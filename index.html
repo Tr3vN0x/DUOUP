@@ -524,7 +524,7 @@ if(!localStorage.getItem('users')) {
             posts:[
                 {
                     text: 'Welcome to Tr3vMedia! This site just got a whole lot cooler. Check out this placeholder!', 
-                    imageUrl: 'https://via.placeholder.com/400x200?text=Site+Launch+Image', // ADDED IMAGE
+                    imageUrl: 'https://via.placeholder.com/400x200?text=Site+Launch+Image', 
                     date: Date.now(), 
                     reactions: {like: [], heart: [], star: []},
                     comments: [
@@ -894,9 +894,12 @@ function addPost(){
     
     // Reset inputs and temporary image variable
     document.getElementById('post-text').value='';
+    
+    // --- FIX IS HERE: Clear file input and hide preview ---
     document.getElementById('post-image-upload').value = '';
     document.getElementById('post-image-preview').style.display = 'none';
     currentPostImage = null;
+    // -----------------------------------------------------
 
     loadUser(); 
 }
@@ -1062,7 +1065,7 @@ function renderPosts(){
             allPosts.push({
                 user,
                 text: p.text,
-                imageUrl: p.imageUrl, // INCLUDE IMAGE URL
+                imageUrl: p.imageUrl, 
                 date: p.date,
                 profilePic: users[user].profilePic,
                 postIndex: index, 
