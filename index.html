@@ -796,68 +796,118 @@ function getChatID(user1, user2) {
     return [user1, user2].sort().join('_');
 }
 
-// ------------------ Data Setup (Messages) ------------------
-if(!localStorage.getItem('messages')) {
-    const initialMessages = {
-        [getChatID('Tr3vN0x', 'TestUser1')]: [
-            { sender: 'TestUser1', text: 'Hey Tr3v, love the new DM feature!', date: Date.now() - 3600000 },
-            { sender: 'Tr3vN0x', text: 'Thanks! Let me know if you run into any bugs.', date: Date.now() - 3500000 }
+// ------------------ Data Setup (Core FIX implemented here) ------------------
+
+// Define the absolute default data
+const DEFAULT_USER_DATA = {
+    'Tr3vN0x': {
+        password:'ownerpass', 
+        profilePic:DEFAULT_PIC, 
+        bio:'Owner of Tr3vMedia', 
+        gallery: Array(GALLERY_SIZE).fill(DEFAULT_GALLERY_ITEM), 
+        followers: ['TestUser1'], 
+        following: ['TestUser1'], 
+        isActive: false, 
+        lastOnline: Date.now() - 600000, 
+        notifications: [], 
+        posts:[
+            {
+                text: 'Welcome to Tr3vMedia! This site just got a whole lot cooler. Check out this placeholder!', 
+                imageUrl: 'https://via.placeholder.com/400x200?text=Site+Launch+Image', 
+                date: Date.now(), 
+                reactions: {like: [], heart: [], star: []},
+                comments: [
+                    {user: 'TestUser1', text: 'Looks awesome!'},
+                    {user: 'Tr3vN0x', text: 'Thanks! Enjoy the new features.'}
+                ]
+            }
         ]
-    };
-    localStorage.setItem('messages', JSON.stringify(initialMessages));
-}
+    },
+    'TestUser1': {
+        password:'password', 
+        profilePic:DEFAULT_PIC, 
+        bio:'Just a friendly user.', 
+        gallery: Array(GALLERY_SIZE).fill(DEFAULT_GALLERY_ITEM).map((_, i) => i === 0 ? 'https://via.placeholder.com/150x150?text=Cool+Pic' : DEFAULT_GALLERY_ITEM), 
+        followers: ['Tr3vN0x'], 
+        following: ['Tr3vN0x'], 
+        isActive: false, 
+        lastOnline: Date.now() - 10000000, 
+        notifications: [], 
+        posts:[
+            {
+                text: 'Testing the new clean style overhaul. Looking very polished!', 
+                imageUrl: null,
+                date: Date.now() - 5000000, 
+                reactions: {like: ['Tr3vN0x'], heart: [], star: []},
+                comments: []
+            }
+        ]
+    }
+};
 
-// ------------------ Users Setup ------------------
-if(!localStorage.getItem('users')) {
-    const defaultGallery = Array(GALLERY_SIZE).fill(DEFAULT_GALLERY_ITEM);
+const DEFAULT_MESSAGES_DATA = {
+    [getChatID('Tr3vN0x', 'TestUser1')]: [
+        { sender: 'TestUser1', text: 'Hey Tr3v, love the new DM feature!', date: Date.now() - 3600000 },
+        { sender: 'Tr3vN0x', text: 'Thanks! Let me know if you run into any bugs.', date: Date.now() - 3500000 }
+    ]
+};
 
-    const defaultUsers = {
-        'Tr3vN0x': {
-            password:'ownerpass', 
-            profilePic:DEFAULT_PIC, 
-            bio:'Owner of Tr3vMedia', 
-            gallery: defaultGallery, 
-            followers: ['TestUser1'], 
-            following: ['TestUser1'], 
-            isActive: false, 
-            lastOnline: Date.now() - 600000, 
-            notifications: [], 
-            posts:[
-                {
-                    text: 'Welcome to Tr3vMedia! This site just got a whole lot cooler. Check out this placeholder!', 
-                    imageUrl: 'https://via.placeholder.com/400x200?text=Site+Launch+Image', 
-                    date: Date.now(), 
-                    reactions: {like: [], heart: [], star: []},
-                    comments: [
-                        {user: 'TestUser1', text: 'Looks awesome!'},
-                        {user: 'Tr3vN0x', text: 'Thanks! Enjoy the new features.'}
-                    ]
-                }
-            ]
-        },
-        'TestUser1': {
-            password:'password', 
-            profilePic:DEFAULT_PIC, 
-            bio:'Just a friendly user.', 
-            gallery: defaultGallery.map((_, i) => i === 0 ? 'https://via.placeholder.com/150x150?text=Cool+Pic' : DEFAULT_GALLERY_ITEM), 
-            followers: ['Tr3vN0x'], 
-            following: ['Tr3vN0x'], 
-            isActive: false, 
-            lastOnline: Date.now() - 10000000, 
-            notifications: [], 
-            posts:[
-                {
-                    text: 'Testing the new clean style overhaul. Looking very polished!', 
-                    imageUrl: null,
-                    date: Date.now() - 5000000, 
-                    reactions: {like: ['Tr3vN0x'], heart: [], star: []},
-                    comments: []
-                }
-            ]
+// Function to initialize or merge data
+function initializeOrMergeData() {
+    // 1. Load existing data or initialize to an empty object
+    let users = {};
+    let messages = {};
+
+    try {
+        const storedUsers = localStorage.getItem('users');
+        if (storedUsers) {
+            users = JSON.parse(storedUsers);
         }
-    };
-    localStorage.setItem('users', JSON.stringify(defaultUsers));
+    } catch (e) {
+        console.error("Error parsing stored users, resetting users data.", e);
+        // Fallback: If parsing fails, start fresh (only for that session)
+    }
+
+    try {
+        const storedMessages = localStorage.getItem('messages');
+        if (storedMessages) {
+            messages = JSON.parse(storedMessages);
+        }
+    } catch (e) {
+        console.error("Error parsing stored messages, resetting messages data.", e);
+    }
+
+    // 2. Merge Default Users (Ensure 'Tr3vN0x' and 'TestUser1' are always present)
+    // NOTE: This is the FIX. Default users are added if they are missing from the current storage.
+    let changedUsers = false;
+    for (const defaultUser in DEFAULT_USER_DATA) {
+        if (!users[defaultUser]) {
+            users[defaultUser] = DEFAULT_USER_DATA[defaultUser];
+            changedUsers = true;
+        }
+    }
+    
+    // 3. Merge Default Messages (Only for default users)
+    let changedMessages = false;
+    for (const chatID in DEFAULT_MESSAGES_DATA) {
+        if (!messages[chatID]) {
+            messages[chatID] = DEFAULT_MESSAGES_DATA[chatID];
+            changedMessages = true;
+        }
+    }
+
+    // 4. Save merged data back to localStorage
+    if (changedUsers || localStorage.getItem('users') === null) {
+        localStorage.setItem('users', JSON.stringify(users));
+    }
+    if (changedMessages || localStorage.getItem('messages') === null) {
+        localStorage.setItem('messages', JSON.stringify(messages));
+    }
 }
+
+// Call the initialization function immediately before any other data access
+initializeOrMergeData();
+
 
 // ------------------ Auth Tabs ------------------
 function showLogin() {document.getElementById('signup').style.display='none'; document.getElementById('auth').style.display='block';}
@@ -1275,6 +1325,9 @@ function viewProfile(username){
     document.getElementById('search-input').value = ''; 
     viewingUsername = username; 
     
+    // Crucial: Re-initialize/Merge data before viewing to pick up changes from other sessions
+    initializeOrMergeData(); 
+
     const users=JSON.parse(localStorage.getItem('users'));
     const user = users[username];
     if (!user) return alert("User not found.");
@@ -1332,6 +1385,9 @@ function searchUsers() {
         return;
     }
 
+    // Crucial: Re-initialize/Merge data before searching to pick up changes from other sessions
+    initializeOrMergeData();
+
     const users = JSON.parse(localStorage.getItem('users'));
     const userKeys = Object.keys(users);
     
@@ -1386,6 +1442,9 @@ function addPost(){
     
     if(!text && !currentPostImage){alert("Cannot post empty text or image"); return;}
     
+    // Crucial: Re-initialize/Merge data before posting to ensure we are posting to the latest data
+    initializeOrMergeData();
+
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
     
@@ -1407,6 +1466,9 @@ function addPost(){
     loadUser(); 
 }
 function toggleReaction(postUser, postIndex, reactionType){
+    // Crucial: Re-initialize/Merge data before reacting
+    initializeOrMergeData();
+
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
     const post = users[postUser].posts[postIndex];
@@ -1441,6 +1503,9 @@ function addComment(postUser, postIndex) {
     const commentText = commentInput.value.trim();
 
     if (!commentText) return;
+
+    // Crucial: Re-initialize/Merge data before commenting
+    initializeOrMergeData();
 
     const users = JSON.parse(localStorage.getItem('users'));
     const post = users[postUser].posts[postIndex];
@@ -1512,6 +1577,9 @@ function renderPostImage(imageUrl) {
     return '';
 }
 function renderUserPosts(username, targetElement) {
+    // Crucial: Re-initialize/Merge data before rendering
+    initializeOrMergeData();
+
     const users = JSON.parse(localStorage.getItem('users'));
     const currentUser = localStorage.getItem('currentUser');
     const userPosts = users[username].posts;
@@ -1549,6 +1617,9 @@ function renderUserPosts(username, targetElement) {
     });
 }
 function renderPosts(){
+    // Crucial: Re-initialize/Merge data before rendering the feed
+    initializeOrMergeData();
+
     const postsDiv=document.getElementById('posts'); postsDiv.innerHTML='';
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
@@ -1601,6 +1672,10 @@ function renderPosts(){
 function changeUsername(){
     const newName=document.getElementById('change-username').value.trim();
     if(!newName) return alert("Username cannot be empty");
+    
+    // Crucial: Re-initialize/Merge data before changing username
+    initializeOrMergeData();
+
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
     if(users[newName]) return alert("Username taken");
@@ -1678,6 +1753,9 @@ function startDM(targetUser) {
 }
 
 function renderMessageList() {
+    // Crucial: Re-initialize/Merge data before rendering message list
+    initializeOrMergeData();
+
     const currentUser = localStorage.getItem('currentUser');
     const messages = JSON.parse(localStorage.getItem('messages'));
     const listDiv = document.getElementById('messages-list');
@@ -1721,6 +1799,9 @@ function renderMessageList() {
 }
 
 function renderConversation(partner) {
+    // Crucial: Re-initialize/Merge data before rendering conversation
+    initializeOrMergeData();
+
     const currentUser = localStorage.getItem('currentUser');
     const messages = JSON.parse(localStorage.getItem('messages'));
     const chatID = getChatID(currentUser, partner);
@@ -1755,6 +1836,9 @@ function sendMessage() {
 
     if (!text || !partner) return;
 
+    // Crucial: Re-initialize/Merge data before sending message
+    initializeOrMergeData();
+
     const messages = JSON.parse(localStorage.getItem('messages'));
     const users = JSON.parse(localStorage.getItem('users'));
     const chatID = getChatID(currentUser, partner);
@@ -1780,6 +1864,9 @@ function sendMessage() {
 
 
 // ------------------ Check login on reload ------------------
+// Crucial: Run initializeOrMergeData again before checking login status
+initializeOrMergeData(); 
+
 if(localStorage.getItem('currentUser')) {
     const users = JSON.parse(localStorage.getItem('users'));
     const currentUser = localStorage.getItem('currentUser');
