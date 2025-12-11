@@ -4,16 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tr3vMedia</title>
-<link rel="icon" type="image/jpg" href="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/596009832_838710972097270_9022730636766278745_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=TZjP9DC4yXIQ7kNvwHdpFg7&_nc_oc=AdnBmq-TZowH6YRcFRCd3Jivz_VCUa2-xgSohFxWykjbNuzrqYHW_6gne7eslaL4ZFCdK9cEG8NpB5VG555CxO6q&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=tSIEeMfSeNSk__07eF_UGA&oh=00_Afm8Xz1VR1MYenel-chWfd3ajWnOdho-IvK1TEyO-duDuA&oe=693AC07A">
-
+<link rel="icon" type="image/jpg" href="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/596009832_838710972097270_9022730636766278745_n.jpg">
 <style>
+/* ---------------------- General Styles ---------------------- */
 body {
     margin: 0;
     font-family: 'Consolas', monospace;
     background: #0a0a0a;
     color: #00ff66;
 }
-
 header {
     display: flex;
     justify-content: space-between;
@@ -27,25 +26,21 @@ header {
     flex-wrap: wrap;
     gap: 15px;
 }
-
 .logo-container {
     display: flex;
     align-items: center;
     gap: 12px;
 }
-
-.logo-container img:not(.side-image) {
+.logo-container img.logo {
     height: 50px;
     border-radius: 4px;
     border: 1px solid #00ff66;
 }
-
 .header-actions {
     display: flex;
     align-items: center;
     gap: 10px;
 }
-
 .nav-tab {
     text-decoration: none;
     color: #00ff66;
@@ -59,19 +54,16 @@ header {
     background: #111;
     cursor: pointer;
 }
-
 .nav-tab:hover {
     background: #003300;
     border-color: #00ff66;
     box-shadow: 0 0 10px #00ff66;
     color: #33ff99;
 }
-
 .nav-tab.active {
     background: #003300;
     box-shadow: 0 0 10px #33ff99;
 }
-
 #welcome-banner {
     padding: 15px 30px;
     background: #004400;
@@ -80,15 +72,10 @@ header {
     font-size: 1.2em;
     font-weight: bold;
     border-bottom: 2px solid #00ff66;
-    text-shadow: 0 0 5px rgba(0,0,0,0.5);
-    letter-spacing: 1px;
-    box-shadow: 0 5px 15px rgba(0,255,102,0.2);
 }
-
 main {
     padding: 20px 30px;
 }
-
 .post {
     background: #111;
     padding: 15px;
@@ -96,8 +83,17 @@ main {
     border: 1px solid #003300;
     border-radius: 6px;
     box-shadow: 0 0 8px #00ff66;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
 }
-
+.post img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid #00ff66;
+    object-fit: cover;
+}
 footer {
     text-align: center;
     padding: 25px;
@@ -108,14 +104,12 @@ footer {
     text-shadow: 0 0 4px #00ff66;
     margin-top: 20px;
 }
-
 #new-post {
     margin-bottom: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
 }
-
 #new-post textarea {
     padding: 10px;
     background: #111;
@@ -124,7 +118,6 @@ footer {
     color: #00ff66;
     resize: none;
 }
-
 #new-post button {
     width: 120px;
     padding: 8px;
@@ -134,46 +127,25 @@ footer {
     color: #00ff66;
     cursor: pointer;
 }
-
 #new-post button:hover {
     background: #003300;
     box-shadow: 0 0 10px #00ff66;
     color: #33ff99;
 }
-
-.profile-info {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.profile-info img {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: 2px solid #00ff66;
-}
-
-.profile-info div {
-    display: flex;
-    flex-direction: column;
-}
-
-#settings button {
-    padding: 8px;
+input, textarea {
     background: #111;
+    color: #00ff66;
     border: 1px solid #003300;
     border-radius: 6px;
-    color: #00ff66;
-    cursor: pointer;
-    margin-top: 5px;
+    padding: 5px;
 }
-
-#settings button:hover {
-    background: #003300;
-    box-shadow: 0 0 10px #00ff66;
-    color: #33ff99;
+button {
+    cursor: pointer;
+}
+.verified {
+    color: #1DA1F2;
+    font-weight: bold;
+    margin-left: 5px;
 }
 </style>
 </head>
@@ -181,18 +153,17 @@ footer {
 
 <header>
     <div class="logo-container">
-        <img src="https://see.fontimg.com/api/rf5/vXL4/YTM3ZmYyMWFkMzNiNGY5MGEwY2ZmZTZmNDhiZGI4NzkudHRm/VHIzdk1lZGlh/chimpanzee-website-report.png?r=fs&h=65&w=1000&fg=E8E4E4&bg=27E2A1&tb=1&s=65" alt="Site Logo">
+        <img src="https://see.fontimg.com/api/rf5/vXL4/YTM3ZmYyMWFkMzNiNGY5MGEwY2ZmZTZmNDhiZGI4NzkudHRm/VHIzdk1lZGlh/chimpanzee-website-report.png" class="logo" alt="Tr3vMedia Logo">
     </div>
     <div class="header-actions">
         <div class="nav-tab active" onclick="showTab('home')">Home</div>
         <div class="nav-tab" onclick="showTab('profile')">Profile</div>
-        <div class="nav-tab" onclick="showTab('notifications')">Notifications</div>
-        <div class="nav-tab" onclick="showTab('messages')">Messages</div>
         <div class="nav-tab" onclick="showTab('settings')">Settings</div>
+        <div class="nav-tab" onclick="logout()">Logout</div>
     </div>
 </header>
 
-<div id="welcome-banner">Hello user, welcome to Tr3vMedia!</div>
+<div id="welcome-banner"></div>
 
 <main id="main-content">
     <!-- Home feed -->
@@ -207,40 +178,24 @@ footer {
     <!-- Profile -->
     <div id="profile" class="tab-content" style="display:none;">
         <h2>Profile Page</h2>
-        <div class="profile-info">
-            <img src="" id="profile-pic" alt="Profile Picture">
-            <div>
-                <div id="profile-username"></div>
-                <div id="profile-posts"></div>
-                <div id="profile-followers"></div>
-            </div>
+        <div>
+            <img id="profile-pic" src="" width="80" height="80">
+            <input type="file" id="profile-upload" accept="image/*">
         </div>
-        <label for="bio">Bio:</label>
-        <textarea id="bio" rows="2" style="background:#111;color:#00ff66;border:1px solid #003300;border-radius:6px;width:100%;"></textarea>
-        <input type="file" id="profile-upload" accept="image/*">
-        <button onclick="updateProfilePic()">Update Profile</button>
-    </div>
-
-    <!-- Notifications -->
-    <div id="notifications" class="tab-content" style="display:none;">
-        <h2>Notifications</h2>
-        <p>No new notifications</p>
-    </div>
-
-    <!-- Messages -->
-    <div id="messages" class="tab-content" style="display:none;">
-        <h2>Messages</h2>
-        <p>You have no messages.</p>
+        <div>
+            <textarea id="profile-bio" placeholder="Write your bio..."></textarea>
+            <button onclick="saveProfile()">Save Profile</button>
+        </div>
+        <p>Username: <span id="profile-username"></span> <span id="owner-tag"></span></p>
+        <p>Posts: <span id="profile-posts-count"></span></p>
     </div>
 
     <!-- Settings -->
     <div id="settings" class="tab-content" style="display:none;">
         <h2>Settings</h2>
-        <button onclick="logout()">Logout</button>
-        <button onclick="deleteAccount()">Delete Account</button>
-        <button onclick="changeUsername()">Change Username</button>
-        <button onclick="changePassword()">Change Password</button>
-        <button onclick="resetBio()">Reset Bio</button>
+        <p>Settings for your account:</p>
+        <label>Change username: <input type="text" id="change-username"></label>
+        <button onclick="changeUsername()">Save</button>
     </div>
 </main>
 
@@ -249,157 +204,129 @@ footer {
 </footer>
 
 <script>
-// --------------- Setup Users ---------------
-if(!localStorage.getItem('users')){
-    const initialUsers = {
-        "Tr3vN0x": {profilePic:'https://via.placeholder.com/60?text=Owner', bio:'I am the owner', posts:[], followers:0},
-        "User1": {profilePic:'https://via.placeholder.com/60?text=U1', bio:'Hello world!', posts:[], followers:0},
-        "User2": {profilePic:'https://via.placeholder.com/60?text=U2', bio:'Loving Tr3vMedia!', posts:[], followers:0},
-    };
-    localStorage.setItem('users', JSON.stringify(initialUsers));
-}
-
-if(!localStorage.getItem('currentUser')){
-    localStorage.setItem('currentUser','Tr3vN0x');
-}
-
-// --------------- Tab Switching ---------------
-function showTab(tabId){
-    const tabs = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => tab.style.display='none');
-    document.getElementById(tabId).style.display='block';
-
-    const navTabs = document.querySelectorAll('.nav-tab');
-    navTabs.forEach(t => t.classList.remove('active'));
-    document.querySelector(`.nav-tab[onclick="showTab('${tabId}')"]`).classList.add('active');
-}
-
-// --------------- Posts ---------------
-function addPost(){
-    const text = document.getElementById('post-text').value.trim();
-    if(!text) return alert("Post cannot be empty!");
-    const username = localStorage.getItem('currentUser');
-    const users = JSON.parse(localStorage.getItem('users'));
-    users[username].posts.unshift({text, date: Date.now()});
-    localStorage.setItem('users', JSON.stringify(users));
-    document.getElementById('post-text').value = '';
-    loadPosts();
-    updateProfile();
-}
-
-function loadPosts(){
-    const users = JSON.parse(localStorage.getItem('users'));
-    const postsContainer = document.getElementById('posts');
-    postsContainer.innerHTML = '';
-
-    for(const username in users){
-        const user = users[username];
-        user.posts.forEach(post=>{
-            const div = document.createElement('div');
-            div.className = 'post';
-            const ownerTag = (username==='Tr3vN0x') ? ' <span style="color:#00aaff;font-weight:bold;">✔️</span>' : '';
-            div.innerHTML = `
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <img src="${user.profilePic}" style="width:40px;height:40px;border-radius:50%;border:1px solid #00ff66;">
-                    <strong>${username}${ownerTag}:</strong>
-                </div>
-                <div style="margin-left:50px;">${post.text}</div>
-            `;
-            postsContainer.appendChild(div);
-        });
-    }
-}
-
-// --------------- Profile ---------------
-function updateProfile(){
-    const username = localStorage.getItem('currentUser');
-    const users = JSON.parse(localStorage.getItem('users'));
-    const user = users[username];
-
-    const ownerTag = (username==='Tr3vN0x') ? ' <span style="color:#00aaff;font-weight:bold;">✔️</span>' : '';
-
-    document.getElementById('profile-username').innerHTML = `Username: ${username}${ownerTag}`;
-    document.getElementById('profile-posts').innerText = `Posts: ${user.posts.length}`;
-    document.getElementById('profile-followers').innerText = `Followers: ${user.followers}`;
-    document.getElementById('bio').value = user.bio || '';
-    document.getElementById('profile-pic').src = user.profilePic;
-}
-
-// --------------- Profile Pic & Bio Update ---------------
-function updateProfilePic(){
-    const fileInput = document.getElementById('profile-upload');
-    const bioText = document.getElementById('bio').value;
-    const users = JSON.parse(localStorage.getItem('users'));
-    const username = localStorage.getItem('currentUser');
-
-    if(fileInput.files.length > 0){
-        const reader = new FileReader();
-        reader.onload = function(e){
-            users[username].profilePic = e.target.result;
-            users[username].bio = bioText;
-            localStorage.setItem('users', JSON.stringify(users));
-            updateProfile();
-            loadPosts();
-            alert("Profile updated!");
+// ------------------ Users Setup ------------------
+if(!localStorage.getItem('users')) {
+    const defaultUsers = {
+        'Tr3vN0x': {
+            profilePic: 'https://via.placeholder.com/60?text=Owner',
+            bio: 'Owner of Tr3vMedia',
+            posts: []
         }
-        reader.readAsDataURL(fileInput.files[0]);
-    } else {
-        users[username].bio = bioText;
-        localStorage.setItem('users', JSON.stringify(users));
-        updateProfile();
-        alert("Bio updated!");
-    }
+    };
+    localStorage.setItem('users', JSON.stringify(defaultUsers));
 }
 
-// --------------- Settings ---------------
-function logout(){
-    alert("Logged out!");
-    // For now, just reload page to simulate logout
+// ------------------ Login / Current User ------------------
+function login() {
+    let username = prompt("Enter username:");
+    const users = JSON.parse(localStorage.getItem('users'));
+    if(!users[username]) {
+        if(confirm("Username not found. Create new account?")) {
+            users[username] = {profilePic:'https://via.placeholder.com/60', bio:'', posts:[]};
+            localStorage.setItem('users', JSON.stringify(users));
+        } else return login();
+    }
+    localStorage.setItem('currentUser', username);
+    loadUser();
+}
+
+function logout() {
+    localStorage.removeItem('currentUser');
     location.reload();
 }
 
-function deleteAccount(){
-    const username = localStorage.getItem('currentUser');
-    if(confirm(`Are you sure you want to delete account ${username}?`)){
-        const users = JSON.parse(localStorage.getItem('users'));
-        delete users[username];
-        localStorage.setItem('users', JSON.stringify(users));
-        localStorage.removeItem('currentUser');
-        alert("Account deleted!");
-        location.reload();
+function loadUser() {
+    const users = JSON.parse(localStorage.getItem('users'));
+    const currentUser = localStorage.getItem('currentUser');
+    if(!currentUser) return login();
+    const user = users[currentUser];
+    document.getElementById('welcome-banner').innerText = `Hello ${currentUser}, welcome to Tr3vMedia!`;
+    document.getElementById('profile-pic').src = user.profilePic;
+    document.getElementById('profile-username').innerText = currentUser;
+    document.getElementById('profile-posts-count').innerText = user.posts.length;
+    document.getElementById('owner-tag').innerHTML = currentUser==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':'';
+    renderPosts();
+}
+
+login();
+
+// ------------------ Tab Switching ------------------
+function showTab(tabId){
+    document.querySelectorAll('.tab-content').forEach(tab => tab.style.display='none');
+    document.getElementById(tabId).style.display='block';
+    document.querySelectorAll('.nav-tab').forEach(tab=>tab.classList.remove('active'));
+    document.querySelector(`.nav-tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+}
+
+// ------------------ Profile ------------------
+document.getElementById('profile-upload').addEventListener('change', function(){
+    const file = this.files[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = function(){
+            const users = JSON.parse(localStorage.getItem('users'));
+            const currentUser = localStorage.getItem('currentUser');
+            users[currentUser].profilePic = reader.result;
+            localStorage.setItem('users', JSON.stringify(users));
+            document.getElementById('profile-pic').src = reader.result;
+            renderPosts(); // update posts
+        };
+        reader.readAsDataURL(file);
     }
+});
+
+function saveProfile(){
+    const users = JSON.parse(localStorage.getItem('users'));
+    const currentUser = localStorage.getItem('currentUser');
+    users[currentUser].bio = document.getElementById('profile-bio').value;
+    localStorage.setItem('users', JSON.stringify(users));
+    alert("Profile updated!");
 }
 
+// ------------------ Posts ------------------
+function addPost(){
+    const text = document.getElementById('post-text').value.trim();
+    if(!text) return alert("Post cannot be empty!");
+    const users = JSON.parse(localStorage.getItem('users'));
+    const currentUser = localStorage.getItem('currentUser');
+    users[currentUser].posts.unshift({text, date: Date.now()});
+    localStorage.setItem('users', JSON.stringify(users));
+    document.getElementById('post-text').value='';
+    renderPosts();
+}
+
+function renderPosts(){
+    const postsDiv = document.getElementById('posts');
+    postsDiv.innerHTML='';
+    const users = JSON.parse(localStorage.getItem('users'));
+    const currentUser = localStorage.getItem('currentUser');
+    const allPosts = [];
+    for(let user in users){
+        users[user].posts.forEach(post => allPosts.push({user, text: post.text, date: post.date, profilePic: users[user].profilePic}));
+    }
+    allPosts.sort((a,b)=>b.date-a.date);
+    allPosts.forEach(post=>{
+        const div = document.createElement('div');
+        div.className='post';
+        div.innerHTML=`<img src="${post.profilePic}"><strong>${post.user}${post.user==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':''}:</strong> ${post.text}`;
+        postsDiv.appendChild(div);
+    });
+}
+
+// ------------------ Settings ------------------
 function changeUsername(){
-    const newUsername = prompt("Enter new username:");
-    if(!newUsername) return;
+    const newName = document.getElementById('change-username').value.trim();
+    if(!newName) return alert("Username cannot be empty!");
     const users = JSON.parse(localStorage.getItem('users'));
-    const oldUsername = localStorage.getItem('currentUser');
-    users[newUsername] = {...users[oldUsername]};
-    delete users[oldUsername];
+    const currentUser = localStorage.getItem('currentUser');
+    if(users[newName]) return alert("Username already taken!");
+    users[newName] = users[currentUser];
+    delete users[currentUser];
     localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('currentUser', newUsername);
-    updateProfile();
-    loadPosts();
+    localStorage.setItem('currentUser', newName);
+    loadUser();
+    alert("Username changed!");
 }
-
-function changePassword(){
-    alert("Password change feature is not implemented yet.");
-}
-
-function resetBio(){
-    const users = JSON.parse(localStorage.getItem('users'));
-    const username = localStorage.getItem('currentUser');
-    users[username].bio = "";
-    localStorage.setItem('users', JSON.stringify(users));
-    updateProfile();
-    alert("Bio reset!");
-}
-
-// Initial load
-loadPosts();
-updateProfile();
 </script>
-
 </body>
 </html>
