@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tr3vMedia</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 <style>
 /* ---------------------------------- */
 /* --- 🎨 COLOR REVERTED TO GREEN --- */
@@ -17,11 +18,15 @@ body {
     color: #00FF00; /* Main text color: Bright Green */
     line-height: 1.6;
 }
-header, footer {
+header {
     background: #111111; 
     padding: 15px 30px;
     color: #00FF00;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); 
+    border-bottom: 1px solid #004400;
+    position:sticky;
+    top:0;
+    z-index:1000; 
 }
 main {padding: 30px 40px;}
 h2, h3, h4 {color: #00CC00; margin-top: 0;} /* Green Accent */
@@ -44,15 +49,11 @@ h2, h3, h4 {color: #00CC00; margin-top: 0;} /* Green Accent */
     border-radius: 8px; 
 }
 
-/* --- Header & Navigation --- */
+/* --- Header & Navigation (Desktop/Tablet) --- */
 header {
     display:flex;
     justify-content:space-between;
     align-items:center;
-    border-bottom: 1px solid #004400;
-    position:sticky;
-    top:0;
-    z-index:1000; 
 }
 .header-left {
     display: flex;
@@ -119,7 +120,7 @@ header {
 }
 
 
-/* Tabs Styling */
+/* Tabs Styling (Desktop) */
 .header-actions {
     display: flex; 
     gap: 10px; 
@@ -156,6 +157,7 @@ header {
     font-size: 0.7em;
     font-weight: bold;
     pointer-events: none; /* Allows click-through */
+    z-index: 5;
 }
 
 /* --- Forms & Inputs (General) --- */
@@ -216,8 +218,127 @@ button:active {
     background: #FF3333;
 }
 
+/* --- DM Specific Styling --- */
+.chat-messages {
+    /* Adjust margin for mobile fixed footer */
+    max-height: 400px; 
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+    background: #0d0d0d;
+    border-radius: 8px;
+    border: 1px solid #004400;
+}
+/* ... (Keep other styles like post, profile, gallery) ... */
 
-/* --- Posts & Post Images --- */
+
+/* --- Mobile Navigation Bar (NEW) --- */
+#mobile-nav {
+    display: none; /* Hidden by default (desktop) */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #111111;
+    border-top: 1px solid #004400;
+    box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    padding-bottom: env(safe-area-inset-bottom); /* For modern phones */
+}
+
+.mobile-tab-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 60px;
+}
+
+.mobile-nav-item {
+    cursor: pointer;
+    flex: 1;
+    text-align: center;
+    padding: 5px 0;
+    color: #666666; /* Default inactive color */
+    font-size: 0.75em;
+    transition: color 0.3s;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.mobile-nav-item .material-icons {
+    font-size: 24px;
+}
+
+.mobile-nav-item.active {
+    color: #00CC00; /* Active green color */
+    font-weight: bold;
+}
+.mobile-nav-item:hover {
+    color: #00FF00;
+}
+/* Mobile Notification Badge */
+.mobile-notification-badge {
+    position: absolute;
+    top: 0px;
+    right: 20%;
+    background: red;
+    color: white;
+    border-radius: 50%;
+    padding: 2px 5px;
+    font-size: 0.6em;
+    font-weight: bold;
+}
+/* Content padding adjustment for mobile footer */
+@media (max-width: 768px) {
+    main {
+        padding-bottom: 80px; /* Make space for the fixed footer */
+    }
+}
+
+
+/* --- Media Queries for Mobile Experience --- */
+@media (max-width: 768px) {
+    /* Hide Desktop elements */
+    .header-actions {
+        display: none !important;
+    }
+    #search-bar {
+        min-width: 100px; /* Allow search bar to shrink */
+        width: 60%;
+    }
+    header {
+        padding: 10px 15px;
+    }
+    .header-left {
+        gap: 15px;
+    }
+    .logo-container img {
+        height: 28px;
+    }
+    main {
+        padding: 15px 15px;
+    }
+
+    /* Show Mobile Navigation */
+    #mobile-nav {
+        display: block;
+    }
+    /* Hide footer on mobile */
+    footer {
+        display: none;
+    }
+    /* Adjust DM section height for smaller screens */
+    .chat-messages {
+        max-height: 350px;
+    }
+}
+
+
+/* --- Post, Profile, Gallery Styles (Kept for completeness) --- */
 .post {
     display:flex;
     flex-direction: column; 
@@ -284,8 +405,6 @@ button:active {
     background: #0d0d0d; 
 }
 #profile-pic-display {width: 90px; height: 90px;}
-
-/* --- Comments Styling --- */
 .comments-section {
     margin-top: 20px;
     padding: 10px 0;
@@ -324,15 +443,12 @@ button:active {
 .comment-input-area button:hover {
     background: #00FF00;
 }
-
-/* --- Profile Styling (View & Edit) --- */
 #profile, #view-profile {
     background: #1e1e1e;
     padding: 25px;
     border-radius: 10px;
     border: 1px solid #004400;
 }
-
 #view-profile-content #profile-pic-view {
     width: 120px;
     height: 120px;
@@ -356,8 +472,6 @@ button:active {
     color: #555555;
     margin-left: 10px;
 }
-
-/* Status Indicators */
 .status-container {
     display: flex;
     align-items: center;
@@ -375,9 +489,6 @@ button:active {
     font-size: 0.9em;
     color: #777777;
 }
-
-
-/* Gallery Styling */
 .gallery-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr); 
@@ -387,7 +498,12 @@ button:active {
     background: #111111;
     border-radius: 8px;
 }
-
+@media (max-width: 600px) {
+    .gallery-container {
+        grid-template-columns: repeat(3, 1fr); /* 3 columns on small screens */
+        gap: 10px;
+    }
+}
 .gallery-slot {
     background: #222222;
     border: 1px solid #004400;
@@ -396,7 +512,6 @@ button:active {
     text-align: center;
     overflow: hidden;
 }
-
 .gallery-image-display {
     width: 100%;
     aspect-ratio: 1 / 1; 
@@ -411,8 +526,6 @@ button:active {
     opacity: 0.8;
     transform: scale(1.02);
 }
-
-/* --- DM Specific Styling --- */
 #messages-list {
     display: flex;
     flex-direction: column;
@@ -428,17 +541,6 @@ button:active {
 }
 .chat-summary:hover {
     background: #222222;
-}
-.chat-messages {
-    max-height: 500px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 10px;
-    background: #0d0d0d;
-    border-radius: 8px;
-    border: 1px solid #004400;
 }
 .message {
     padding: 10px 15px;
@@ -491,18 +593,6 @@ button:active {
     padding: 10px;
     border-bottom: 1px dashed #004400;
 }
-
-/* Mobile adjustments */
-@media (max-width: 600px) {
-    main {padding: 15px 15px;}
-    header {padding: 10px 15px;}
-    .header-left {gap: 10px;}
-    .logo-container img {height: 30px;}
-    .gallery-container {
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 10px;
-    }
-}
 </style>
 </head>
 <body>
@@ -512,7 +602,6 @@ button:active {
         <div class="logo-container">
             <img src="https://see.fontimg.com/api/rf5/vXL4/YTM3ZmYyMWFkMzNiNGY5MGEwY2ZmZTZmNDhiZGI4NzkudHRm/VHIzdk1lZGlh/chimpanzee-website-report.png?r=fs&h=65&w=1000&fg=E8E4E4&bg=27E2A1&tb=1&s=65" 
                  alt="Tr3vMedia Icon 1">
-            
             <img src="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/596009832_838710972097270_9022730636766278745_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=FV-kAQTMc9sQ7kNvwHtnXUJ&_nc_oc=AdnMy32z6EqV3KBKYoxV9lXa4sxDC5HGtKjqXOn1Ft5DhugILwP1VuHdODGDfKtXeMswLEwyf_07cIoNby3di58u&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=ffAPLrP0wQ4lRnuf3eL46g&oh=00_Afk9OB0-t0OJNQksLxcPV1gJpw_C1Z8IwkKu4li6rX9bgA&oe=6940AF3A" 
                  alt="Tr3vMedia Icon 2">
         </div>
@@ -646,10 +735,36 @@ button:active {
         <h2>Settings</h2>
         <label>Change username: <input type="text" id="change-username"></label><br>
         <button onclick="changeUsername()">Save</button>
+        <button onclick="logout()" style="background: #CC0000; margin-top: 20px;">Logout</button>
     </div>
 </main>
 
 <footer>&copy; 2025 Tr3vMedia — All Rights Reserved</footer>
+
+<nav id="mobile-nav">
+    <div class="mobile-tab-container">
+        <div class="mobile-nav-item" onclick="showTab('home')">
+            <span class="material-icons">home</span>
+            Home
+        </div>
+        <div class="mobile-nav-item" id="mobile-messages-tab" onclick="showTab('messages')">
+            <span class="material-icons">message</span>
+            Messages
+        </div>
+        <div class="mobile-nav-item" id="mobile-notifications-tab" onclick="showTab('notifications')">
+            <span class="material-icons">notifications</span>
+            Notifications
+        </div>
+        <div class="mobile-nav-item" onclick="showTab('profile')">
+            <span class="material-icons">person</span>
+            Profile
+        </div>
+        <div class="mobile-nav-item" onclick="showTab('settings')">
+            <span class="material-icons">settings</span>
+            Settings
+        </div>
+    </div>
+</nav>
 
 <script>
 // --- Global Constants & State ---
@@ -692,7 +807,7 @@ if(!localStorage.getItem('messages')) {
     localStorage.setItem('messages', JSON.stringify(initialMessages));
 }
 
-// ------------------ Users Setup (Updated for Notifications/Status) ------------------
+// ------------------ Users Setup ------------------
 if(!localStorage.getItem('users')) {
     const defaultGallery = Array(GALLERY_SIZE).fill(DEFAULT_GALLERY_ITEM);
 
@@ -704,9 +819,9 @@ if(!localStorage.getItem('users')) {
             gallery: defaultGallery, 
             followers: ['TestUser1'], 
             following: ['TestUser1'], 
-            isActive: false, // NEW
-            lastOnline: Date.now() - 600000, // NEW
-            notifications: [], // NEW
+            isActive: false, 
+            lastOnline: Date.now() - 600000, 
+            notifications: [], 
             posts:[
                 {
                     text: 'Welcome to Tr3vMedia! This site just got a whole lot cooler. Check out this placeholder!', 
@@ -727,9 +842,9 @@ if(!localStorage.getItem('users')) {
             gallery: defaultGallery.map((_, i) => i === 0 ? 'https://via.placeholder.com/150x150?text=Cool+Pic' : DEFAULT_GALLERY_ITEM), 
             followers: ['Tr3vN0x'], 
             following: ['Tr3vN0x'], 
-            isActive: false, // NEW
-            lastOnline: Date.now() - 10000000, // NEW
-            notifications: [], // NEW
+            isActive: false, 
+            lastOnline: Date.now() - 10000000, 
+            notifications: [], 
             posts:[
                 {
                     text: 'Testing the new clean style overhaul. Looking very polished!', 
@@ -764,9 +879,9 @@ function signup(){
         gallery: Array(GALLERY_SIZE).fill(DEFAULT_GALLERY_ITEM),
         followers: [], 
         following: [],
-        isActive: false, // NEW
-        lastOnline: Date.now(), // NEW
-        notifications: [] // NEW
+        isActive: false, 
+        lastOnline: Date.now(), 
+        notifications: [] 
     }; 
     
     localStorage.setItem('users', JSON.stringify(users));
@@ -780,7 +895,6 @@ function login(){
     const users = JSON.parse(localStorage.getItem('users'));
     if(!users[username] || users[username].password!==password){alert("Invalid credentials"); return;}
     
-    // Set status to active
     users[username].isActive = true; 
     localStorage.setItem('users', JSON.stringify(users));
     
@@ -795,15 +909,17 @@ function initApp(){
     
     document.getElementById('welcome-banner').innerText=`Hello ${localStorage.getItem('currentUser')}!`;
     
+    // Desktop Tabs
     document.getElementById('header-tabs').innerHTML=`
         <div class="nav-tab" onclick="showTab('home')">Home</div>
         <div class="nav-tab" id="messages-tab" onclick="showTab('messages')">Messages</div>
-        <div class="nav-tab" id="notifications-tab" onclick="showTab('notifications')">Notifications</div> <div class="nav-tab" onclick="showTab('profile')">Profile</div>
+        <div class="nav-tab" id="notifications-tab" onclick="showTab('notifications')">Notifications</div>
+        <div class="nav-tab" onclick="showTab('profile')">Profile</div>
         <div class="nav-tab" onclick="showTab('settings')">Settings</div>
         <div class="nav-tab" onclick="logout()">Logout</div>`;
     
     loadUser();
-    updateNotificationBadges(); // Initial badge check
+    updateNotificationBadges(); 
     showTab('home'); 
 }
 
@@ -825,20 +941,27 @@ function showTab(tabId){
     document.querySelectorAll('.tab-content').forEach(tab=>tab.style.display='none');
     document.getElementById(tabId).style.display='block';
     
+    // Handle Desktop Tabs
     document.querySelectorAll('.nav-tab').forEach(tab=>tab.classList.remove('active'));
-    
-    const activeTabElement = document.querySelector(`.nav-tab[onclick*="showTab('${tabId}')"]`);
-    if (activeTabElement) {
-        activeTabElement.classList.add('active');
+    const activeTabElementDesktop = document.querySelector(`.nav-tab[onclick*="showTab('${tabId}')"]`);
+    if (activeTabElementDesktop) {
+        activeTabElementDesktop.classList.add('active');
+    }
+
+    // Handle Mobile Tabs (NEW)
+    document.querySelectorAll('.mobile-nav-item').forEach(tab=>tab.classList.remove('active'));
+    const activeTabElementMobile = document.querySelector(`.mobile-nav-item[onclick*="showTab('${tabId}')"]`);
+    if (activeTabElementMobile) {
+        activeTabElementMobile.classList.add('active');
     }
     
     if (tabId === 'profile') {
         renderGalleryEdit();
+        loadUser(); 
     } else if (tabId === 'messages') { 
-        // Clearing message notifications when viewing DMs
         clearMessageNotifications(); 
         renderMessageList();
-    } else if (tabId === 'notifications') { // NEW: Handle notifications tab
+    } else if (tabId === 'notifications') { 
         renderNotifications();
     }
 }
@@ -849,35 +972,65 @@ function updateNotificationBadges() {
     const currentUser = localStorage.getItem('currentUser');
     const users = JSON.parse(localStorage.getItem('users'));
     const user = users[currentUser];
+    
+    // Helper to add/remove badge on an element
+    const manageBadge = (elementId, count, isMessageBadge) => {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        element.querySelector('.notification-badge')?.remove();
+        element.querySelector('.mobile-notification-badge')?.remove();
 
-    // Message Badge (handled by clearMessageNotifications)
-    const messageTab = document.getElementById('messages-tab');
-    messageTab.querySelector('.notification-badge')?.remove();
+        if (count > 0) {
+            const badge = document.createElement('span');
+            badge.innerText = count;
+            
+            // Desktop uses standard badge, mobile uses its own class
+            if (elementId.startsWith('mobile-')) {
+                 badge.className = 'mobile-notification-badge';
+            } else {
+                 badge.className = 'notification-badge';
+            }
+            
+            // Message badge only shows 1 for any unread message
+            if (isMessageBadge) {
+                badge.innerText = '•'; 
+                badge.style.padding = '0 5px';
+            }
+            element.appendChild(badge);
+        }
+    };
+
+    // Calculate message notifications (only count new messages)
+    const messageNotifCount = user.notifications.filter(n => n.includes('YOU GOT A NEW MESSAGE!')).length;
+    // General notifications are all other types
+    const generalNotifCount = user.notifications.length; 
     
-    // General Notifications Badge
-    const notificationTab = document.getElementById('notifications-tab');
-    notificationTab.querySelector('.notification-badge')?.remove();
+    // Desktop tabs
+    manageBadge('messages-tab', messageNotifCount, true);
+    manageBadge('notifications-tab', generalNotifCount, false);
     
-    if (user.notifications.length > 0) {
-        const badge = document.createElement('span');
-        badge.className = 'notification-badge';
-        badge.innerText = user.notifications.length;
-        notificationTab.appendChild(badge);
-    }
+    // Mobile tabs
+    manageBadge('mobile-messages-tab', messageNotifCount, true);
+    manageBadge('mobile-notifications-tab', generalNotifCount, false);
 }
 
 function clearMessageNotifications() {
     const currentUser = localStorage.getItem('currentUser');
     const users = JSON.parse(localStorage.getItem('users'));
     
-    const messageTab = document.getElementById('messages-tab');
-    messageTab.querySelector('.notification-badge')?.remove();
+    // Remove badges from both desktop and mobile message tabs
+    document.getElementById('messages-tab')?.querySelector('.notification-badge')?.remove();
+    document.getElementById('mobile-messages-tab')?.querySelector('.mobile-notification-badge')?.remove();
 
-    // Clear notifications of type 'message'
+    // Clear notifications of type 'message' from data
     users[currentUser].notifications = users[currentUser].notifications.filter(
         n => !n.includes('YOU GOT A NEW MESSAGE!')
     );
     localStorage.setItem('users', JSON.stringify(users));
+    
+    // Update the notification badge (which might still show general notifs)
+    updateNotificationBadges(); 
 }
 
 function addNotification(recipient, message) {
@@ -888,18 +1041,8 @@ function addNotification(recipient, message) {
     
     const notificationText = `Tr3vMedia: YOU GOT A NEW MESSAGE! (From ${message.sender})`;
 
-    // Check if the recipient already has a new message notification from this user
-    const existingNotificationIndex = users[recipient].notifications.findIndex(
-        n => n.includes(`(From ${message.sender})`)
-    );
-
-    if (existingNotificationIndex !== -1) {
-        // Update existing notification to keep it fresh
-        users[recipient].notifications[existingNotificationIndex] = notificationText;
-    } else {
-        // Add new notification
-        users[recipient].notifications.unshift(notificationText);
-    }
+    // Add new notification
+    users[recipient].notifications.unshift(notificationText);
     
     localStorage.setItem('users', JSON.stringify(users));
     updateNotificationBadges();
@@ -931,70 +1074,8 @@ function renderNotifications() {
     localStorage.setItem('users', JSON.stringify(users));
     updateNotificationBadges(); // Update badge to only show message count if any remain
 }
+// ------------------ Rest of the Functions (Kept unchanged) ------------------
 
-// ------------------ Profile (View Other User) ------------------
-
-function renderUserStatus(username, user) {
-    const statusDiv = document.getElementById('view-user-status');
-    statusDiv.innerHTML = '';
-    
-    if (user.isActive === true) {
-        statusDiv.innerHTML = '<div class="active-dot"></div><strong>Active Now</strong>';
-    } else {
-        // Fallback for lastOnline if not set (shouldn't happen with updated setup)
-        const lastOnlineTime = user.lastOnline || Date.now(); 
-        statusDiv.innerHTML = `
-            <div class="last-online-text">Last online: ${formatTimestamp(lastOnlineTime)}</div>
-        `;
-    }
-}
-
-
-function viewProfile(username){
-    document.getElementById('search-results').innerHTML = '';
-    document.getElementById('search-input').value = ''; 
-    viewingUsername = username; 
-    
-    const users=JSON.parse(localStorage.getItem('users'));
-    const user = users[username];
-    if (!user) return alert("User not found.");
-    
-    // Safety check for new fields
-    if (!user.followers) user.followers = [];
-    if (!user.following) user.following = [];
-    if (user.isActive === undefined) user.isActive = false; // Initialize status fields if missing
-
-    // Update the UI with data
-    document.getElementById('profile-pic-view').src = user.profilePic;
-    document.getElementById('view-username').innerText = username;
-    document.getElementById('view-owner-tag').innerHTML = username === 'Tr3vN0x' ? '<span class="verified">✔️ Owner</span>' : '';
-    
-    renderUserStatus(username, user); // NEW: Render Status/Last Online
-
-    // ... (rest of profile rendering logic)
-    let totalReactions = 0;
-    user.posts.forEach(p => {
-        if(p.reactions) {
-            REACTIONS.forEach(r => totalReactions += p.reactions[r] ? p.reactions[r].length : 0);
-        }
-    });
-
-    document.getElementById('view-bio').innerText = user.bio || 'No bio set.';
-    document.getElementById('view-posts-count').innerText = user.posts.length;
-    document.getElementById('view-likes-received').innerText = totalReactions;
-    document.getElementById('view-following-count').innerText = user.following.length;
-    document.getElementById('view-followers-count').innerText = user.followers.length;
-
-
-    renderFollowButton(username);
-
-    renderViewGallery(username, document.getElementById('view-gallery'));
-    renderUserPosts(username, document.getElementById('view-user-posts'));
-    
-    showTab('view-profile');
-}
-// [Omitted functions: loadUser, uploadProfilePic, saveProfile, uploadGalleryImage, renderGalleryEdit, renderFollowButton, toggleFollow, renderViewGallery, searchUsers, previewPostImage, addPost, toggleReaction, addComment, renderComments, renderPostActions, renderPostImage, renderUserPosts, renderPosts, changeUsername]
-// ... (omitting other functions for brevity, assume they are included and unchanged) ...
 function loadUser(){
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
@@ -1187,6 +1268,59 @@ function renderViewGallery(username, targetElement) {
         targetElement.innerHTML = galleryContent;
     } else {
         targetElement.innerHTML = '<p style="font-style: italic; color: #555555; padding: 10px;">User has no images in their gallery.</p>';
+    }
+}
+function viewProfile(username){
+    document.getElementById('search-results').innerHTML = '';
+    document.getElementById('search-input').value = ''; 
+    viewingUsername = username; 
+    
+    const users=JSON.parse(localStorage.getItem('users'));
+    const user = users[username];
+    if (!user) return alert("User not found.");
+    
+    if (!user.followers) user.followers = [];
+    if (!user.following) user.following = [];
+    if (user.isActive === undefined) user.isActive = false; 
+
+    document.getElementById('profile-pic-view').src = user.profilePic;
+    document.getElementById('view-username').innerText = username;
+    document.getElementById('view-owner-tag').innerHTML = username === 'Tr3vN0x' ? '<span class="verified">✔️ Owner</span>' : '';
+    
+    renderUserStatus(username, user); 
+
+    let totalReactions = 0;
+    user.posts.forEach(p => {
+        if(p.reactions) {
+            REACTIONS.forEach(r => totalReactions += p.reactions[r] ? p.reactions[r].length : 0);
+        }
+    });
+
+    document.getElementById('view-bio').innerText = user.bio || 'No bio set.';
+    document.getElementById('view-posts-count').innerText = user.posts.length;
+    document.getElementById('view-likes-received').innerText = totalReactions;
+    document.getElementById('view-following-count').innerText = user.following.length;
+    document.getElementById('view-followers-count').innerText = user.followers.length;
+
+
+    renderFollowButton(username);
+
+    renderViewGallery(username, document.getElementById('view-gallery'));
+    renderUserPosts(username, document.getElementById('view-user-posts'));
+    
+    showTab('view-profile');
+}
+function renderUserStatus(username, user) {
+    const statusDiv = document.getElementById('view-user-status');
+    statusDiv.innerHTML = '';
+    
+    if (user.isActive === true) {
+        statusDiv.innerHTML = '<div class="active-dot"></div><strong>Active Now</strong>';
+    } else {
+        const lastOnlineTime = user.lastOnline || Date.now(); 
+        statusDiv.innerHTML = `
+            <div class="last-online-text">Last online: ${formatTimestamp(lastOnlineTime)}</div>
+        `;
     }
 }
 function searchUsers() {
@@ -1476,7 +1610,6 @@ function changeUsername(){
     users[newName]=users[currentUser]; 
     delete users[currentUser];
     
-    // Update references in users (posts, comments, followers, following, notifications)
     for (let userKey in users) {
         const userObj = users[userKey];
         
@@ -1510,7 +1643,6 @@ function changeUsername(){
         });
     }
     
-    // Update references in all messages
     const messages = JSON.parse(localStorage.getItem('messages'));
     const newMessages = {};
 
@@ -1539,11 +1671,6 @@ function changeUsername(){
     alert("Username changed! You must log in again with your new username.");
     logout(); 
 }
-// ------------------ End of Omitted Functions ------------------
-
-
-// ------------------ Direct Messaging Functions ------------------
-
 function startDM(targetUser) {
     currentChatPartner = targetUser;
     showTab('messages');
@@ -1645,7 +1772,6 @@ function sendMessage() {
     messages[chatID].push(newMessage);
     localStorage.setItem('messages', JSON.stringify(messages));
     
-    // NEW: Add notification to recipient
     addNotification(partner, newMessage);
 
     input.value = '';
@@ -1655,7 +1781,6 @@ function sendMessage() {
 
 // ------------------ Check login on reload ------------------
 if(localStorage.getItem('currentUser')) {
-    // Ensure the current user is marked active upon page load/reload
     const users = JSON.parse(localStorage.getItem('users'));
     const currentUser = localStorage.getItem('currentUser');
     if (users[currentUser]) {
