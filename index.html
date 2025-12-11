@@ -3,14 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tr3vN0x Official Website</title>
+<title>Tr3vMedia | Social Hub</title>
 <link rel="icon" type="image/jpg" href="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/596009832_838710972097270_9022730636766278745_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=TZjP9DC4yXIQ7kNvwHdpFg7&_nc_oc=AdnBmq-TZowH6YRcFRCd3Jivz_VCUa2-xgSohFxWykjbNuzrqYHW_6gne7eslaL4ZFCdK9cEG8NpB5VG555CxO6q&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=tSIEeMfSeNSk__07eF_UGA&oh=00_Afm8Xz1VR1MYenel-chWfd3ajWnOdho-IvK1TEyO-duDuA&oe=693AC07A">
-
-<meta property="og:title" content="Tr3vN0x Official Website | Latest Videos & Info">
-<meta property="og:description" content="Welcome to the home of Tr3vN0x! Watch the newest videos, catch up on history, and see the most viewed clips.">
-<meta property="og:image" content="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/596009832_838710972097270_9022730636766278745_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=TZjP9DC4yXIQ7kNvwHdpFg7&_nc_oc=AdnBmq-TZowH6YRcFRCd3Jivz_VCUa2-xgSohFxWykjbNuzrqYHW_6gne7eslaL4ZFCdK9cEG8NpB5VG555CxO6q&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=tSIEeMfSeNSk__07eF_UGA&oh=00_Afm8Xz1VR1MYenel-chWfd3ajWnOdho-IvK1TEyO-duDuA&oe=693AC07A">
-<meta property="og:url" content="https://tr3vn0x.github.io/Tr3vN0x/">
-<meta name="twitter:card" content="summary_large_image"> 
 
 <style>
 body {
@@ -55,13 +49,13 @@ header {
     border: 1px solid #00ff66;
 }
 
-.header-actions {
+/* Navigation tabs for social media */
+.nav-tabs {
     display: flex;
-    align-items: center;
-    gap: 15px; 
+    gap: 15px;
 }
 
-.social-button {
+.nav-tab {
     text-decoration: none;
     color: #00ff66;
     font-weight: bold;
@@ -75,7 +69,7 @@ header {
     cursor: pointer;
 }
 
-.social-button:hover {
+.nav-tab:hover {
     background: #003300;
     border-color: #00ff66;
     box-shadow: 0 0 10px #00ff66;
@@ -96,6 +90,20 @@ header {
     box-shadow: 0 5px 15px rgba(0, 255, 102, 0.2);
 }
 
+/* Main content placeholder for posts */
+#feed {
+    padding: 20px 30px;
+}
+
+.post {
+    background: #111;
+    border: 1px solid #003300;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+}
+
 /* Footer */
 footer {
     text-align: center;
@@ -111,47 +119,43 @@ footer {
 </head>
 <body>
 
-<main id="main-content">
-
 <header>
     <div class="logo-container">
         <img src="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/596009832_838710972097270_9022730636766278745_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=6ee11a&_nc_ohc=TZjP9DC4yXIQ7kNvwHdpFg7&_nc_oc=AdnBmq-TZowH6YRcFRCd3Jivz_VCUa2-xgSohFxWykjbNuzrqYHW_6gne7eslaL4ZFCdK9cEG8NpB5VG555CxO6q&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=tSIEeMfSeNSk__07eF_UGA&oh=00_Afm8Xz1VR1MYenel-chWfd3ajWnOdho-IvK1TEyO-duDuA&oe=693AC07A" class="side-image" alt="Profile Image">
         <img src="https://see.fontimg.com/api/rf5/vXL4/YTM3ZmYyMWFkMzNiNGY5MGEwY2ZmZTZmNDhiZGI4NzkudHRm/VHIzdk4weA/chimpanzee-website-report.png?r=fs&h=65&w=1000&fg=E8E4E4&bg=27E2A1&tb=1&s=65" alt="Site Logo">
     </div>
 
-    <div class="header-actions">
-        <div class="social-button" onclick="shareWebsite()">Share</div>
-        <a href="https://youtube.com/@Tr3vN0x" target="_blank" class="social-button">YouTube</a>
-        <a href="https://x.com/@Tr3vN0x" target="_blank" class="social-button">Twitter</a>
+    <div class="nav-tabs">
+        <div class="nav-tab" onclick="showTab('home')">Home</div>
+        <div class="nav-tab" onclick="showTab('profile')">Profile</div>
+        <div class="nav-tab" onclick="showTab('notifications')">Notifications</div>
+        <div class="nav-tab" onclick="showTab('messages')">Messages</div>
+        <div class="nav-tab" onclick="showTab('settings')">Settings</div>
     </div>
 </header>
 
 <div id="welcome-banner">
-    Hello user, welcome to the Tr3vN0x official website!
+    Welcome to Tr3vMedia — Your Social Hub!
 </div>
+
+<main id="feed">
+    <div class="post">
+        <strong>User1:</strong> Hello world! This is my first post.
+    </div>
+    <div class="post">
+        <strong>User2:</strong> Loving the new platform!
+    </div>
+</main>
 
 <footer>
     &copy; 2025 Tr3vN0x — All Rights Reserved
 </footer>
 
 <script>
-async function shareWebsite() {
-    if (navigator.share) {
-        try {
-            await navigator.share({
-                title: 'Tr3vN0x Official Website',
-                text: 'Check out Tr3vN0x official website!',
-                url: window.location.href, 
-            });
-        } catch (error) {
-            console.error('Error sharing website:', error);
-        }
-    } else {
-        alert("Copy the link to share this website!");
-    }
+function showTab(tab) {
+    alert("Switching to " + tab + " tab — functionality coming soon!");
 }
 </script>
 
-</main>
 </body>
 </html>
