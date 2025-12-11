@@ -5,26 +5,152 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tr3vMedia</title>
 <style>
+/* --- Core Styling --- */
 body {margin:0;font-family:'Consolas',monospace;background:#0a0a0a;color:#00ff66;}
 header, footer {background:#0d0d0d;padding:15px 30px;color:#00ff66;}
-header {display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #003300;position:sticky;top:0;z-index:10;}
-.nav-tab {cursor:pointer;padding:8px 12px;border-radius:6px;border:1px solid #003300;margin-left:5px;}
-.nav-tab.active {background:#003300;box-shadow:0 0 10px #33ff99;}
 main {padding:20px 30px;}
-input, button, textarea {padding:5px;border-radius:6px;background:#111;color:#00ff66;border:1px solid #003300;margin-top:5px;}
-button {cursor:pointer;}
-.post {display:flex;align-items:flex-start;gap:10px;background:#111;padding:15px;margin-bottom:10px;border-radius:6px;border:1px solid #003300;}
-.post img {width:40px;height:40px;border-radius:50%;border:1px solid #00ff66;object-fit:cover;}
 .verified {color:#1DA1F2;font-weight:bold;margin-left:5px;}
 .tab-content {display:none;}
 #welcome-banner {background:#004400;color:white;text-align:center;padding:15px;margin-bottom:20px;}
+
+/* --- Header & Navigation --- */
+header {display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #003300;position:sticky;top:0;z-index:10;}
+.logo-container {
+    display: flex; /* Allow multiple logos side-by-side */
+    align-items: center;
+    gap: 10px;
+}
+.logo-container img {
+    height: 30px; /* Consistent height for both logos */
+    width: auto;
+    border: none;
+    padding: 0;
+    vertical-align: middle;
+}
+
+/* Fix: Make tabs look like small, uniform buttons */
+.nav-tab {
+    cursor:pointer;
+    padding: 6px 10px; /* Smaller padding */
+    border-radius:4px; /* Smaller radius */
+    border:1px solid #003300;
+    margin-left:5px;
+    font-size: 0.9em; /* Smaller font */
+    transition: background 0.2s;
+}
+.nav-tab.active {background:#003300;box-shadow:0 0 8px #33ff99;}
+.nav-tab:hover:not(.active) {background: #001a00;}
+
+/* --- Forms & Inputs (Posting Area Neatness) --- */
+input:not([type="file"]), textarea {
+    width: 100%; 
+    box-sizing: border-box;
+    padding: 10px;
+    margin-bottom: 10px; 
+    border-radius:6px;
+    background:#111;
+    color:#00ff66;
+    border:1px solid #003300;
+    margin-top:5px;
+    resize: vertical;
+}
+input[type="file"] {margin-top:5px;}
+button {
+    cursor:pointer;
+    padding:8px 12px; /* Uniform button size */
+    border-radius:4px;
+    background:#111;
+    color:#00ff66;
+    border:1px solid #003300;
+    margin-top:5px;
+    transition: background 0.2s;
+}
+button:hover {background: #003300;}
+
+#new-post {
+    background: #0d0d0d;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #003300;
+}
+#new-post button {margin-top: 5px;}
+
+/* --- Posts & Profile Images --- */
+.post {
+    display:flex;
+    flex-direction: column; 
+    background:#111;
+    padding:15px;
+    margin-bottom:10px;
+    border-radius:6px;
+    border:1px solid #003300;
+}
+.post-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.post-content {
+    margin-bottom: 10px;
+}
+.post-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+    border-top: 1px dashed #003300;
+    padding-top: 8px;
+}
+.post-actions button {
+    padding: 5px 10px;
+    margin-top: 0;
+}
+.reaction-count {
+    margin-left: 5px;
+    font-size: 0.9em;
+}
+.post img, #profile-pic-display {
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    border:1px solid #00ff66;
+    object-fit:cover;
+    background: #0d0d0d; 
+}
+#profile-pic-display {width:80px;height:80px;}
+
+/* --- Profile Styling (View) --- */
+#view-profile-content #profile-pic-view {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 2px solid #33ff99;
+    background: #0d0d0d;
+}
+.clickable-username {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #33ff99;
+}
+.post-timestamp {
+    font-size: 0.8em;
+    color: #009944;
+    margin-left: 10px;
+}
 </style>
 </head>
 <body>
 
 <header>
     <div class="logo-container">
-        <strong>Tr3vMedia</strong>
+        <img src="https://see.fontimg.com/api/rf5/vXL4/YTM3ZmYyMWFkMzNiNGY5MGEwY2ZmZTZmNDhiZGI4NzkudHRm/VHIzdk1lZGlh/chimpanzee-website-report.png?r=fs&h=65&w=1000&fg=E8E4E4&bg=27E2A1&tb=1&s=65" 
+             alt="Tr3vMedia Icon 1">
+        
+        <img src="https://via.placeholder.com/30/27E2A1/000000?text=2" 
+             alt="Tr3vMedia Icon 2">
+             
     </div>
     <div class="header-actions" id="header-tabs"></div>
 </header>
@@ -32,44 +158,56 @@ button {cursor:pointer;}
 <div id="welcome-banner"></div>
 
 <main id="main-content">
-    <!-- Login / Signup -->
     <div id="auth" class="tab-content">
         <h2>Login</h2>
-        <input type="text" id="login-username" placeholder="Username"><br>
-        <input type="password" id="login-password" placeholder="Password"><br>
+        <input type="text" id="login-username" placeholder="Username">
+        <input type="password" id="login-password" placeholder="Password">
         <button onclick="login()">Login</button>
         <p>Or <span style="cursor:pointer;color:#33ff99;" onclick="showSignup()">Sign Up</span></p>
     </div>
 
     <div id="signup" class="tab-content">
         <h2>Sign Up</h2>
-        <input type="text" id="signup-username" placeholder="Username"><br>
-        <input type="password" id="signup-password" placeholder="Password"><br>
+        <input type="text" id="signup-username" placeholder="Username">
+        <input type="password" id="signup-password" placeholder="Password">
         <button onclick="signup()">Create Account</button>
         <p>Or <span style="cursor:pointer;color:#33ff99;" onclick="showLogin()">Login</span></p>
     </div>
 
-    <!-- Home feed -->
     <div id="home" class="tab-content">
         <div id="new-post">
-            <textarea id="post-text" rows="3" placeholder="What's on your mind?"></textarea><br>
+            <textarea id="post-text" rows="3" placeholder="What's on your mind?"></textarea>
             <button onclick="addPost()">Post</button>
         </div>
         <div id="posts"></div>
     </div>
 
-    <!-- Profile -->
     <div id="profile" class="tab-content">
-        <h2>Profile</h2>
-        <img id="profile-pic" src="" width="80" height="80"><br>
+        <h2>My Profile</h2>
+        <img id="profile-pic-display" src="" alt="Profile Picture"><br>
         <input type="file" id="profile-upload" accept="image/*"><br>
         <textarea id="profile-bio" placeholder="Write your bio..."></textarea><br>
         <button onclick="saveProfile()">Save Profile</button>
-        <p>Username: <span id="profile-username"></span> <span id="owner-tag"></span></p>
-        <p>Posts: <span id="profile-posts-count"></span></p>
+        <p>Username: <span id="my-profile-username"></span> <span id="owner-tag-me"></span></p>
+        <p>Total Posts: <span id="my-profile-posts-count"></span></p>
+        <p>Total Reactions Received: <span id="my-profile-likes-count"></span></p>
+    </div>
+    
+    <div id="view-profile" class="tab-content">
+        <div id="view-profile-content">
+            <img id="profile-pic-view" src="" alt="User Profile Picture"><br>
+            <h2 id="view-username"></h2>
+            <p id="view-owner-tag"></p>
+            <p>Bio: <span id="view-bio"></span></p>
+            <p>Posts: <span id="view-posts-count"></span></p>
+            <p>Reactions Received: <span id="view-likes-received"></span></p>
+            <hr style="border-top: 1px dashed #003300;">
+            <h3>User Posts</h3>
+            <div id="view-user-posts"></div>
+        </div>
+        <button onclick="showTab('home')" style="margin-top: 20px;">Back to Feed</button>
     </div>
 
-    <!-- Settings -->
     <div id="settings" class="tab-content">
         <h2>Settings</h2>
         <label>Change username: <input type="text" id="change-username"></label><br>
@@ -80,10 +218,31 @@ button {cursor:pointer;}
 <footer>&copy; 2025 Tr3vMedia — All Rights Reserved</footer>
 
 <script>
+// --- Global Constants ---
+const DEFAULT_PIC = 'https://via.placeholder.com/60';
+const REACTIONS = ['like', 'heart', 'star']; // Available reaction types
+
+// Helper function to format date
+function formatTimestamp(timestamp) {
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diff = now - then;
+
+    if (diff < 60000) return 'Just now'; // less than 1 minute
+    if (diff < 3600000) return Math.round(diff / 60000) + 'm ago'; // less than 1 hour
+    if (diff < 86400000) return Math.round(diff / 3600000) + 'h ago'; // less than 24 hours
+    
+    // Default format for older posts
+    return then.toLocaleDateString(); 
+}
+
 // ------------------ Users Setup ------------------
 if(!localStorage.getItem('users')) {
     const defaultUsers = {
-        'Tr3vN0x': {password:'ownerpass', profilePic:'https://via.placeholder.com/60', bio:'Owner of Tr3vMedia', posts:[]}
+        'Tr3vN0x': {password:'ownerpass', profilePic:DEFAULT_PIC, bio:'Owner of Tr3vMedia', posts:[
+            // Posts now store reactions as an object of arrays
+            {text: 'Welcome to Tr3vMedia! This site just got a whole lot cooler.', date: Date.now(), reactions: {like: [], heart: [], star: []}}
+        ]}
     };
     localStorage.setItem('users', JSON.stringify(defaultUsers));
 }
@@ -99,7 +258,7 @@ function signup(){
     if(!username||!password){alert("Fill all fields"); return;}
     const users = JSON.parse(localStorage.getItem('users'));
     if(users[username]){alert("Username taken"); return;}
-    users[username]={password,profilePic:'https://via.placeholder.com/60',bio:'',posts:[]};
+    users[username]={password,profilePic:DEFAULT_PIC,bio:'',posts:[]}; 
     localStorage.setItem('users', JSON.stringify(users));
     alert("Account created! Login now.");
     showLogin();
@@ -117,14 +276,17 @@ function login(){
 function initApp(){
     document.getElementById('auth').style.display='none';
     document.getElementById('signup').style.display='none';
-    document.getElementById('home').style.display='block';
+    
     document.getElementById('welcome-banner').innerText=`Hello ${localStorage.getItem('currentUser')}!`;
-    // header tabs
-    document.getElementById('header-tabs').innerHTML=`<div class="nav-tab active" onclick="showTab('home')">Home</div>
-    <div class="nav-tab" onclick="showTab('profile')">Profile</div>
-    <div class="nav-tab" onclick="showTab('settings')">Settings</div>
-    <div class="nav-tab" onclick="logout()">Logout</div>`;
+    
+    document.getElementById('header-tabs').innerHTML=`
+        <div class="nav-tab" onclick="showTab('home')">Home</div>
+        <div class="nav-tab" onclick="showTab('profile')">Profile</div>
+        <div class="nav-tab" onclick="showTab('settings')">Settings</div>
+        <div class="nav-tab" onclick="logout()">Logout</div>`;
+    
     loadUser();
+    showTab('home'); 
 }
 
 // ------------------ Logout ------------------
@@ -134,20 +296,35 @@ function logout(){localStorage.removeItem('currentUser'); location.reload();}
 function showTab(tabId){
     document.querySelectorAll('.tab-content').forEach(tab=>tab.style.display='none');
     document.getElementById(tabId).style.display='block';
+    
     document.querySelectorAll('.nav-tab').forEach(tab=>tab.classList.remove('active'));
-    const tabs = document.querySelectorAll('.nav-tab'); tabs.forEach(t=>{if(t.textContent==tabId.charAt(0).toUpperCase()+tabId.slice(1)) t.classList.add('active');});
+    
+    const activeTabElement = document.querySelector(`.nav-tab[onclick*="showTab('${tabId}')"]`);
+    if (activeTabElement) {
+        activeTabElement.classList.add('active');
+    }
 }
 
-// ------------------ Profile ------------------
+// ------------------ Profile (My Profile) ------------------
 function loadUser(){
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
     if(!currentUser) return;
     const user = users[currentUser];
-    document.getElementById('profile-pic').src=user.profilePic;
-    document.getElementById('profile-username').innerText=currentUser;
-    document.getElementById('profile-posts-count').innerText=user.posts.length;
-    document.getElementById('owner-tag').innerHTML=currentUser==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':'';
+    
+    let totalReactions = 0;
+    user.posts.forEach(p => {
+        // Ensure reactions object exists and sum up all reaction types
+        if(p.reactions) {
+            REACTIONS.forEach(r => totalReactions += p.reactions[r] ? p.reactions[r].length : 0);
+        }
+    });
+
+    document.getElementById('profile-pic-display').src=user.profilePic;
+    document.getElementById('my-profile-username').innerText=currentUser;
+    document.getElementById('my-profile-posts-count').innerText=user.posts.length;
+    document.getElementById('my-profile-likes-count').innerText=totalReactions;
+    document.getElementById('owner-tag-me').innerHTML=currentUser==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':'';
     document.getElementById('profile-bio').value=user.bio;
     renderPosts();
 }
@@ -160,7 +337,7 @@ document.getElementById('profile-upload').addEventListener('change', function(){
             const currentUser=localStorage.getItem('currentUser');
             users[currentUser].profilePic=reader.result;
             localStorage.setItem('users',JSON.stringify(users));
-            document.getElementById('profile-pic').src=reader.result;
+            document.getElementById('profile-pic-display').src=reader.result;
             renderPosts();
         };
         reader.readAsDataURL(file);
@@ -175,27 +352,167 @@ function saveProfile(){
     alert("Profile saved!");
 }
 
-// ------------------ Posts ------------------
+
+// ------------------ Profile (View Other User) ------------------
+function viewProfile(username){
+    const users=JSON.parse(localStorage.getItem('users'));
+    const user = users[username];
+    if (!user) return alert("User not found.");
+
+    let totalReactions = 0;
+    user.posts.forEach(p => {
+        if(p.reactions) {
+            REACTIONS.forEach(r => totalReactions += p.reactions[r] ? p.reactions[r].length : 0);
+        }
+    });
+
+    // Load data into the view-profile tab elements
+    document.getElementById('profile-pic-view').src = user.profilePic;
+    document.getElementById('view-username').innerText = username;
+    document.getElementById('view-owner-tag').innerHTML = username === 'Tr3vN0x' ? '<span class="verified">✔️ Owner</span>' : '';
+    document.getElementById('view-bio').innerText = user.bio || 'No bio set.';
+    document.getElementById('view-posts-count').innerText = user.posts.length;
+    document.getElementById('view-likes-received').innerText = totalReactions;
+
+    // Render only this user's posts in the view-profile tab
+    renderUserPosts(username, document.getElementById('view-user-posts'));
+    
+    showTab('view-profile');
+}
+
+// ------------------ Posts & Reactions ------------------
 function addPost(){
     const text=document.getElementById('post-text').value.trim();
     if(!text){alert("Cannot post empty"); return;}
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
-    users[currentUser].posts.unshift({text,date:Date.now()});
+    
+    // New posts initialize with an empty reactions object
+    users[currentUser].posts.unshift({text,date:Date.now(), reactions: {like: [], heart: [], star: []}}); 
+    
     localStorage.setItem('users',JSON.stringify(users));
     document.getElementById('post-text').value='';
-    renderPosts();
+    loadUser(); // Re-loads user and renders all posts
+}
+
+function toggleReaction(postUser, postIndex, reactionType){
+    const users=JSON.parse(localStorage.getItem('users'));
+    const currentUser=localStorage.getItem('currentUser');
+    const post = users[postUser].posts[postIndex];
+    
+    if(!post.reactions) post.reactions = {like: [], heart: [], star: []}; // Safety check/init
+
+    // 1. Check and remove current user from ALL other reaction arrays on this post
+    REACTIONS.forEach(r => {
+        const index = post.reactions[r].indexOf(currentUser);
+        if (index !== -1) {
+            post.reactions[r].splice(index, 1);
+        }
+    });
+
+    // 2. Add or remove the reactionType
+    const indexInTargetReaction = post.reactions[reactionType].indexOf(currentUser);
+    if (indexInTargetReaction === -1) {
+        // User is not in target array, so add the reaction
+        post.reactions[reactionType].push(currentUser);
+    } 
+    // If user was in target array (indexInTargetReaction !== -1), they were just removed in step 1.
+    // This effectively toggles the reaction off if the same button is pressed twice.
+    
+    localStorage.setItem('users',JSON.stringify(users));
+    
+    // Re-render the current view
+    if (document.getElementById('home').style.display === 'block') {
+        renderPosts();
+    } else if (document.getElementById('view-profile').style.display === 'block') {
+        viewProfile(postUser);
+    } else if (document.getElementById('profile').style.display === 'block') {
+        loadUser();
+    }
+}
+
+function renderPostActions(postUser, postIndex, reactions, currentUser) {
+    let actionsHTML = '';
+    const reactionEmojis = {
+        'like': '👍',
+        'heart': '❤️',
+        'star': '⭐️'
+    };
+
+    REACTIONS.forEach(type => {
+        const count = reactions[type] ? reactions[type].length : 0;
+        const isActive = reactions[type].includes(currentUser);
+        const buttonClass = isActive ? 'active-reaction' : '';
+        
+        actionsHTML += `
+            <button class="${buttonClass}" onclick="toggleReaction('${postUser}', ${postIndex}, '${type}')">
+                ${reactionEmojis[type]} ${type.charAt(0).toUpperCase() + type.slice(1)}
+            </button>
+            <span class="reaction-count">${count}</span>
+        `;
+    });
+    return actionsHTML;
+}
+
+function renderUserPosts(username, targetElement) {
+    const users = JSON.parse(localStorage.getItem('users'));
+    const currentUser = localStorage.getItem('currentUser');
+    const userPosts = users[username].posts;
+    targetElement.innerHTML = '';
+
+    userPosts.forEach((p, index) => {
+        const div = document.createElement('div'); 
+        div.className = 'post';
+        div.innerHTML = `
+            <div class="post-header">
+                <img src="${users[username].profilePic}" alt="${username}'s profile picture">
+                <strong><span class="clickable-username" onclick="viewProfile('${username}')">${username}</span>${username==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':''}</strong>
+                <span class="post-timestamp">${formatTimestamp(p.date)}</span>
+            </div>
+            <div class="post-content">${p.text}</div>
+            <div class="post-actions">
+                ${renderPostActions(username, index, p.reactions, currentUser)}
+            </div>
+        `;
+        targetElement.appendChild(div);
+    });
 }
 
 function renderPosts(){
     const postsDiv=document.getElementById('posts'); postsDiv.innerHTML='';
     const users=JSON.parse(localStorage.getItem('users'));
+    const currentUser=localStorage.getItem('currentUser');
     const allPosts=[];
-    for(let user in users){users[user].posts.forEach(p=>allPosts.push({user,text:p.text,date:p.date,profilePic:users[user].profilePic}));}
+    
+    // Collect all posts from all users, adding the index of the post in the original array
+    for(let user in users){
+        users[user].posts.forEach((p, index) => {
+            allPosts.push({
+                user,
+                text: p.text,
+                date: p.date,
+                profilePic: users[user].profilePic,
+                postIndex: index, 
+                reactions: p.reactions || {like: [], heart: [], star: []}
+            });
+        });
+    }
+    
     allPosts.sort((a,b)=>b.date-a.date);
+    
     allPosts.forEach(p=>{
         const div=document.createElement('div'); div.className='post';
-        div.innerHTML=`<img src="${p.profilePic}"><strong>${p.user}${p.user==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':''}:</strong> ${p.text}`;
+        div.innerHTML=`
+            <div class="post-header">
+                <img src="${p.profilePic}" alt="${p.user}'s profile picture">
+                <strong><span class="clickable-username" onclick="viewProfile('${p.user}')">${p.user}</span>${p.user==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':''}</strong>
+                <span class="post-timestamp">${formatTimestamp(p.date)}</span>
+            </div>
+            <div class="post-content">${p.text}</div>
+            <div class="post-actions">
+                ${renderPostActions(p.user, p.postIndex, p.reactions, currentUser)}
+            </div>
+        `;
         postsDiv.appendChild(div);
     });
 }
@@ -207,15 +524,39 @@ function changeUsername(){
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
     if(users[newName]) return alert("Username taken");
-    users[newName]=users[currentUser]; delete users[currentUser];
+    
+    if (currentUser === 'Tr3vN0x') return alert("The owner's username cannot be changed.");
+    
+    // 1. Move user data to new username key
+    users[newName]=users[currentUser]; 
+    delete users[currentUser];
+    
+    // 2. Update reactions on ALL posts to reflect the new username
+    for (let userKey in users) {
+        users[userKey].posts.forEach(post => {
+            if (post.reactions) {
+                REACTIONS.forEach(r => {
+                    const index = post.reactions[r].indexOf(currentUser);
+                    if (index !== -1) {
+                        post.reactions[r][index] = newName;
+                    }
+                });
+            }
+        });
+    }
+
     localStorage.setItem('users',JSON.stringify(users));
     localStorage.setItem('currentUser',newName);
+    
+    document.getElementById('change-username').value = '';
     loadUser();
-    alert("Username changed!");
+    
+    alert("Username changed! You must log in again with your new username.");
+    logout(); 
 }
 
 // ------------------ Check login on reload ------------------
-if(localStorage.getItem('currentUser')) initApp(); else {document.getElementById('auth').style.display='block';}
+if(localStorage.getItem('currentUser')) initApp(); else {showLogin();}
 </script>
 
 </body>
