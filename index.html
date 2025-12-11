@@ -271,7 +271,7 @@ button:active {
 }
 #profile-pic-display {width: 90px; height: 90px;}
 
-/* --- Comments Styling (Remains Clean) --- */
+/* --- Comments Styling --- */
 .comments-section {
     margin-top: 20px;
     padding: 10px 0;
@@ -378,6 +378,76 @@ button:active {
     transform: scale(1.02);
 }
 
+/* --- DM Specific Styling --- */
+#messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.chat-summary {
+    background: #1e1e1e;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 5px solid #00CC00;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.chat-summary:hover {
+    background: #222222;
+}
+.chat-messages {
+    max-height: 500px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px;
+    background: #0d0d0d;
+    border-radius: 8px;
+    border: 1px solid #004400;
+}
+.message {
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 70%;
+    word-wrap: break-word;
+    font-size: 0.95em;
+    line-height: 1.4;
+    position: relative;
+}
+.message-time {
+    display: block;
+    font-size: 0.75em;
+    color: #555555;
+    margin-top: 5px;
+    text-align: right;
+}
+.sent {
+    background: #005500; /* Darker Green for self */
+    color: #FFFFFF;
+    align-self: flex-end;
+    border-top-right-radius: 5px;
+}
+.received {
+    background: #333333;
+    color: #00FF00;
+    align-self: flex-start;
+    border-top-left-radius: 5px;
+}
+#send-message-area {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+#send-message-area input {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+#send-message-area button {
+    margin-top: 0;
+    padding: 10px 20px;
+}
+
 /* Mobile adjustments */
 @media (max-width: 600px) {
     main {padding: 15px 15px;}
@@ -477,7 +547,11 @@ button:active {
             <h2 id="view-username"></h2>
             <p id="view-owner-tag"></p>
 
-            <button id="follow-button" onclick="toggleFollow()"></button>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <button id="follow-button" onclick="toggleFollow()"></button>
+                <button onclick="startDM(viewingUsername)">Message</button>
+            </div>
+            
             <p style="margin-top: 15px;">Bio: <span id="view-bio"></span></p>
             <p>Posts: <span id="view-posts-count"></span></p>
             <p>Reactions Received: <span id="view-likes-received"></span></p>
@@ -494,6 +568,27 @@ button:active {
         </div>
         <button onclick="showTab('home')" style="margin-top: 30px;">Back to Feed</button>
     </div>
+    
+    <div id="messages" class="tab-content">
+        <h2>Direct Messages</h2>
+        <div id="message-view">
+            <h3>Chats:</h3>
+            <div id="messages-list">
+                </div>
+        </div>
+        
+        <div id="conversation-container" style="display: none; margin-top: 30px;">
+            <h3 id="chat-header"></h3>
+            <div id="chat-messages" class="chat-messages">
+                </div>
+            <div id="send-message-area">
+                <input type="text" id="message-input" placeholder="Type your message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+            <button onclick="renderMessageList()" style="margin-top: 20px; width: auto; background: #333333;">&larr; Back to Chats</button>
+        </div>
+    </div>
+
 
     <div id="settings" class="tab-content">
         <h2>Settings</h2>
@@ -512,7 +607,8 @@ const REACTIONS = ['like', 'heart', 'star'];
 const GALLERY_SIZE = 8; 
 
 let currentPostImage = null; 
-let viewingUsername = null; // Stores the username of the profile currently being viewed
+let viewingUsername = null; 
+let currentChatPartner = null; // NEW: The user currently being DMed
 
 // Helper function to format date
 function formatTimestamp(timestamp) {
@@ -527,6 +623,24 @@ function formatTimestamp(timestamp) {
     return then.toLocaleDateString(); 
 }
 
+// Helper to create a standardized conversation ID (alphabetical sorting ensures consistency)
+function getChatID(user1, user2) {
+    return [user1, user2].sort().join('_');
+}
+
+
+// ------------------ Data Setup (Messages) ------------------
+
+if(!localStorage.getItem('messages')) {
+    const initialMessages = {
+        [getChatID('Tr3vN0x', 'TestUser1')]: [
+            { sender: 'TestUser1', text: 'Hey Tr3v, love the new DM feature!', date: Date.now() - 3600000 },
+            { sender: 'Tr3vN0x', text: 'Thanks! Let me know if you run into any bugs.', date: Date.now() - 3500000 }
+        ]
+    };
+    localStorage.setItem('messages', JSON.stringify(initialMessages));
+}
+
 // ------------------ Users Setup (Updated for Followers) ------------------
 if(!localStorage.getItem('users')) {
     const defaultGallery = Array(GALLERY_SIZE).fill(DEFAULT_GALLERY_ITEM);
@@ -537,8 +651,8 @@ if(!localStorage.getItem('users')) {
             profilePic:DEFAULT_PIC, 
             bio:'Owner of Tr3vMedia', 
             gallery: defaultGallery, 
-            followers: ['TestUser1'], // NEW: Follower Array
-            following: ['TestUser1'], // NEW: Following Array
+            followers: ['TestUser1'], 
+            following: ['TestUser1'], 
             posts:[
                 {
                     text: 'Welcome to Tr3vMedia! This site just got a whole lot cooler. Check out this placeholder!', 
@@ -557,8 +671,8 @@ if(!localStorage.getItem('users')) {
             profilePic:DEFAULT_PIC, 
             bio:'Just a friendly user.', 
             gallery: defaultGallery.map((_, i) => i === 0 ? 'https://via.placeholder.com/150x150?text=Cool+Pic' : DEFAULT_GALLERY_ITEM), 
-            followers: ['Tr3vN0x'], // NEW
-            following: ['Tr3vN0x'], // NEW
+            followers: ['Tr3vN0x'], 
+            following: ['Tr3vN0x'], 
             posts:[
                 {
                     text: 'Testing the new clean style overhaul. Looking very polished!', 
@@ -591,8 +705,8 @@ function signup(){
         bio:'',
         posts:[],
         gallery: Array(GALLERY_SIZE).fill(DEFAULT_GALLERY_ITEM),
-        followers: [], // NEW
-        following: [] // NEW
+        followers: [], 
+        following: [] 
     }; 
     
     localStorage.setItem('users', JSON.stringify(users));
@@ -617,7 +731,7 @@ function initApp(){
     
     document.getElementById('header-tabs').innerHTML=`
         <div class="nav-tab" onclick="showTab('home')">Home</div>
-        <div class="nav-tab" onclick="showTab('profile')">Profile</div>
+        <div class="nav-tab" onclick="showTab('messages')">Messages</div> <div class="nav-tab" onclick="showTab('profile')">Profile</div>
         <div class="nav-tab" onclick="showTab('settings')">Settings</div>
         <div class="nav-tab" onclick="logout()">Logout</div>`;
     
@@ -642,6 +756,8 @@ function showTab(tabId){
     
     if (tabId === 'profile') {
         renderGalleryEdit();
+    } else if (tabId === 'messages') { // NEW: Handle messages tab
+        renderMessageList();
     }
 }
 
@@ -652,7 +768,6 @@ function loadUser(){
     if(!currentUser) return;
     const user = users[currentUser];
     
-    // Safety check for new fields
     if (!user.followers) user.followers = [];
     if (!user.following) user.following = [];
 
@@ -670,14 +785,14 @@ function loadUser(){
     document.getElementById('owner-tag-me').innerHTML=currentUser==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':'';
     document.getElementById('profile-bio').value=user.bio;
     
-    // NEW: Display follower stats
     document.getElementById('my-profile-following-count').innerText = user.following.length;
     document.getElementById('my-profile-followers-count').innerText = user.followers.length;
 
     renderPosts();
 }
 
-// Main Profile Picture Upload
+// [Omitted functions: uploadProfilePic, saveProfile, uploadGalleryImage, renderGalleryEdit]
+// ... (omitting for brevity, assume they are included and unchanged from the previous working code) ...
 function uploadProfilePic(){
     const file = document.getElementById('profile-upload').files[0]; 
     if(file){
@@ -699,7 +814,6 @@ function uploadProfilePic(){
     }
 }
 
-
 function saveProfile(){
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
@@ -708,7 +822,6 @@ function saveProfile(){
     alert("Profile saved!");
 }
 
-// Gallery Upload Function
 function uploadGalleryImage(index) {
     const input = document.createElement('input');
     input.type = 'file';
@@ -738,11 +851,9 @@ function uploadGalleryImage(index) {
             reader.readAsDataURL(file);
         }
     };
-    
     input.click();
 }
 
-// Render Gallery Edit (on My Profile tab)
 function renderGalleryEdit() {
     const users = JSON.parse(localStorage.getItem('users'));
     const currentUser = localStorage.getItem('currentUser');
@@ -778,7 +889,7 @@ function renderGalleryEdit() {
         galleryContainer.appendChild(slotDiv);
     }
 }
-
+// ------------------ End of Omitted Functions ------------------
 
 // ------------------ Profile (View Other User) ------------------
 
@@ -789,7 +900,7 @@ function renderFollowButton(targetUser) {
     followButton.style.display = 'inline-block';
 
     if (currentUser === targetUser) {
-        followButton.style.display = 'none'; // Hide button on own profile
+        followButton.style.display = 'none'; 
         return;
     }
 
@@ -809,25 +920,21 @@ function toggleFollow() {
     const currentUser = localStorage.getItem('currentUser');
     const users = JSON.parse(localStorage.getItem('users'));
     
-    // Current User (The follower)
     let currentFollowing = users[currentUser].following;
-    // Target User (The followee)
     let targetFollowers = users[targetUser].followers;
 
     const isFollowing = currentFollowing.includes(targetUser);
 
     if (isFollowing) {
-        // Unfollow Logic
         users[currentUser].following = currentFollowing.filter(u => u !== targetUser);
         users[targetUser].followers = targetFollowers.filter(u => u !== currentUser);
     } else {
-        // Follow Logic
         if (!currentFollowing.includes(targetUser)) users[currentUser].following.push(targetUser);
         if (!targetFollowers.includes(currentUser)) users[targetUser].followers.push(currentUser);
     }
 
     localStorage.setItem('users', JSON.stringify(users));
-    viewProfile(targetUser); // Re-render the view profile screen
+    viewProfile(targetUser); 
 }
 
 function renderViewGallery(username, targetElement) {
@@ -864,13 +971,12 @@ function renderViewGallery(username, targetElement) {
 function viewProfile(username){
     document.getElementById('search-results').innerHTML = '';
     document.getElementById('search-input').value = ''; 
-    viewingUsername = username; // Set the global state
+    viewingUsername = username; 
     
     const users=JSON.parse(localStorage.getItem('users'));
     const user = users[username];
     if (!user) return alert("User not found.");
     
-    // Safety check for new fields
     if (!user.followers) user.followers = [];
     if (!user.following) user.following = [];
 
@@ -888,7 +994,6 @@ function viewProfile(username){
     document.getElementById('view-posts-count').innerText = user.posts.length;
     document.getElementById('view-likes-received').innerText = totalReactions;
     
-    // NEW: Display follower stats
     document.getElementById('view-following-count').innerText = user.following.length;
     document.getElementById('view-followers-count').innerText = user.followers.length;
 
@@ -936,7 +1041,6 @@ function searchUsers() {
 
 // ------------------ Posts & Reactions & Comments ------------------
 
-// Function to preview the image and store the Data URL
 function previewPostImage() {
     const fileInput = document.getElementById('post-image-upload');
     const previewContainer = document.getElementById('post-image-preview');
@@ -955,7 +1059,7 @@ function previewPostImage() {
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            currentPostImage = e.target.result; // Store the Data URL globally
+            currentPostImage = e.target.result; 
             previewImage.src = currentPostImage;
             previewContainer.style.display = 'block';
         };
@@ -968,16 +1072,14 @@ function previewPostImage() {
 function addPost(){
     const text=document.getElementById('post-text').value.trim();
     
-    // --- FIX: Allow posting if EITHER text OR image is present ---
     if(!text && !currentPostImage){alert("Cannot post empty text or image"); return;}
     
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
     
-    // Create new post object including the stored image URL
     users[currentUser].posts.unshift({
         text,
-        imageUrl: currentPostImage, // Use the stored image URL
+        imageUrl: currentPostImage, 
         date:Date.now(), 
         reactions: {like: [], heart: [], star: []}, 
         comments: []
@@ -985,7 +1087,6 @@ function addPost(){
     
     localStorage.setItem('users',JSON.stringify(users));
     
-    // Reset inputs and temporary image variable
     document.getElementById('post-text').value='';
     document.getElementById('post-image-upload').value = '';
     document.getElementById('post-image-preview').style.display = 'none';
@@ -994,6 +1095,8 @@ function addPost(){
     loadUser(); 
 }
 
+// [Omitted functions: toggleReaction, addComment, renderComments, renderPostActions, renderPostImage, renderUserPosts, renderPosts, changeUsername]
+// ... (omitting post-related and settings functions for brevity, assume they are included and unchanged) ...
 function toggleReaction(postUser, postIndex, reactionType){
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
@@ -1024,7 +1127,6 @@ function toggleReaction(postUser, postIndex, reactionType){
     }
 }
 
-
 function addComment(postUser, postIndex) {
     const currentUser = localStorage.getItem('currentUser');
     const commentInput = document.getElementById(`comment-input-${postUser}-${postIndex}`);
@@ -1054,7 +1156,6 @@ function addComment(postUser, postIndex) {
         loadUser();
     }
 }
-
 
 function renderComments(comments) {
     let html = '<div class="comments-section">';
@@ -1095,7 +1196,6 @@ function renderPostActions(postUser, postIndex, reactions, currentUser) {
     return actionsHTML;
 }
 
-// Helper to render the post image if available
 function renderPostImage(imageUrl) {
     if (imageUrl) {
         return `
@@ -1196,7 +1296,6 @@ function renderPosts(){
     });
 }
 
-// ------------------ Settings ------------------
 function changeUsername(){
     const newName=document.getElementById('change-username').value.trim();
     if(!newName) return alert("Username cannot be empty");
@@ -1206,13 +1305,12 @@ function changeUsername(){
     
     if (currentUser === 'Tr3vN0x') return alert("The owner's username cannot be changed.");
     
-    // Update the main user object
+    // 1. Update the main user object
     users[newName]=users[currentUser]; 
     delete users[currentUser];
     
-    // Update references in all posts/comments/reactions
+    // 2. Update references in all posts/comments/reactions/followers/following
     for (let userKey in users) {
-        // Update follower/following arrays of other users
         const userObj = users[userKey];
         
         let followerIndex = userObj.followers.indexOf(currentUser);
@@ -1222,7 +1320,6 @@ function changeUsername(){
         if (followingIndex !== -1) userObj.following[followingIndex] = newName;
 
 
-        // Update post reactions and comments
         userObj.posts.forEach(post => {
             if (post.reactions) {
                 REACTIONS.forEach(r => {
@@ -1241,8 +1338,28 @@ function changeUsername(){
             }
         });
     }
+    
+    // 3. Update references in all messages
+    const messages = JSON.parse(localStorage.getItem('messages'));
+    const newMessages = {};
+
+    for (const chatID in messages) {
+        const [u1, u2] = chatID.split('_');
+        let newU1 = u1 === currentUser ? newName : u1;
+        let newU2 = u2 === currentUser ? newName : u2;
+        const newChatID = getChatID(newU1, newU2);
+
+        const conversation = messages[chatID];
+        conversation.forEach(msg => {
+            if (msg.sender === currentUser) {
+                msg.sender = newName;
+            }
+        });
+        newMessages[newChatID] = conversation;
+    }
 
     localStorage.setItem('users',JSON.stringify(users));
+    localStorage.setItem('messages', JSON.stringify(newMessages));
     localStorage.setItem('currentUser',newName);
     
     document.getElementById('change-username').value = '';
@@ -1251,6 +1368,115 @@ function changeUsername(){
     alert("Username changed! You must log in again with your new username.");
     logout(); 
 }
+// ------------------ End of Omitted Functions ------------------
+
+// ------------------ Direct Messaging Functions ------------------
+
+function startDM(targetUser) {
+    currentChatPartner = targetUser;
+    showTab('messages');
+    renderConversation(targetUser);
+}
+
+function renderMessageList() {
+    const currentUser = localStorage.getItem('currentUser');
+    const messages = JSON.parse(localStorage.getItem('messages'));
+    const listDiv = document.getElementById('messages-list');
+    listDiv.innerHTML = '';
+    
+    document.getElementById('message-view').style.display = 'block';
+    document.getElementById('conversation-container').style.display = 'none';
+    currentChatPartner = null;
+
+    const chatPartners = [];
+    for (const chatID in messages) {
+        if (chatID.includes(currentUser)) {
+            const partners = chatID.split('_');
+            const partner = partners.find(p => p !== currentUser);
+            if (partner) chatPartners.push(partner);
+        }
+    }
+    
+    if (chatPartners.length === 0) {
+        listDiv.innerHTML = '<p style="font-style: italic; color: #555555;">No current conversations. Start one from a user\'s profile!</p>';
+        return;
+    }
+
+    chatPartners.forEach(partner => {
+        const chatID = getChatID(currentUser, partner);
+        const chat = messages[chatID];
+        const lastMessage = chat[chat.length - 1];
+        
+        const summaryDiv = document.createElement('div');
+        summaryDiv.className = 'chat-summary';
+        summaryDiv.onclick = () => renderConversation(partner);
+        summaryDiv.innerHTML = `
+            <strong>Chat with ${partner}</strong>
+            <p style="font-size: 0.9em; margin: 5px 0 0 0; color: #999999;">
+                ${lastMessage.sender === currentUser ? 'You' : lastMessage.sender}: ${lastMessage.text.substring(0, 40)}...
+                <span style="float: right; font-size: 0.8em; color: #555555;">${formatTimestamp(lastMessage.date)}</span>
+            </p>
+        `;
+        listDiv.appendChild(summaryDiv);
+    });
+}
+
+function renderConversation(partner) {
+    const currentUser = localStorage.getItem('currentUser');
+    const messages = JSON.parse(localStorage.getItem('messages'));
+    const chatID = getChatID(currentUser, partner);
+    const chat = messages[chatID] || [];
+    
+    currentChatPartner = partner;
+    document.getElementById('message-view').style.display = 'none';
+    document.getElementById('conversation-container').style.display = 'block';
+    document.getElementById('chat-header').innerText = `Chatting with ${partner}`;
+    
+    const chatMessagesDiv = document.getElementById('chat-messages');
+    chatMessagesDiv.innerHTML = '';
+
+    chat.forEach(msg => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${msg.sender === currentUser ? 'sent' : 'received'}`;
+        msgDiv.innerHTML = `
+            ${msg.text}
+            <span class="message-time">${formatTimestamp(msg.date)}</span>
+        `;
+        chatMessagesDiv.appendChild(msgDiv);
+    });
+    
+    // Scroll to the bottom of the conversation
+    chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+}
+
+function sendMessage() {
+    const currentUser = localStorage.getItem('currentUser');
+    const partner = currentChatPartner;
+    const input = document.getElementById('message-input');
+    const text = input.value.trim();
+
+    if (!text || !partner) return;
+
+    const messages = JSON.parse(localStorage.getItem('messages'));
+    const chatID = getChatID(currentUser, partner);
+
+    if (!messages[chatID]) {
+        messages[chatID] = [];
+    }
+
+    const newMessage = {
+        sender: currentUser,
+        text: text,
+        date: Date.now()
+    };
+
+    messages[chatID].push(newMessage);
+    localStorage.setItem('messages', JSON.stringify(messages));
+
+    input.value = '';
+    renderConversation(partner); // Re-render the chat
+}
+
 
 // ------------------ Check login on reload ------------------
 if(localStorage.getItem('currentUser')) initApp(); else {showLogin();}
