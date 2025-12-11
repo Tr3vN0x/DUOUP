@@ -8,59 +8,23 @@
 body {margin:0;font-family:'Consolas',monospace;background:#0a0a0a;color:#00ff66;}
 header, footer {background:#0d0d0d;padding:15px 30px;color:#00ff66;}
 header {display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #003300;position:sticky;top:0;z-index:10;}
-header img {
-    height: 30px; /* Control icon size */
-    width: auto;
-    border: none;
-    padding: 0;
-}
 .nav-tab {cursor:pointer;padding:8px 12px;border-radius:6px;border:1px solid #003300;margin-left:5px;}
 .nav-tab.active {background:#003300;box-shadow:0 0 10px #33ff99;}
 main {padding:20px 30px;}
-input:not([type="file"]), textarea {
-    width: 100%; 
-    box-sizing: border-box;
-    padding: 10px;
-    margin-bottom: 10px; 
-    border-radius:6px;
-    background:#111;
-    color:#00ff66;
-    border:1px solid #003300;
-    margin-top:5px;
-}
-input[type="file"] {margin-top:5px;}
-button {
-    cursor:pointer;
-    padding:10px 15px; 
-    border-radius:6px;
-    background:#111;
-    color:#00ff66;
-    border:1px solid #003300;
-    margin-top:5px;
-}
+input, button, textarea {padding:5px;border-radius:6px;background:#111;color:#00ff66;border:1px solid #003300;margin-top:5px;}
+button {cursor:pointer;}
 .post {display:flex;align-items:flex-start;gap:10px;background:#111;padding:15px;margin-bottom:10px;border-radius:6px;border:1px solid #003300;}
-.post img, #profile-pic {
-    width:40px;
-    height:40px;
-    border-radius:50%;
-    border:1px solid #00ff66;
-    object-fit:cover;
-    background: #0d0d0d; 
-}
-#profile-pic {width:80px;height:80px;}
+.post img {width:40px;height:40px;border-radius:50%;border:1px solid #00ff66;object-fit:cover;}
 .verified {color:#1DA1F2;font-weight:bold;margin-left:5px;}
 .tab-content {display:none;}
 #welcome-banner {background:#004400;color:white;text-align:center;padding:15px;margin-bottom:20px;}
-#new-post button {margin-top: 10px;}
 </style>
 </head>
 <body>
 
 <header>
     <div class="logo-container">
-        <img src="https://see.fontimg.com/api/rf5/vXL4/YTM3ZmYyMWFkMzNiNGY5MGEwY2ZmZTZmNDhiZGI4NzkudHRm/VHIzdk1lZGlh/chimpanzee-website-report.png?r=fs&h=65&w=1000&fg=E8E4E4&bg=27E2A1&tb=1&s=65" 
-             alt="Tr3vMedia Icon" 
-             style="height: 30px; border: none; padding: 0; margin-top: 5px; vertical-align: middle;">
+        <strong>Tr3vMedia</strong>
     </div>
     <div class="header-actions" id="header-tabs"></div>
 </header>
@@ -68,33 +32,36 @@ button {
 <div id="welcome-banner"></div>
 
 <main id="main-content">
+    <!-- Login / Signup -->
     <div id="auth" class="tab-content">
         <h2>Login</h2>
-        <input type="text" id="login-username" placeholder="Username">
-        <input type="password" id="login-password" placeholder="Password">
+        <input type="text" id="login-username" placeholder="Username"><br>
+        <input type="password" id="login-password" placeholder="Password"><br>
         <button onclick="login()">Login</button>
         <p>Or <span style="cursor:pointer;color:#33ff99;" onclick="showSignup()">Sign Up</span></p>
     </div>
 
     <div id="signup" class="tab-content">
         <h2>Sign Up</h2>
-        <input type="text" id="signup-username" placeholder="Username">
-        <input type="password" id="signup-password" placeholder="Password">
+        <input type="text" id="signup-username" placeholder="Username"><br>
+        <input type="password" id="signup-password" placeholder="Password"><br>
         <button onclick="signup()">Create Account</button>
         <p>Or <span style="cursor:pointer;color:#33ff99;" onclick="showLogin()">Login</span></p>
     </div>
 
+    <!-- Home feed -->
     <div id="home" class="tab-content">
         <div id="new-post">
-            <textarea id="post-text" rows="3" placeholder="What's on your mind?"></textarea>
+            <textarea id="post-text" rows="3" placeholder="What's on your mind?"></textarea><br>
             <button onclick="addPost()">Post</button>
         </div>
         <div id="posts"></div>
     </div>
 
+    <!-- Profile -->
     <div id="profile" class="tab-content">
         <h2>Profile</h2>
-        <img id="profile-pic" src="" alt="Profile Picture"><br>
+        <img id="profile-pic" src="" width="80" height="80"><br>
         <input type="file" id="profile-upload" accept="image/*"><br>
         <textarea id="profile-bio" placeholder="Write your bio..."></textarea><br>
         <button onclick="saveProfile()">Save Profile</button>
@@ -102,6 +69,7 @@ button {
         <p>Posts: <span id="profile-posts-count"></span></p>
     </div>
 
+    <!-- Settings -->
     <div id="settings" class="tab-content">
         <h2>Settings</h2>
         <label>Change username: <input type="text" id="change-username"></label><br>
@@ -131,7 +99,7 @@ function signup(){
     if(!username||!password){alert("Fill all fields"); return;}
     const users = JSON.parse(localStorage.getItem('users'));
     if(users[username]){alert("Username taken"); return;}
-    users[username]={password,profilePic:'https://via.placeholder.com/60',bio:'',posts:[]}; 
+    users[username]={password,profilePic:'https://via.placeholder.com/60',bio:'',posts:[]};
     localStorage.setItem('users', JSON.stringify(users));
     alert("Account created! Login now.");
     showLogin();
@@ -149,17 +117,14 @@ function login(){
 function initApp(){
     document.getElementById('auth').style.display='none';
     document.getElementById('signup').style.display='none';
-    
+    document.getElementById('home').style.display='block';
     document.getElementById('welcome-banner').innerText=`Hello ${localStorage.getItem('currentUser')}!`;
-    
-    document.getElementById('header-tabs').innerHTML=`
-        <div class="nav-tab" onclick="showTab('home')">Home</div>
-        <div class="nav-tab" onclick="showTab('profile')">Profile</div>
-        <div class="nav-tab" onclick="showTab('settings')">Settings</div>
-        <div class="nav-tab" onclick="logout()">Logout</div>`;
-    
+    // header tabs
+    document.getElementById('header-tabs').innerHTML=`<div class="nav-tab active" onclick="showTab('home')">Home</div>
+    <div class="nav-tab" onclick="showTab('profile')">Profile</div>
+    <div class="nav-tab" onclick="showTab('settings')">Settings</div>
+    <div class="nav-tab" onclick="logout()">Logout</div>`;
     loadUser();
-    showTab('home'); 
 }
 
 // ------------------ Logout ------------------
@@ -169,13 +134,8 @@ function logout(){localStorage.removeItem('currentUser'); location.reload();}
 function showTab(tabId){
     document.querySelectorAll('.tab-content').forEach(tab=>tab.style.display='none');
     document.getElementById(tabId).style.display='block';
-    
     document.querySelectorAll('.nav-tab').forEach(tab=>tab.classList.remove('active'));
-    
-    const activeTabElement = document.querySelector(`.nav-tab[onclick*="showTab('${tabId}')"]`);
-    if (activeTabElement) {
-        activeTabElement.classList.add('active');
-    }
+    const tabs = document.querySelectorAll('.nav-tab'); tabs.forEach(t=>{if(t.textContent==tabId.charAt(0).toUpperCase()+tabId.slice(1)) t.classList.add('active');});
 }
 
 // ------------------ Profile ------------------
@@ -224,7 +184,6 @@ function addPost(){
     users[currentUser].posts.unshift({text,date:Date.now()});
     localStorage.setItem('users',JSON.stringify(users));
     document.getElementById('post-text').value='';
-    document.getElementById('profile-posts-count').innerText=users[currentUser].posts.length; 
     renderPosts();
 }
 
@@ -236,7 +195,7 @@ function renderPosts(){
     allPosts.sort((a,b)=>b.date-a.date);
     allPosts.forEach(p=>{
         const div=document.createElement('div'); div.className='post';
-        div.innerHTML=`<img src="${p.profilePic}" alt="${p.user}'s profile picture"><div><strong>${p.user}${p.user==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':''}:</strong> ${p.text}</div>`;
+        div.innerHTML=`<img src="${p.profilePic}"><strong>${p.user}${p.user==='Tr3vN0x'?'<span class="verified">✔️ Owner</span>':''}:</strong> ${p.text}`;
         postsDiv.appendChild(div);
     });
 }
@@ -248,21 +207,15 @@ function changeUsername(){
     const users=JSON.parse(localStorage.getItem('users'));
     const currentUser=localStorage.getItem('currentUser');
     if(users[newName]) return alert("Username taken");
-    
-    if (currentUser === 'Tr3vN0x') return alert("The owner's username cannot be changed.");
-    
     users[newName]=users[currentUser]; delete users[currentUser];
     localStorage.setItem('users',JSON.stringify(users));
     localStorage.setItem('currentUser',newName);
-    
-    document.getElementById('change-username').value = '';
     loadUser();
-    
-    alert("Username changed! Please refresh to ensure all elements update.");
+    alert("Username changed!");
 }
 
 // ------------------ Check login on reload ------------------
-if(localStorage.getItem('currentUser')) initApp(); else {showLogin();}
+if(localStorage.getItem('currentUser')) initApp(); else {document.getElementById('auth').style.display='block';}
 </script>
 
 </body>
