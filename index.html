@@ -25,7 +25,7 @@ header nav{display:flex;align-items:center;gap:15px;flex-wrap:wrap;}
 form:not(#duoSearchForm):not(#postForm){display:flex;flex-direction:column;background:#141426;padding:25px;border-radius:12px;margin:10px;width:90%;max-width:360px;}
 input,textarea{margin:8px 0;padding:12px;border-radius:6px;border:1px solid var(--duoup-primary);background:#2D2D44;color:var(--duoup-light);}
 button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10px;padding:12px;font-weight:bold;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);}
-.google-btn{background:linear-gradient(90deg,#DB4437,#EA4335);color:white;width:90%;max-width:360px;display:none;align-items:center;justify-content:center;gap:10px;margin-top:15px;} /* HIDDEN */
+.google-btn{background:linear-gradient(90deg,#DB4437,#EA4335);color:white;width:90%;max-width:360px;display:none;align-items:center;justify-content:center;gap:10px;margin-top:15px;}
 #app-section{width:100%;padding-top:60px;display:none;}
 .container{max-width:1200px;margin:20px auto;padding:0 15px;}
 .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
@@ -36,8 +36,14 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
 .action-button{width:100%;padding:12px;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);font-weight:bold;border-radius:0 0 12px 12px;}
 .nickname-display{display:flex;align-items:center;font-size:1.1em;}
 .verified-badge{color:#1DA1F2;margin-left:5px;}
-/* Highlight disabled input for Google users */
-#profile-nickname:disabled { background: #1a1a2e; color: var(--duoup-muted); cursor: not-allowed; border-color: #3A3A52; }
+/* Highlight disabled input */
+#profile-nickname { 
+    background: #1a1a2e; 
+    color: var(--duoup-muted); 
+    cursor: not-allowed; 
+    border-color: #3A3A52; 
+    font-weight: 700;
+}
 .input-help{font-size:0.8em;color:var(--duoup-muted);margin-top:-5px;margin-bottom:10px;}
 
 /* Post Specific Styles */
@@ -94,7 +100,7 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
         <input id="signup-password" type="password" placeholder="Password" required>
         <button type="submit">Create Account</button>
     </form>
-    </div>
+</div>
 
 <div id="app-section">
     
@@ -116,17 +122,19 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
     <div id="profile-section" class="container" style="display:none;">
         <h2>Profile Management</h2>
         <form id="profileEditForm">
-            <input class="profile-field" id="profile-nickname" placeholder="Nickname">
-            <p id="nickname-help" class="input-help"></p>
+            <input class="profile-field" id="profile-nickname" placeholder="Nickname" disabled readonly>
+            <p id="nickname-help" class="input-help">Your nickname is permanent and cannot be changed.</p>
+            
             <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
-            <input type="file" id="profile-photo">
+            
+            <label for="profile-photo" style="margin-top: 15px; color: var(--duoup-primary); font-weight: bold;">Change Profile Picture:</label>
+            <input type="file" id="profile-photo" accept="image/*" style="border: none; background: transparent; padding: 0;">
         </form>
         <div id="profilePreviewContainer"></div>
     </div>
 </div>
 
 <script type="module">
-// REMOVED GoogleAuthProvider, signInWithPopup from import
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, addDoc, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
@@ -145,12 +153,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-// REMOVED provider initialization
 
 // --- DOM Elements ---
 const signinForm = document.getElementById("signin");
 const signupForm = document.getElementById("signup");
-// REMOVED googleBtn = document.querySelector(".google-btn");
 const authSection = document.getElementById("auth-section");
 const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
@@ -160,7 +166,6 @@ const profileNickname = document.getElementById("profile-nickname");
 const profileAbout = document.getElementById("profile-about");
 const profilePhoto = document.getElementById("profile-photo");
 const profilePreviewContainer = document.getElementById("profilePreviewContainer");
-const nicknameHelp = document.getElementById("nickname-help");
 const postForm = document.getElementById("postForm"); 
 const postsList = document.getElementById("postsList"); 
 
@@ -210,9 +215,7 @@ async function ensureUserProfileLoaded(user) {
     let userData = docSnap.exists() ? docSnap.data() : {};
 
     if (!docSnap.exists() || !userData.nickname) { 
-        // With Google removed, we default to 'email' auth type for new users.
         const authType = 'email'; 
-        
         const defaultNickname = user.email.split('@')[0] || "New Player";
 
         userData = {
@@ -259,8 +262,6 @@ signupForm.addEventListener("submit", async e=>{
     } catch(err){ alert(err.message); }
 });
 
-// REMOVED googleBtn event listener
-
 document.getElementById("logoutBtnHeader").addEventListener("click", async ()=>{ 
     clearInterval(activityInterval); 
     await signOut(auth); 
@@ -276,19 +277,13 @@ async function loadProfile(){
     currentNickname = data.nickname || ''; 
     currentBio = data.bio || '';
 
+    // Nickname is loaded but permanently displayed as disabled
     profileNickname.value = currentNickname; 
     profileAbout.value = currentBio;
     
-    // Auth check is now simpler since Google is removed
-    const isGoogleUser = data.authType === 'google'; 
-    profileNickname.disabled = isGoogleUser; 
-    profileNickname.readOnly = isGoogleUser; 
-    
-    // Google check is technically not needed for new users, but kept for legacy Google users
-    nicknameHelp.innerText = isGoogleUser ? "Nickname is locked for Google sign-in users." : "Nickname auto-saves as you type."; 
-
     renderProfilePreview(data);
 }
+
 function renderProfilePreview(data){
     const nickname = data.nickname || 'New Player'; 
     const verifiedBadgeHtml = getVerifiedBadge(nickname);
@@ -308,55 +303,50 @@ function renderProfilePreview(data){
     `;
 }
 
-// --- Auto-save profile and update lastActive timestamp ---
+// --- Auto-save profile (Bio and Profile Photo only) ---
 let saveTimeout;
 const saveProfile = async (updates) => {
     const user = auth.currentUser;
     if(!user) return;
     
-    if (profileNickname.disabled && updates.nickname) { 
-        return; 
-    }
+    // Safety check: ensure 'nickname' is never in the updates object here
+    if (updates.nickname) delete updates.nickname; 
 
     try{
         await updateDoc(doc(db,"users",user.uid), { ...updates, lastActive: Date.now() });
         
-        if (updates.nickname) { 
-            currentNickname = updates.nickname; 
-        }
         if (updates.bio !== undefined) { 
             currentBio = updates.bio;
         }
     } catch(err){ console.error(err); }
 };
 
-profileNickname.addEventListener("input", ()=>{ 
-    if (profileNickname.disabled) { 
-        profileNickname.value = currentNickname; 
-        alert("This nickname is locked and cannot be changed.");
-        return;
-    }
-    
-    renderProfilePreview({nickname: profileNickname.value, bio: profileAbout.value}); 
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(()=>saveProfile({ nickname: profileNickname.value }), 800); 
-});
-
+// Bio Auto-save
 profileAbout.addEventListener("input", ()=>{
-    renderProfilePreview({nickname: profileNickname.value, bio: profileAbout.value}); 
+    renderProfilePreview({nickname: currentNickname, bio: profileAbout.value}); 
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(()=>saveProfile({ bio: profileAbout.value }), 800); 
 });
 
+// Profile Photo Upload
 profilePhoto.addEventListener("change", async e=>{
     const file = e.target.files[0];
     if(!file) return;
     const user = auth.currentUser;
     const storageRef = ref(storage,`profiles/${user.uid}`);
-    await uploadBytes(storageRef,file);
-    const photoURL = await getDownloadURL(storageRef);
-    await updateDoc(doc(db,"users",user.uid), { profileImageUrl: photoURL, lastActive: Date.now() });
-    loadProfile();
+    
+    alert("Uploading profile photo...");
+    
+    try {
+        await uploadBytes(storageRef,file);
+        const photoURL = await getDownloadURL(storageRef);
+        await updateDoc(doc(db,"users",user.uid), { profileImageUrl: photoURL, lastActive: Date.now() });
+        alert("Profile picture updated successfully!");
+        loadProfile(); // Reload profile to update avatar if used
+    } catch (err) {
+        console.error("Error uploading photo:", err);
+        alert("Failed to upload profile photo.");
+    }
 });
 
 // --- User Search ---
