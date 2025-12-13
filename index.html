@@ -9,16 +9,16 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
-    --duoup-primary: #00FFFF;
-    --duoup-secondary: #FF5733;
-    --duoup-accent: #8A2BE2;
-    --duoup-dark: #050510;
-    --duoup-light: #F0F8FF;
-    --duoup-muted: #80809C;
-    --font-main: 'Rajdhani', sans-serif;
-    --font-header: 'Orbitron', sans-serif;
-    --status-online: #38A169;
-    --status-offline: #E53E3E;
+    --duoup-primary: #00FFFF;
+    --duoup-secondary: #FF5733;
+    --duoup-accent: #8A2BE2;
+    --duoup-dark: #050510;
+    --duoup-light: #F0F8FF;
+    --duoup-muted: #80809C;
+    --font-main: 'Rajdhani', sans-serif;
+    --font-header: 'Orbitron', sans-serif;
+    --status-online: #38A169;
+    --status-offline: #E53E3E;
 }
 html, body { margin: 0; height: 100%; background-color: var(--duoup-dark); background-image: radial-gradient(circle at top center, rgba(255,87,51,0.08) 0%, rgba(5,5,16,0.8) 40%, var(--duoup-dark) 100%); font-family: var(--font-main); color: var(--duoup-light); }
 h1,h2,h3 { font-family: var(--font-header); margin:0; color: var(--duoup-light); }
@@ -56,7 +56,15 @@ button:not(.google-btn):not(#duoSearchForm button):hover { background:linear-gra
 .action-button { width:100%; padding:12px; background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark); font-weight:bold; border-radius:0 0 12px 12px; text-transform:uppercase; }
 .duo-request-card { border-top:5px solid var(--duoup-secondary); }
 .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000; }
-.chat-container { width:90%; max-width:420px; height:80%; background:#141426; border-radius:12px; display:flex; flex-direction:column; }
+
+/* MODAL STYLES (for both chat and request) */
+.chat-container, #requestModalContent {
+    background: #141426;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+}
+
+.chat-container { width:90%; max-width:420px; height:80%; display:flex; flex-direction:column; }
 .chat-header { padding:10px 15px; background:#1A1A2E; display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--duoup-primary); color: var(--duoup-light);}
 .status-dot { width:8px; height:8px; border-radius:50%; margin-right:8px; display:inline-block;}
 .status-dot.online { background: var(--status-online); }
@@ -70,100 +78,134 @@ button:not(.google-btn):not(#duoSearchForm button):hover { background:linear-gra
 .chat-input-area { display:flex; padding:10px; gap:5px; }
 .chat-input { flex:1; padding:10px; border-radius:6px; border:none; background:#2D2D44; color:white; }
 .send-button { padding:10px 15px; border:none; background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark); font-weight:bold; border-radius:6px; }
+
+/* DUO REQUEST MODAL STYLES (NEW) */
+#requestModalContent {
+    width: 90%;
+    max-width: 400px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+#requestModalContent h3 {
+    color: var(--duoup-secondary);
+    border-bottom: 2px solid var(--duoup-primary);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.5em;
+}
+#requestModalContent button {
+    margin-top: 15px;
+}
+#requestMessage {
+    min-height: 100px;
+    max-height: 150px;
+    background: #1A1A2E;
+}
+
 @media(max-width:500px){ header h1 { font-size:1.6em; } .results-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
 
 <header style="display:none;" id="mainHeader">
-    <div class="logo">
-        <img src="https://i.imgur.com/3UQx9gR.png" alt="DuoUp" width="40" style="border-radius:8px;"/>
-        <h1>DUO<span>UP</span></h1>
-    </div>
-    <nav>
-        <a href="#" onclick="showSection('home')">Duo Search</a>
-        <a href="#" onclick="showSection('profile')">Profile</a>
-        <a href="#" onclick="showSection('messages')">Messages <span id="notificationBadge"></span></a>
-        <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </nav>
+    <div class="logo">
+        <img src="https://i.imgur.com/3UQx9gR.png" alt="DuoUp" width="40" style="border-radius:8px;"/>
+        <h1>DUO<span>UP</span></h1>
+    </div>
+    <nav>
+        <a href="#" onclick="showSection('home')">Duo Search</a>
+        <a href="#" onclick="showSection('profile')">Profile</a>
+        <a href="#" onclick="showSection('messages')">Messages <span id="notificationBadge"></span></a>
+        <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </nav>
 </header>
 
 <div id="auth-section">
-    <h2>Welcome to DuoUp</h2>
-    <form id="signin">
-        <h3>Sign In</h3>
-        <input id="signin-email" type="email" placeholder="Email" required>
-        <input id="signin-password" type="password" placeholder="Password" required>
-        <button type="submit">Sign In</button>
-    </form>
+    <h2>Welcome to DuoUp</h2>
+    <form id="signin">
+        <h3>Sign In</h3>
+        <input id="signin-email" type="email" placeholder="Email" required>
+        <input id="signin-password" type="password" placeholder="Password" required>
+        <button type="submit">Sign In</button>
+    </form>
 
-    <form id="signup">
-        <h3>New Player? Sign Up</h3>
-        <input id="signup-email" type="email" placeholder="Email" required>
-        <input id="signup-password" type="password" placeholder="Password" required>
-        <button type="submit">Create Account</button>
-    </form>
+    <form id="signup">
+        <h3>New Player? Sign Up</h3>
+        <input id="signup-email" type="email" placeholder="Email" required>
+        <input id="signup-password" type="password" placeholder="Password" required>
+        <button type="submit">Create Account</button>
+    </form>
 
-    <button class="google-btn">
-        <i class="fab fa-google"></i> Continue with Google
-    </button>
+    <button class="google-btn">
+        <i class="fab fa-google"></i> Continue with Google
+    </button>
 </div>
 
 <div id="app-section" style="display:none; width:100%; padding-top:60px;">
-    <!-- HOME / DUO SEARCH -->
-    <div id="home-section" class="container">
-        <h2 id="homeSectionHeader">Duo Search <span id="userCount"></span></h2> 
-        <form id="duoSearchForm" style="display:flex; gap:10px; margin-bottom:20px;">
-            <input type="text" id="searchQuery" placeholder="Search by Username, Game, or Platform" style="flex-grow:1; padding:12px; border:1px solid var(--duoup-primary); border-radius:6px; background:#2D2D44; color:var(--duoup-light); font-family: var(--font-main);">
-            <button type="submit" style="padding:12px 20px;"><i class="fas fa-search"></i> Find Duo</button>
-        </form>
-        <div class="results-grid" id="usersGrid"></div>
-    </div>
+        <div id="home-section" class="container">
+        <h2 id="homeSectionHeader">Duo Search <span id="userCount"></span></h2> 
+        <form id="duoSearchForm" style="display:flex; gap:10px; margin-bottom:20px;">
+            <input type="text" id="searchQuery" placeholder="Search by Username, Game, or Platform" style="flex-grow:1; padding:12px; border:1px solid var(--duoup-primary); border-radius:6px; background:#2D2D44; color:var(--duoup-light); font-family: var(--font-main);">
+            <button type="submit" style="padding:12px 20px;"><i class="fas fa-search"></i> Find Duo</button>
+        </form>
+        <div class="results-grid" id="usersGrid"></div>
+    </div>
 
-    <!-- PROFILE -->
-    <div id="profile-section" class="container" style="display:none;">
-        <h2 style="margin-bottom:25px;">Profile Management</h2>
-        <div style="display:flex; gap:30px; flex-wrap:wrap;">
-            <form id="profileEditForm">
-                <h3>Edit Details</h3>
-                <input class="profile-field" id="profile-username" placeholder="Username">
-                <input class="profile-field" id="profile-platform" placeholder="Platform">
-                <input class="profile-field" id="profile-games" placeholder="Games">
-                <input class="profile-field" id="profile-playstyle" placeholder="Playstyle">
-                <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
-                <label style="margin-top:10px; color: var(--duoup-muted);">Upload/Update Profile Photo:</label>
-                <input type="file" id="profile-photo" style="margin-top:5px;">
-                <button type="button" onclick="updateProfile()">Save Profile</button>
-            </form>
-            <div style="flex-grow:1; min-width:300px; max-width:320px;">
-                <h3>Your Current Duo Card Preview</h3>
-                <div id="profilePreviewContainer"></div>
-            </div>
-        </div>
-    </div>
+        <div id="profile-section" class="container" style="display:none;">
+        <h2 style="margin-bottom:25px;">Profile Management</h2>
+        <div style="display:flex; gap:30px; flex-wrap:wrap;">
+            <form id="profileEditForm">
+                <h3>Edit Details</h3>
+                <input class="profile-field" id="profile-username" placeholder="Username">
+                <input class="profile-field" id="profile-platform" placeholder="Platform">
+                <input class="profile-field" id="profile-games" placeholder="Games">
+                <input class="profile-field" id="profile-playstyle" placeholder="Playstyle">
+                <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
+                <label style="margin-top:10px; color: var(--duoup-muted);">Upload/Update Profile Photo:</label>
+                <input type="file" id="profile-photo" style="margin-top:5px;">
+                <button type="button" onclick="updateProfile()">Save Profile</button>
+            </form>
+            <div style="flex-grow:1; min-width:300px; max-width:320px;">
+                <h3>Your Current Duo Card Preview</h3>
+                <div id="profilePreviewContainer"></div>
+            </div>
+        </div>
+    </div>
 
-    <!-- MESSAGES -->
-    <div id="messages-section" class="container" style="display:none;">
-        <h2>Messages & Duo Requests</h2>
-        <div id="messages-container" class="messages-container">
-            <h3>Pending Requests</h3>
-            <div class="results-grid" id="requestsGrid"></div>
-            <h3>Your Accepted Duos (Click to Chat)</h3>
-            <div class="results-grid" id="duosGrid"></div>
-        </div>
-    </div>
+        <div id="messages-section" class="container" style="display:none;">
+        <h2>Messages & Duo Requests</h2>
+        <div id="messages-container" class="messages-container">
+            <h3>Pending Requests</h3>
+            <div class="results-grid" id="requestsGrid"></div>
+            <h3>Your Accepted Duos (Click to Chat)</h3>
+            <div class="results-grid" id="duosGrid"></div>
+        </div>
+    </div>
 </div>
 
-<!-- CHAT MODAL -->
 <div id="chatModal" class="modal">
-    <div class="chat-container">
-        <div id="chatHeader" class="chat-header"></div>
-        <div id="messageArea" class="message-area"></div>
-        <div class="chat-input-area">
-            <input id="chatInput" class="chat-input" placeholder="Type message">
-            <button class="send-button" onclick="sendMessage()">Send</button>
-            <span onclick="closeChat()" style="cursor:pointer; padding:10px; color: var(--duoup-light);"><i class="fas fa-times"></i></span>
-        </div>
+    <div class="chat-container">
+        <div id="chatHeader" class="chat-header"></div>
+        <div id="messageArea" class="message-area"></div>
+        <div class="chat-input-area">
+            <input id="chatInput" class="chat-input" placeholder="Type message">
+            <button class="send-button" onclick="sendMessage()">Send</button>
+            <span onclick="closeChat()" style="cursor:pointer; padding:10px; color: var(--duoup-light);"><i class="fas fa-times"></i></span>
+        </div>
+    </div>
+</div>
+
+<div id="requestModal" class="modal">
+    <div id="requestModalContent">
+        <h3>Send Duo Request to <span id="requestRecipientName"></span></h3>
+        <textarea id="requestMessage" placeholder="Type your personal message here. This will be sent as a first message to break the ice!" maxlength="500"></textarea>
+        <button id="sendRequestBtn" onclick="sendDuoRequestWithModal()">
+            <i class="fas fa-paper-plane"></i> Send Request & Message
+        </button>
+        <button onclick="closeRequestModal()" style="background: #3A3A52; color: var(--duoup-light); margin-top: 10px;">
+            Cancel
+        </button>
     </div>
 </div>
 
@@ -176,13 +218,13 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 
 // Firebase Config
 const firebaseConfig = {
-  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw", 
-  authDomain: "duoup-cfae6.firebaseapp.com",
-  projectId: "duoup-cfae6",
-  storageBucket: "duoup-cfae6.appspot.com",
-  messagingSenderId: "812263060524",
-  appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
-  measurementId: "G-46B67F90FK"
+  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw", 
+  authDomain: "duoup-cfae6.firebaseapp.com",
+  projectId: "duoup-cfae6",
+  storageBucket: "duoup-cfae6.appspot.com",
+  messagingSenderId: "812263060524",
+  appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
+  measurementId: "G-46B67F90FK"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -212,319 +254,364 @@ const searchQueryInput = document.getElementById("searchQuery");
 const profilePreviewContainer = document.getElementById("profilePreviewContainer");
 const notificationBadge = document.getElementById("notificationBadge");
 
+// NEW MODAL ELEMENTS
+const requestModal = document.getElementById("requestModal");
+const requestMessageInput = document.getElementById("requestMessage");
+const requestRecipientName = document.getElementById("requestRecipientName");
+
 let activeChatId = "";
 let activeFriendUid = "";
 let allUsersData = [];
 let acceptedDuosMap = new Map();
+let currentRequestTarget = { toUid: '', toUsername: '' }; // Store the target for the request modal
 
 // ----- AUTH -----
 signinForm.addEventListener("submit", async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, document.getElementById("signin-email").value, document.getElementById("signin-password").value); } catch(err){ alert(err.message); } });
 signupForm.addEventListener("submit", async e => {
-    e.preventDefault();
-    const email = document.getElementById("signup-email").value;
-    const password = document.getElementById("signup-password").value;
-    try{
-        const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-        await setDoc(doc(db,"users",userCredential.user.uid),{
-            uid:userCredential.user.uid,
-            username:"New Player",
-            email,
-            platform:"",
-            games:"",
-            playstyle:"",
-            about:"",
-            photoURL:"",
-            mic:"",
-            timestamp:serverTimestamp()
-        });
-    } catch(err){ alert(err.message); }
+    e.preventDefault();
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    try{
+        const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+        await setDoc(doc(db,"users",userCredential.user.uid),{
+            uid:userCredential.user.uid,
+            username:"New Player",
+            email,
+            platform:"",
+            games:"",
+            playstyle:"",
+            about:"",
+            photoURL:"",
+            mic:"",
+            timestamp:serverTimestamp()
+        });
+    } catch(err){ alert(err.message); }
 });
 googleBtn.addEventListener("click", async ()=>{ try{await signInWithPopup(auth,provider);} catch(err){alert(err.message);} });
 logoutBtn.addEventListener("click", async ()=>{ await signOut(auth); });
 
 // ----- PROFILE PREVIEW -----
 function renderProfilePreview(data) {
-    const username = document.getElementById("profile-username").value || data.username || 'New Player';
-    const platform = document.getElementById("profile-platform").value || data.platform || 'N/A';
-    const games = document.getElementById("profile-games").value || data.games || 'N/A';
-    const playstyle = document.getElementById("profile-playstyle").value || data.playstyle || 'N/A';
-    const photoURL = data.photoURL || '';
-    profilePreviewContainer.innerHTML = `
-        <div class="duo-card">
-            <div class="card-header">
-                <div class="avatar">${photoURL ? `<img src="${photoURL}">` : username[0]}</div>
-                <strong>${username}</strong>
-            </div>
-            <div class="bio">
-                Platform: ${platform}<br>
-                Games: ${games}<br>
-                Playstyle: ${playstyle}
-            </div>
-            <button class="action-button" disabled style="opacity: 0.7; cursor: default;">Profile Preview</button>
-        </div>
-    `;
+    const username = document.getElementById("profile-username").value || data.username || 'New Player';
+    const platform = document.getElementById("profile-platform").value || data.platform || 'N/A';
+    const games = document.getElementById("profile-games").value || data.games || 'N/A';
+    const playstyle = document.getElementById("profile-playstyle").value || data.playstyle || 'N/A';
+    const photoURL = data.photoURL || '';
+    profilePreviewContainer.innerHTML = `
+        <div class="duo-card">
+            <div class="card-header">
+                <div class="avatar">${photoURL ? `<img src="${photoURL}">` : username[0]}</div>
+                <strong>${username}</strong>
+            </div>
+            <div class="bio">
+                Platform: ${platform}<br>
+                Games: ${games}<br>
+                Playstyle: ${playstyle}
+            </div>
+            <button class="action-button" disabled style="opacity: 0.7; cursor: default;">Profile Preview</button>
+        </div>
+    `;
 }
 function setupProfilePreviewListeners(initialData) {
-    const fields = document.querySelectorAll(".profile-field");
-    fields.forEach(field => { field.addEventListener('input', () => renderProfilePreview(initialData)); });
-    document.getElementById("profile-photo").addEventListener('change', e=>{
-        const file = e.target.files[0];
-        if(file){ const reader = new FileReader(); reader.onload = (event)=>{ renderProfilePreview({...initialData, photoURL:event.target.result}); }; reader.readAsDataURL(file); }
-        else{ renderProfilePreview(initialData); }
-    });
+    const fields = document.querySelectorAll(".profile-field");
+    fields.forEach(field => { field.addEventListener('input', () => renderProfilePreview(initialData)); });
+    document.getElementById("profile-photo").addEventListener('change', e=>{
+        const file = e.target.files[0];
+        if(file){ const reader = new FileReader(); reader.onload = (event)=>{ renderProfilePreview({...initialData, photoURL:event.target.result}); }; reader.readAsDataURL(file); }
+        else{ renderProfilePreview(initialData); }
+    });
 }
 
 // ----- PROFILE UPDATE -----
 async function updateProfile(){
-    const user = auth.currentUser; if(!user) return;
-    const username = document.getElementById("profile-username").value;
-    const platform = document.getElementById("profile-platform").value;
-    const games = document.getElementById("profile-games").value;
-    const playstyle = document.getElementById("profile-playstyle").value;
-    const about = document.getElementById("profile-about").value;
-    const file = document.getElementById("profile-photo").files[0];
-    let photoURL="";
-    if(file){ const storageRef = ref(storage,`profiles/${user.uid}`); await uploadBytes(storageRef,file); photoURL = await getDownloadURL(storageRef);}
-    await updateDoc(doc(db,"users",user.uid),{username,platform,games,playstyle,about,photoURL});
-    alert("Profile updated!"); loadProfile();
+    const user = auth.currentUser; if(!user) return;
+    const username = document.getElementById("profile-username").value;
+    const platform = document.getElementById("profile-platform").value;
+    const games = document.getElementById("profile-games").value;
+    const playstyle = document.getElementById("profile-playstyle").value;
+    const about = document.getElementById("profile-about").value;
+    const file = document.getElementById("profile-photo").files[0];
+    let photoURL="";
+    if(file){ const storageRef = ref(storage,`profiles/${user.uid}`); await uploadBytes(storageRef,file); photoURL = await getDownloadURL(storageRef);}
+    await updateDoc(doc(db,"users",user.uid),{username,platform,games,playstyle,about,photoURL});
+    alert("Profile updated!"); loadProfile();
 }
 async function loadProfile(){
-    const user = auth.currentUser; if(!user) return;
-    const docSnap = await getDoc(doc(db,"users",user.uid));
-    const data = docSnap.exists()?docSnap.data():{};
-    document.getElementById("profile-username").value = data.username || "";
-    document.getElementById("profile-platform").value = data.platform || "";
-    document.getElementById("profile-games").value = data.games || "";
-    document.getElementById("profile-playstyle").value = data.playstyle || "";
-    document.getElementById("profile-about").value = data.about || "";
-    renderProfilePreview(data); setupProfilePreviewListeners(data);
+    const user = auth.currentUser; if(!user) return;
+    const docSnap = await getDoc(doc(db,"users",user.uid));
+    const data = docSnap.exists()?docSnap.data():{};
+    document.getElementById("profile-username").value = data.username || "";
+    document.getElementById("profile-platform").value = data.platform || "";
+    document.getElementById("profile-games").value = data.games || "";
+    document.getElementById("profile-playstyle").value = data.playstyle || "";
+    document.getElementById("profile-about").value = data.about || "";
+    renderProfilePreview(data); setupProfilePreviewListeners(data);
 }
 
 // ----- SECTIONS -----
 function showSection(section){
-    ["home","profile","messages"].forEach(s=>document.getElementById(s+"-section").style.display="none");
-    document.getElementById(section+"-section").style.display="block";
-    if(section==="profile") loadProfile();
+    ["home","profile","messages"].forEach(s=>document.getElementById(s+"-section").style.display="none");
+    document.getElementById(section+"-section").style.display="block";
+    if(section==="profile") loadProfile();
 }
 
 // ----- USERS / DUO SEARCH -----
 async function loadUsers(){
-    const q = query(collection(db,"users"));
-    onSnapshot(q,snapshot=>{
-        allUsersData = snapshot.docs.filter(doc => doc.id !== auth.currentUser.uid).map(doc => ({id:doc.id,data:doc.data()}));
-        renderUsersGrid();
-    });
+    const q = query(collection(db,"users"));
+    onSnapshot(q,snapshot=>{
+        allUsersData = snapshot.docs.filter(doc => doc.id !== auth.currentUser.uid).map(doc => ({id:doc.id,data:doc.data()}));
+        renderUsersGrid();
+    });
 }
 
 function renderUsersGrid(queryText=''){
-    const queryLower = queryText.toLowerCase();
-    usersGrid.innerHTML="";
-    const filteredUsers = allUsersData.filter(userDoc=>{
-        if(!queryLower) return true;
-        const data = userDoc.data;
-        return (data.username||'').toLowerCase().includes(queryLower)||(data.platform||'').toLowerCase().includes(queryLower)||(data.games||'').toLowerCase().includes(queryLower);
-    });
-    if(userCountElement) userCountElement.textContent = `(${filteredUsers.length} Players Matched)`;
+    const queryLower = queryText.toLowerCase();
+    usersGrid.innerHTML="";
+    const filteredUsers = allUsersData.filter(userDoc=>{
+        if(!queryLower) return true;
+        const data = userDoc.data;
+        return (data.username||'').toLowerCase().includes(queryLower)||(data.platform||'').toLowerCase().includes(queryLower)||(data.games||'').toLowerCase().includes(queryLower);
+    });
+    if(userCountElement) userCountElement.textContent = `(${filteredUsers.length} Players Matched)`;
 
-    filteredUsers.forEach(userDoc=>{
-        const u = userDoc.data; const docId = userDoc.id;
-        const div = document.createElement("div");
-        div.className="duo-card";
+    filteredUsers.forEach(userDoc=>{
+        const u = userDoc.data; const docId = userDoc.id;
+        const div = document.createElement("div");
+        div.className="duo-card";
 
-        let buttonHtml = "";
-        if(acceptedDuosMap.has(docId)){
-            buttonHtml = `<button class="action-button" onclick="openChat('${docId}','${acceptedDuosMap.get(docId)}')">Chat</button>`;
-        } else {
-            buttonHtml = `<button class="action-button" onclick="sendDuoRequest('${docId}','${u.username}')">Send Duo Request</button>`;
-        }
+        let buttonHtml = "";
+        if(acceptedDuosMap.has(docId)){
+            buttonHtml = `<button class="action-button" onclick="openChat('${docId}','${acceptedDuosMap.get(docId)}')">Chat</button>`;
+        } else {
+            // UPDATED BUTTON TO OPEN NEW MODAL
+            buttonHtml = `<button class="action-button" onclick="openRequestModal('${docId}','${u.username}')">Send Duo Request & Message</button>`;
+        }
 
-        div.innerHTML=`<div class="card-header"><div class="avatar">${u.photoURL?`<img src="${u.photoURL}">`:u.username[0]}</div><strong>${u.username}</strong></div>
-        <div class="bio">Platform: ${u.platform||'N/A'}<br>Games: ${u.games||'N/A'}<br>Playstyle: ${u.playstyle||'N/A'}</div>
-        ${buttonHtml}`;
-        usersGrid.appendChild(div);
-    });
+        div.innerHTML=`<div class="card-header"><div class="avatar">${u.photoURL?`<img src="${u.photoURL}">`:u.username[0]}</div><strong>${u.username}</strong></div>
+        <div class="bio">Platform: ${u.platform||'N/A'}<br>Games: ${u.games||'N/A'}<br>Playstyle: ${u.playstyle||'N/A'}</div>
+        ${buttonHtml}`;
+        usersGrid.appendChild(div);
+    });
 }
 duoSearchForm.addEventListener("submit", e=>{ e.preventDefault(); renderUsersGrid(searchQueryInput.value.trim()); });
 searchQueryInput.addEventListener("input", ()=>{ renderUsersGrid(searchQueryInput.value.trim()); });
 
-// ----- SEND DUO REQUEST -----
-async function sendDuoRequest(toUid, toUsername){
-    const fromUid = auth.currentUser.uid;
-    const fromDoc = await getDoc(doc(db,"users",fromUid));
-    const fromUsername = fromDoc.data().username;
+// ----- DUO REQUEST MODAL FUNCTIONS (NEW) -----
+function openRequestModal(toUid, toUsername) {
+    currentRequestTarget = { toUid, toUsername };
+    requestRecipientName.textContent = toUsername;
+    requestMessageInput.value = `Hey ${toUsername}, I'd like to Duo Up! Let's play.`;
+    requestModal.style.display = 'flex';
+}
 
-    const requestRef = await addDoc(collection(db,"duoRequests"),{
-        fromUserId:fromUid,
-        fromUsername,
-        toUserId:toUid,
-        toUsername,
-        status:"pending",
-        timestamp:serverTimestamp()
-    });
+function closeRequestModal() {
+    requestModal.style.display = 'none';
+    currentRequestTarget = { toUid: '', toUsername: '' };
+}
 
-    await addDoc(collection(db,"messages"),{
-        content:`📨 ${fromUsername} has sent you a Duo Request!`,
-        fromUid:fromUid,
-        toUid:toUid,
-        duoId:`request_${requestRef.id}`,
-        timestamp:serverTimestamp(),
-        type:"notification"
-    });
-
-    alert("Duo request sent! The recipient has been notified in their messages.");
-
-    // Update the button to indicate pending
-    const btn = document.querySelector(`.duo-card button[onclick*="${toUid}"]`);
-    if(btn) { 
-        btn.textContent = "Request Sent"; 
-        btn.disabled = true;
-        btn.style.opacity = 0.6;
-        btn.style.cursor = "default";
+async function sendDuoRequestWithModal() {
+    const messageContent = requestMessageInput.value.trim();
+    if (!messageContent) {
+        alert("Please enter a message for your Duo Request.");
+        return;
     }
+    
+    // Disable the button to prevent double-send
+    const sendBtn = document.getElementById("sendRequestBtn");
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
+
+    await sendDuoRequest(currentRequestTarget.toUid, currentRequestTarget.toUsername, messageContent);
+    closeRequestModal();
+
+    // Re-enable and reset button (in case the modal is opened again)
+    sendBtn.disabled = false;
+    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Send Request & Message';
+}
+
+
+// ----- SEND DUO REQUEST (MODIFIED) -----
+async function sendDuoRequest(toUid, toUsername, messageContent){
+    const fromUid = auth.currentUser.uid;
+    const fromDoc = await getDoc(doc(db,"users",fromUid));
+    const fromUsername = fromDoc.data().username;
+
+    const requestRef = await addDoc(collection(db,"duoRequests"),{
+        fromUserId:fromUid,
+        fromUsername,
+        toUserId:toUid,
+        toUsername,
+        status:"pending",
+        timestamp:serverTimestamp()
+    });
+
+    // Send the user's custom message as a notification
+    await addDoc(collection(db,"messages"),{
+        content:`**Duo Request from ${fromUsername}:** ${messageContent}`,
+        fromUid:fromUid,
+        toUid:toUid,
+        duoId:`request_${requestRef.id}`, // Use a unique ID for the request message
+        timestamp:serverTimestamp(),
+        type:"notification" // Type to give it a unique style in the message area
+    });
+
+    alert(`Duo request and message sent to ${toUsername}!`);
+
+    // Update the button to indicate pending
+    const btn = document.querySelector(`.duo-card button[onclick*="${toUid}"]`);
+    if(btn) { 
+        btn.textContent = "Request Sent"; 
+        btn.disabled = true;
+        btn.style.opacity = 0.6;
+        btn.style.cursor = "default";
+    }
 }
 
 // ----- LOAD DUO REQUESTS -----
 function loadDuoRequests(){
-    const user = auth.currentUser; if(!user) return;
-    const duosMap = new Map();
-    const q1 = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","pending"));
-    onSnapshot(q1,snap=>{
-        requestsGrid.innerHTML="";
-        snap.forEach(docSnap=>{
-            const r = docSnap.data();
-            const div = document.createElement("div");
-            div.className="duo-card duo-request-card";
-            div.innerHTML=`<div class="card-header"><strong>${r.fromUsername}</strong></div>
-                <button class="action-button" onclick="acceptDuo('${docSnap.id}')">Accept</button>`;
-            requestsGrid.appendChild(div);
-        });
-    });
+    const user = auth.currentUser; if(!user) return;
+    const duosMap = new Map();
+    const q1 = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","pending"));
+    onSnapshot(q1,snap=>{
+        requestsGrid.innerHTML="";
+        snap.forEach(docSnap=>{
+            const r = docSnap.data();
+            const div = document.createElement("div");
+            div.className="duo-card duo-request-card";
+            div.innerHTML=`<div class="card-header"><strong>${r.fromUsername}</strong></div>
+                <button class="action-button" onclick="acceptDuo('${docSnap.id}')">Accept</button>`;
+            requestsGrid.appendChild(div);
+        });
+    });
 
-    function renderAcceptedDuos(snap){
-        snap.forEach(docSnap=>{
-            const r=docSnap.data();
-            const friendUid=r.fromUserId===user.uid?r.toUserId:r.fromUserId;
-            const friendUsername=r.fromUserId===user.uid?r.toUsername:r.fromUsername;
-            acceptedDuosMap.set(friendUid, friendUsername);
-        });
-        renderUsersGrid(searchQueryInput.value.trim());
-        duosGrid.innerHTML="";
-        acceptedDuosMap.forEach((friendUsername,friendUid)=>{
-            const div=document.createElement("div");
-            div.className="duo-card";
-            div.innerHTML=`<div class="card-header"><strong>${friendUsername}</strong></div>
-            <button class="action-button" onclick="openChat('${friendUid}','${friendUsername}')">Chat</button>`;
-            duosGrid.appendChild(div);
-        });
-    }
+    function renderAcceptedDuos(snap){
+        snap.forEach(docSnap=>{
+            const r=docSnap.data();
+            const friendUid=r.fromUserId===user.uid?r.toUserId:r.fromUserId;
+            const friendUsername=r.fromUserId===user.uid?r.toUsername:r.fromUsername;
+            acceptedDuosMap.set(friendUid, friendUsername);
+        });
+        renderUsersGrid(searchQueryInput.value.trim());
+        duosGrid.innerHTML="";
+        acceptedDuosMap.forEach((friendUsername,friendUid)=>{
+            const div=document.createElement("div");
+            div.className="duo-card";
+            div.innerHTML=`<div class="card-header"><strong>${friendUsername}</strong></div>
+            <button class="action-button" onclick="openChat('${friendUid}','${friendUsername}')">Chat</button>`;
+            duosGrid.appendChild(div);
+        });
+    }
 
-    const qSent = query(collection(db,"duoRequests"),where("fromUserId","==",user.uid),where("status","==","accepted"));
-    onSnapshot(qSent, renderAcceptedDuos);
-    const qReceived = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","accepted"));
-    onSnapshot(qReceived, renderAcceptedDuos);
+    const qSent = query(collection(db,"duoRequests"),where("fromUserId","==",user.uid),where("status","==","accepted"));
+    onSnapshot(qSent, renderAcceptedDuos);
+    const qReceived = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","accepted"));
+    onSnapshot(qReceived, renderAcceptedDuos);
 }
 async function acceptDuo(requestId){ await updateDoc(doc(db,"duoRequests",requestId),{status:"accepted"}); }
 
 // ----- CHAT -----
 function openChat(friendUid,friendUsername){
-    activeChatId = [auth.currentUser.uid,friendUid].sort().join("_");
-    activeFriendUid = friendUid;
-    chatModal.style.display="flex";
-    chatHeader.innerHTML = `<span class="status-dot online"></span> Chatting with ${friendUsername}`;
-    loadChat(activeChatId);
+    activeChatId = [auth.currentUser.uid,friendUid].sort().join("_");
+    activeFriendUid = friendUid;
+    chatModal.style.display="flex";
+    chatHeader.innerHTML = `<span class="status-dot online"></span> Chatting with ${friendUsername}`;
+    loadChat(activeChatId);
 }
 function closeChat(){ chatModal.style.display="none"; messageArea.innerHTML=""; }
 function sendMessage(){
-    const content=chatInput.value.trim();
-    if(!content) return;
-    addDoc(collection(db,"messages"),{
-        content,
-        fromUid:auth.currentUser.uid,
-        toUid:activeFriendUid,
-        duoId:activeChatId,
-        timestamp:serverTimestamp()
-    });
-    chatInput.value="";
+    const content=chatInput.value.trim();
+    if(!content) return;
+    addDoc(collection(db,"messages"),{
+        content,
+        fromUid:auth.currentUser.uid,
+        toUid:activeFriendUid,
+        duoId:activeChatId,
+        timestamp:serverTimestamp()
+    });
+    chatInput.value="";
 }
 function loadChat(duoId){
-    const q = query(collection(db,"messages"),where("duoId","==",duoId),orderBy("timestamp"));
-    onSnapshot(q,snap=>{
-        messageArea.innerHTML="";
-        snap.forEach(docSnap=>{
-            const m=docSnap.data();
-            const div=document.createElement("div");
-            div.className="message "+(m.fromUid===auth.currentUser.uid?"self":"other");
-            div.innerHTML=`<div class="message-content" ${m.type==='notification'? 'style="background: linear-gradient(90deg, #FF5733, #FFBD33); color: #050510; font-weight:bold;"':''}>${m.content}</div>`;
-            messageArea.appendChild(div);
-        });
-        messageArea.scrollTop=messageArea.scrollHeight;
-    });
+    const q = query(collection(db,"messages"),where("duoId","==",duoId),orderBy("timestamp"));
+    onSnapshot(q,snap=>{
+        messageArea.innerHTML="";
+        snap.forEach(docSnap=>{
+            const m=docSnap.data();
+            const div=document.createElement("div");
+            div.className="message "+(m.fromUid===auth.currentUser.uid?"self":"other");
+            // Highlight notification messages
+            div.innerHTML=`<div class="message-content" ${m.type==='notification'? 'style="background: linear-gradient(90deg, #FF5733, #FFBD33); color: #050510; font-weight:bold; text-align: center;"':''}>${m.content}</div>`;
+            messageArea.appendChild(div);
+        });
+        messageArea.scrollTop=messageArea.scrollHeight;
+    });
 }
 
 // ----- NOTIFICATION BADGE -----
 function setupNotificationBadge(){
-    const qNotifications=query(collection(db,"messages"),where("toUid","==",auth.currentUser.uid),where("type","==","notification"));
-    onSnapshot(qNotifications,snap=>{
-        notificationBadge.textContent = snap.size>0?`(${snap.size})`:'';
-    });
+    const qNotifications=query(collection(db,"messages"),where("toUid","==",auth.currentUser.uid),where("type","==","notification"));
+    onSnapshot(qNotifications,snap=>{
+        notificationBadge.textContent = snap.size>0?`(${snap.size})`:'';
+    });
 }
 
 // ----- LOAD ACCEPTED DUOS FOR CHAT BUTTONS -----
 function loadAcceptedDuos(){
-    const user = auth.currentUser;
-    if(!user) return;
+    const user = auth.currentUser;
+    if(!user) return;
 
-    acceptedDuosMap.clear();
+    acceptedDuosMap.clear();
 
-    const qSent = query(collection(db,"duoRequests"), where("fromUserId","==",user.uid), where("status","==","accepted"));
-    onSnapshot(qSent, snap => {
-        snap.forEach(docSnap => {
-            const r = docSnap.data();
-            const friendUid = r.toUserId;
-            acceptedDuosMap.set(friendUid, r.toUsername);
-        });
-        renderUsersGrid(searchQueryInput.value.trim());
-    });
+    const qSent = query(collection(db,"duoRequests"), where("fromUserId","==",user.uid), where("status","==","accepted"));
+    onSnapshot(qSent, snap => {
+        snap.forEach(docSnap => {
+            const r = docSnap.data();
+            const friendUid = r.toUserId;
+            acceptedDuosMap.set(friendUid, r.toUsername);
+        });
+        renderUsersGrid(searchQueryInput.value.trim());
+    });
 
-    const qReceived = query(collection(db,"duoRequests"), where("toUserId","==",user.uid), where("status","==","accepted"));
-    onSnapshot(qReceived, snap => {
-        snap.forEach(docSnap => {
-            const r = docSnap.data();
-            const friendUid = r.fromUserId;
-            acceptedDuosMap.set(friendUid, r.fromUsername);
-        });
-        renderUsersGrid(searchQueryInput.value.trim());
-    });
+    const qReceived = query(collection(db,"duoRequests"), where("toUserId","==",user.uid), where("status","==","accepted"));
+    onSnapshot(qReceived, snap => {
+        snap.forEach(docSnap => {
+            const r = docSnap.data();
+            const friendUid = r.fromUserId;
+            acceptedDuosMap.set(friendUid, r.fromUsername);
+        });
+        renderUsersGrid(searchQueryInput.value.trim());
+    });
 }
 
 // ----- AUTH STATE -----
 onAuthStateChanged(auth,user=>{
-    if(user){
-        authSection.style.display="none";
-        appSection.style.display="block";
-        mainHeader.style.display="flex";
-        loadUsers();
-        loadDuoRequests();
-        setupNotificationBadge();
-        loadAcceptedDuos();
-        showSection('home');
-    } else {
-        authSection.style.display="flex";
-        appSection.style.display="none";
-        mainHeader.style.display="none";
-    }
+    if(user){
+        authSection.style.display="none";
+        appSection.style.display="block";
+        mainHeader.style.display="flex";
+        loadUsers();
+        loadDuoRequests();
+        setupNotificationBadge();
+        loadAcceptedDuos();
+        showSection('home');
+    } else {
+        authSection.style.display="flex";
+        appSection.style.display="none";
+        mainHeader.style.display="none";
+    }
 });
 
 // ----- GLOBALS -----
 window.updateProfile = updateProfile;
 window.showSection = showSection;
-window.sendDuoRequest = sendDuoRequest;
 window.acceptDuo = acceptDuo;
 window.openChat = openChat;
 window.closeChat = closeChat;
 window.sendMessage = sendMessage;
+// New/Modified Globals
+window.openRequestModal = openRequestModal;
+window.closeRequestModal = closeRequestModal;
+window.sendDuoRequestWithModal = sendDuoRequestWithModal;
 
 </script>
 </body>
 </html>
-
