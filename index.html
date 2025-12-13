@@ -133,6 +133,7 @@ button:not(.google-btn):not(#duoSearchForm button):hover { background:linear-gra
                 <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
                 <label style="margin-top:10px; color: var(--duoup-muted);">Upload/Update Profile Photo:</label>
                 <input type="file" id="profile-photo" style="margin-top:5px;">
+                <button type="button" onclick="updateProfile()">Save Profile</button>
             </form>
             <div style="flex-grow:1; min-width:300px; max-width:320px;">
                 <h3>Your Current Duo Card Preview</h3>
@@ -262,44 +263,30 @@ function renderProfilePreview(data) {
         </div>
     `;
 }
-
-// ----- AUTO SAVE PROFILE -----
-function setupAutoSaveProfile() {
+function setupProfilePreviewListeners(initialData) {
     const fields = document.querySelectorAll(".profile-field");
-    fields.forEach(field => {
-        let timeout;
-        field.addEventListener('input', () => {
-            clearTimeout(timeout);
-            timeout = setTimeout(async () => {
-                const user = auth.currentUser;
-                if(!user) return;
-                const username = document.getElementById("profile-username").value;
-                const platform = document.getElementById("profile-platform").value;
-                const games = document.getElementById("profile-games").value;
-                const playstyle = document.getElementById("profile-playstyle").value;
-                const about = document.getElementById("profile-about").value;
-                await updateDoc(doc(db,"users",user.uid), { username, platform, games, playstyle, about });
-                renderProfilePreview({ username, platform, games, playstyle, about });
-            }, 800);
-        });
-    });
-
-    // Photo upload auto-save
-    document.getElementById("profile-photo").addEventListener('change', async e=>{
+    fields.forEach(field => { field.addEventListener('input', () => renderProfilePreview(initialData)); });
+    document.getElementById("profile-photo").addEventListener('change', e=>{
         const file = e.target.files[0];
-        if(file){
-            const user = auth.currentUser;
-            if(!user) return;
-            const storageRef = ref(storage,`profiles/${user.uid}`);
-            await uploadBytes(storageRef,file);
-            const photoURL = await getDownloadURL(storageRef);
-            await updateDoc(doc(db,"users",user.uid), { photoURL });
-            loadProfile();
-        }
+        if(file){ const reader = new FileReader(); reader.onload = (event)=>{ renderProfilePreview({...initialData, photoURL:event.target.result}); }; reader.readAsDataURL(file); }
+        else{ renderProfilePreview(initialData); }
     });
 }
 
-// ----- LOAD PROFILE -----
+// ----- PROFILE UPDATE -----
+async function updateProfile(){
+    const user = auth.currentUser; if(!user) return;
+    const username = document.getElementById("profile-username").value;
+    const platform = document.getElementById("profile-platform").value;
+    const games = document.getElementById("profile-games").value;
+    const playstyle = document.getElementById("profile-playstyle").value;
+    const about = document.getElementById("profile-about").value;
+    const file = document.getElementById("profile-photo").files[0];
+    let photoURL="";
+    if(file){ const storageRef = ref(storage,`profiles/${user.uid}`); await uploadBytes(storageRef,file); photoURL = await getDownloadURL(storageRef);}
+    await updateDoc(doc(db,"users",user.uid),{username,platform,games,playstyle,about,photoURL});
+    alert("Profile updated!"); loadProfile();
+}
 async function loadProfile(){
     const user = auth.currentUser; if(!user) return;
     const docSnap = await getDoc(doc(db,"users",user.uid));
@@ -309,24 +296,7 @@ async function loadProfile(){
     document.getElementById("profile-games").value = data.games || "";
     document.getElementById("profile-playstyle").value = data.playstyle || "";
     document.getElementById("profile-about").value = data.about || "";
-    renderProfilePreview(data);
-    setupProfilePreviewListeners(data);
-    setupAutoSaveProfile();
-}
-
-// ----- PROFILE PREVIEW INPUT LISTENERS -----
-function setupProfilePreviewListeners(initialData) {
-    const fields = document.querySelectorAll(".profile-field");
-    fields.forEach(field => { field.addEventListener('input', () => renderProfilePreview(initialData)); });
-    const photoInput = document.getElementById("profile-photo");
-    photoInput.addEventListener('change', e=>{
-        const file = e.target.files[0];
-        if(file){
-            const reader = new FileReader();
-            reader.onload = event => { renderProfilePreview({...initialData, photoURL:event.target.result}); };
-            reader.readAsDataURL(file);
-        } else { renderProfilePreview(initialData); }
-    });
+    renderProfilePreview(data); setupProfilePreviewListeners(data);
 }
 
 // ----- SECTIONS -----
@@ -336,9 +306,148 @@ function showSection(section){
     if(section==="profile") loadProfile();
 }
 
-// The rest of the code (duo search, chat, notifications, etc.) remains the same as your previous full version.
-// Make sure to include it after this section or merge it with your existing code.
+// ----- USERS / DUO SEARCH -----
+async function loadUsers(){
+    const q = query(collection(db,"users"));
+    onSnapshot(q,snapshot=>{
+        allUsersData = snapshot.docs.filter(doc => doc.id !== auth.currentUser.uid).map(doc => ({id:doc.id,data:doc.data()}));
+        renderUsersGrid();
+    });
+}
+function renderUsersGrid(queryText=''){
+    const queryLower = queryText.toLowerCase();
+    usersGrid.innerHTML="";
+    const filteredUsers = allUsersData.filter(userDoc=>{
+        if(!queryLower) return true;
+        const data = userDoc.data;
+        return (data.username||'').toLowerCase().includes(queryLower)||(data.platform||'').toLowerCase().includes(queryLower)||(data.games||'').toLowerCase().includes(queryLower);
+    });
+    if(userCountElement) userCountElement.textContent = `(${filteredUsers.length} Players Matched)`;
+    filteredUsers.forEach(userDoc=>{
+        const u = userDoc.data; const docId = userDoc.id;
+        const div = document.createElement("div");
+        div.className="duo-card";
+        div.innerHTML=`<div class="card-header"><div class="avatar">${u.photoURL?`<img src="${u.photoURL}">`:u.username[0]}</div><strong>${u.username}</strong></div>
+        <div class="bio">Platform: ${u.platform||'N/A'}<br>Games: ${u.games||'N/A'}<br>Playstyle: ${u.playstyle||'N/A'}</div>
+        <button class="action-button" onclick="sendDuoRequest('${docId}','${u.username}')">Send Duo Request</button>`;
+        usersGrid.appendChild(div);
+    });
+}
+duoSearchForm.addEventListener("submit", e=>{ e.preventDefault(); renderUsersGrid(searchQueryInput.value.trim()); });
+searchQueryInput.addEventListener("input", ()=>{ renderUsersGrid(searchQueryInput.value.trim()); });
 
+// ----- SEND DUO REQUEST WITH MESSAGE NOTIFICATION -----
+async function sendDuoRequest(toUid, toUsername){
+    const fromUid = auth.currentUser.uid;
+    const fromDoc = await getDoc(doc(db,"users",fromUid));
+    const fromUsername = fromDoc.data().username;
+
+    const requestRef = await addDoc(collection(db,"duoRequests"),{
+        fromUserId:fromUid,
+        fromUsername,
+        toUserId:toUid,
+        toUsername,
+        status:"pending",
+        timestamp:serverTimestamp()
+    });
+
+    await addDoc(collection(db,"messages"),{
+        content:`📨 ${fromUsername} has sent you a Duo Request!`,
+        fromUid:fromUid,
+        toUid:toUid,
+        duoId:`request_${requestRef.id}`,
+        timestamp:serverTimestamp(),
+        type:"notification"
+    });
+
+    alert("Duo request sent! The recipient has been notified in their messages.");
+}
+
+// ----- LOAD DUO REQUESTS -----
+function loadDuoRequests(){
+    const user = auth.currentUser; const duosMap = new Map();
+    const q1 = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","pending"));
+    onSnapshot(q1,snap=>{
+        requestsGrid.innerHTML="";
+        snap.forEach(docSnap=>{
+            const r = docSnap.data();
+            const div = document.createElement("div");
+            div.className="duo-card duo-request-card";
+            div.innerHTML=`<div class="card-header"><strong>${r.fromUsername}</strong></div>
+                <button class="action-button" onclick="acceptDuo('${docSnap.id}')">Accept</button>`;
+            requestsGrid.appendChild(div);
+        });
+    });
+
+    function renderAcceptedDuos(snap){
+        snap.forEach(docSnap=>{
+            const r=docSnap.data();
+            const friendUid=r.fromUserId===user.uid?r.toUserId:r.fromUserId;
+            const friendUsername=r.fromUserId===user.uid?r.toUsername:r.fromUsername;
+            if(!duosMap.has(friendUid)) duosMap.set(friendUid,{id:docSnap.id,username:friendUsername});
+        });
+        duosGrid.innerHTML="";
+        duosMap.forEach((duo,friendUid)=>{
+            const div=document.createElement("div");
+            div.className="duo-card";
+            div.innerHTML=`<div class="card-header"><strong>${duo.username}</strong></div>
+            <button class="action-button" onclick="openChat('${friendUid}','${duo.username}')">Chat</button>`;
+            duosGrid.appendChild(div);
+        });
+    }
+
+    const qSent = query(collection(db,"duoRequests"),where("fromUserId","==",user.uid),where("status","==","accepted"));
+    onSnapshot(qSent, renderAcceptedDuos);
+    const qReceived = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","accepted"));
+    onSnapshot(qReceived, renderAcceptedDuos);
+}
+async function acceptDuo(requestId){ await updateDoc(doc(db,"duoRequests",requestId),{status:"accepted"}); }
+
+// ----- CHAT -----
+function openChat(friendUid,friendUsername){
+    activeChatId = [auth.currentUser.uid,friendUid].sort().join("_");
+    activeFriendUid = friendUid;
+    chatModal.style.display="flex";
+    chatHeader.innerHTML = `<span class="status-dot online"></span> Chatting with ${friendUsername}`;
+    loadChat(activeChatId);
+}
+function closeChat(){ chatModal.style.display="none"; messageArea.innerHTML=""; }
+function sendMessage(){
+    const content=chatInput.value.trim();
+    if(!content) return;
+    addDoc(collection(db,"messages"),{
+        content,
+        fromUid:auth.currentUser.uid,
+        toUid:activeFriendUid,
+        duoId:activeChatId,
+        timestamp:serverTimestamp()
+    });
+    chatInput.value="";
+}
+function loadChat(duoId){
+    const q = query(collection(db,"messages"),where("duoId","==",duoId),orderBy("timestamp"));
+    onSnapshot(q,snap=>{
+        messageArea.innerHTML="";
+        snap.forEach(docSnap=>{
+            const m=docSnap.data();
+            const div=document.createElement("div");
+            div.className="message "+(m.fromUid===auth.currentUser.uid?"self":"other");
+            div.innerHTML=`<div class="message-content" ${m.type==='notification'? 'style="background: linear-gradient(90deg, #FF5733, #FFBD33); color: #050510; font-weight:bold;"':''}>${m.content}</div>`;
+            messageArea.appendChild(div);
+        });
+        messageArea.scrollTop=messageArea.scrollHeight;
+    });
+}
+
+// ----- NOTIFICATION BADGE -----
+function setupNotificationBadge(){
+    const qNotifications=query(collection(db,"messages"),where("toUid","==",auth.currentUser.uid),where("type","==","notification"));
+    onSnapshot(qNotifications,snap=>{
+        notificationBadge.textContent = snap.size>0?`(${snap.size})`:'';
+    });
+}
+
+// ----- AUTH STATE -----
 onAuthStateChanged(auth,user=>{
     if(user){
         authSection.style.display="none";
@@ -355,8 +464,15 @@ onAuthStateChanged(auth,user=>{
     }
 });
 
-window.loadProfile = loadProfile;
+// ----- GLOBALS -----
+window.updateProfile = updateProfile;
 window.showSection = showSection;
+window.sendDuoRequest = sendDuoRequest;
+window.acceptDuo = acceptDuo;
+window.openChat = openChat;
+window.closeChat = closeChat;
+window.sendMessage = sendMessage;
+
 </script>
 </body>
 </html>
