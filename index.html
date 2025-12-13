@@ -3,27 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tr3vMedia SYNTH-O Game (Full AI Logic)</title>
+    <title>Tr3vMedia NEON Messenger Terminal</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* --- CORE NEON & SYNTH-O STYLES (Unchanged) --- */
+        /* --- CORE NEON STYLES --- */
         :root {
-            --bg-dark: #0F1117;
-            --neon-green: #00FF66;
-            --neon-glow: 0 0 8px var(--neon-green), 0 0 15px var(--neon-green);
-            --card-bg: #1B1E28;
+            --bg-dark: #07090F; /* Darker background for contrast */
+            --neon-primary: #00FF66; /* Main Green Neon */
+            --neon-secondary: #0088FF; /* Blue accent */
+            --neon-glow-primary: 0 0 10px var(--neon-primary), 0 0 20px rgba(0, 255, 102, 0.7);
+            --neon-glow-secondary: 0 0 8px var(--neon-secondary);
+            --interface-bg: #101520; /* Slightly lighter inner components */
             --text-light: #E0E0E0;
-            --secondary-dark: #12151d;
-            
-            /* SYNTH-O Colors */
-            --synth-red: #E74C3C;
-            --synth-blue: #3498DB;
-            --synth-green: #2ECC71;
-            --synth-yellow: #F1C40F;
-            --synth-wild: #34495E;
-            
-            /* TCG Rarity Colors */
-            --rarity-legendary: #ffc107;
         }
 
         body {
@@ -31,630 +22,329 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh; 
+            min-height: 100vh;
             background-color: var(--bg-dark);
-            color: var(--neon-green);
+            color: var(--text-light);
             margin: 0;
-            padding: 20px;
+            padding: 0;
+            overflow-x: hidden;
         }
 
-        h1 {
-            text-shadow: var(--neon-glow);
-            margin-bottom: 30px;
-            font-size: 2em;
+        /* --- HEADER & ICON STYLES --- */
+        .app-header {
+            width: 100%;
+            height: 100px;
+            background-color: var(--interface-bg);
+            border-bottom: 3px solid var(--neon-primary);
+            box-shadow: 0 0 15px rgba(0, 255, 102, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 20px;
+            margin-bottom: 20px;
         }
-        
-        /* --- GENERAL UI & MODAL STYLES (Unchanged/Simplified) --- */
-        .header-controls { display: flex; gap: 15px; margin-bottom: 20px; }
-        .ui-button:hover, .controls button:hover, .pack-button:hover {
-            background-color: var(--neon-green); color: var(--bg-dark); transform: translateY(-2px); box-shadow: none;
+        .header-icon {
+            width: 100px;
+            height: 65px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 5px var(--neon-primary));
         }
-
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.9); display: flex; justify-content: center;
-            align-items: center; z-index: 1000; backdrop-filter: blur(5px);
-        }
-        .modal-content {
-            background: var(--card-bg); padding: 30px; border-radius: 12px;
-            border: 2px solid var(--neon-green); box-shadow: var(--neon-glow);
-            width: 90%; max-width: 900px; color: var(--text-light);
-            max-height: 90vh; overflow-y: auto;
-        }
-
-        /* --- SYNTH-O GAME BOARD STYLES --- */
-        #synthOBoard {
-            display: grid;
-            grid-template-areas: 
-                "log log"
-                "center board"
-                "hand hand";
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            min-height: 70vh;
-        }
-        .game-log { grid-area: log; background: var(--secondary-dark); padding: 10px; border-radius: 6px; font-size: 0.8em; max-height: 80px; overflow-y: auto; border: 1px solid var(--neon-green); }
-        .center-area { grid-area: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .board-info { grid-area: board; background: var(--secondary-dark); padding: 15px; border-radius: 6px; border: 1px solid var(--neon-green); }
-        .player-hand { grid-area: hand; display: flex; justify-content: flex-start; gap: 10px; padding-top: 20px; border-top: 1px dashed var(--neon-green); overflow-x: auto; max-width: 100%; }
-
-        /* SYNTH-O Card Styling */
-        .synth-card {
-            width: 80px; height: 120px; border-radius: 8px; border: 3px solid var(--text-light);
-            display: flex; align-items: center; justify-content: center; font-size: 1.5em; /* Smaller font for actions */
-            font-weight: bold; color: var(--text-light); box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-            transition: transform 0.1s; cursor: pointer; flex-shrink: 0; 
+        .header-title {
+            color: var(--neon-primary);
+            font-size: 2.2em;
+            text-shadow: var(--neon-glow-primary);
+            margin-left: 20px;
+            letter-spacing: 2px;
         }
 
-        /* Color classes */
-        .color-R { background-color: var(--synth-red); border-color: var(--synth-red); }
-        .color-B { background-color: var(--synth-blue); border-color: var(--synth-blue); }
-        .color-G { background-color: var(--synth-green); border-color: var(--synth-green); }
-        .color-Y { background-color: var(--synth-yellow); border-color: var(--synth-yellow); }
-        .color-W { background-color: var(--synth-wild); color: var(--neon-green); border-color: var(--neon-green); }
-        .deck-card { background-color: var(--synth-wild); border-color: var(--neon-green); color: var(--neon-green); }
-        
-        .synth-card:hover { transform: translateY(-5px); }
-        .synth-card.playable { border: 3px solid var(--neon-green) !important; box-shadow: 0 0 15px var(--neon-green) !important; }
-        .synth-card.non-playable { opacity: 0.5; cursor: default; }
+        /* --- MESSENGER LAYOUT --- */
+        .messenger-container {
+            display: flex;
+            width: 90%;
+            max-width: 1200px;
+            height: 80vh;
+            background-color: var(--interface-bg);
+            border: 2px solid var(--neon-primary);
+            box-shadow: var(--neon-glow-primary);
+            border-radius: 10px;
+            overflow: hidden;
+        }
 
-        /* Discard Pile */
-        #discardPile { 
-            position: relative; width: 100px; height: 140px; border: 2px dashed var(--text-light); 
-            display: flex; align-items: center; justify-content: center; 
+        /* --- CONTACTS / SIDEBAR --- */
+        .contact-list {
+            width: 300px;
+            border-right: 1px solid var(--neon-primary);
+            background-color: rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
         }
-        #discardPile .synth-card {
-            position: absolute; width: 100px; height: 140px; transform: rotate(2deg);
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-        }
-        
-        /* Color Picker */
-        #colorPicker {
-            position: absolute;
-            bottom: 50%; /* Center of the modal */
-            left: 50%;
-            transform: translate(-50%, 50%);
-            padding: 20px;
-            background: var(--card-bg);
-            border: 2px solid var(--neon-green);
-            border-radius: 8px;
-            box-shadow: var(--neon-glow);
-            z-index: 1001;
-            display: none;
+        .contact-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--neon-primary);
+            color: var(--neon-secondary);
+            text-shadow: var(--neon-glow-secondary);
+            font-size: 1.1em;
             text-align: center;
         }
-        .color-option {
-            width: 40px; height: 40px; border-radius: 50%; display: inline-block; margin: 5px;
-            cursor: pointer; border: 2px solid var(--text-light);
+        .contact-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-bottom: 1px dotted rgba(0, 255, 102, 0.2);
         }
-        .color-option:hover {
-            border-width: 4px;
+        .contact-item:hover, .contact-item.active {
+            background-color: rgba(0, 255, 102, 0.15);
+            border-left: 5px solid var(--neon-primary);
+            padding-left: 5px;
+        }
+        .contact-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-secondary);
+            background-color: var(--bg-dark);
+            margin-right: 10px;
+        }
+        .contact-info strong {
+            color: var(--text-light);
+            font-weight: normal;
+        }
+        .contact-info span {
+            display: block;
+            font-size: 0.75em;
+            color: var(--neon-primary);
+            opacity: 0.8;
+        }
+
+        /* --- CHAT WINDOW --- */
+        .chat-window {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: var(--bg-dark);
+        }
+        .chat-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--neon-primary);
+            color: var(--neon-primary);
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.5);
+            font-size: 1.2em;
+        }
+        .message-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        /* Message Bubbles */
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+        }
+        .message.self {
+            justify-content: flex-end;
+        }
+        .message-bubble {
+            max-width: 60%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            line-height: 1.4;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+        }
+        .message.other .message-bubble {
+            background-color: var(--neon-secondary);
+            color: var(--bg-dark);
+            border-bottom-left-radius: 2px;
+            box-shadow: var(--neon-glow-secondary);
+        }
+        .message.self .message-bubble {
+            background-color: var(--neon-primary);
+            color: var(--bg-dark);
+            border-bottom-right-radius: 2px;
+            box-shadow: var(--neon-glow-primary);
+        }
+        
+        /* Input Area */
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            border-top: 2px solid var(--neon-primary);
+            background-color: var(--interface-bg);
+        }
+        .chat-input input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 2px solid var(--neon-secondary);
+            background-color: var(--bg-dark);
+            color: var(--neon-primary);
+            font-family: 'Share Tech Mono', monospace;
+            border-radius: 5px;
+            margin-right: 10px;
+            text-shadow: 0 0 3px var(--neon-primary);
+            box-shadow: 0 0 8px rgba(0, 136, 255, 0.5);
+        }
+        .chat-input input[type="text"]:focus {
+            outline: none;
+            border-color: var(--neon-primary);
+            box-shadow: var(--neon-glow-primary);
+        }
+        .chat-input button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--neon-primary);
+            color: var(--bg-dark);
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .chat-input button:hover {
+            background-color: #00FF99;
         }
 
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>TR3VMEDIA // SYNTH-O TERMINAL</h1>
-        <div class="header-controls">
-            <button id="customizeBtn" class="ui-button">⚙️ Custom Card</button>
-            <button id="viewCollectionBtn" class="ui-button">🎴 Collection</button>
-            <button id="openPackBtn" class="pack-button">⚡ Open Pack</button>
-            <button id="playSynthOBtn" class="ui-button">🎮 Play SYNTH-O</button>
-            <button id="loginBtn" class="ui-button">🔓 Login/Logout</button>
-        </div>
+    <header class="app-header">
+        <img src="https://see.fontimg.com/api/rf5/vXL4/YTM3ZmYyMWFkMzNiNGY5MGEwY2ZmZTZmNDhiZGI4NzkudHRm/VHIzdk1lZGlh/chimpanzee-website-report.png?r=fs&h=65&w=1000&fg=E8E4E4&bg=27E2A1&tb=1&s=65" 
+             alt="Tr3vMedia Icon" 
+             class="header-icon">
+        <h1 class="header-title">NEON MESSENGER // INITIATE COMMS</h1>
     </header>
 
-    <div id="synthOModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content" style="max-width: 90vw;">
-            <h2 id="synthOTitle">SYNTH-O: Initiate Sequence</h2>
-            <div id="synthOBoard">
-                
-                <div class="game-log">
-                    <p>SYSTEM LOG:</p>
-                    <div id="logContent"></div>
+    <div class="messenger-container">
+        
+        <div class="contact-list">
+            <div class="contact-header">ACTIVE CHANNELS (3)</div>
+            
+            <div class="contact-item active" data-id="1" data-name="@CyberGhost">
+                <div class="contact-avatar" style="background-color: #ff33ff;"></div>
+                <div class="contact-info">
+                    <strong>@CyberGhost</strong>
+                    <span>[NEW] Awaiting data transfer...</span>
                 </div>
-
-                <div class="center-area">
-                    <div id="drawDeck" class="synth-card deck-card" onclick="drawCardWrapper()">DECK</div>
-                    
-                    <div style="margin-top: 20px;">
-                        <p style="color: var(--text-light); margin-bottom: 5px;">DISCARD PILE</p>
-                        <div id="discardPile">
-                            </div>
-                    </div>
-                </div>
-
-                <div class="board-info">
-                    <h3>GAME STATE</h3>
-                    <p>Current Player: <strong id="currentPlayerName"></strong></p>
-                    <p>Turn Direction: <strong id="direction"></strong></p>
-                    <p>Required Color: <strong id="requiredColor" style="color: var(--neon-green);"></strong></p>
-                    <p>Required Value: <strong id="requiredValue" style="color: var(--neon-green);"></strong></p>
-                    <p>Hand Count (AI): <strong id="aiHandCount">0</strong></p>
-                    <p>Deck Count: <strong id="deckCount">0</strong></p>
-                    
-                    <button id="synthOBtn" class="ui-button" onclick="saySynthO()" disabled>SAY SYNTH-O</button>
-                    <button class="ui-button" onclick="closeSynthOModal()" style="float: right;">EXIT GAME</button>
-                </div>
-
-                <div class="player-hand">
-                    </div>
             </div>
+
+            <div class="contact-item" data-id="2" data-name="@Synapse_AI">
+                <div class="contact-avatar" style="background-color: #ffcc00;"></div>
+                <div class="contact-info">
+                    <strong>@Synapse_AI</strong>
+                    <span>System update complete.</span>
+                </div>
+            </div>
+
+            <div class="contact-item" data-id="3" data-name="@CodeMonkey">
+                <div class="contact-avatar" style="background-color: #00ffcc;"></div>
+                <div class="contact-info">
+                    <strong>@CodeMonkey</strong>
+                    <span>Last seen: 02:45 AM</span>
+                </div>
+            </div>
+            
         </div>
 
-        <div id="colorPicker">
-            <h3>Choose New Color</h3>
-            <div class="color-options-container">
-                <span class="color-option color-R" onclick="selectWildColor('R')"></span>
-                <span class="color-option color-B" onclick="selectWildColor('B')"></span>
-                <span class="color-option color-G" onclick="selectWildColor('G')"></span>
-                <span class="color-option color-Y" onclick="selectWildColor('Y')"></span>
+        <div class="chat-window">
+            
+            <div class="chat-header">
+                Channel: <span id="currentChatName">@CyberGhost</span>
+            </div>
+
+            <div class="message-area" id="messageArea">
+                
+                <div class="message other">
+                    <div class="message-bubble">
+                        Establishing secure connection... Protocol 7 initiated. Have you seen the new firmware update for the synth rigs?
+                    </div>
+                </div>
+
+                <div class="message self">
+                    <div class="message-bubble">
+                        Affirmative. Running diagnostics now. The latency is almost zero. Neon is looking sharper than ever.
+                    </div>
+                </div>
+                
+                <div class="message other">
+                    <div class="message-bubble">
+                        Good. Send the encrypted TCG manifest when ready.
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Type data stream here...">
+                <button onclick="sendMessage()">SEND</button>
             </div>
         </div>
     </div>
-
-
+    
     <script>
-        // --- JAVASCRIPT LOGIC (SYNTH-O Game) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.scrollTop = messageArea.scrollHeight; // Scroll to bottom on load
 
-        // Card definition structure: Color, Value (0-9, S, R, D2, W, W4)
-        const COLORS = ['R', 'B', 'G', 'Y'];
-        const VALUES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'S', 'R', 'D2'];
-        const WILD_CARDS = ['W', 'W4'];
-        const PLAYER_NAMES = ['User', 'BOT-Alpha'];
-        
-        // --- GLOBAL GAME STATE ---
-        let gameDeck = [];
-        let discardPile = [];
-        let playerHand = [];
-        let aiHand = [];
-
-        let isGameRunning = false;
-        let currentPlayerIndex = 0; // 0: User, 1: BOT-Alpha
-        let currentDirection = 1; // 1: Clockwise (default), -1: Counter-Clockwise
-        let hasDrawn = false;
-        let pendingCard = null; // Used to hold a wild card until color is selected
-
-        const logContent = document.getElementById('logContent');
-
-        // --- UTILITIES ---
-
-        function log(message) {
-            logContent.innerHTML += `<p>${message}</p>`;
-            logContent.scrollTop = logContent.scrollHeight;
-        }
-        
-        function getTopCard() {
-            return discardPile[discardPile.length - 1];
-        }
-
-        function getColorName(code) {
-            switch(code) {
-                case 'R': return 'RED';
-                case 'B': return 'BLUE';
-                case 'G': return 'GREEN';
-                case 'Y': return 'YELLOW';
-                default: return 'WILD';
-            }
-        }
-
-        function getDisplayValue(value) {
-            switch(value) {
-                case 'S': return 'Ø'; 
-                case 'R': return '⇌'; 
-                case 'D2': return '+2'; 
-                case 'W': return 'WILD'; 
-                case 'W4': return '+4'; 
-                default: return value;
-            }
-        }
-
-        function shuffleDeck(deck) {
-            for (let i = deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [deck[i], deck[j]] = [deck[j], deck[i]];
-            }
-            return deck;
-        }
-
-        // --- DECK & DRAW LOGIC ---
-
-        function createDeck() {
-            let deck = [];
-            COLORS.forEach(color => {
-                deck.push({ color: color, value: '0' }); // One '0' per color
-                for (let i = 1; i <= 9; i++) {
-                    deck.push({ color: color, value: String(i) });
-                    deck.push({ color: color, value: String(i) });
-                }
-                ['S', 'R', 'D2'].forEach(value => {
-                    deck.push({ color: color, value: value });
-                    deck.push({ color: color, value: value });
+            // Mock selection logic for contacts
+            document.querySelectorAll('.contact-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelector('.contact-item.active')?.classList.remove('active');
+                    this.classList.add('active');
+                    
+                    const chatName = this.getAttribute('data-name');
+                    document.getElementById('currentChatName').textContent = chatName;
+                    
+                    // Mock: Clear and show a new message for context
+                    messageArea.innerHTML = `
+                        <div class="message other">
+                            <div class="message-bubble">
+                                Switched to chat with ${chatName}. Initializing chat history...
+                            </div>
+                        </div>
+                    `;
+                    messageArea.scrollTop = messageArea.scrollHeight;
                 });
             });
-            WILD_CARDS.forEach(value => {
-                for (let i = 0; i < 4; i++) {
-                    deck.push({ color: 'W', value: value });
+            
+            // Allow 'Enter' key to send message
+            document.getElementById('messageInput').addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
                 }
             });
-            return shuffleDeck(deck);
-        }
+        });
 
-        function drawCardFromDeck(hand, count = 1) {
-            for (let i = 0; i < count; i++) {
-                if (gameDeck.length === 0) {
-                    if (discardPile.length <= 1) {
-                        log("CRITICAL: No cards left to draw!");
-                        return;
-                    }
-                    const topCard = discardPile.pop();
-                    gameDeck = shuffleDeck(discardPile);
-                    discardPile = [topCard];
-                    log("Deck empty. Reshuffling discard pile into the deck.");
-                }
-                const card = gameDeck.pop();
-                hand.push(card);
-            }
-            updateHandDisplay();
-            updateGameInfo();
-        }
-        
-        function drawCardWrapper() {
-            if (currentPlayerIndex !== 0) return; // Only user can trigger the draw button
-            if (hasDrawn) {
-                log("You already drew this turn. You must play or pass.");
-                return;
-            }
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const messageArea = document.getElementById('messageArea');
+            const messageText = input.value.trim();
+
+            if (messageText === "") return;
+
+            // 1. Create and append the message bubble (Self)
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message self';
+            messageDiv.innerHTML = `<div class="message-bubble">${messageText}</div>`;
             
-            drawCardFromDeck(playerHand, 1);
-            hasDrawn = true;
+            messageArea.appendChild(messageDiv);
             
-            const topCard = getTopCard();
-            const playableCards = playerHand.filter(card => isCardPlayable(card, topCard));
+            // 2. Clear input
+            input.value = '';
             
-            // If the drawn card makes a play possible, the user can still play it
-            // Otherwise, they pass the turn.
-            if (playableCards.length === 0) {
-                log("Drawn card not playable. Passing turn.");
-                nextTurn();
-            } else {
-                log("Drawn a card. You may now play it or pass.");
-            }
-        }
-
-        // --- GAME PLAY VALIDATION & UI ---
-
-        function isCardPlayable(card, topCard) {
-            // Check against the actual color property of the card on the pile
-            const requiredColor = topCard.color === 'W' ? topCard.selectedColor : topCard.color;
-
-            // Wild cards are always playable
-            if (card.color === 'W') return true;
-
-            // Must match the currently required color OR the value
-            return card.color === requiredColor || card.value === topCard.value;
-        }
-
-        function updateHandDisplay() {
-            const handContainer = document.querySelector('.player-hand');
-            const topCard = getTopCard();
-            handContainer.innerHTML = '';
+            // 3. Scroll to the new message
+            messageArea.scrollTop = messageArea.scrollHeight;
             
-            playerHand.forEach((card, index) => {
-                const playable = currentPlayerIndex === 0 && isCardPlayable(card, topCard);
-                const cardElement = renderCard(card, index, playable);
-                handContainer.appendChild(cardElement);
-            });
-            
-            // Check for SYNTH-O state
-            document.getElementById('synthOBtn').disabled = playerHand.length !== 2;
+            // 4. Mock Bot Response
+            setTimeout(() => {
+                const responseDiv = document.createElement('div');
+                responseDiv.className = 'message other';
+                const responseText = `[BOT] Received: "${messageText.substring(0, 15)}...". Processing query. Standby.`;
+                responseDiv.innerHTML = `<div class="message-bubble">${responseText}</div>`;
+                messageArea.appendChild(responseDiv);
+                messageArea.scrollTop = messageArea.scrollHeight;
+            }, 1500);
         }
-
-        function updateDiscardPile() {
-            const pileContainer = document.getElementById('discardPile');
-            const topCard = getTopCard();
-            pileContainer.innerHTML = '';
-            
-            if (topCard) {
-                const cardElement = renderCard(topCard, -1, false);
-                cardElement.style.cursor = 'default';
-                pileContainer.appendChild(cardElement);
-            }
-        }
-        
-        function updateGameInfo() {
-            const topCard = getTopCard();
-            const requiredColor = topCard.color === 'W' ? topCard.selectedColor : topCard.color;
-            const colorName = getColorName(requiredColor);
-            
-            document.getElementById('currentPlayerName').textContent = PLAYER_NAMES[currentPlayerIndex];
-            document.getElementById('direction').textContent = currentDirection === 1 ? 'CLOCKWISE (→)' : 'COUNTER-CLOCKWISE (←)';
-            document.getElementById('requiredColor').textContent = colorName;
-            document.getElementById('requiredValue').textContent = getDisplayValue(topCard.value);
-            document.getElementById('aiHandCount').textContent = aiHand.length;
-            document.getElementById('deckCount').textContent = gameDeck.length;
-
-            // Highlight current player
-            document.getElementById('currentPlayerName').style.color = (currentPlayerIndex === 0) ? 'var(--neon-green)' : 'var(--synth-red)';
-        }
-
-        function renderCard(card, index, isPlayable = false) {
-            const displayValue = getDisplayValue(card.value);
-
-            const cardElement = document.createElement('div');
-            cardElement.className = `synth-card color-${card.color} ${isPlayable ? 'playable' : 'non-playable'}`;
-            cardElement.textContent = displayValue;
-            cardElement.dataset.index = index;
-            
-            if (isPlayable) {
-                cardElement.onclick = () => playCard(index);
-            }
-
-            return cardElement;
-        }
-
-        // --- TURN FLOW & ACTION CARDS ---
-        
-        function resolveAction(card) {
-            let skipTurn = false;
-            let drawCount = 0;
-            const nextPlayerIndex = (currentPlayerIndex + currentDirection + PLAYER_NAMES.length) % PLAYER_NAMES.length;
-            const targetHand = nextPlayerIndex === 0 ? playerHand : aiHand;
-            const targetPlayerName = PLAYER_NAMES[nextPlayerIndex];
-
-            switch (card.value) {
-                case 'S':
-                    log(`ACTION: ${targetPlayerName} is SKIPPED.`);
-                    skipTurn = true;
-                    break;
-                case 'R':
-                    currentDirection *= -1;
-                    log("ACTION: Direction REVERSED.");
-                    break;
-                case 'D2':
-                    drawCount = 2;
-                    log(`ACTION: ${targetPlayerName} draws 2 cards.`);
-                    break;
-                case 'W4':
-                    drawCount = 4;
-                    log(`ACTION: ${targetPlayerName} draws 4 cards.`);
-                    break;
-            }
-
-            if (drawCount > 0) {
-                drawCardFromDeck(targetHand, drawCount);
-                skipTurn = true; // Player who draws is always skipped
-            }
-            
-            // Advance turn, potentially skipping the next player
-            currentPlayerIndex = (currentPlayerIndex + currentDirection + PLAYER_NAMES.length) % PLAYER_NAMES.length;
-            if (skipTurn) {
-                currentPlayerIndex = (currentPlayerIndex + currentDirection + PLAYER_NAMES.length) % PLAYER_NAMES.length;
-                log(`Turn automatically advances past ${targetPlayerName}.`);
-            }
-        }
-        
-        function nextTurn() {
-            hasDrawn = false;
-            // Only advance if it wasn't a Draw 2/4 or Skip
-            // (The resolveAction already handled the skip logic)
-            currentPlayerIndex = (currentPlayerIndex + currentDirection + PLAYER_NAMES.length) % PLAYER_NAMES.length;
-            
-            updateGameInfo();
-            updateHandDisplay();
-            
-            if (currentPlayerIndex === 1) {
-                setTimeout(botPlayTurn, 1000); // Give player time to see the move
-            } else {
-                log(`It is now your turn, ${PLAYER_NAMES[currentPlayerIndex]}.`);
-            }
-        }
-        
-        function playCard(index) {
-            if (currentPlayerIndex !== 0) return;
-
-            const card = playerHand[index];
-            const topCard = getTopCard();
-
-            if (!isCardPlayable(card, topCard)) {
-                log("Invalid move: Card does not match color or value.");
-                return;
-            }
-
-            playerHand.splice(index, 1);
-            log(`User played ${card.color}-${card.value}.`);
-
-            // Check for Wilds: If it's a Wild, prompt for color selection
-            if (card.color === 'W') {
-                pendingCard = card;
-                document.getElementById('colorPicker').style.display = 'block';
-                return; // Wait for color selection
-            }
-
-            // Normal card or non-Wild action
-            discardPile.push(card);
-            checkWinCondition(playerHand, 'User');
-            resolveAction(card);
-            nextTurn();
-        }
-
-        // --- WILD CARD LOGIC ---
-        
-        function selectWildColor(colorCode) {
-            document.getElementById('colorPicker').style.display = 'none';
-            if (!pendingCard) return;
-
-            // Set the wild card's temporary color
-            pendingCard.selectedColor = colorCode;
-            
-            // Log the play and push to discard
-            discardPile.push(pendingCard);
-            log(`Color selected: ${getColorName(colorCode)}.`);
-            
-            checkWinCondition(playerHand, 'User');
-            resolveAction(pendingCard);
-            pendingCard = null;
-            nextTurn();
-        }
-
-        // --- AI BOT LOGIC (Simple Strategy) ---
-
-        function botPlayTurn() {
-            if (currentPlayerIndex !== 1) return;
-
-            const topCard = getTopCard();
-            const playableCards = aiHand.filter(card => isCardPlayable(card, topCard));
-
-            if (playableCards.length > 0) {
-                // Strategy 1: Play the first playable card found
-                const cardToPlay = playableCards[0];
-                const cardIndex = aiHand.indexOf(cardToPlay);
-                aiHand.splice(cardIndex, 1);
-                
-                log(`BOT-Alpha played ${cardToPlay.color}-${cardToPlay.value}.`);
-
-                if (cardToPlay.color === 'W') {
-                    // Bot's Wild Card Color Choice: Pick the color it has the most of (excluding the wild itself)
-                    const colorCounts = {};
-                    aiHand.filter(c => c.color !== 'W').forEach(c => {
-                        colorCounts[c.color] = (colorCounts[c.color] || 0) + 1;
-                    });
-                    const chosenColor = Object.keys(colorCounts).reduce((a, b) => colorCounts[a] > colorCounts[b] ? a : b, COLORS[0]);
-                    
-                    cardToPlay.selectedColor = chosenColor;
-                    log(`BOT-Alpha chose color: ${getColorName(chosenColor)}.`);
-                }
-
-                discardPile.push(cardToPlay);
-                checkWinCondition(aiHand, 'BOT-Alpha');
-                resolveAction(cardToPlay);
-                nextTurn();
-
-            } else {
-                // Strategy 2: Draw a card
-                drawCardFromDeck(aiHand, 1);
-                log("BOT-Alpha drew a card.");
-                
-                // After drawing, check if the card is playable
-                const drawnCard = aiHand[aiHand.length - 1];
-                if (isCardPlayable(drawnCard, topCard)) {
-                    // Play the drawn card immediately
-                    aiHand.pop(); 
-                    log(`BOT-Alpha immediately played the drawn card: ${drawnCard.color}-${drawnCard.value}.`);
-                    discardPile.push(drawnCard);
-                    checkWinCondition(aiHand, 'BOT-Alpha');
-                    resolveAction(drawnCard);
-                } else {
-                    log("BOT-Alpha could not play the drawn card. Passing turn.");
-                }
-                
-                nextTurn();
-            }
-        }
-        
-        // --- WIN CONDITION ---
-        
-        function checkWinCondition(hand, playerName) {
-            if (hand.length === 0) {
-                alert(`GAME OVER. ${playerName} has won SYNTH-O!`);
-                closeSynthOModal();
-                return true;
-            }
-            if (hand.length === 1 && playerName === 'BOT-Alpha') {
-                log("BOT-Alpha called SYNTH-O!");
-            }
-            return false;
-        }
-
-        function saySynthO() {
-            if (playerHand.length === 2) {
-                log("User declared SYNTH-O!");
-            } else {
-                log("Cannot declare SYNTH-O. You need exactly 2 cards to call it.");
-            }
-        }
-
-        // --- GAME CONTROL ---
-
-        function initSynthOGame() {
-            gameDeck = createDeck();
-            discardPile = [];
-            playerHand = [];
-            aiHand = [];
-            logContent.innerHTML = 'Game initialized. Drawing hands...';
-
-            // Draw initial hands (7 cards each)
-            for (let i = 0; i < 7; i++) {
-                drawCardFromDeck(playerHand, 1);
-                drawCardFromDeck(aiHand, 1);
-            }
-
-            // Flip the first card (must not be a Wild Draw Four)
-            let firstCard;
-            do {
-                firstCard = gameDeck.pop();
-                if (firstCard.value === 'W4') {
-                    gameDeck.unshift(firstCard);
-                    gameDeck = shuffleDeck(gameDeck);
-                }
-            } while (firstCard.value === 'W4');
-            
-            // If the first card is a standard Wild, it resolves immediately to a random color
-            if (firstCard.color === 'W') {
-                const nextColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-                firstCard.selectedColor = nextColor;
-                log(`First card is WILD. Color set to ${getColorName(nextColor)}.`);
-            }
-
-            discardPile.push(firstCard);
-            
-            // Start the game flow
-            currentPlayerIndex = 0; // User starts
-            currentDirection = 1;
-            hasDrawn = false;
-
-            updateDiscardPile();
-            updateHandDisplay();
-            updateGameInfo();
-            isGameRunning = true;
-            log(`Game ready. Player hand: ${playerHand.length}. Top card: ${getColorName(firstCard.color)}-${firstCard.value}`);
-        }
-
-        
-        function openSynthOModal() {
-            if (!isGameRunning) {
-                initSynthOGame();
-            }
-            document.getElementById('synthOModal').style.display = 'flex';
-        }
-        
-        function closeSynthOModal() {
-            isGameRunning = false;
-            document.getElementById('synthOModal').style.display = 'none';
-        }
-
-        document.getElementById('playSynthOBtn').addEventListener('click', openSynthOModal);
-
-        // --- (EXISTING TCG/PROFILE LOGIC BELOW, SIMPLIFIED) ---
-
-        // TCG MOCK DATA (Required for Profile Console/Collection buttons to not break)
-        function updateCollectionCount() { /* ... */ }
-        function openCollectionModal() { alert("Viewing TCG Collection."); }
-        function openPack() { alert("Opening TCG Pack."); }
-        function updateLoginState() { /* ... */ }
-        function init() {
-            updateLoginState('@Guest', false);
-            updateCollectionCount();
-        }
-        
-        // --- EVENT LISTENERS FOR MODALS/CONTROLS ---
-        document.getElementById('viewCollectionBtn').addEventListener('click', openCollectionModal);
-        document.getElementById('openPackBtn').addEventListener('click', openPack);
-        
-        init();
-
     </script>
 </body>
 </html>
