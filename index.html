@@ -8,15 +8,15 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
-  --bg-primary:#1A1A2E;
-  --bg-secondary:#24263B;
-  --accent-cyan:#00FFFF;
-  --text-light:#F0F0F0;
-  --text-muted:#A0AEC0;
-  --card-color:#ffffff;
-  --font-main:'Rajdhani',sans-serif;
-  --font-header:'Orbitron',sans-serif;
-  --status-online:#38A169;
+  --bg-primary:#1A1A2E;
+  --bg-secondary:#24263B;
+  --accent-cyan:#00FFFF;
+  --text-light:#F0F0F0;
+  --text-muted:#A0AEC0;
+  --card-color:#ffffff;
+  --font-main:'Rajdhani',sans-serif;
+  --font-header:'Orbitron',sans-serif;
+  --status-online:#38A169;
 }
 body { margin:0; font-family:var(--font-main); background:var(--bg-primary); color:var(--text-light); min-height:100vh; }
 h1,h2,h3 {font-family:var(--font-header); margin:0;}
@@ -56,95 +56,96 @@ button { margin-top:10px; padding:10px; font-weight:bold; }
 .chat-locked { text-align:center; color:var(--text-muted); padding-top:50px; }
 .profile-field { margin:10px 0; width:100%; padding:8px; border-radius:5px; border:none; }
 textarea.profile-field { resize:none; }
+/* Added styling for messages/duos separation */
+.messages-container h3 { margin-top: 30px; color: var(--accent-cyan); border-bottom: 2px solid var(--text-muted); padding-bottom: 5px; }
+.duo-request-card { border-top: 5px solid #FFC107; } /* Differentiate requests */
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <header style="display:none;" id="mainHeader">
-  <h1>DUO<span>UP</span></h1>
-  <nav>
-    <a href="#" onclick="showHome()">Home</a>
-    <a href="#" onclick="showProfile()">Profile</a>
-    <a href="#" onclick="showMessages()">Messages</a>
-    <a href="#" id="logoutBtnHeader">Logout</a>
-  </nav>
+  <h1>DUO<span>UP</span></h1>
+  <nav>
+    <a href="#" onclick="showHome()">Home</a>
+    <a href="#" onclick="showProfile()">Profile</a>
+    <a href="#" onclick="showMessages()">Messages</a>
+    <a href="#" id="logoutBtnHeader">Logout</a>
+  </nav>
 </header>
 
-<!-- AUTH SECTION -->
 <div id="auth-section">
-  <h2>Sign In</h2>
-  <form id="signin">
-    <input id="signin-email" type="email" placeholder="Email" required>
-    <input id="signin-password" type="password" placeholder="Password" required>
-    <button type="submit">Sign In</button>
-  </form>
+  <h2>Sign In</h2>
+  <form id="signin">
+    <input id="signin-email" type="email" placeholder="Email" required>
+    <input id="signin-password" type="password" placeholder="Password" required>
+    <button type="submit">Sign In</button>
+  </form>
 
-  <h2>Sign Up</h2>
-  <form id="signup">
-    <input id="signup-email" type="email" placeholder="Email" required>
-    <input id="signup-password" type="password" placeholder="Password" required>
-    <button type="submit">Create Account</button>
-  </form>
+  <h2>Sign Up</h2>
+  <form id="signup">
+    <input id="signup-email" type="email" placeholder="Email" required>
+    <input id="signup-password" type="password" placeholder="Password" required>
+    <button type="submit">Create Account</button>
+  </form>
 
-  <button class="google-btn" onclick="googleLogin()">
-    <i class="fab fa-google"></i> Continue with Google
-  </button>
+  <button class="google-btn" onclick="googleLogin()">
+    <i class="fab fa-google"></i> Continue with Google
+  </button>
 </div>
 
-<!-- APP SECTION -->
 <div id="app-section" style="display:none; width:100%; padding-top:60px;">
-  <!-- HOME -->
-  <div id="home-section" class="container">
-    <h2>Available Duos</h2>
-    <div class="results-grid" id="usersGrid"></div>
-  </div>
+    <div id="home-section" class="container">
+    <h2>Available Duos</h2>
+    <div class="results-grid" id="usersGrid"></div>
+  </div>
 
-  <!-- PROFILE -->
-  <div id="profile-section" class="container" style="display:none;">
-    <h2>Your Profile</h2>
-    <input class="profile-field" id="profile-username" placeholder="Username">
-    <input class="profile-field" id="profile-platform" placeholder="Platform">
-    <input class="profile-field" id="profile-games" placeholder="Games (comma separated)">
-    <input class="profile-field" id="profile-playstyle" placeholder="Playstyle">
-    <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
-    <input type="file" id="profile-photo">
-    <button onclick="updateProfile()">Save Profile</button>
-  </div>
+    <div id="profile-section" class="container" style="display:none;">
+    <h2>Your Profile</h2>
+    <input class="profile-field" id="profile-username" placeholder="Username">
+    <input class="profile-field" id="profile-platform" placeholder="Platform">
+    <input class="profile-field" id="profile-games" placeholder="Games (comma separated)">
+    <input class="profile-field" id="profile-playstyle" placeholder="Playstyle">
+    <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
+    <input type="file" id="profile-photo">
+    <button onclick="updateProfile()">Save Profile</button>
+  </div>
 
-  <!-- MESSAGES -->
-  <div id="messages-section" class="container" style="display:none;">
-    <h2>Messages & Requests</h2>
-    <div class="results-grid" id="messagesGrid"></div>
-  </div>
+    <div id="messages-section" class="container" style="display:none;">
+    <h2>Messages & Requests</h2>
+    <div id="messages-container" class="messages-container">
+      <h3>Pending Requests</h3>
+      <div class="results-grid" id="requestsGrid"></div>
+      <h3>Accepted Duos (Click to Chat)</h3>
+      <div class="results-grid" id="duosGrid"></div>
+    </div>
+  </div>
 </div>
 
-<!-- CHAT MODAL -->
 <div id="chatModal" class="modal">
-  <div class="chat-container">
-    <div id="chatHeader" class="chat-header"></div>
-    <div id="messageArea" class="message-area"></div>
-    <div class="chat-input-area">
-      <input id="chatInput" class="chat-input" placeholder="Type message">
-      <button class="send-button" onclick="sendMessage()">Send</button>
-    </div>
-  </div>
+  <div class="chat-container">
+    <div id="chatHeader" class="chat-header"></div>
+    <div id="messageArea" class="message-area"></div>
+    <div class="chat-input-area">
+      <input id="chatInput" class="chat-input" placeholder="Type message">
+      <button class="send-button" onclick="sendMessage()">Send</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, query, where, onSnapshot, addDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 // Firebase config
 const firebaseConfig = {
-  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-  authDomain: "duoup-cfae6.firebaseapp.com",
-  projectId: "duoup-cfae6",
-  storageBucket: "duoup-cfae6.appspot.com",
-  messagingSenderId: "812263060524",
-  appId: "1:812263060524:web:ac09c3ae610db1cd110d89"
+  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+  authDomain: "duoup-cfae6.firebaseapp.com",
+  projectId: "duoup-cfae6",
+  storageBucket: "duoup-cfae6.appspot.com",
+  messagingSenderId: "812263060524",
+  appId: "1:812263060524:web:ac09c3ae610db1cd110d89"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -158,175 +159,319 @@ const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
 const logoutBtnHeader = document.getElementById("logoutBtnHeader");
 const usersGrid = document.getElementById("usersGrid");
-const messagesGrid = document.getElementById("messagesGrid");
+const requestsGrid = document.getElementById("requestsGrid");
+const duosGrid = document.getElementById("duosGrid"); // New Element
 
 // --- AUTH ---
 document.getElementById("signup").addEventListener("submit", async e=>{
-  e.preventDefault();
-  const email = document.getElementById("signup-email").value;
-  const password = document.getElementById("signup-password").value;
-  try{
-    const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-    const uid = userCredential.user.uid;
-    await setDoc(doc(db,"users",uid),{ username:"NewUser", platform:"PC", games:"", playstyle:"Casual", about:"", photoURL:"" });
-  } catch(err){ alert(err.message); }
+  e.preventDefault();
+  const email = document.getElementById("signup-email").value;
+  const password = document.getElementById("signup-password").value;
+  try{
+    const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+    const uid = userCredential.user.uid;
+    // Initialize basic user profile
+    await setDoc(doc(db,"users",uid),{ username:"NewUser", platform:"PC", games:"", playstyle:"Casual", about:"", photoURL:"" });
+  } catch(err){ alert("Signup Failed: "+err.message); }
 });
 
 document.getElementById("signin").addEventListener("submit", async e=>{
-  e.preventDefault();
-  const email = document.getElementById("signin-email").value;
-  const password = document.getElementById("signin-password").value;
-  try{ await signInWithEmailAndPassword(auth,email,password); }
-  catch(err){ alert(err.message); }
+  e.preventDefault();
+  const email = document.getElementById("signin-email").value;
+  const password = document.getElementById("signin-password").value;
+  try{ await signInWithEmailAndPassword(auth,email,password); }
+  catch(err){ alert("Sign-in Failed: "+err.message); }
 });
 
 window.googleLogin = async ()=>{
-  try{
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth,provider);
-    const uid = result.user.uid;
-    const userDoc = await getDoc(doc(db,"users",uid));
-    if(!userDoc.exists()) await setDoc(doc(db,"users",uid),{ username:result.user.displayName, platform:"PC", games:"", playstyle:"Casual", about:"", photoURL:result.user.photoURL || "" });
-  } catch(err){ alert(err.message); }
+  try{
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth,provider);
+    const uid = result.user.uid;
+    const userDoc = await getDoc(doc(db,"users",uid));
+    // Create profile only if it doesn't exist
+    if(!userDoc.exists()) await setDoc(doc(db,"users",uid),{ username:result.user.displayName, platform:"PC", games:"", playstyle:"Casual", about:"", photoURL:result.user.photoURL || "" });
+  } catch(err){ alert("Google Login Failed: "+err.message); }
 };
 
 logoutBtnHeader.addEventListener("click", async ()=>{
-  await signOut(auth);
+  await signOut(auth);
 });
 
-// --- SHOW SECTIONS ---
-function showHome(){ document.getElementById("home-section").style.display="block"; document.getElementById("profile-section").style.display="none"; document.getElementById("messages-section").style.display="none"; loadUsers(); }
-function showProfile(){ document.getElementById("home-section").style.display="none"; document.getElementById("profile-section").style.display="block"; document.getElementById("messages-section").style.display="none"; loadProfile(); }
-function showMessages(){ document.getElementById("home-section").style.display="none"; document.getElementById("profile-section").style.display="none"; document.getElementById("messages-section").style.display="block"; loadMessages(); }
+// --- GLOBAL HELPERS (Attach to window for HTML access) ---
+window.showHome = function() { document.getElementById("home-section").style.display="block"; document.getElementById("profile-section").style.display="none"; document.getElementById("messages-section").style.display="none"; loadUsers(); }
+window.showProfile = function() { document.getElementById("home-section").style.display="none"; document.getElementById("profile-section").style.display="block"; document.getElementById("messages-section").style.display="none"; loadProfile(); }
+window.showMessages = function() { document.getElementById("home-section").style.display="none"; document.getElementById("profile-section").style.display="none"; document.getElementById("messages-section").style.display="block"; loadMessagesAndDuos(); }
+window.sendDuoRequest = sendDuoRequest;
+window.acceptRequest = acceptRequest;
+window.rejectRequest = rejectRequest;
+window.openChat = openChat;
+window.closeChat = closeChat;
+window.sendMessage = sendMessage;
+
 
 // --- AUTH STATE ---
 let currentUser;
 onAuthStateChanged(auth,user=>{
-  if(user){
-    currentUser=user;
-    authSection.style.display='none';
-    appSection.style.display='block';
-    mainHeader.style.display='flex';
-    showHome();
-  } else {
-    authSection.style.display='flex';
-    appSection.style.display='none';
-    mainHeader.style.display='none';
-  }
+  if(user){
+    currentUser=user;
+    authSection.style.display='none';
+    appSection.style.display='block';
+    mainHeader.style.display='flex';
+    showHome();
+  } else {
+    currentUser=null;
+    authSection.style.display='flex';
+    appSection.style.display='none';
+    mainHeader.style.display='none';
+  }
 });
 
 // --- PROFILE ---
 async function loadProfile(){
-  const docSnap = await getDoc(doc(db,"users",currentUser.uid));
-  if(docSnap.exists()){
-    const data=docSnap.data();
-    document.getElementById("profile-username").value=data.username||"";
-    document.getElementById("profile-platform").value=data.platform||"";
-    document.getElementById("profile-games").value=data.games||"";
-    document.getElementById("profile-playstyle").value=data.playstyle||"";
-    document.getElementById("profile-about").value=data.about||"";
-  }
+  try {
+    const docSnap = await getDoc(doc(db,"users",currentUser.uid));
+    if(docSnap.exists()){
+      const data=docSnap.data();
+      document.getElementById("profile-username").value=data.username||"";
+      document.getElementById("profile-platform").value=data.platform||"";
+      document.getElementById("profile-games").value=data.games||"";
+      document.getElementById("profile-playstyle").value=data.playstyle||"";
+      document.getElementById("profile-about").value=data.about||"";
+    }
+  } catch(e) { console.error("Error loading profile:", e); }
 }
 
-async function updateProfile(){
-  const username=document.getElementById("profile-username").value;
-  const platform=document.getElementById("profile-platform").value;
-  const games=document.getElementById("profile-games").value;
-  const playstyle=document.getElementById("profile-playstyle").value;
-  const about=document.getElementById("profile-about").value;
-  const photoFile=document.getElementById("profile-photo").files[0];
-  let photoURL="";
-  if(photoFile){
-    const storageRef = ref(storage,"profilePhotos/"+currentUser.uid);
-    await uploadBytes(storageRef,photoFile);
-    photoURL = await getDownloadURL(storageRef);
-  }
-  await updateDoc(doc(db,"users",currentUser.uid),{ username, platform, games, playstyle, about, ...(photoURL && {photoURL}) });
-  alert("Profile Updated!");
+window.updateProfile = async function(){
+  try {
+    const username=document.getElementById("profile-username").value;
+    const platform=document.getElementById("profile-platform").value;
+    const games=document.getElementById("profile-games").value;
+    const playstyle=document.getElementById("profile-playstyle").value;
+    const about=document.getElementById("profile-about").value;
+    const photoFile=document.getElementById("profile-photo").files[0];
+    let photoURL="";
+
+    if(photoFile){
+      const storageRef = ref(storage,"profilePhotos/"+currentUser.uid);
+      await uploadBytes(storageRef,photoFile);
+      photoURL = await getDownloadURL(storageRef);
+    }
+    await updateDoc(doc(db,"users",currentUser.uid),{ username, platform, games, playstyle, about, ...(photoURL && {photoURL}) });
+    alert("Profile Updated!");
+  } catch(e) { alert("Profile Update Failed: " + e.message); }
 }
 
-// --- LOAD USERS ---
+// --- LOAD USERS (FOR HOME) ---
 async function loadUsers(){
-  usersGrid.innerHTML="";
-  const querySnap = await getDocs(collection(db,"users"));
-  querySnap.forEach(docSnap=>{
-    if(docSnap.id===currentUser.uid) return;
-    const data = docSnap.data();
-    const avatarHTML = data.photoURL ? `<img src="${data.photoURL}" alt="Avatar">` : data.username[0];
-    const card = document.createElement("div");
-    card.className="duo-card";
-    card.innerHTML=`<div class="card-header"><div class="avatar">${avatarHTML}</div>
-    <div><h3>${data.username}</h3><p>${data.platform} | ${data.playstyle}</p></div></div>
-    <div class="bio">${data.about||"No bio set."}</div>
-    <button class="action-button" onclick="sendDuoRequest('${docSnap.id}')">Send Duo Request</button>`;
-    usersGrid.appendChild(card);
-  });
+  usersGrid.innerHTML="";
+  try {
+    const querySnap = await getDocs(collection(db,"users"));
+    querySnap.forEach(docSnap=>{
+      if(docSnap.id===currentUser.uid) return;
+      const data = docSnap.data();
+      const avatarHTML = data.photoURL ? `<img src="${data.photoURL}" alt="Avatar">` : data.username[0];
+      const card = document.createElement("div");
+      card.className="duo-card";
+      card.innerHTML=`<div class="card-header"><div class="avatar">${avatarHTML}</div>
+      <div><h3>${data.username}</h3><p>${data.platform} | ${data.playstyle}</p></div></div>
+      <div class="bio">${data.about||"No bio set."}</div>
+      <button class="action-button" onclick="sendDuoRequest('${docSnap.id}')">Send Duo Request</button>`;
+      usersGrid.appendChild(card);
+    });
+  } catch(e) { console.error("Error loading users:", e); }
 }
 
 // --- DUO REQUEST ---
 async function sendDuoRequest(targetUid){
-  const reqRef = doc(db,"users",targetUid,"requests",currentUser.uid);
-  await setDoc(reqRef,{ from:currentUser.uid, status:"pending" });
-  alert("Duo Request Sent!");
+  try {
+    const reqRef = doc(db,"users",targetUid,"requests",currentUser.uid);
+    await setDoc(reqRef,{ from:currentUser.uid, status:"pending" });
+    alert("Duo Request Sent!");
+  } catch(e) { alert("Failed to send request: " + e.message); }
 }
 
-// --- LOAD MESSAGES ---
-async function loadMessages(){
-  messagesGrid.innerHTML="";
-  const reqsSnap = await getDocs(collection(db,"users",currentUser.uid,"requests"));
-  reqsSnap.forEach(async reqDoc=>{
-    const reqData=reqDoc.data();
-    if(reqData.status==="pending"){
-      const senderSnap = await getDoc(doc(db,"users",reqData.from));
-      const senderData = senderSnap.data();
-      const avatarHTML = senderData.photoURL ? `<img src="${senderData.photoURL}" alt="Avatar">` : senderData.username[0];
-      const card = document.createElement("div");
-      card.className="duo-card";
-      card.innerHTML=`<div class="card-header"><div class="avatar">${avatarHTML}</div>
-      <div><h3>${senderData.username}</h3><p>${senderData.platform}</p></div></div>
-      <div class="bio">Duo Request Pending</div>
-      <button class="action-button" onclick="acceptRequest('${reqDoc.id}')">Accept</button>
-      <button class="action-button" onclick="rejectRequest('${reqDoc.id}')">Reject</button>`;
-      messagesGrid.appendChild(card);
-    }
-  });
+// --- LOAD MESSAGES & DUOS ---
+async function loadMessagesAndDuos(){
+  await loadPendingRequests();
+  await loadDuos();
 }
+
+async function loadPendingRequests(){
+  requestsGrid.innerHTML="";
+  try {
+    const reqsSnap = await getDocs(query(collection(db,"users",currentUser.uid,"requests"), where("status", "==", "pending")));
+    
+    if(reqsSnap.empty) { requestsGrid.innerHTML = "<p style='padding: 10px;'>No pending requests.</p>"; return; }
+
+    reqsSnap.forEach(async reqDoc=>{
+      const reqData=reqDoc.data();
+      const senderSnap = await getDoc(doc(db,"users",reqData.from));
+      const senderData = senderSnap.data();
+      const avatarHTML = senderData.photoURL ? `<img src="${senderData.photoURL}" alt="Avatar">` : senderData.username[0];
+      const card = document.createElement("div");
+      card.className="duo-card duo-request-card";
+      card.innerHTML=`<div class="card-header"><div class="avatar">${avatarHTML}</div>
+      <div><h3>${senderData.username}</h3><p>${senderData.platform}</p></div></div>
+      <div class="bio">Incoming Duo Request</div>
+      <button class="action-button" onclick="acceptRequest('${reqDoc.id}', '${senderData.username}')">Accept</button>
+      <button class="action-button" style="background:#dc3545;" onclick="rejectRequest('${reqDoc.id}')">Reject</button>`;
+      requestsGrid.appendChild(card);
+    });
+  } catch(e) { console.error("Error loading pending requests:", e); }
+}
+
+async function loadDuos(){
+  duosGrid.innerHTML="";
+  try {
+    // Get Duos where the current user is a member
+    const duosQuery = query(collection(db, "chats"), where("members", "array-contains", currentUser.uid));
+    const duosSnap = await getDocs(duosQuery);
+
+    if(duosSnap.empty) { duosGrid.innerHTML = "<p style='padding: 10px;'>No accepted duos yet. Accept a request to start chatting!</p>"; return; }
+
+    duosSnap.forEach(async duoDoc => {
+      const duoData = duoDoc.data();
+      // Find the other user's UID
+      const otherUid = duoData.members.find(uid => uid !== currentUser.uid);
+      const otherUserSnap = await getDoc(doc(db, "users", otherUid));
+      const otherUserData = otherUserSnap.data();
+      
+      const avatarHTML = otherUserData.photoURL ? `<img src="${otherUserData.photoURL}" alt="Avatar">` : otherUserData.username[0];
+      const card = document.createElement("div");
+      card.className="duo-card";
+      card.innerHTML=`<div class="card-header"><div class="avatar">${avatarHTML}</div>
+      <div><h3>${otherUserData.username}</h3><p>Active Duo</p></div></div>
+      <div class="bio">Ready to play together!</div>
+      <button class="action-button" onclick="openChat('${duoDoc.id}', '${otherUserData.username}')">Start Chat</button>`;
+      duosGrid.appendChild(card);
+    });
+  } catch(e) { console.error("Error loading duos:", e); }
+}
+
 
 // --- ACCEPT/REJECT REQUESTS ---
-async function acceptRequest(reqId){
-  await updateDoc(doc(db,"users",currentUser.uid,"requests",reqId),{status:"accepted"});
-  alert("Request Accepted!");
-  loadMessages();
-}
-async function rejectRequest(reqId){
-  await updateDoc(doc(db,"users",currentUser.uid,"requests",reqId),{status:"rejected"});
-  alert("Request Rejected!");
-  loadMessages();
+async function acceptRequest(reqId, senderUsername){
+  try {
+    // 1. Update the request status
+    await updateDoc(doc(db,"users",currentUser.uid,"requests",reqId),{status:"accepted"});
+
+    // 2. Create a new bilateral chat/duo document (important for chat access)
+    const chatDoc = await addDoc(collection(db, "chats"), {
+      members: [currentUser.uid, reqId], // reqId is the sender's UID
+      memberNames: {[currentUser.uid]: "You", [reqId]: senderUsername},
+      createdAt: Date.now()
+    });
+
+    alert(`Duo created with ${senderUsername}!`);
+    loadMessagesAndDuos(); // Refresh the Messages screen
+    // Optional: Automatically open chat after acceptance
+    openChat(chatDoc.id, senderUsername);
+
+  } catch(e) { alert("Accept Request Failed: " + e.message); }
 }
 
-// --- CHAT ---
-let chatActive=false;
-let currentDuo="";
+async function rejectRequest(reqId){
+  try {
+    await updateDoc(doc(db,"users",currentUser.uid,"requests",reqId),{status:"rejected"});
+    alert("Request Rejected!");
+    loadMessagesAndDuos();
+  } catch(e) { alert("Reject Request Failed: " + e.message); }
+}
+
+// --- CHAT IMPLEMENTATION ---
+let currentChatId = null;
+let chatUnsubscribe = null;
 const chatModal=document.getElementById("chatModal");
 const chatHeader=document.getElementById("chatHeader");
 const messageArea=document.getElementById("messageArea");
 const chatInput=document.getElementById("chatInput");
 
-function openChat(duoName,isAccepted){
-  currentDuo=duoName;
-  chatActive=isAccepted;
-  chatInput.value="";
-  chatInput.disabled=!chatActive;
-  chatHeader.innerHTML=chatActive
-    ? `<div><span class="status-dot"></span>${duoName} (Online)</div><span onclick="closeChat()">×</span>`
-    : `<div style="color:#FFC107;">Request Pending with ${duoName}</div><span onclick="closeChat()">×</span>`;
-  messageArea.innerHTML=chatActive
-    ? `<div class="message other"><div class="message-content">Hey! Ready to play?</div></div>`
-    : `<p class="chat-locked">Chat locked until request accepted.</p>`;
-  chatModal.style.display="flex";
+/**
+ * Renders the message list from a Firestore snapshot.
+ */
+function renderMessages(messages) {
+  messageArea.innerHTML = "";
+  messages.forEach(msg => {
+    const isSelf = msg.senderId === currentUser.uid;
+    const messageDiv = document.createElement("div");
+    messageDiv.className = isSelf ? "message self" : "message other";
+    messageDiv.innerHTML = `<div class="message-content">${msg.text}</div>`;
+    messageArea.appendChild(messageDiv);
+  });
+  // Scroll to bottom
+  messageArea.scrollTop = messageArea.scrollHeight;
 }
-function closeChat(){ chatModal.style.display="none"; }
-function sendMessage(){ if(!chatActive || !chatInput.value.trim()) return; messageArea.innerHTML+=`<div class="message self"><div class="message-content">${chatInput.value}</div></div>`; chatInput.value=""; messageArea.scrollTop=messageArea.scrollHeight; }
+
+/**
+ * Opens the chat modal and sets up the real-time listener.
+ */
+function openChat(chatId, duoName){
+  currentChatId = chatId;
+
+  // 1. Set Chat Header
+  chatHeader.innerHTML= `<div><span class="status-dot"></span>${duoName}</div><span onclick="closeChat()" style="cursor:pointer;">×</span>`;
+  
+  // 2. Clear old messages and setup new listener
+  messageArea.innerHTML = "";
+  
+  // If there was a previous listener, detach it
+  if (chatUnsubscribe) {
+    chatUnsubscribe();
+  }
+
+  const messagesRef = collection(db, "chats", chatId, "messages");
+  const messagesQuery = query(messagesRef, orderBy("timestamp", "asc"));
+  
+  // Attach real-time listener to the messages collection
+  chatUnsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+    const messages = [];
+    snapshot.forEach(doc => {
+      messages.push(doc.data());
+    });
+    renderMessages(messages);
+  }, (error) => {
+    console.error("Error listening to chat messages:", error);
+    messageArea.innerHTML = `<p class="chat-locked" style="color:#dc3545;">Error loading messages.</p>`;
+  });
+
+  chatInput.disabled = false;
+  chatModal.style.display="flex";
+}
+
+/**
+ * Closes the chat and detaches the listener.
+ */
+function closeChat(){
+  chatModal.style.display="none";
+  if (chatUnsubscribe) {
+    chatUnsubscribe(); // Detach the real-time listener
+    chatUnsubscribe = null;
+  }
+  currentChatId = null;
+}
+
+/**
+ * Sends a new message to the current chat's Firestore collection.
+ */
+function sendMessage(){
+  const text = chatInput.value.trim();
+  if(!currentChatId || !text) return;
+
+  try {
+    const messagesRef = collection(db, "chats", currentChatId, "messages");
+    addDoc(messagesRef, {
+      text: text,
+      senderId: currentUser.uid,
+      timestamp: Date.now() // Use Firestore ServerTimestamp for production
+    });
+    chatInput.value = "";
+  } catch(e) {
+    console.error("Error sending message:", e);
+    alert("Failed to send message.");
+  }
+}
+
 window.onclick=e=>{if(e.target===chatModal) closeChat();}
 </script>
 </body>
