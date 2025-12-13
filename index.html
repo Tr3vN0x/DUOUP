@@ -27,7 +27,7 @@
 body { 
     margin:0; 
     font-family: var(--font-main); 
-    /* UPDATED: Radial Gradient for Red/Black Neon Effect */
+    /* Radial Gradient for Red/Black Neon Effect */
     background: radial-gradient(circle at center, #100508 0%, var(--duoup-dark) 40%, #20050A 75%, var(--duoup-secondary) 100%) !important;
     color: var(--duoup-light); 
     min-height:100vh;
@@ -84,6 +84,7 @@ header nav { display:flex; align-items:center; gap:15px; flex-wrap:wrap; }
     display:flex; flex-direction:column; 
     align-items:center; justify-content:center; 
     min-height:100vh; padding-top:60px;
+    /* FIX: Aggressively force dark background */
     background: var(--duoup-dark) !important;
 }
 
@@ -127,6 +128,13 @@ button:hover { 
 }
 
 /* App Containers */
+#app-section {
+    width:100%; 
+    padding-top:60px;
+    /* FIX: Aggressively force dark background */
+    background: var(--duoup-dark) !important;
+}
+
 .container { max-width:1200px; margin:20px auto; padding:0 15px; width:100%; }
 .results-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:20px; width:100%; }
 
