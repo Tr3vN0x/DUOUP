@@ -14,7 +14,7 @@ h1,h2,h3{margin:0;font-family:var(--font-header);}
 h2{display:flex;align-items:baseline;border-bottom:2px solid var(--duoup-secondary);padding-bottom:5px;margin-bottom:20px;font-size:1.8em;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 #userCount{color:var(--duoup-secondary);font-size:0.55em;font-weight:600;margin-left:10px;}
 a{color:var(--duoup-primary);text-decoration:none;}
-button, select{cursor:pointer;border:none;border-radius:5px;transition:0.2s;}
+button{cursor:pointer;border:none;border-radius:5px;transition:0.2s;}
 header{position:fixed;top:0;width:100%;height:60px;background:rgba(20,20,38,0.98);display:flex;align-items:center;justify-content:space-between;padding:0 15px;z-index:1000;border-bottom:3px solid var(--duoup-secondary);}
 header .logo{display:flex;align-items:center;gap:10px;}
 header h1{font-size:2em;font-weight:700;color:var(--duoup-primary);text-shadow:0 0 10px var(--duoup-primary);}
@@ -22,37 +22,50 @@ header h1 span{color:var(--duoup-secondary);}
 header nav{display:flex;align-items:center;gap:15px;flex-wrap:wrap;}
 #logoutBtnHeader{background:var(--duoup-secondary);color:var(--duoup-dark);padding:6px 12px;font-weight:bold;display:flex;align-items:center;gap:5px;}
 #auth-section{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding-top:60px;}
-form:not(#duoSearchForm){display:flex;flex-direction:column;background:#141426;padding:25px;border-radius:12px;margin:10px;width:90%;max-width:360px;}
-input,textarea,select{margin:8px 0;padding:12px;border-radius:6px;border:1px solid var(--duoup-primary);background:#2D2D44;color:var(--duoup-light);}
-button:not(.google-btn):not(.action-button){margin-top:10px;padding:12px;font-weight:bold;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);}
+form:not(#duoSearchForm):not(#postForm){display:flex;flex-direction:column;background:#141426;padding:25px;border-radius:12px;margin:10px;width:90%;max-width:360px;}
+input,textarea{margin:8px 0;padding:12px;border-radius:6px;border:1px solid var(--duoup-primary);background:#2D2D44;color:var(--duoup-light);}
+button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10px;padding:12px;font-weight:bold;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);}
 .google-btn{background:linear-gradient(90deg,#DB4437,#EA4335);color:white;width:90%;max-width:360px;display:none;align-items:center;justify-content:center;gap:10px;margin-top:15px;}
 #app-section{width:100%;padding-top:60px;display:none;}
 .container{max-width:1200px;margin:20px auto;padding:0 15px;}
-
-/* DUOQUEST/USER SEARCH STYLES */
 .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
-.duo-card{background:linear-gradient(145deg,#1A1A2E,#2D2D44);color:var(--duoup-light);border-radius:12px;overflow:hidden;border:1px solid var(--duoup-primary);transition:.3s;box-shadow:0 4px 15px rgba(0,255,255,0.2);margin-bottom:15px;}
+.duo-card{background:linear-gradient(145deg,#1A1A2E,#2D2D44);color:var(--duoup-light);border-radius:12px;overflow:hidden;border:1px solid #3A3A52;transition:.3s;box-shadow:0 4px 8px rgba(0,0,0,0.4);margin-bottom:15px;}
 .card-header{display:flex;align-items:center;padding:10px 15px;border-bottom:1px solid #3A3A52;}
 .avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;background:var(--duoup-secondary);color:var(--duoup-dark);flex-shrink: 0;}
-.bio{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);white-space: pre-wrap;}
+.bio, .post-content{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);white-space: pre-wrap;}
 .action-button{width:100%;padding:12px;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);font-weight:bold;border-radius:0 0 12px 12px;}
-.action-button:hover{opacity:0.8;}
-.action-button:disabled{background:#3A3A52 !important; color:#80809C !important; cursor: not-allowed;}
 .nickname-display{display:flex;align-items:center;font-size:1.1em;}
 .verified-badge{color:#1DA1F2;margin-left:5px;}
+/* Highlight disabled input */
+#profile-nickname { 
+    background: #1a1a2e; 
+    color: var(--duoup-muted); 
+    cursor: not-allowed; 
+    border-color: #3A3A52; 
+    font-weight: 700;
+}
+.input-help{font-size:0.8em;color:var(--duoup-muted);margin-top:-5px;margin-bottom:10px;}
 
-/* Header Nav */
-header nav a {
-    color: var(--duoup-light);
-    padding: 8px 15px;
-    border-radius: 5px;
-    transition: background-color 0.2s, color 0.2s;
+/* Post Specific Styles */
+#postForm{background:#1A1A2E;padding:15px;border-radius:12px;margin-bottom:20px;display:flex;flex-direction:column;}
+#postContent{resize:vertical;min-height:80px;}
+#postBtn{background:var(--duoup-secondary);color:var(--duoup-dark);font-weight:bold;padding:10px;}
+.post-meta{font-size:0.8em;color:var(--duoup-muted);margin-top:5px;}
+.post-list{max-width:700px;margin:0 auto;}
+
+.post-footer { display: flex; align-items: center; justify-content: space-between; padding: 0 15px 10px; }
+.like-btn { 
+    background: transparent; 
+    color: var(--duoup-muted); 
+    padding: 5px 10px; 
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
-header nav a.active {
-    background-color: var(--duoup-accent);
-    color: var(--duoup-dark);
-    font-weight: bold;
-}
+.like-btn:hover { color: var(--duoup-primary); }
+.like-btn.liked { color: var(--duoup-secondary); }
+.like-btn.liked i { color: var(--duoup-secondary); }
 
 @media(max-width:500px){.results-grid{grid-template-columns:1fr;}}
 </style>
@@ -65,9 +78,8 @@ header nav a.active {
         <h1>DUO<span>UP</span></h1>
     </div>
     <nav>
-        <a href="#" onclick="showSection('home')" id="nav-home">DuoQuest</a> 
-        <a href="#" onclick="showSection('feed')" id="nav-feed">Feed (Coming Soon)</a>
-        <a href="#" onclick="showSection('messages')" id="nav-messages">Messages (Coming Soon)</a>
+        <a href="#" onclick="showSection('feed')">Feed</a>
+        <a href="#" onclick="showSection('home')">Duo Search</a>
         <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </nav>
 </header>
@@ -91,24 +103,376 @@ header nav a.active {
 
 <div id="app-section">
     
-    <div id="home-section" class="container">
-        <h2>DuoQuest: Find Players <span id="userCount"></span></h2>
-        <div class="results-grid" id="usersGrid">
+    <div id="feed-section" class="container" style="display:none;">
+        <h2>Global Feed</h2>
+        <form id="postForm">
+            <textarea id="postContent" placeholder="What's your duo thought?" required></textarea>
+            <button type="submit" id="postBtn">Post to Feed</button>
+        </form>
+        <div id="postsList" class="post-list">
             </div>
     </div>
     
-    <div id="feed-section" class="container" style="display:none;">
-        <h2>Global Feed - Build Next!</h2>
-        <p style="color: var(--duoup-muted);">This section is currently disabled as we focus on DuoQuest.</p>
+    <div id="home-section" class="container" style="display:none;">
+        <h2>Duo Search <span id="userCount"></span></h2>
+        <div class="results-grid" id="usersGrid"></div>
     </div>
-    <div id="messages-section" class="container" style="display:none;">
-        <h2>Private Messages - Build Next!</h2>
-        <p style="color: var(--duoup-muted);">This section is currently disabled as we focus on DuoQuest.</p>
-    </div>
+    
 </div>
 
 <script type="module">
-// ... JavaScript code will follow ...
+'use strict';
+
+import { 
+    initializeApp 
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut, 
+    onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+import { 
+    getFirestore, 
+    doc, 
+    setDoc, 
+    getDoc, 
+    updateDoc, 
+    collection, 
+    getDocs, 
+    query, 
+    orderBy, 
+    addDoc, 
+    arrayUnion, 
+    arrayRemove 
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+// --- Firebase Config & Initialization ---
+const firebaseConfig = {
+    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+    authDomain: "duoup-cfae6.firebaseapp.com",
+    projectId: "duoup-cfae6",
+    storageBucket: "duoup-cfae6.appspot.com",
+    messagingSenderId: "812263060524",
+    appId: "1:812263060524:web:ac09c3ae610db1cd110d89"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// --- DOM Elements ---
+const signinForm = document.getElementById("signin");
+const signupForm = document.getElementById("signup");
+const authSection = document.getElementById("auth-section");
+const appSection = document.getElementById("app-section");
+const mainHeader = document.getElementById("mainHeader");
+const usersGrid = document.getElementById("usersGrid");
+const userCountElement = document.getElementById("userCount");
+const postForm = document.getElementById("postForm"); 
+const postsList = document.getElementById("postsList"); 
+
+// --- Constants & Local State ---
+const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
+let activityInterval; 
+let currentNickname = ""; 
+let currentBio = ""; 
+
+// --- Utility Functions ---
+function getVerifiedBadge(nickname) {
+    return nickname === 'Tr3vN0x' ? '<i class="fas fa-badge-check verified-badge" title="Verified Player"></i>' : '';
+}
+
+function timeSince(timestamp) {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes";
+    return Math.floor(seconds) + " seconds";
+}
+
+async function updateLastActiveStatus(uid) {
+    if (!uid) return;
+    try {
+        await updateDoc(doc(db, "users", uid), {
+            lastActive: Date.now()
+        });
+    } catch (err) {
+        console.warn("Could not update lastActive status:", err.message);
+    }
+}
+
+/**
+ * Ensures a user's profile document exists and loads the core data.
+ */
+async function loadUserData(user) {
+    const userDocRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userDocRef);
+    let userData = docSnap.exists() ? docSnap.data() : {};
+
+    if (!docSnap.exists() || !userData.nickname) { 
+        const authType = 'email'; 
+        const defaultNickname = user.email.split('@')[0] || "New Player";
+
+        userData = {
+            uid: user.uid,
+            email: user.email,
+            nickname: defaultNickname, 
+            bio: "",
+            profileImageUrl: user.photoURL || "",
+            friends: "",
+            lastActive: Date.now(),
+            authType: authType 
+        };
+        await setDoc(userDocRef, userData);
+    }
+    return userData;
+}
+
+// --- Auth Functions ---
+async function handleSignIn(e) {
+    e.preventDefault();
+    const email = document.getElementById("signin-email").value;
+    const password = document.getElementById("signin-password").value;
+    try{
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch(err){ 
+        alert(err.message); 
+    }
+}
+
+async function handleSignUp(e) {
+    e.preventDefault();
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    const nickname = document.getElementById("signup-nickname").value; 
+
+    try{
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const { user } = userCredential;
+
+        await setDoc(doc(db,"users", user.uid), {
+            uid: user.uid,
+            email: email,
+            nickname: nickname, 
+            bio: "",
+            profileImageUrl: "",
+            friends: [], // Initialize as an array for future friend features
+            lastActive: Date.now(),
+            authType: 'email' 
+        });
+    } catch(err){ 
+        alert(err.message); 
+    }
+}
+
+async function handleLogout() {
+    clearInterval(activityInterval); 
+    activityInterval = null;
+    await signOut(auth); 
+}
+
+// Attach Auth Listeners
+signinForm.addEventListener("submit", handleSignIn);
+signupForm.addEventListener("submit", handleSignUp);
+document.getElementById("logoutBtnHeader").addEventListener("click", handleLogout);
+
+// --- User Search (Duo Search) ---
+async function loadUsers(){
+    const currentUser = auth.currentUser;
+    if(!currentUser) return;
+
+    const SEVEN_DAYS_AGO = Date.now() - SEVEN_DAYS_IN_MS;
+
+    const qSnap = await getDocs(collection(db,"users"));
+    usersGrid.innerHTML='';
+    let count=0;
+
+    qSnap.forEach(doc=>{
+        const data = doc.data();
+        
+        if(!data.uid || data.uid === currentUser.uid) return;
+
+        // Filter out users who haven't been active in 7 days
+        if (!data.lastActive || data.lastActive < SEVEN_DAYS_AGO) {
+            return; 
+        }
+        
+        const nickname = data.nickname; 
+        const verifiedBadgeHtml = getVerifiedBadge(nickname);
+
+        count++;
+        usersGrid.innerHTML+=`
+        <div class="duo-card">
+            <div class="card-header">
+                <div class="avatar">${nickname[0]}</div>
+                <div class="nickname-display">
+                    <strong>${nickname}</strong>
+                    ${verifiedBadgeHtml}
+                </div>
+            </div>
+            <div class="bio">${data.bio || 'No bio set.'}</div>
+            <button class="action-button" onclick="alert('Duo request sent to ${nickname}!')">Send Duo Request</button>
+        </div>
+        `;
+    });
+    userCountElement.innerText = count+" players online (active 7d)";
+}
+
+// --- Feed/Posts ---
+async function handlePostSubmit(e) {
+    e.preventDefault();
+    const postContent = document.getElementById("postContent");
+    const content = postContent.value.trim();
+    if (!content) return;
+
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    try {
+        await addDoc(collection(db, "posts"), {
+            authorUid: user.uid,
+            authorNickname: currentNickname, 
+            content: content,
+            timestamp: Date.now(),
+            likes: [], 
+        });
+        postContent.value = ""; 
+        await loadPosts(); 
+    } catch (err) {
+        console.error("Error creating post:", err);
+        alert("Failed to create post.");
+    }
+}
+
+postForm.addEventListener("submit", handlePostSubmit);
+
+
+/**
+ * Toggles the like status of a post.
+ */
+window.toggleLikePost = async function(postId, isLiked) {
+    const user = auth.currentUser;
+    if (!user) return alert("You must be logged in to like posts.");
+
+    const postRef = doc(db, "posts", postId);
+    try {
+        const updateOperation = isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid);
+        
+        await updateDoc(postRef, {
+            likes: updateOperation
+        });
+        
+        await loadPosts(); 
+
+    } catch (err) {
+        console.error("Error toggling like:", err);
+        alert("Failed to update like status.");
+    }
+}
+
+
+async function loadPosts() {
+    postsList.innerHTML = '';
+    const user = auth.currentUser;
+
+    const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+    const postSnap = await getDocs(postsQuery);
+
+    postSnap.forEach(postDoc => {
+        const post = postDoc.data();
+        const postId = postDoc.id;
+        
+        const nickname = post.authorNickname || 'Unknown User'; 
+        const avatarChar = nickname ? nickname[0] : 'U';
+        const verifiedBadgeHtml = getVerifiedBadge(nickname);
+        
+        const likesArray = post.likes || [];
+        const likeCount = likesArray.length;
+        const isLiked = user && likesArray.includes(user.uid);
+        
+        const likeIcon = isLiked ? 'fas fa-heart' : 'far fa-heart';
+        const likeClass = isLiked ? 'liked' : '';
+        
+        postsList.innerHTML += `
+        <div class="duo-card">
+            <div class="card-header">
+                <div class="avatar">${avatarChar}</div>
+                <div>
+                    <div class="nickname-display">
+                        <strong>${nickname}</strong>
+                        ${verifiedBadgeHtml}
+                    </div>
+                    <div class="post-meta">Posted ${timeSince(post.timestamp)} ago</div>
+                </div>
+            </div>
+            <div class="post-content">${post.content}</div>
+            <div class="post-footer">
+                <button class="like-btn ${likeClass}" onclick="toggleLikePost('${postId}', ${isLiked})">
+                    <i class="${likeIcon}"></i> ${likeCount}
+                </button>
+            </div>
+        </div>
+        `;
+    });
+
+    if (postSnap.empty) {
+        postsList.innerHTML = `<p style="text-align:center; color:var(--duoup-muted);">No posts yet. Be the first to share your thoughts!</p>`;
+    }
+}
+
+
+// --- Sections ---
+function showSection(section){
+    const sections = ["feed", "home"];
+    sections.forEach(s => document.getElementById(s + "-section").style.display = "none");
+    
+    const targetSection = document.getElementById(section + "-section");
+    if (targetSection) {
+        targetSection.style.display = "block";
+    }
+    
+    if(section === "home") loadUsers();
+    if(section === "feed") loadPosts();
+}
+
+// --- Auth State Handler ---
+onAuthStateChanged(auth, async user => {
+    if(user){
+        authSection.style.display = "none";
+        appSection.style.display = "block";
+        mainHeader.style.display = "flex";
+        
+        const userData = await loadUserData(user); 
+        currentNickname = userData.nickname || ''; 
+        currentBio = userData.bio || '';
+        
+        await updateLastActiveStatus(user.uid); 
+        
+        if (!activityInterval) {
+            activityInterval = setInterval(() => updateLastActiveStatus(user.uid), 60000); // 1 minute
+        }
+
+        showSection('feed'); 
+    } else {
+        authSection.style.display = "flex";
+        appSection.style.display = "none";
+        mainHeader.style.display = "none";
+        clearInterval(activityInterval); 
+        activityInterval = null;
+    }
+});
+
+// Expose functions
+window.showSection = showSection;
+window.toggleLikePost = toggleLikePost;
 </script>
 
 </body>
