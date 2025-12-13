@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tr3vMedia SYNTH-O Game</title>
+    <title>Tr3vMedia SYNTH-O Game (Full AI Logic)</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* --- CORE NEON STYLES --- */
+        /* --- CORE NEON & SYNTH-O STYLES (Unchanged) --- */
         :root {
             --bg-dark: #0F1117;
             --neon-green: #00FF66;
@@ -46,7 +46,10 @@
         
         /* --- GENERAL UI & MODAL STYLES (Unchanged/Simplified) --- */
         .header-controls { display: flex; gap: 15px; margin-bottom: 20px; }
-        .ui-button, .controls button, .pack-button { /* ... existing button styles ... */ }
+        .ui-button:hover, .controls button:hover, .pack-button:hover {
+            background-color: var(--neon-green); color: var(--bg-dark); transform: translateY(-2px); box-shadow: none;
+        }
+
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.9); display: flex; justify-content: center;
@@ -59,7 +62,7 @@
             max-height: 90vh; overflow-y: auto;
         }
 
-        /* --- SYNTH-O GAME BOARD STYLES (NEW) --- */
+        /* --- SYNTH-O GAME BOARD STYLES --- */
         #synthOBoard {
             display: grid;
             grid-template-areas: 
@@ -77,20 +80,10 @@
 
         /* SYNTH-O Card Styling */
         .synth-card {
-            width: 80px;
-            height: 120px;
-            border-radius: 8px;
-            border: 3px solid var(--text-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2em;
-            font-weight: bold;
-            color: var(--text-light);
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
-            transition: transform 0.1s;
-            cursor: pointer;
-            flex-shrink: 0; /* Important for horizontal scrolling hand */
+            width: 80px; height: 120px; border-radius: 8px; border: 3px solid var(--text-light);
+            display: flex; align-items: center; justify-content: center; font-size: 1.5em; /* Smaller font for actions */
+            font-weight: bold; color: var(--text-light); box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+            transition: transform 0.1s; cursor: pointer; flex-shrink: 0; 
         }
 
         /* Color classes */
@@ -107,20 +100,37 @@
 
         /* Discard Pile */
         #discardPile { 
-            position: relative; 
-            width: 100px; 
-            height: 140px; 
-            border: 2px dashed var(--text-light); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
+            position: relative; width: 100px; height: 140px; border: 2px dashed var(--text-light); 
+            display: flex; align-items: center; justify-content: center; 
         }
         #discardPile .synth-card {
-            position: absolute;
-            width: 100px;
-            height: 140px;
-            transform: rotate(2deg);
+            position: absolute; width: 100px; height: 140px; transform: rotate(2deg);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
+        
+        /* Color Picker */
+        #colorPicker {
+            position: absolute;
+            bottom: 50%; /* Center of the modal */
+            left: 50%;
+            transform: translate(-50%, 50%);
+            padding: 20px;
+            background: var(--card-bg);
+            border: 2px solid var(--neon-green);
+            border-radius: 8px;
+            box-shadow: var(--neon-glow);
+            z-index: 1001;
+            display: none;
+            text-align: center;
+        }
+        .color-option {
+            width: 40px; height: 40px; border-radius: 50%; display: inline-block; margin: 5px;
+            cursor: pointer; border: 2px solid var(--text-light);
+        }
+        .color-option:hover {
+            border-width: 4px;
+        }
+
     </style>
 </head>
 <body>
@@ -136,9 +146,6 @@
         </div>
     </header>
 
-    <div class="swipe-area">
-        </div>
-
     <div id="synthOModal" class="modal-overlay" style="display: none;">
         <div class="modal-content" style="max-width: 90vw;">
             <h2 id="synthOTitle">SYNTH-O: Initiate Sequence</h2>
@@ -146,11 +153,11 @@
                 
                 <div class="game-log">
                     <p>SYSTEM LOG:</p>
-                    <div id="logContent">Game initialized. Drawing hands...</div>
+                    <div id="logContent"></div>
                 </div>
 
                 <div class="center-area">
-                    <div id="drawDeck" class="synth-card deck-card" onclick="drawCard()">DECK</div>
+                    <div id="drawDeck" class="synth-card deck-card" onclick="drawCardWrapper()">DECK</div>
                     
                     <div style="margin-top: 20px;">
                         <p style="color: var(--text-light); margin-bottom: 5px;">DISCARD PILE</p>
@@ -161,12 +168,14 @@
 
                 <div class="board-info">
                     <h3>GAME STATE</h3>
-                    <p>Current Player: <strong id="currentPlayerName">User</strong></p>
-                    <p>Turn Direction: <strong id="direction">CLOCKWISE (→)</strong></p>
-                    <p>Required Color: <strong id="requiredColor" style="color: var(--neon-green);">Any</strong></p>
-                    <p>Required Value: <strong id="requiredValue" style="color: var(--neon-green);">Any</strong></p>
+                    <p>Current Player: <strong id="currentPlayerName"></strong></p>
+                    <p>Turn Direction: <strong id="direction"></strong></p>
+                    <p>Required Color: <strong id="requiredColor" style="color: var(--neon-green);"></strong></p>
+                    <p>Required Value: <strong id="requiredValue" style="color: var(--neon-green);"></strong></p>
                     <p>Hand Count (AI): <strong id="aiHandCount">0</strong></p>
-                    <button class="ui-button" onclick="saySynthO()">SAY SYNTH-O</button>
+                    <p>Deck Count: <strong id="deckCount">0</strong></p>
+                    
+                    <button id="synthOBtn" class="ui-button" onclick="saySynthO()" disabled>SAY SYNTH-O</button>
                     <button class="ui-button" onclick="closeSynthOModal()" style="float: right;">EXIT GAME</button>
                 </div>
 
@@ -174,57 +183,72 @@
                     </div>
             </div>
         </div>
+
+        <div id="colorPicker">
+            <h3>Choose New Color</h3>
+            <div class="color-options-container">
+                <span class="color-option color-R" onclick="selectWildColor('R')"></span>
+                <span class="color-option color-B" onclick="selectWildColor('B')"></span>
+                <span class="color-option color-G" onclick="selectWildColor('G')"></span>
+                <span class="color-option color-Y" onclick="selectWildColor('Y')"></span>
+            </div>
+        </div>
     </div>
 
 
     <script>
-        // --- JAVASCRIPT LOGIC (UNO/SYNTH-O Game) ---
+        // --- JAVASCRIPT LOGIC (SYNTH-O Game) ---
 
         // Card definition structure: Color, Value (0-9, S, R, D2, W, W4)
         const COLORS = ['R', 'B', 'G', 'Y'];
         const VALUES = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'S', 'R', 'D2'];
         const WILD_CARDS = ['W', 'W4'];
-
+        const PLAYER_NAMES = ['User', 'BOT-Alpha'];
+        
+        // --- GLOBAL GAME STATE ---
         let gameDeck = [];
         let discardPile = [];
         let playerHand = [];
         let aiHand = [];
 
-        // Game State Variables
         let isGameRunning = false;
-        let currentPlayer = 'User'; // Simple state for now
-        let currentDirection = 1; // 1 for Clockwise (default), -1 for Counter-Clockwise
-        
+        let currentPlayerIndex = 0; // 0: User, 1: BOT-Alpha
+        let currentDirection = 1; // 1: Clockwise (default), -1: Counter-Clockwise
+        let hasDrawn = false;
+        let pendingCard = null; // Used to hold a wild card until color is selected
+
         const logContent = document.getElementById('logContent');
 
+        // --- UTILITIES ---
+
         function log(message) {
-            logContent.innerHTML += `<p>>> ${message}</p>`;
-            logContent.scrollTop = logContent.scrollHeight; // Scroll to bottom
+            logContent.innerHTML += `<p>${message}</p>`;
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+        
+        function getTopCard() {
+            return discardPile[discardPile.length - 1];
         }
 
-        // --- DECK INITIALIZATION ---
-        function createDeck() {
-            let deck = [];
-            // Numbers 1-9 (two of each per color)
-            COLORS.forEach(color => {
-                deck.push({ color: color, value: '0' }); // One '0' per color
-                for (let i = 1; i <= 9; i++) {
-                    deck.push({ color: color, value: String(i) });
-                    deck.push({ color: color, value: String(i) });
-                }
-                // Action Cards (two of each per color)
-                ['S', 'R', 'D2'].forEach(value => {
-                    deck.push({ color: color, value: value });
-                    deck.push({ color: color, value: value });
-                });
-            });
-            // Wild Cards (four of each)
-            WILD_CARDS.forEach(value => {
-                for (let i = 0; i < 4; i++) {
-                    deck.push({ color: 'W', value: value });
-                }
-            });
-            return shuffleDeck(deck);
+        function getColorName(code) {
+            switch(code) {
+                case 'R': return 'RED';
+                case 'B': return 'BLUE';
+                case 'G': return 'GREEN';
+                case 'Y': return 'YELLOW';
+                default: return 'WILD';
+            }
+        }
+
+        function getDisplayValue(value) {
+            switch(value) {
+                case 'S': return 'Ø'; 
+                case 'R': return '⇌'; 
+                case 'D2': return '+2'; 
+                case 'W': return 'WILD'; 
+                case 'W4': return '+4'; 
+                default: return value;
+            }
         }
 
         function shuffleDeck(deck) {
@@ -235,29 +259,129 @@
             return deck;
         }
 
-        function drawCardFromDeck(hand) {
-            if (gameDeck.length === 0) {
-                // If the deck runs out, shuffle the discard pile back in (except the top card)
-                const topCard = discardPile.pop();
-                gameDeck = shuffleDeck(discardPile);
-                discardPile = [topCard];
-                log("Deck empty. Reshuffling discard pile into the deck.");
+        // --- DECK & DRAW LOGIC ---
+
+        function createDeck() {
+            let deck = [];
+            COLORS.forEach(color => {
+                deck.push({ color: color, value: '0' }); // One '0' per color
+                for (let i = 1; i <= 9; i++) {
+                    deck.push({ color: color, value: String(i) });
+                    deck.push({ color: color, value: String(i) });
+                }
+                ['S', 'R', 'D2'].forEach(value => {
+                    deck.push({ color: color, value: value });
+                    deck.push({ color: color, value: value });
+                });
+            });
+            WILD_CARDS.forEach(value => {
+                for (let i = 0; i < 4; i++) {
+                    deck.push({ color: 'W', value: value });
+                }
+            });
+            return shuffleDeck(deck);
+        }
+
+        function drawCardFromDeck(hand, count = 1) {
+            for (let i = 0; i < count; i++) {
+                if (gameDeck.length === 0) {
+                    if (discardPile.length <= 1) {
+                        log("CRITICAL: No cards left to draw!");
+                        return;
+                    }
+                    const topCard = discardPile.pop();
+                    gameDeck = shuffleDeck(discardPile);
+                    discardPile = [topCard];
+                    log("Deck empty. Reshuffling discard pile into the deck.");
+                }
+                const card = gameDeck.pop();
+                hand.push(card);
             }
-            const card = gameDeck.pop();
-            hand.push(card);
-            return card;
+            updateHandDisplay();
+            updateGameInfo();
+        }
+        
+        function drawCardWrapper() {
+            if (currentPlayerIndex !== 0) return; // Only user can trigger the draw button
+            if (hasDrawn) {
+                log("You already drew this turn. You must play or pass.");
+                return;
+            }
+            
+            drawCardFromDeck(playerHand, 1);
+            hasDrawn = true;
+            
+            const topCard = getTopCard();
+            const playableCards = playerHand.filter(card => isCardPlayable(card, topCard));
+            
+            // If the drawn card makes a play possible, the user can still play it
+            // Otherwise, they pass the turn.
+            if (playableCards.length === 0) {
+                log("Drawn card not playable. Passing turn.");
+                nextTurn();
+            } else {
+                log("Drawn a card. You may now play it or pass.");
+            }
+        }
+
+        // --- GAME PLAY VALIDATION & UI ---
+
+        function isCardPlayable(card, topCard) {
+            // Check against the actual color property of the card on the pile
+            const requiredColor = topCard.color === 'W' ? topCard.selectedColor : topCard.color;
+
+            // Wild cards are always playable
+            if (card.color === 'W') return true;
+
+            // Must match the currently required color OR the value
+            return card.color === requiredColor || card.value === topCard.value;
+        }
+
+        function updateHandDisplay() {
+            const handContainer = document.querySelector('.player-hand');
+            const topCard = getTopCard();
+            handContainer.innerHTML = '';
+            
+            playerHand.forEach((card, index) => {
+                const playable = currentPlayerIndex === 0 && isCardPlayable(card, topCard);
+                const cardElement = renderCard(card, index, playable);
+                handContainer.appendChild(cardElement);
+            });
+            
+            // Check for SYNTH-O state
+            document.getElementById('synthOBtn').disabled = playerHand.length !== 2;
+        }
+
+        function updateDiscardPile() {
+            const pileContainer = document.getElementById('discardPile');
+            const topCard = getTopCard();
+            pileContainer.innerHTML = '';
+            
+            if (topCard) {
+                const cardElement = renderCard(topCard, -1, false);
+                cardElement.style.cursor = 'default';
+                pileContainer.appendChild(cardElement);
+            }
+        }
+        
+        function updateGameInfo() {
+            const topCard = getTopCard();
+            const requiredColor = topCard.color === 'W' ? topCard.selectedColor : topCard.color;
+            const colorName = getColorName(requiredColor);
+            
+            document.getElementById('currentPlayerName').textContent = PLAYER_NAMES[currentPlayerIndex];
+            document.getElementById('direction').textContent = currentDirection === 1 ? 'CLOCKWISE (→)' : 'COUNTER-CLOCKWISE (←)';
+            document.getElementById('requiredColor').textContent = colorName;
+            document.getElementById('requiredValue').textContent = getDisplayValue(topCard.value);
+            document.getElementById('aiHandCount').textContent = aiHand.length;
+            document.getElementById('deckCount').textContent = gameDeck.length;
+
+            // Highlight current player
+            document.getElementById('currentPlayerName').style.color = (currentPlayerIndex === 0) ? 'var(--neon-green)' : 'var(--synth-red)';
         }
 
         function renderCard(card, index, isPlayable = false) {
-            let displayValue = card.value;
-            // Map action card values to symbols
-            switch(card.value) {
-                case 'S': displayValue = 'Ø'; break; // Skip
-                case 'R': displayValue = '⇌'; break; // Reverse
-                case 'D2': displayValue = '+2'; break; // Draw Two
-                case 'W': displayValue = 'WILD'; break; // Wild
-                case 'W4': displayValue = '+4'; break; // Wild Draw Four
-            }
+            const displayValue = getDisplayValue(card.value);
 
             const cardElement = document.createElement('div');
             cardElement.className = `synth-card color-${card.color} ${isPlayable ? 'playable' : 'non-playable'}`;
@@ -271,121 +395,187 @@
             return cardElement;
         }
 
-        // --- GAME PLAY LOGIC ---
+        // --- TURN FLOW & ACTION CARDS ---
+        
+        function resolveAction(card) {
+            let skipTurn = false;
+            let drawCount = 0;
+            const nextPlayerIndex = (currentPlayerIndex + currentDirection + PLAYER_NAMES.length) % PLAYER_NAMES.length;
+            const targetHand = nextPlayerIndex === 0 ? playerHand : aiHand;
+            const targetPlayerName = PLAYER_NAMES[nextPlayerIndex];
 
-        function isCardPlayable(card, topCard) {
-            // Wild cards are always playable
-            if (card.color === 'W') return true;
+            switch (card.value) {
+                case 'S':
+                    log(`ACTION: ${targetPlayerName} is SKIPPED.`);
+                    skipTurn = true;
+                    break;
+                case 'R':
+                    currentDirection *= -1;
+                    log("ACTION: Direction REVERSED.");
+                    break;
+                case 'D2':
+                    drawCount = 2;
+                    log(`ACTION: ${targetPlayerName} draws 2 cards.`);
+                    break;
+                case 'W4':
+                    drawCount = 4;
+                    log(`ACTION: ${targetPlayerName} draws 4 cards.`);
+                    break;
+            }
 
-            // Must match color or value
-            return card.color === topCard.color || card.value === topCard.value;
-        }
-
-        function updateHandDisplay() {
-            const handContainer = document.querySelector('.player-hand');
-            const topCard = discardPile[discardPile.length - 1];
-            handContainer.innerHTML = '';
+            if (drawCount > 0) {
+                drawCardFromDeck(targetHand, drawCount);
+                skipTurn = true; // Player who draws is always skipped
+            }
             
-            playerHand.forEach((card, index) => {
-                const playable = isCardPlayable(card, topCard);
-                const cardElement = renderCard(card, index, playable);
-                handContainer.appendChild(cardElement);
-            });
-            document.getElementById('aiHandCount').textContent = aiHand.length;
-        }
-
-        function updateDiscardPile() {
-            const pileContainer = document.getElementById('discardPile');
-            const topCard = discardPile[discardPile.length - 1];
-            pileContainer.innerHTML = '';
-            
-            if (topCard) {
-                const cardElement = renderCard(topCard, -1, false);
-                cardElement.style.cursor = 'default';
-                pileContainer.appendChild(cardElement);
-
-                // Update required color/value display
-                document.getElementById('requiredColor').textContent = topCard.color === 'W' ? topCard.selectedColor || 'Wild' : topCard.color;
-                document.getElementById('requiredValue').textContent = topCard.value;
+            // Advance turn, potentially skipping the next player
+            currentPlayerIndex = (currentPlayerIndex + currentDirection + PLAYER_NAMES.length) % PLAYER_NAMES.length;
+            if (skipTurn) {
+                currentPlayerIndex = (currentPlayerIndex + currentDirection + PLAYER_NAMES.length) % PLAYER_NAMES.length;
+                log(`Turn automatically advances past ${targetPlayerName}.`);
             }
         }
         
-        function drawCard() {
-            if (currentPlayer !== 'User') {
-                 log("It's not your turn.");
-                 return;
-            }
-
-            const topCard = discardPile[discardPile.length - 1];
-            const canPlay = playerHand.some(card => isCardPlayable(card, topCard));
-
-            if (canPlay) {
-                log("You have a playable card. You must play or pass (not implemented yet).");
-                return;
-            }
-
-            const newCard = drawCardFromDeck(playerHand);
-            log(`Drew a card: ${newCard.color}-${newCard.value}.`);
+        function nextTurn() {
+            hasDrawn = false;
+            // Only advance if it wasn't a Draw 2/4 or Skip
+            // (The resolveAction already handled the skip logic)
+            currentPlayerIndex = (currentPlayerIndex + currentDirection + PLAYER_NAMES.length) % PLAYER_NAMES.length;
             
-            // Allow playing the drawn card immediately if it's playable
-            if (isCardPlayable(newCard, topCard)) {
-                 log("Drawn card is playable.");
-            } else {
-                 log("Drawn card is not playable. Next turn (AI turn not implemented).");
-            }
+            updateGameInfo();
             updateHandDisplay();
-            // In a full game, we'd switch to the AI here: nextTurn();
+            
+            if (currentPlayerIndex === 1) {
+                setTimeout(botPlayTurn, 1000); // Give player time to see the move
+            } else {
+                log(`It is now your turn, ${PLAYER_NAMES[currentPlayerIndex]}.`);
+            }
         }
-
+        
         function playCard(index) {
+            if (currentPlayerIndex !== 0) return;
+
             const card = playerHand[index];
-            const topCard = discardPile[discardPile.length - 1];
+            const topCard = getTopCard();
 
             if (!isCardPlayable(card, topCard)) {
                 log("Invalid move: Card does not match color or value.");
                 return;
             }
 
-            // Remove card from hand
             playerHand.splice(index, 1);
-            
-            // Handle Wild Card selection (Mocked)
+            log(`User played ${card.color}-${card.value}.`);
+
+            // Check for Wilds: If it's a Wild, prompt for color selection
             if (card.color === 'W') {
-                // In a real game, this would open a color selection modal.
-                // For the demo, we'll arbitrarily pick the next color.
-                const nextColor = COLORS[Math.floor(Math.random() * COLORS.length)];
-                card.selectedColor = nextColor;
-                log(`Played WILD card. Next color is set to ${nextColor}.`);
+                pendingCard = card;
+                document.getElementById('colorPicker').style.display = 'block';
+                return; // Wait for color selection
             }
 
-            // Move to discard pile
+            // Normal card or non-Wild action
             discardPile.push(card);
-            log(`User played ${card.color}-${card.value}. Hand size: ${playerHand.length}`);
+            checkWinCondition(playerHand, 'User');
+            resolveAction(card);
+            nextTurn();
+        }
 
-            // Update UI
-            updateDiscardPile();
-            updateHandDisplay();
+        // --- WILD CARD LOGIC ---
+        
+        function selectWildColor(colorCode) {
+            document.getElementById('colorPicker').style.display = 'none';
+            if (!pendingCard) return;
+
+            // Set the wild card's temporary color
+            pendingCard.selectedColor = colorCode;
             
-            // Check for Win
-            if (playerHand.length === 0) {
-                alert("CONGRATULATIONS! You won SYNTH-O!");
-                closeSynthOModal();
-                return;
-            }
+            // Log the play and push to discard
+            discardPile.push(pendingCard);
+            log(`Color selected: ${getColorName(colorCode)}.`);
+            
+            checkWinCondition(playerHand, 'User');
+            resolveAction(pendingCard);
+            pendingCard = null;
+            nextTurn();
+        }
 
-            // Handle Action Card effects (Not fully implemented, just logging)
-            if (card.value === 'S') log("Next player skipped.");
-            if (card.value === 'R') { 
-                currentDirection *= -1; 
-                document.getElementById('direction').textContent = currentDirection === 1 ? 'CLOCKWISE (→)' : 'COUNTER-CLOCKWISE (←)';
-                log("Direction reversed.");
-            }
-            if (card.value === 'D2') log("Next player must draw 2.");
-            if (card.value === 'W4') log("Next player must draw 4.");
+        // --- AI BOT LOGIC (Simple Strategy) ---
 
-            // nextTurn(); (Switch to AI)
+        function botPlayTurn() {
+            if (currentPlayerIndex !== 1) return;
+
+            const topCard = getTopCard();
+            const playableCards = aiHand.filter(card => isCardPlayable(card, topCard));
+
+            if (playableCards.length > 0) {
+                // Strategy 1: Play the first playable card found
+                const cardToPlay = playableCards[0];
+                const cardIndex = aiHand.indexOf(cardToPlay);
+                aiHand.splice(cardIndex, 1);
+                
+                log(`BOT-Alpha played ${cardToPlay.color}-${cardToPlay.value}.`);
+
+                if (cardToPlay.color === 'W') {
+                    // Bot's Wild Card Color Choice: Pick the color it has the most of (excluding the wild itself)
+                    const colorCounts = {};
+                    aiHand.filter(c => c.color !== 'W').forEach(c => {
+                        colorCounts[c.color] = (colorCounts[c.color] || 0) + 1;
+                    });
+                    const chosenColor = Object.keys(colorCounts).reduce((a, b) => colorCounts[a] > colorCounts[b] ? a : b, COLORS[0]);
+                    
+                    cardToPlay.selectedColor = chosenColor;
+                    log(`BOT-Alpha chose color: ${getColorName(chosenColor)}.`);
+                }
+
+                discardPile.push(cardToPlay);
+                checkWinCondition(aiHand, 'BOT-Alpha');
+                resolveAction(cardToPlay);
+                nextTurn();
+
+            } else {
+                // Strategy 2: Draw a card
+                drawCardFromDeck(aiHand, 1);
+                log("BOT-Alpha drew a card.");
+                
+                // After drawing, check if the card is playable
+                const drawnCard = aiHand[aiHand.length - 1];
+                if (isCardPlayable(drawnCard, topCard)) {
+                    // Play the drawn card immediately
+                    aiHand.pop(); 
+                    log(`BOT-Alpha immediately played the drawn card: ${drawnCard.color}-${drawnCard.value}.`);
+                    discardPile.push(drawnCard);
+                    checkWinCondition(aiHand, 'BOT-Alpha');
+                    resolveAction(drawnCard);
+                } else {
+                    log("BOT-Alpha could not play the drawn card. Passing turn.");
+                }
+                
+                nextTurn();
+            }
         }
         
+        // --- WIN CONDITION ---
+        
+        function checkWinCondition(hand, playerName) {
+            if (hand.length === 0) {
+                alert(`GAME OVER. ${playerName} has won SYNTH-O!`);
+                closeSynthOModal();
+                return true;
+            }
+            if (hand.length === 1 && playerName === 'BOT-Alpha') {
+                log("BOT-Alpha called SYNTH-O!");
+            }
+            return false;
+        }
+
+        function saySynthO() {
+            if (playerHand.length === 2) {
+                log("User declared SYNTH-O!");
+            } else {
+                log("Cannot declare SYNTH-O. You need exactly 2 cards to call it.");
+            }
+        }
+
         // --- GAME CONTROL ---
 
         function initSynthOGame() {
@@ -397,8 +587,8 @@
 
             // Draw initial hands (7 cards each)
             for (let i = 0; i < 7; i++) {
-                drawCardFromDeck(playerHand);
-                drawCardFromDeck(aiHand); // Mock AI hand size
+                drawCardFromDeck(playerHand, 1);
+                drawCardFromDeck(aiHand, 1);
             }
 
             // Flip the first card (must not be a Wild Draw Four)
@@ -406,7 +596,6 @@
             do {
                 firstCard = gameDeck.pop();
                 if (firstCard.value === 'W4') {
-                    // Put it back and shuffle again
                     gameDeck.unshift(firstCard);
                     gameDeck = shuffleDeck(gameDeck);
                 }
@@ -416,25 +605,23 @@
             if (firstCard.color === 'W') {
                 const nextColor = COLORS[Math.floor(Math.random() * COLORS.length)];
                 firstCard.selectedColor = nextColor;
-                log(`First card is WILD. Color set to ${nextColor}.`);
+                log(`First card is WILD. Color set to ${getColorName(nextColor)}.`);
             }
 
             discardPile.push(firstCard);
             
-            // Update UI
+            // Start the game flow
+            currentPlayerIndex = 0; // User starts
+            currentDirection = 1;
+            hasDrawn = false;
+
             updateDiscardPile();
             updateHandDisplay();
+            updateGameInfo();
             isGameRunning = true;
-            log(`Game ready. Player hand: ${playerHand.length}. Top card: ${firstCard.color}-${firstCard.value}`);
+            log(`Game ready. Player hand: ${playerHand.length}. Top card: ${getColorName(firstCard.color)}-${firstCard.value}`);
         }
 
-        function saySynthO() {
-            if (playerHand.length === 2) {
-                alert("SYNTH-O declared! (Would prevent the next player from calling you out)");
-            } else {
-                alert("You can only declare SYNTH-O when you have 2 cards left.");
-            }
-        }
         
         function openSynthOModal() {
             if (!isGameRunning) {
@@ -446,7 +633,6 @@
         function closeSynthOModal() {
             isGameRunning = false;
             document.getElementById('synthOModal').style.display = 'none';
-            // In a full game, you might prompt to save the game state here
         }
 
         document.getElementById('playSynthOBtn').addEventListener('click', openSynthOModal);
@@ -454,21 +640,6 @@
         // --- (EXISTING TCG/PROFILE LOGIC BELOW, SIMPLIFIED) ---
 
         // TCG MOCK DATA (Required for Profile Console/Collection buttons to not break)
-        const PACK_CARD_POOL = [ /* ... TCG cards ... */ ]; 
-        let userCardsCollected = JSON.parse(localStorage.getItem('tcgCollection')) || [];
-        let isUserLoggedIn = false;
-        
-        let userCardData = JSON.parse(localStorage.getItem('userCard')) || {
-            id: 'user_custom', title: "My Custom Media Card", user: "@Guest", birthday: '2000-01-01', 
-            description: "Default card.", bio: "Default bio.",
-            imageUrl: "https://picsum.photos/320/280?user=tr3vmedia",
-            mediaType: 'image', fullUrl: 'https://picsum.photos/600/400?user=tr3vmedia',
-            rarity: 'Starter', type: 'Profile', power: 70 
-        };
-        if (!userCardsCollected.find(c => c.id === 'user_custom')) { userCardsCollected.push(userCardData); }
-
-
-        // --- DUMMY FUNCTIONS TO PREVENT ERRORS ---
         function updateCollectionCount() { /* ... */ }
         function openCollectionModal() { alert("Viewing TCG Collection."); }
         function openPack() { alert("Opening TCG Pack."); }
@@ -476,8 +647,6 @@
         function init() {
             updateLoginState('@Guest', false);
             updateCollectionCount();
-            // NOTE: The main UI (swipe, profile console) HTML is omitted, but the JS references remain.
-            // In a production environment, you'd ensure the profileConsole HTML structure is present.
         }
         
         // --- EVENT LISTENERS FOR MODALS/CONTROLS ---
