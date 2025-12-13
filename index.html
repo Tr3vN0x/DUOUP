@@ -57,10 +57,10 @@ h2 {
     -webkit-text-fill-color: transparent;
 }
 
-/* NEW STYLE: Counter for available players */
+/* Style for the dynamic player count */
 #userCount {
     color: var(--duoup-secondary);
-    font-size: 0.55em; /* Adjusted size relative to h2 */
+    font-size: 0.55em; 
     font-weight: 600;
     text-shadow: 0 0 5px var(--duoup-secondary);
     margin-left: 10px;
@@ -113,13 +113,13 @@ header nav { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
     padding-top: 60px;
 }
 
-form {
+form:not(#duoSearchForm) {
     display: flex; flex-direction: column;
     background: #141426; padding: 25px; border-radius: 12px;
     margin: 10px; width: 90%; max-width: 360px;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.15); /* Subtle blue glow around form */
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.15); 
 }
-input, textarea {
+input:not(#searchQuery), textarea {
     margin: 8px 0; padding: 12px; border-radius: 6px;
     border: 1px solid var(--duoup-primary);
     background: #2D2D44;
@@ -127,19 +127,28 @@ input, textarea {
 }
 textarea { resize: none; min-height: 80px; }
 
-button:not(.google-btn) {
+button:not(.google-btn):not(#duoSearchForm button) {
     margin-top: 10px; padding: 12px; font-weight: bold;
     /* Aggressive gradient for main buttons (Blue to Purple) */
     background: linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent));
     color: var(--duoup-dark); text-transform: uppercase;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); /* Neon glow on buttons */
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); 
 }
-button:not(.google-btn):hover {
+button:not(.google-btn):not(#duoSearchForm button):hover {
     /* Secondary button gradient on hover (Red/Purple) */
     background: linear-gradient(90deg, var(--duoup-accent), var(--duoup-secondary));
     transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(255, 87, 51, 0.8); /* Red glow on hover */
+    box-shadow: 0 0 20px rgba(255, 87, 51, 0.8); 
 }
+
+/* Search Button Specific Style */
+#duoSearchForm button {
+    background: linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent));
+    color: var(--duoup-dark);
+    font-weight: bold;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+}
+
 .google-btn {
     background: linear-gradient(90deg, #DB4437, #EA4335);
     color: white; width: 90%; max-width: 360px;
@@ -247,8 +256,21 @@ button:not(.google-btn):hover {
 </div>
 
 <div id="app-section" style="display:none; width:100%; padding-top:60px;">
+    
     <div id="home-section" class="container">
         <h2 id="homeSectionHeader">Duo Search <span id="userCount"></span></h2> 
+        
+        <form id="duoSearchForm" style="display:flex; gap:10px; margin-bottom:20px;">
+            <input 
+                type="text" 
+                id="searchQuery" 
+                placeholder="Search by Username, Game, or Platform"
+                style="flex-grow:1; padding:12px; border:1px solid var(--duoup-primary); border-radius:6px; background:#2D2D44; color:var(--duoup-light); font-family: var(--font-main);"
+            >
+            <button type="submit" style="padding:12px 20px;">
+                <i class="fas fa-search"></i> Find Duo
+            </button>
+        </form>
         <div class="results-grid" id="usersGrid"></div>
     </div>
     
@@ -313,6 +335,7 @@ const provider = new GoogleAuthProvider();
 // Globals
 let activeChatId = "";
 let activeFriendUid = "";
+let allUsersData = []; // Global array to store all user data for client-side filtering
 
 // --- DOM ELEMENTS ---
 const signinForm = document.getElementById("signin");
@@ -323,13 +346,17 @@ const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
 const logoutBtn = document.getElementById("logoutBtnHeader");
 const usersGrid = document.getElementById("usersGrid");
-const userCountElement = document.getElementById("userCount"); // NEW: For available player count
+const userCountElement = document.getElementById("userCount");
 const requestsGrid = document.getElementById("requestsGrid");
 const duosGrid = document.getElementById("duosGrid");
 const chatModal = document.getElementById("chatModal");
 const chatHeader = document.getElementById("chatHeader");
 const messageArea = document.getElementById("messageArea");
 const chatInput = document.getElementById("chatInput");
+
+// NEW SEARCH ELEMENTS
+const duoSearchForm = document.getElementById("duoSearchForm");
+const searchQueryInput = document.getElementById("searchQuery");
 
 
 // --- AUTH LISTENERS ---
@@ -406,34 +433,73 @@ function showSection(section){
     if(section==="profile") loadProfile();
 }
 
-// --- USERS / DUO SEARCH (Includes NEW Counter Logic) ---
+// --- USERS / DUO SEARCH (Core Filtering Logic) ---
+
+// Function to fetch all user data and start the real-time listener
 async function loadUsers(){
     const q = query(collection(db,"users"));
     onSnapshot(q,snapshot=>{
-        usersGrid.innerHTML="";
+        // Store all available user data (excluding current user) globally
+        allUsersData = snapshot.docs
+            .filter(doc => doc.id !== auth.currentUser.uid)
+            .map(doc => ({ id: doc.id, data: doc.data() }));
         
-        // Filter out the current user and update the counter
-        const availableUsers = snapshot.docs.filter(doc => doc.id !== auth.currentUser.uid);
-        
-        if (userCountElement) {
-             userCountElement.textContent = `(${availableUsers.length} Players Online)`;
-        }
-
-        // Populate the grid
-        availableUsers.forEach(docSnap=>{
-            const u = docSnap.data();
-            const div = document.createElement("div");
-            div.className="duo-card";
-            div.innerHTML=`<div class="card-header">
-                <div class="avatar">${u.photoURL?`<img src="${u.photoURL}">`:u.username[0]}</div>
-                <strong>${u.username}</strong>
-            </div>
-            <div class="bio">Platform: ${u.platform||'N/A'}<br>Games: ${u.games||'N/A'}<br>Playstyle: ${u.playstyle||'N/A'}</div>
-            <button class="action-button" onclick="sendDuoRequest('${docSnap.id}','${u.username}')">Send Duo Request</button>`;
-            usersGrid.appendChild(div);
-        });
+        // Initial render of the grid (with no search query)
+        renderUsersGrid();
     });
 }
+
+// Function to render the grid based on the current search query
+function renderUsersGrid(queryText = ''){
+    const queryLower = queryText.toLowerCase();
+    usersGrid.innerHTML="";
+    
+    // Filter the global data array
+    const filteredUsers = allUsersData.filter(userDoc => {
+        if (!queryLower) return true; // Show all if query is empty
+        const data = userDoc.data;
+        
+        // Check if the query matches username, platform, or games
+        return (
+            (data.username || '').toLowerCase().includes(queryLower) ||
+            (data.platform || '').toLowerCase().includes(queryLower) ||
+            (data.games || '').toLowerCase().includes(queryLower)
+        );
+    });
+
+    // Update the counter based on filtered results
+    if (userCountElement) {
+         userCountElement.textContent = `(${filteredUsers.length} Players Matched)`;
+    }
+
+    // Populate the grid with filtered users
+    filteredUsers.forEach(userDoc => {
+        const u = userDoc.data;
+        const docId = userDoc.id;
+        const div = document.createElement("div");
+        div.className="duo-card";
+        div.innerHTML=`<div class="card-header">
+            <div class="avatar">${u.photoURL?`<img src="${u.photoURL}">`:u.username[0]}</div>
+            <strong>${u.username}</strong>
+        </div>
+        <div class="bio">Platform: ${u.platform||'N/A'}<br>Games: ${u.games||'N/A'}<br>Playstyle: ${u.playstyle||'N/A'}</div>
+        <button class="action-button" onclick="sendDuoRequest('${docId}','${u.username}')">Send Duo Request</button>`;
+        usersGrid.appendChild(div);
+    });
+}
+
+// Attach search listeners
+duoSearchForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const queryText = searchQueryInput.value.trim();
+    renderUsersGrid(queryText);
+});
+
+// Real-time filtering as user types (removes need for separate submit click)
+searchQueryInput.addEventListener("input", () => {
+    renderUsersGrid(searchQueryInput.value.trim());
+});
+
 
 async function sendDuoRequest(toUid,toUsername){
     const fromUid = auth.currentUser.uid;
