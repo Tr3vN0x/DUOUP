@@ -1,266 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DuoUp - Social Gaming</title>
-<link rel="icon" type="image/png" href="https://i.imgur.com/3UQx9gR.png">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<style>
-:root {
-    --duoup-primary: #00FFFF;
-    --duoup-secondary: #FF5733;
-    --duoup-accent: #8A2BE2;
-    --duoup-dark: #050510;
-    --duoup-light: #F0F8FF;
-    --duoup-muted: #80809C;
-    --font-main: 'Rajdhani', sans-serif;
-    --font-header: 'Orbitron', sans-serif;
-}
-html, body { margin: 0; height: 100%; background-color: var(--duoup-dark); font-family: var(--font-main); color: var(--duoup-light); }
-h1,h2,h3 { font-family: var(--font-header); margin:0; }
-button { cursor:pointer; border:none; border-radius:5px; }
-header { position:fixed; top:0; width:100%; height:60px; background:rgba(20,20,38,0.98); display:flex; align-items:center; justify-content:space-between; padding:0 15px; z-index:1000; }
-header .logo { display:flex; align-items:center; gap:10px; }
-header nav { display:flex; align-items:center; gap:15px; }
-.container { max-width:1200px; margin:80px auto 20px; padding:0 15px; width:100%; }
-.results-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:20px; width:100%; }
-.duo-card { background:linear-gradient(145deg,#1A1A2E,#2D2D44); color: var(--duoup-light); border-radius:12px; padding:10px; overflow:hidden; border:1px solid #3A3A52; }
-.duo-card .card-header { display:flex; align-items:center; margin-bottom:10px; }
-.duo-card .avatar { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:15px; background: var(--duoup-secondary); color: var(--duoup-dark); }
-.duo-card button { margin-top:10px; width:100%; padding:8px; background:var(--duoup-primary); color:#000; font-weight:bold; border-radius:6px; }
-form input, form textarea { width:100%; margin:6px 0; padding:10px; border-radius:6px; border:none; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duoup - Gamer Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        /* CSS Reset and Global Styles */
+        :root {
+            /* Define CSS Variables for Easy Theming */
+            --color-dark-bg: #1A1A2E;
+            --color-card-bg: #212534;
+            --color-primary: #E94560; /* Duoup Red/Pink Accent */
+            --color-text-light: #F5F5F5;
+            --color-text-fade: #A0A0A0;
+            --color-success: #4CAF50;
+            --color-border: #3A3A4A;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--color-dark-bg);
+            color: var(--color-text-light);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* --- PROFILE CONTAINER --- */
+        .profile-container {
+            width: 100%;
+            max-width: 900px;
+            background-color: var(--color-card-bg);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            display: grid;
+            grid-template-columns: 1fr 2fr; /* Layout: 1/3 for sidebar, 2/3 for main content */
+            overflow: hidden;
+            border: 1px solid var(--color-border);
+        }
+
+        /* --- SIDEBAR (Left Column) --- */
+        .profile-sidebar {
+            background-color: #2D3043;
+            padding: 30px 20px;
+            text-align: center;
+            border-right: 2px solid var(--color-primary);
+        }
+
+        .profile-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--color-primary);
+            margin-bottom: 15px;
+        }
+
+        .username {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+            color: var(--color-text-light);
+        }
+
+        .code {
+            font-size: 0.9rem;
+            color: var(--color-text-fade);
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px dashed var(--color-border);
+        }
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+        .stat-label {
+            color: var(--color-text-fade);
+            font-weight: 500;
+        }
+        .stat-value {
+            color: var(--color-primary);
+            font-weight: bold;
+        }
+
+        /* --- MAIN CONTENT (Right Column) --- */
+        .profile-content {
+            padding: 30px;
+        }
+
+        .section-heading {
+            font-size: 1.5rem;
+            color: var(--color-primary);
+            border-bottom: 2px solid var(--color-border);
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+        }
+
+        .tag-list {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .tag {
+            background-color: #4A4E69;
+            color: var(--color-text-light);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        .tag:hover {
+            background-color: var(--color-primary);
+            cursor: pointer;
+        }
+
+        /* --- FRIEND REQUEST BUTTON --- */
+        .friend-action {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: -15px; /* Pull up to align with main content header */
+        }
+        
+        .btn-request {
+            background-color: var(--color-primary);
+            color: var(--color-text-light);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn-request i {
+            margin-right: 8px;
+        }
+        .btn-request:hover {
+            background-color: #C63D55; /* Darker red on hover */
+            transform: translateY(-2px);
+        }
+        .btn-request:active {
+            transform: translateY(0);
+        }
+
+        /* --- Responsive Adjustments --- */
+        @media (max-width: 768px) {
+            .profile-container {
+                grid-template-columns: 1fr; /* Stack columns vertically */
+            }
+            .profile-sidebar {
+                border-right: none;
+                border-bottom: 2px solid var(--color-primary);
+            }
+            .friend-action {
+                justify-content: center;
+                margin-top: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
 
-<header style="display:none;" id="mainHeader">
-    <div class="logo">
-        <img src="https://i.imgur.com/3UQx9gR.png" alt="DuoUp" width="40"/>
-        <h1>DUO<span>UP</span></h1>
+    <div class="profile-container">
+        
+        <div class="profile-sidebar">
+            <img src="https://via.placeholder.com/150/E94560/FFFFFF?text=Player" alt="Gamer Profile Picture" class="profile-image">
+            
+            <h1 class="username">Apex_Predator_1995</h1>
+            <p class="code">#DuoupID-62A8Z</p>
+
+            <div class="stats-card">
+                <div class="stat-item">
+                    <span class="stat-label">Age</span>
+                    <span class="stat-value">30</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Friends</span>
+                    <span class="stat-value">142</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Joined</span>
+                    <span class="stat-value">2024-10-20</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-content">
+            
+            <div class="friend-action">
+                <button class="btn-request">
+                    <i class="fas fa-user-plus"></i> Add Friend
+                </button>
+            </div>
+            
+            <h2 class="section-heading">🎮 Current Objective</h2>
+            <p style="margin-bottom: 30px;">
+                Looking for a reliable support main to push Diamond rank in Apex Legends. Must have a mic and be chill. Also open to grinding Destiny 2 raids on weekends.
+            </p>
+
+            <h2 class="section-heading">🔥 Games & Playstyle</h2>
+            <ul class="tag-list">
+                <li class="tag">Apex Legends (Main)</li>
+                <li class="tag">Destiny 2</li>
+                <li class="tag">PC</li>
+                <li class="tag">Competitive</li>
+                <li class="tag">Casual</li>
+                <li class="tag">Voice Chat Preferred</li>
+                <li class="tag">Role: IGL/DPS</li>
+                <li class="tag">Evenings & Weekends</li>
+            </ul>
+
+            <h2 class="section-heading">💬 My Vibe</h2>
+            <p style="color: var(--color-text-fade);">
+                I take ranked seriously but hate toxicity. Let's communicate, make smart plays, and have a good time. I usually play between 7 PM and 11 PM EST.
+            </p>
+
+        </div>
     </div>
-    <nav>
-        <a href="#" onclick="showSection('home')">Home</a>
-        <a href="#" onclick="showSection('profile')">Profile</a>
-        <a href="#" onclick="showSection('messages')">Messages <span id="notificationBadge"></span></a>
-        <button id="logoutBtnHeader">Logout</button>
-    </nav>
-</header>
-
-<div id="auth-section">
-    <h2>Welcome to DuoUp</h2>
-    <form id="signin">
-        <input id="signin-email" type="email" placeholder="Email" required>
-        <input id="signin-password" type="password" placeholder="Password" required>
-        <button type="submit">Sign In</button>
-    </form>
-    <form id="signup">
-        <input id="signup-email" type="email" placeholder="Email" required>
-        <input id="signup-password" type="password" placeholder="Password" required>
-        <button type="submit">Sign Up</button>
-    </form>
-</div>
-
-<div id="app-section" style="display:none;">
-  <div id="home-section" class="container">
-    <h2>Duo Search <span id="userCount"></span></h2>
-    <form id="duoSearchForm">
-        <input type="text" id="searchQuery" placeholder="Search by Username, Game, or Platform">
-        <button type="submit">Search</button>
-    </form>
-    <div id="quickAddSection">
-      <h3>Quick Add Random Players</h3>
-      <div class="results-grid" id="quickAddGrid"></div>
-    </div>
-    <div class="results-grid" id="usersGrid"></div>
-  </div>
-
-  <div id="profile-section" class="container" style="display:none;">
-      <h2>My Profile</h2>
-      <form id="profileEditForm">
-          <input id="profileUsernameInput" placeholder="Username">
-          <input id="profilePlatformInput" placeholder="Platform">
-          <input id="profileGamesInput" placeholder="Games">
-          <button type="submit">Save Profile</button>
-          <p id="usernameMessage" style="color:red;"></p>
-      </form>
-  </div>
-
-  <div id="messages-section" class="container" style="display:none;">
-    <h2>Messages</h2>
-    <div id="messagesList"></div>
-  </div>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, addDoc, getDoc, query, where, orderBy, onSnapshot, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-
-const firebaseConfig = { /* your firebase config here */ };
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-const signinForm = document.getElementById("signin");
-const signupForm = document.getElementById("signup");
-const logoutBtn = document.getElementById("logoutBtnHeader");
-const authSection = document.getElementById("auth-section");
-const appSection = document.getElementById("app-section");
-const mainHeader = document.getElementById("mainHeader");
-const usersGrid = document.getElementById("usersGrid");
-const quickAddGrid = document.getElementById("quickAddGrid");
-const userCountElement = document.getElementById("userCount");
-const messagesList = document.getElementById("messagesList");
-
-let allUsersData = [];
-
-signinForm.addEventListener("submit", async e=>{
-    e.preventDefault();
-    await signInWithEmailAndPassword(auth, document.getElementById("signin-email").value, document.getElementById("signin-password").value);
-});
-signupForm.addEventListener("submit", async e=>{
-    e.preventDefault();
-    const email = document.getElementById("signup-email").value;
-    const password = document.getElementById("signup-password").value;
-    const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-    await setDoc(doc(db,"users",userCredential.user.uid),{
-        uid:userCredential.user.uid, email, username:"New Player", platform:"", games:"", timestamp:serverTimestamp()
-    });
-});
-logoutBtn.addEventListener("click", async()=>{ await signOut(auth); });
-
-function renderUsersGrid(queryText=''){
-    const queryLower = queryText.toLowerCase();
-    usersGrid.innerHTML="";
-    const filteredUsers = allUsersData.filter(u=> {
-        if(!queryLower) return true;
-        return (u.data.username||'').toLowerCase().includes(queryLower) ||
-               (u.data.platform||'').toLowerCase().includes(queryLower) ||
-               (u.data.games||'').toLowerCase().includes(queryLower);
-    });
-    userCountElement.textContent = `(${filteredUsers.length} Players Found)`;
-    filteredUsers.forEach(u=>{
-        const card = document.createElement("div");
-        card.className = "duo-card";
-        card.innerHTML = `<div class="card-header"><div class="avatar">${u.data.username?.[0]}</div><strong>${u.data.username}</strong></div>
-        <div>Platform: ${u.data.platform || 'N/A'}<br>Games: ${u.data.games || 'N/A'}</div>
-        <button onclick="quickAdd('${u.id}','${u.data.username}')">Quick Add</button>`;
-        usersGrid.appendChild(card);
-    });
-}
-
-document.getElementById("duoSearchForm").addEventListener("submit", e=>{
-    e.preventDefault();
-    renderUsersGrid(document.getElementById("searchQuery").value);
-});
-
-function loadQuickAdd(){
-    const q = query(collection(db,"users"));
-    onSnapshot(q, snap=>{
-        let allUsers=[];
-        snap.forEach(doc=>{
-            if(doc.id!==auth.currentUser.uid) allUsers.push({id:doc.id,data:doc.data()});
-        });
-        allUsersData = allUsers;
-        allUsers.sort(()=>Math.random()-0.5);
-        const randomUsers = allUsers.slice(0, Math.min(4, allUsers.length));
-        quickAddGrid.innerHTML="";
-        randomUsers.forEach(u=>{
-            const card=document.createElement("div");
-            card.className="duo-card";
-            card.innerHTML = `<div class="card-header"><div class="avatar">${u.data.username?.[0]}</div><strong>${u.data.username}</strong></div>
-            <div>Platform: ${u.data.platform || 'N/A'}<br>Games: ${u.data.games || 'N/A'}</div>
-            <button onclick="quickAdd('${u.id}','${u.data.username}')">Quick Add</button>`;
-            quickAddGrid.appendChild(card);
-        });
-    });
-}
-
-window.quickAdd = async function(uid,username){
-    const currentUser = auth.currentUser;
-    await addDoc(collection(db,"messages"),{
-        from: currentUser.uid,
-        to: uid,
-        message: `${currentUser.uid} sent you a Quick Add request!`,
-        timestamp: serverTimestamp(),
-        type:"quickAdd"
-    });
-    alert("Quick Add request sent!");
-};
-
-async function loadMessages(){
-    const currentUser = auth.currentUser;
-    const q = query(collection(db,"messages"), where("to","==",currentUser.uid), orderBy("timestamp","desc"));
-    onSnapshot(q, snap=>{
-        messagesList.innerHTML = "";
-        snap.forEach(doc=>{
-            const msg = doc.data();
-            const div = document.createElement("div");
-            div.className = "duo-card";
-            div.innerHTML = `<div class="card-header"><strong>${msg.type==="quickAdd"?"Quick Add Request":"Message"}</strong></div>
-            <div>${msg.message}</div>`;
-            messagesList.appendChild(div);
-        });
-    });
-}
-
-// PROFILE EDIT
-const profileForm = document.getElementById("profileEditForm");
-profileForm.addEventListener("submit", async e=>{
-    e.preventDefault();
-    const username = document.getElementById("profileUsernameInput").value.trim();
-    const platform = document.getElementById("profilePlatformInput").value.trim();
-    const games = document.getElementById("profileGamesInput").value.trim();
-    const usersSnap = await getDocs(collection(db,"users"));
-    let taken = false;
-    usersSnap.forEach(doc=>{
-        if(doc.data().username===username && doc.id!==auth.currentUser.uid){
-            taken = true;
-        }
-    });
-    if(taken){
-        document.getElementById("usernameMessage").textContent = "Username already taken.";
-        return;
-    }
-    await setDoc(doc(db,"users",auth.currentUser.uid), {username, platform, games}, {merge:true});
-    document.getElementById("usernameMessage").textContent = "Profile updated!";
-});
-
-window.showSection = function(section){
-    document.getElementById("home-section").style.display = section==="home" ? "block" : "none";
-    document.getElementById("profile-section").style.display = section==="profile" ? "block" : "none";
-    document.getElementById("messages-section").style.display = section==="messages" ? "block" : "none";
-    if(section==="messages") loadMessages();
-    if(section==="profile") loadProfileEdit();
-};
-
-async function loadProfileEdit(){
-    const docSnap = await getDoc(doc(db,"users",auth.currentUser.uid));
-    if(docSnap.exists()){
-        const data = docSnap.data();
-        document.getElementById("profileUsernameInput").value = data.username;
-        document.getElementById("profilePlatformInput").value = data.platform || '';
-        document.getElementById("profileGamesInput").value = data.games || '';
-        document.getElementById("usernameMessage").textContent = "";
-    }
-}
-
-onAuthStateChanged(auth, user=>{
-    if(user){
-        authSection.style.display="none";
-        appSection.style.display="block";
-        mainHeader.style.display="flex";
-        loadQuickAdd();
-        renderUsersGrid();
-    } else {
-        authSection.style.display="flex";
-        appSection.style.display="none";
-        mainHeader.style.display="none";
-    }
-});
-</script>
 
 </body>
 </html>
