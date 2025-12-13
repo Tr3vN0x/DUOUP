@@ -96,7 +96,7 @@ button:not(.google-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
 
 // --- Firebase Config & Initialization ---
@@ -133,7 +133,7 @@ const usernameHelp = document.getElementById("username-help");
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
 let activityInterval; 
 let currentUsername = ""; // Tracks username fetched from DB/last saved
-let currentBio = "";      // FIX: Tracks bio fetched from DB/last saved
+let currentBio = "";      // Tracks bio fetched from DB/last saved
 
 // --- Utility Functions ---
 function getVerifiedBadge(username) {
@@ -149,6 +149,36 @@ async function updateLastActiveStatus(uid) {
     } catch (err) {
         console.warn("Could not update lastActive status:", err.message);
     }
+}
+
+/**
+ * Ensures a user's profile document exists in Firestore and returns its data.
+ * Used on every login to initialize the application state.
+ */
+async function ensureUserProfileLoaded(user) {
+    const userDocRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userDocRef);
+    let userData = docSnap.exists() ? docSnap.data() : {};
+
+    if (!docSnap.exists()) {
+        const authType = user.providerData.some(p => p.providerId === GoogleAuthProvider.PROVIDER_ID) ? 'google' : 'email';
+        
+        // Use a reasonable default for missing profiles
+        const defaultUsername = user.displayName || user.email.split('@')[0] || "New Player";
+
+        userData = {
+            uid: user.uid,
+            email: user.email,
+            username: defaultUsername,
+            bio: "",
+            profileImageUrl: user.photoURL || "",
+            friends: "",
+            lastActive: Date.now(),
+            authType: authType 
+        };
+        await setDoc(userDocRef, userData);
+    }
+    return userData;
 }
 
 // --- Auth ---
@@ -183,23 +213,7 @@ signupForm.addEventListener("submit", async e=>{
 googleBtn.addEventListener("click", async ()=>{ 
     try{ 
         const userCredential = await signInWithPopup(auth,provider); 
-        const userDocRef = doc(db,"users",userCredential.user.uid);
-        const docSnap = await getDoc(userDocRef);
-        
-        if(!docSnap.exists()) {
-             await setDoc(userDocRef, {
-                uid: userCredential.user.uid,
-                email: userCredential.user.email,
-                username: userCredential.user.displayName || "New Google Player",
-                bio: "",
-                profileImageUrl: userCredential.user.photoURL || "",
-                friends: "",
-                lastActive: Date.now(),
-                authType: 'google' 
-            });
-        } else {
-             await updateLastActiveStatus(userCredential.user.uid);
-        }
+        // ensureUserProfileLoaded handles the rest of the profile creation/update
     } catch(err){ alert(err.message); }
 });
 document.getElementById("logoutBtnHeader").addEventListener("click", async ()=>{ 
@@ -211,9 +225,12 @@ document.getElementById("logoutBtnHeader").addEventListener("click", async ()=>{
 async function loadProfile(){
     const user = auth.currentUser;
     if(!user) return;
-    const docSnap = await getDoc(doc(db,"users",user.uid));
-    const data = docSnap.exists()?docSnap.data():{};
     
+    // NOTE: We don't need to fetch from the database here because the data was set in onAuthStateChanged
+    // on app load. However, to ensure the absolute latest data is displayed (e.g. if another device changed it), 
+    // we'll run a quick fetch and update the local variables.
+    const data = await ensureUserProfileLoaded(user);
+
     // Set local state variables
     currentUsername = data.username || '';
     currentBio = data.bio || '';
@@ -263,11 +280,11 @@ const saveProfile = async (updates) => {
     try{
         await updateDoc(doc(db,"users",user.uid), { ...updates, lastActive: Date.now() });
         
-        // FIX: Update local state variables on successful save
+        // Update local state variables on successful save
         if (updates.username) {
             currentUsername = updates.username; 
         }
-        if (updates.bio !== undefined) { // Check for bio field update
+        if (updates.bio !== undefined) { 
             currentBio = updates.bio;
         }
     } catch(err){ console.error(err); }
@@ -286,10 +303,8 @@ profileUsername.addEventListener("input", ()=>{
 });
 
 profileAbout.addEventListener("input", ()=>{
-    // Use the current bio text from the input field for the preview
     renderProfilePreview({username: profileUsername.value, bio: profileAbout.value}); 
     clearTimeout(saveTimeout);
-    // Send the current bio input value for saving
     saveTimeout = setTimeout(()=>saveProfile({ bio: profileAbout.value }), 800); 
 });
 
@@ -358,6 +373,11 @@ onAuthStateChanged(auth,async user=>{
         authSection.style.display="none";
         appSection.style.display="block";
         mainHeader.style.display="flex";
+        
+        // FIX: Ensure profile data is loaded and local state is set immediately on login/refresh
+        const userData = await ensureUserProfileLoaded(user);
+        currentUsername = userData.username || '';
+        currentBio = userData.bio || '';
         
         await updateLastActiveStatus(user.uid); 
         
