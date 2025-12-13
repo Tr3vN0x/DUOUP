@@ -8,43 +8,47 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-:root {
-    --duoup-primary: #00FFFF;
-    --duoup-secondary: #FF5733;
-    --duoup-accent: #8A2BE2;
-    --duoup-dark: #050510;
-    --duoup-light: #F0F8FF;
-    --duoup-muted: #80809C;
-    --font-main: 'Rajdhani', sans-serif;
-    --font-header: 'Orbitron', sans-serif;
-    --status-online: #38A169;
-    --status-offline: #E53E3E;
-}
-html, body { margin:0; height:100%; background-color: var(--duoup-dark); font-family: var(--font-main); color: var(--duoup-light);}
-h1,h2,h3{font-family: var(--font-header); margin:0;}
-h2{display:flex; align-items:baseline; border-bottom:2px solid var(--duoup-secondary); padding-bottom:5px; margin-bottom:20px; font-size:1.8em; background: linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
-#userCount{color: var(--duoup-secondary); font-size:0.55em; font-weight:600; margin-left:10px;}
-a{color: var(--duoup-primary); text-decoration:none;}
+:root { --duoup-primary:#00FFFF; --duoup-secondary:#FF5733; --duoup-accent:#8A2BE2; --duoup-dark:#050510; --duoup-light:#F0F8FF; --duoup-muted:#80809C; --font-main:'Rajdhani',sans-serif; --font-header:'Orbitron',sans-serif; --status-online:#38A169; --status-offline:#E53E3E; }
+html,body{margin:0;height:100%;font-family:var(--font-main);background-color:var(--duoup-dark);color:var(--duoup-light);}
+h1,h2,h3{margin:0;font-family:var(--font-header);}
+h2{display:flex;align-items:baseline;border-bottom:2px solid var(--duoup-secondary);padding-bottom:5px;margin-bottom:20px;font-size:1.8em;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#userCount{color:var(--duoup-secondary);font-size:0.55em;font-weight:600;margin-left:10px;}
+a{color:var(--duoup-primary);text-decoration:none;}
 button{cursor:pointer;border:none;border-radius:5px;transition:0.2s;}
-header{position:fixed; top:0;width:100%;height:60px;background:rgba(20,20,38,0.98);display:flex;align-items:center;justify-content:space-between;padding:0 15px; z-index:1000;border-bottom:3px solid var(--duoup-secondary);}
+header{position:fixed;top:0;width:100%;height:60px;background:rgba(20,20,38,0.98);display:flex;align-items:center;justify-content:space-between;padding:0 15px;z-index:1000;border-bottom:3px solid var(--duoup-secondary);}
 header .logo{display:flex;align-items:center;gap:10px;}
-header h1{font-size:2em;font-weight:700;color: var(--duoup-primary);text-shadow:0 0 10px var(--duoup-primary);}
-header h1 span{color: var(--duoup-secondary);}
+header h1{font-size:2em;font-weight:700;color:var(--duoup-primary);text-shadow:0 0 10px var(--duoup-primary);}
+header h1 span{color:var(--duoup-secondary);}
 header nav{display:flex;align-items:center;gap:15px;flex-wrap:wrap;}
-#logoutBtnHeader{background: var(--duoup-secondary); color: var(--duoup-dark); padding:6px 12px; font-weight:bold; display:flex; align-items:center; gap:5px;}
+#logoutBtnHeader{background:var(--duoup-secondary);color:var(--duoup-dark);padding:6px 12px;font-weight:bold;display:flex;align-items:center;gap:5px;}
 #auth-section{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding-top:60px;}
-form:not(#duoSearchForm){display:flex; flex-direction:column; background:#141426; padding:25px; border-radius:12px; margin:10px; width:90%; max-width:360px;}
-input, textarea{margin:8px 0; padding:12px; border-radius:6px; border:1px solid var(--duoup-primary); background:#2D2D44; color:var(--duoup-light);}
-button:not(.google-btn):not(#duoSearchForm button){margin-top:10px; padding:12px; font-weight:bold; background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark);}
-.google-btn{background: linear-gradient(90deg, #DB4437, #EA4335); color:white; width:90%; max-width:360px; display:flex; align-items:center; justify-content:center; gap:10px; margin-top:15px;}
-#app-section{width:100%; padding-top:60px; display:none;}
-.container{max-width:1200px;margin:20px auto; padding:0 15px;}
-.results-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:20px;}
-.duo-card{background:linear-gradient(145deg,#1A1A2E,#2D2D44); color: var(--duoup-light); border-radius:12px; overflow:hidden; border:1px solid #3A3A52; transition:.3s; box-shadow:0 4px 8px rgba(0,0,0,0.4);}
-.card-header{display:flex; align-items:center; padding:10px 15px; border-bottom:1px solid #3A3A52;}
-.avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;background: var(--duoup-secondary); color: var(--duoup-dark);}
-.bio{padding:10px 15px; font-size:0.9em; color: var(--duoup-muted);}
-.action-button{width:100%; padding:12px; background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark); font-weight:bold; border-radius:0 0 12px 12px;}
+form:not(#duoSearchForm){display:flex;flex-direction:column;background:#141426;padding:25px;border-radius:12px;margin:10px;width:90%;max-width:360px;}
+input,textarea{margin:8px 0;padding:12px;border-radius:6px;border:1px solid var(--duoup-primary);background:#2D2D44;color:var(--duoup-light);}
+button:not(.google-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;font-weight:bold;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);}
+.google-btn{background:linear-gradient(90deg,#DB4437,#EA4335);color:white;width:90%;max-width:360px;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:15px;}
+#app-section{width:100%;padding-top:60px;display:none;}
+.container{max-width:1200px;margin:20px auto;padding:0 15px;}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
+.duo-card{background:linear-gradient(145deg,#1A1A2E,#2D2D44);color:var(--duoup-light);border-radius:12px;overflow:hidden;border:1px solid #3A3A52;transition:.3s;box-shadow:0 4px 8px rgba(0,0,0,0.4);}
+.card-header{display:flex;align-items:center;padding:10px 15px;border-bottom:1px solid #3A3A52;}
+.avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;background:var(--duoup-secondary);color:var(--duoup-dark);}
+.bio{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);}
+.action-button{width:100%;padding:12px;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);font-weight:bold;border-radius:0 0 12px 12px;}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);justify-content:center;align-items:center;z-index:2000;}
+.chat-container{width:90%;max-width:420px;height:80%;background:#141426;border-radius:12px;display:flex;flex-direction:column;}
+.chat-header{padding:10px 15px;background:#1A1A2E;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--duoup-primary);color:var(--duoup-light);}
+.status-dot{width:8px;height:8px;border-radius:50%;margin-right:8px;display:inline-block;}
+.status-dot.online{background:var(--status-online);}
+.status-dot.offline{background:var(--status-offline);}
+.message-area{flex:1;padding:10px;overflow-y:auto;}
+.message{max-width:80%;margin-bottom:10px;}
+.message.self{margin-left:auto;}
+.message-content{padding:8px 12px;border-radius:12px;}
+.message.other .message-content{background:linear-gradient(135deg,#2D2D44,#3A3A52);color:white;}
+.message.self .message-content{background:linear-gradient(135deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);}
+.chat-input-area{display:flex;padding:10px;gap:5px;}
+.chat-input{flex:1;padding:10px;border-radius:6px;border:none;background:#2D2D44;color:white;}
+.send-button{padding:10px 15px;border:none;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);font-weight:bold;border-radius:6px;}
 </style>
 </head>
 <body>
@@ -95,12 +99,29 @@ button:not(.google-btn):not(#duoSearchForm button){margin-top:10px; padding:12px
         </form>
         <div id="profilePreviewContainer"></div>
     </div>
+    <div id="messages-section" class="container" style="display:none;">
+        <h2>Messages & Duo Requests</h2>
+        <div id="requestsGrid" class="results-grid"></div>
+        <div id="duosGrid" class="results-grid"></div>
+    </div>
+</div>
+
+<div id="chatModal" class="modal">
+    <div class="chat-container">
+        <div id="chatHeader" class="chat-header"></div>
+        <div id="messageArea" class="message-area"></div>
+        <div class="chat-input-area">
+            <input id="chatInput" class="chat-input" placeholder="Type message">
+            <button class="send-button" id="sendMsgBtn">Send</button>
+            <span onclick="closeChat()" style="cursor:pointer;padding:10px;color:var(--duoup-light);"><i class="fas fa-times"></i></span>
+        </div>
+    </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -117,6 +138,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 
+// --- DOM Elements ---
 const signinForm = document.getElementById("signin");
 const signupForm = document.getElementById("signup");
 const googleBtn = document.querySelector(".google-btn");
@@ -125,15 +147,27 @@ const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
 const logoutBtn = document.getElementById("logoutBtnHeader");
 
-signinForm.addEventListener("submit", async e => {
+const usersGrid = document.getElementById("usersGrid");
+const userCountElement = document.getElementById("userCount");
+
+const profileUsername = document.getElementById("profile-username");
+const profileAbout = document.getElementById("profile-about");
+const profilePhoto = document.getElementById("profile-photo");
+const profilePreviewContainer = document.getElementById("profilePreviewContainer");
+
+const requestsGrid = document.getElementById("requestsGrid");
+const duosGrid = document.getElementById("duosGrid");
+
+// --- Auth ---
+signinForm.addEventListener("submit", async e=>{
     e.preventDefault();
-    try {
+    try{
         await signInWithEmailAndPassword(auth, document.getElementById("signin-email").value, document.getElementById("signin-password").value);
     } catch(err){ alert(err.message); }
 });
-signupForm.addEventListener("submit", async e => {
+signupForm.addEventListener("submit", async e=>{
     e.preventDefault();
-    try {
+    try{
         const userCredential = await createUserWithEmailAndPassword(auth, document.getElementById("signup-email").value, document.getElementById("signup-password").value);
         await setDoc(doc(db,"users",userCredential.user.uid),{
             uid:userCredential.user.uid,
@@ -145,22 +179,120 @@ signupForm.addEventListener("submit", async e => {
     } catch(err){ alert(err.message); }
 });
 googleBtn.addEventListener("click", async ()=>{
-    try { await signInWithPopup(auth,provider); } catch(err){ alert(err.message); }
+    try{ await signInWithPopup(auth, provider); } catch(err){ alert(err.message); }
 });
 logoutBtn.addEventListener("click", async ()=>{ await signOut(auth); });
 
-onAuthStateChanged(auth, user => {
+// --- Profile ---
+async function loadProfile(){
+    const user = auth.currentUser;
+    if(!user) return;
+    const docSnap = await getDoc(doc(db,"users",user.uid));
+    const data = docSnap.exists()?docSnap.data():{};
+    profileUsername.value = data.username || '';
+    profileAbout.value = data.bio || '';
+    renderProfilePreview(data);
+}
+
+function renderProfilePreview(data){
+    profilePreviewContainer.innerHTML = `
+    <div class="duo-card">
+        <div class="card-header">
+            <div class="avatar">${data.username?data.username[0]:'U'}</div>
+            <strong>${data.username || 'New Player'}</strong>
+        </div>
+        <div class="bio">${data.bio || ''}</div>
+        <button class="action-button" disabled>Profile Preview</button>
+    </div>
+    `;
+}
+
+// Auto-save profile
+[profileUsername, profileAbout].forEach(el=>{
+    el.addEventListener("input", async ()=>{
+        const user = auth.currentUser;
+        if(!user) return;
+        await updateDoc(doc(db,"users",user.uid),{
+            username: profileUsername.value,
+            bio: profileAbout.value
+        });
+        renderProfilePreview({username:profileUsername.value, bio:profileAbout.value});
+    });
+});
+profilePhoto.addEventListener("change", async e=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const user = auth.currentUser;
+    const storageRef = ref(storage,`profiles/${user.uid}`);
+    await uploadBytes(storageRef,file);
+    const photoURL = await getDownloadURL(storageRef);
+    await updateDoc(doc(db,"users",user.uid), { profileImageUrl: photoURL });
+    loadProfile();
+});
+
+// --- Duo Search ---
+async function loadUsers(){
+    const currentUser = auth.currentUser;
+    const qSnap = await getDocs(collection(db,"users"));
+    usersGrid.innerHTML='';
+    let count=0;
+    qSnap.forEach(doc=>{
+        const data = doc.data();
+        if(data.uid===currentUser.uid) return;
+        count++;
+        usersGrid.innerHTML+=`
+        <div class="duo-card">
+            <div class="card-header">
+                <div class="avatar">${data.username[0]}</div>
+                <strong>${data.username}</strong>
+            </div>
+            <div class="bio">${data.bio||''}</div>
+            <button class="action-button" onclick="sendFriendRequest('${data.uid}')">Send Duo Request</button>
+        </div>
+        `;
+    });
+    userCountElement.innerText = count+" players online";
+}
+
+// --- Friend Requests & Chat ---
+async function sendFriendRequest(receiverId){
+    const senderId = auth.currentUser.uid;
+    await setDoc(doc(db,"friendRequests",senderId+"_"+receiverId),{
+        senderID: senderId,
+        receiverId,
+        status:"pending"
+    });
+    alert("Duo request sent!");
+}
+
+// --- Sections ---
+function showSection(section){
+    ["home","profile","messages"].forEach(s=>document.getElementById(s+"-section").style.display="none");
+    document.getElementById(section+"-section").style.display="block";
+    if(section==="profile") loadProfile();
+    if(section==="home") loadUsers();
+}
+
+// --- Auth State ---
+onAuthStateChanged(auth, user=>{
     if(user){
         authSection.style.display="none";
         appSection.style.display="block";
         mainHeader.style.display="flex";
+        loadUsers();
     } else {
         authSection.style.display="flex";
         appSection.style.display="none";
         mainHeader.style.display="none";
     }
 });
-</script>
 
+// --- Chat Placeholder ---
+function closeChat(){ document.getElementById("chatModal").style.display="none"; }
+window.sendFriendRequest = sendFriendRequest;
+window.showSection = showSection;
+window.closeChat = closeChat;
+
+</script>
 </body>
 </html>
