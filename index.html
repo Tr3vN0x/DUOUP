@@ -86,7 +86,7 @@
             color: var(--quiet-green-soft);
         }
         
-        /* New Link for Login/Auth */
+        /* Link for Login/Auth */
         .auth-link {
             cursor: pointer;
             text-decoration: none;
@@ -374,7 +374,7 @@
             text-decoration: underline;
         }
 
-        /* --- READING PAGE STYLE (For separate page, but defined here for completion) --- */
+        /* --- READING PAGE STYLE (For separate page, but defined here for reference) --- */
         
         .reading-body {
             background-color: #fffaf0; /* Off-white paper color */
@@ -442,7 +442,7 @@
             <ul>
                 <li><a href="#" class="quiet-link">Reading Nooks</a></li>
                 <li><a href="#" class="quiet-link">My Shelf</a></li>
-                <li><span class="auth-link" onclick="document.getElementById('loginModal').style.display='block'">Sign In</span></li>
+                <li><span class="auth-link" onclick="openLoginModal()">Sign In</span></li>
                 <li><a href="#" class="quiet-link quiet-cta-button">Publish Quietly</a></li>
             </ul>
         </nav>
@@ -488,7 +488,7 @@
     
     <div id="loginModal" class="modal-overlay">
         <div class="login-modal">
-            <span class="close-button" onclick="document.getElementById('loginModal').style.display='none'">&times;</span>
+            <span class="close-button" onclick="closeLoginModal()">&times;</span>
             <h2 class="modal-title">Welcome Back</h2>
             
             <form id="authForm">
@@ -512,41 +512,92 @@
     </footer>
     
     <script>
-        // Simple script to toggle the login/signup form within the modal
-        function switchForm() {
-            const form = document.getElementById('authForm');
-            const title = document.querySelector('.modal-title');
-            const button = document.querySelector('.form-button');
-            const switchText = document.querySelector('.switch-auth');
+        // --- AUTHENTICATION MODAL LOGIC ---
+    
+        const modal = document.getElementById('loginModal');
+        const authForm = document.getElementById('authForm');
+        const modalTitle = document.querySelector('.modal-title');
+        const formButton = document.querySelector('.form-button');
+        const switchText = document.querySelector('.switch-auth');
+        
+        // Function to open the modal and reset to Sign In view
+        function openLoginModal() {
+            // Reset to Sign In view whenever the modal is opened
+            modalTitle.innerText = "Welcome Back";
+            formButton.innerText = "SIGN IN";
+            switchText.innerHTML = "Don't have a spot yet? <a href='#' onclick='switchForm()'>Create Account</a>";
             
-            if (button.innerText === "SIGN IN") {
-                title.innerText = "Create Your Account";
-                button.innerText = "SIGN UP";
+            // Remove username field if it exists
+            const usernameGroup = document.getElementById('usernameGroup');
+            if (usernameGroup) {
+                usernameGroup.remove();
+            }
+
+            modal.style.display = 'block';
+        }
+
+        // Function to close the modal (used by the X button)
+        function closeLoginModal() {
+            modal.style.display = 'none';
+        }
+
+        // Function to switch between Sign In and Sign Up form views
+        function switchForm() {
+            // FIXED: Prevent the default link behavior
+            event.preventDefault(); 
+            
+            if (formButton.innerText === "SIGN IN") {
+                // Switch to Sign Up
+                modalTitle.innerText = "Create Your Account";
+                formButton.innerText = "SIGN UP";
                 switchText.innerHTML = "Already have an account? <a href='#' onclick='switchForm()'>Sign In</a>";
-                // Add an input for Username for Sign Up
-                const usernameInput = document.createElement('div');
-                usernameInput.className = 'form-group';
-                usernameInput.innerHTML = '<input type="text" id="username" class="form-input" placeholder="Username" required>';
-                form.prepend(usernameInput);
+                
+                // Add the Username input field
+                const usernameInputGroup = document.createElement('div');
+                usernameInputGroup.className = 'form-group';
+                usernameInputGroup.id = 'usernameGroup';
+                usernameInputGroup.innerHTML = '<input type="text" id="username" class="form-input" placeholder="Username" required>';
+                
+                // Insert the username field right before the email field's parent
+                const emailGroup = document.getElementById('email').parentElement;
+                authForm.insertBefore(usernameInputGroup, emailGroup);
+                
             } else {
-                title.innerText = "Welcome Back";
-                button.innerText = "SIGN IN";
+                // Switch back to Sign In
+                modalTitle.innerText = "Welcome Back";
+                formButton.innerText = "SIGN IN";
                 switchText.innerHTML = "Don't have a spot yet? <a href='#' onclick='switchForm()'>Create Account</a>";
-                // Remove the username input
-                const usernameGroup = document.getElementById('username');
+                
+                // Remove the username input field
+                const usernameGroup = document.getElementById('usernameGroup');
                 if (usernameGroup) {
-                    usernameGroup.parentElement.remove();
+                    usernameGroup.remove();
                 }
             }
         }
-        
+
         // Close modal when clicking outside of it
-        const modal = document.getElementById('loginModal');
         window.onclick = function(event) {
           if (event.target == modal) {
-            modal.style.display = "none";
+            closeLoginModal();
           }
         }
+        
+        // --- MAIN ACTION BUTTONS (Placeholder console log) ---
+        
+        document.querySelectorAll('.quiet-button, .quiet-cta-button, .filter-tag').forEach(button => {
+            button.addEventListener('click', function(event) {
+                // event.preventDefault(); // Uncomment if these buttons navigate elsewhere later
+                console.log("Button Clicked:", this.innerText);
+            });
+        });
+        
+        authForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // Stop the form from submitting and refreshing the page
+            console.log("Form submitted. Action:", formButton.innerText);
+            // In a real application, AJAX request would go here
+            // closeLoginModal(); // Close after successful submission
+        });
     </script>
 
 </body>
