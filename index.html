@@ -146,7 +146,6 @@ button:hover { background: var(--duoup-accent); transform: translateY(-2px); box
 </div>
 
 <script type="module">
-// ----------------- FIREBASE -----------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.23.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.23.0/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc, addDoc, getDoc, updateDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.23.0/firebase-firestore.js";
@@ -168,7 +167,11 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 
-// ----------------- AUTH -----------------
+// Globals
+let activeChatId = "";
+let activeFriendUid = "";
+
+// --- AUTH ---
 const signinForm = document.getElementById("signin");
 const signupForm = document.getElementById("signup");
 const googleBtn = document.querySelector(".google-btn");
@@ -177,24 +180,22 @@ const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
 const logoutBtn = document.getElementById("logoutBtnHeader");
 
-signinForm.addEventListener("submit", async e => {
+signinForm.addEventListener("submit", async e=>{
   e.preventDefault();
-  try {
-    await signInWithEmailAndPassword(auth,
-      document.getElementById("signin-email").value,
-      document.getElementById("signin-password").value
-    );
-  } catch(err){ alert(err.message); }
+  try { await signInWithEmailAndPassword(auth,
+    document.getElementById("signin-email").value,
+    document.getElementById("signin-password").value
+  ); } catch(err){ alert(err.message); }
 });
 
-signupForm.addEventListener("submit", async e => {
+signupForm.addEventListener("submit", async e=>{
   e.preventDefault();
   const email = document.getElementById("signup-email").value;
   const password = document.getElementById("signup-password").value;
-  try {
+  try{
     const userCredential = await createUserWithEmailAndPassword(auth,email,password);
     await setDoc(doc(db,"users",userCredential.user.uid),{
-      uid: userCredential.user.uid,
+      uid:userCredential.user.uid,
       username:"New Player",
       email,
       platform:"",
@@ -211,7 +212,7 @@ signupForm.addEventListener("submit", async e => {
 googleBtn.addEventListener("click", async ()=>{ try{await signInWithPopup(auth,provider);} catch(err){alert(err.message);} });
 logoutBtn.addEventListener("click", async ()=>{ await signOut(auth); });
 
-// ----------------- PROFILE -----------------
+// --- PROFILE ---
 async function updateProfile(){
   const user = auth.currentUser; if(!user) return;
   const username = document.getElementById("profile-username").value;
@@ -230,24 +231,38 @@ async function updateProfile(){
   alert("Profile updated!");
 }
 
-// ----------------- SECTIONS -----------------
+async function loadProfile(){
+  const user = auth.currentUser; if(!user) return;
+  const docSnap = await getDoc(doc(db,"users",user.uid));
+  if(docSnap.exists()){
+    const data = docSnap.data();
+    document.getElementById("profile-username").value = data.username || "";
+    document.getElementById("profile-platform").value = data.platform || "";
+    document.getElementById("profile-games").value = data.games || "";
+    document.getElementById("profile-playstyle").value = data.playstyle || "";
+    document.getElementById("profile-about").value = data.about || "";
+  }
+}
+
+// --- SECTIONS ---
 function showSection(section){
   ["home","profile","messages"].forEach(s=>{
     document.getElementById(s+"-section").style.display="none";
   });
   document.getElementById(section+"-section").style.display="block";
+  if(section==="profile") loadProfile();
 }
 
-// ----------------- USERS / DUO SEARCH -----------------
+// --- USERS / DUO SEARCH ---
 const usersGrid = document.getElementById("usersGrid");
 async function loadUsers(){
   const q = query(collection(db,"users"));
-  onSnapshot(q, snapshot=>{
+  onSnapshot(q,snapshot=>{
     usersGrid.innerHTML="";
     snapshot.forEach(docSnap=>{
       if(docSnap.id===auth.currentUser.uid) return;
       const u = docSnap.data();
-      const div=document.createElement("div");
+      const div = document.createElement("div");
       div.className="duo-card";
       div.innerHTML=`<div class="card-header">
         <div class="avatar">${u.photoURL?`<img src="${u.photoURL}">`:u.username[0]}</div>
@@ -274,18 +289,19 @@ async function sendDuoRequest(toUid,toUsername){
   alert("Duo request sent!");
 }
 
-// ----------------- DUO REQUESTS / MESSAGES -----------------
+// --- DUO REQUESTS / MESSAGES ---
 const requestsGrid = document.getElementById("requestsGrid");
 const duosGrid = document.getElementById("duosGrid");
 
 function loadDuoRequests(){
   const user = auth.currentUser;
+  // Pending Requests
   const q1 = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","pending"));
-  onSnapshot(q1, snap=>{
+  onSnapshot(q1,snap=>{
     requestsGrid.innerHTML="";
     snap.forEach(docSnap=>{
       const r = docSnap.data();
-      const div=document.createElement("div");
+      const div = document.createElement("div");
       div.className="duo-card duo-request-card";
       div.innerHTML=`<div class="card-header"><strong>${r.fromUsername}</strong></div>
         <button class="action-button" onclick="acceptDuo('${docSnap.id}')">Accept</button>`;
@@ -293,17 +309,27 @@ function loadDuoRequests(){
     });
   });
 
-  const q2 = query(collection(db,"duoRequests"),where("status","==","accepted"),where("toUserId","==",user.uid));
-  onSnapshot(q2,snap=>{
-    duosGrid.innerHTML="";
+  // Accepted duos (both sent and received)
+  const qSent = query(collection(db,"duoRequests"),where("fromUserId","==",user.uid),where("status","==","accepted"));
+  const qReceived = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","accepted"));
+
+  function renderDuos(snap){
     snap.forEach(docSnap=>{
       const r = docSnap.data();
-      const div=document.createElement("div");
+      const friendUid = r.fromUserId === user.uid ? r.toUserId : r.fromUserId;
+      const friendUsername = r.fromUserId === user.uid ? r.toUsername || r.fromUsername : r.fromUsername;
+      const div = document.createElement("div");
       div.className="duo-card";
-      div.innerHTML=`<div class="card-header"><strong>${r.fromUsername}</strong></div>
-        <button class="action-button" onclick="openChat('${r.fromUserId}','${r.fromUsername}')">Chat</button>`;
+      div.innerHTML=`<div class="card-header"><strong>${friendUsername}</strong></div>
+        <button class="action-button" onclick="openChat('${friendUid}','${friendUsername}')">Chat</button>`;
       duosGrid.appendChild(div);
     });
+  }
+
+  onSnapshot(qSent,snap=>{
+    duosGrid.innerHTML="";
+    renderDuos(snap);
+    onSnapshot(qReceived,snap2=>{ renderDuos(snap2); });
   });
 }
 
@@ -311,8 +337,7 @@ async function acceptDuo(requestId){
   await updateDoc(doc(db,"duoRequests",requestId),{status:"accepted"});
 }
 
-// ----------------- CHAT -----------------
-let activeChatId = "";
+// --- CHAT ---
 const chatModal = document.getElementById("chatModal");
 const chatHeader = document.getElementById("chatHeader");
 const messageArea = document.getElementById("messageArea");
@@ -320,6 +345,7 @@ const chatInput = document.getElementById("chatInput");
 
 function openChat(friendUid,friendUsername){
   activeChatId = [auth.currentUser.uid,friendUid].sort().join("_");
+  activeFriendUid = friendUid;
   chatModal.style.display="flex";
   chatHeader.innerText = friendUsername;
   loadChat(activeChatId);
@@ -333,7 +359,7 @@ function sendMessage(){
   addDoc(collection(db,"messages"),{
     content,
     fromUid:auth.currentUser.uid,
-    toUid:chatHeader.innerText,
+    toUid: activeFriendUid,
     duoId:activeChatId,
     timestamp:serverTimestamp()
   });
@@ -351,12 +377,12 @@ function loadChat(duoId){
       div.innerHTML=`<div class="message-content">${m.content}</div>`;
       messageArea.appendChild(div);
     });
-    messageArea.scrollTop=messageArea.scrollHeight;
+    messageArea.scrollTop = messageArea.scrollHeight;
   });
 }
 
-// ----------------- AUTH STATE -----------------
-onAuthStateChanged(auth, user=>{
+// --- AUTH STATE ---
+onAuthStateChanged(auth,user=>{
   if(user){
     authSection.style.display="none";
     appSection.style.display="block";
