@@ -7,21 +7,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
-/* --- DUOUP NEON COLOR SCHEME --- */
 :root {
-  --duoup-primary: #00FFFF;   /* Neon Cyan */
-  --duoup-secondary: #FF5733; /* Neon Orange */
-  --duoup-accent: #8A2BE2;    /* Neon Purple */
-  --duoup-dark: #050510;       /* Deep background */
-  --duoup-light: #F0F8FF;     /* Light text */
-  --duoup-muted: #80809C;     /* Muted gray */
+  --duoup-primary: #00FFFF;
+  --duoup-secondary: #FF5733;
+  --duoup-accent: #8A2BE2;
+  --duoup-dark: #050510;
+  --duoup-light: #F0F8FF;
+  --duoup-muted: #80809C;
   --font-main: 'Rajdhani', sans-serif;
   --font-header: 'Orbitron', sans-serif;
-  --status-online: #38A169;
 }
 
-/* --- Base Styling --- */
-body { 
+body {
   margin:0;
   font-family: var(--font-main);
   background: var(--duoup-dark);
@@ -41,7 +38,6 @@ a:hover { text-shadow: 0 0 8px var(--duoup-primary); }
 
 button { cursor:pointer; border:none; border-radius:5px; transition: background 0.2s, transform 0.1s; }
 
-/* --- Header --- */
 header { 
   position: fixed; top:0; width:100%; height:60px; background: rgba(20,20,38,0.98);
   display:flex; justify-content:space-between; align-items:center; padding:0 20px; z-index:1000;
@@ -58,12 +54,6 @@ header h1 span {
 header nav a { margin-left:20px; color: var(--duoup-light); font-weight:600; transition: color 0.2s, text-shadow 0.2s; }
 header nav a:hover { color: var(--duoup-primary); text-shadow: 0 0 8px var(--duoup-primary); }
 
-/* --- Neon Logo --- */
-.logo svg { 
-  filter: drop-shadow(0 0 6px var(--duoup-primary)) drop-shadow(0 0 10px var(--duoup-secondary));
-}
-
-/* --- Auth Forms --- */
 #auth-section { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding-top:60px; }
 form { display:flex; flex-direction:column; background:#141426; padding:30px; border-radius:12px; margin:15px; width:320px; box-shadow:0 5px 15px rgba(0,0,0,0.6);}
 input, textarea { margin:10px 0; padding:12px; border-radius:6px; border: 1px solid #3A3A52; background:#2D2D44; color:var(--duoup-light); font-family: var(--font-main);}
@@ -71,27 +61,18 @@ button { margin-top:15px; padding:12px; font-weight:bold; background: var(--duou
 button:hover { background: var(--duoup-accent); transform: translateY(-2px); box-shadow:0 4px 15px rgba(138,43,226,0.5);}
 .google-btn { background:#DB4437; color:white; width:380px; display:flex; align-items:center; justify-content:center; gap:10px;}
 
-/* --- App Cards --- */
 .duo-card { background:#141426; color: var(--duoup-light); border-radius:12px; overflow:hidden; border:1px solid #3A3A52; transition:.3s; box-shadow:0 4px 8px rgba(0,0,0,0.4);}
 .duo-card:hover { transform: translateY(-5px); box-shadow: 0 0 15px var(--duoup-primary), 0 12px 25px rgba(0,255,255,.2); border-color: var(--duoup-primary);}
 .avatar { width:50px;height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:15px; background: var(--duoup-secondary); color: var(--duoup-dark); font-family: var(--font-header); font-size:1.5em; border:2px solid var(--duoup-primary);}
 .action-button { width:100%; padding:12px; background: var(--duoup-primary); color: var(--duoup-dark); font-weight:bold; margin-bottom:0; border-radius: 0 0 12px 12px;}
 .duo-request-card { border-top:5px solid var(--duoup-secondary); }
 
-/* --- Logout Button --- */
 #logoutBtnHeader { background: var(--duoup-secondary); color: var(--duoup-dark); padding:8px 15px; font-weight:bold; display:flex; align-items:center; gap:5px;}
 </style>
 </head>
 <body>
 
 <header style="display:none;" id="mainHeader">
-  <!-- Neon SVG Logo -->
-  <div class="logo">
-    <svg width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="32" cy="32" r="30" stroke="cyan" stroke-width="4"/>
-      <text x="50%" y="55%" text-anchor="middle" fill="orange" font-size="28" font-family="Orbitron" font-weight="700">DU</text>
-    </svg>
-  </div>
   <h1>DUO<span>UP</span></h1>
   <nav>
     <a href="#" onclick="showHome()">Duo Search</a>
@@ -101,9 +82,15 @@ button:hover { background: var(--duoup-accent); transform: translateY(-2px); box
   </nav>
 </header>
 
-<!-- --- AUTH SECTION --- -->
 <div id="auth-section">
   <h2>Welcome to DuoUp</h2>
+  <form id="signup">
+    <h3>Sign Up</h3>
+    <input id="signup-email" type="email" placeholder="Email" required>
+    <input id="signup-password" type="password" placeholder="Password" required>
+    <button type="submit">Sign Up</button>
+  </form>
+
   <form id="signin">
     <h3>Sign In</h3>
     <input id="signin-email" type="email" placeholder="Email" required>
@@ -111,63 +98,112 @@ button:hover { background: var(--duoup-accent); transform: translateY(-2px); box
     <button type="submit">Sign In</button>
   </form>
 
-  <form id="signup">
-    <h3>New Player? Sign Up</h3>
-    <input id="signup-email" type="email" placeholder="Email" required>
-    <input id="signup-password" type="password" placeholder="Password" required>
-    <button type="submit">Create Account</button>
-  </form>
-
   <button class="google-btn" onclick="googleLogin()">
     <i class="fab fa-google"></i> Continue with Google
   </button>
 </div>
 
-<!-- --- APP SECTION --- -->
-<div id="app-section" style="display:none; width:100%; padding-top:60px;">
-  <div id="home-section" class="container">
-    <h2>Duo Search (Available Players)</h2>
-    <div class="results-grid" id="usersGrid"></div>
-  </div>
-
-  <div id="profile-section" class="container" style="display:none;">
-    <h2>Profile Management</h2>
-    <input class="profile-field" id="profile-username" placeholder="Username (e.g., Tr3vN0x)">
-    <input class="profile-field" id="profile-platform" placeholder="Platform (e.g., PC, PS5, Xbox)">
-    <input class="profile-field" id="profile-games" placeholder="Games (e.g., Valorant, LoL, Apex)">
-    <input class="profile-field" id="profile-playstyle" placeholder="Playstyle (e.g., Casual, Competitive)">
-    <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
-    <input type="file" id="profile-photo">
-    <button onclick="updateProfile()">Save Profile</button>
-  </div>
-
-  <div id="messages-section" class="container" style="display:none;">
-    <h2>Messages & Duo Requests</h2>
-    <div id="messages-container" class="messages-container">
-      <h3>Pending Requests (Incoming)</h3>
-      <div class="results-grid" id="requestsGrid"></div>
-      <h3>Your Accepted Duos (Click to Chat)</h3>
-      <div class="results-grid" id="duosGrid"></div>
-    </div>
-  </div>
-</div>
-
-<div id="chatModal" class="modal">
-  <div class="chat-container">
-    <div id="chatHeader" class="chat-header"></div>
-    <div id="messageArea" class="message-area"></div>
-    <div class="chat-input-area">
-      <input id="chatInput" class="chat-input" placeholder="Type message">
-      <button class="send-button" onclick="sendMessage()">Send</button>
-      <span onclick="closeChat()" style="cursor:pointer; padding: 10px; margin-left: 10px; color: var(--duoup-light);"><i class="fas fa-times"></i></span>
-    </div>
-  </div>
+<div id="app-section" style="display:none; padding-top:60px;">
+  <h2>Welcome, <span id="userName"></span></h2>
 </div>
 
 <script type="module">
-// --- PASTE YOUR FULL EXISTING Firebase Auth / Firestore / Storage JS HERE ---
-// Everything from your original script (signup/signin/profile/chat) remains
-</script>
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// --- Replace with your Firebase config ---
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const authSection = document.getElementById("auth-section");
+const appSection = document.getElementById("app-section");
+const mainHeader = document.getElementById("mainHeader");
+const userNameSpan = document.getElementById("userName");
+
+// --- Sign Up ---
+document.getElementById("signup").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("signup-email").value;
+  const password = document.getElementById("signup-password").value;
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await setDoc(doc(db, "users", userCredential.user.uid), {
+      username: "NewUser",
+      platform: "PC",
+      games: "",
+      playstyle: "Casual",
+      about: "",
+      photoURL: ""
+    });
+  } catch (err) {
+    alert("Signup failed: " + err.message);
+  }
+});
+
+// --- Sign In ---
+document.getElementById("signin").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("signin-email").value;
+  const password = document.getElementById("signin-password").value;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    alert("Sign-in failed: " + err.message);
+  }
+});
+
+// --- Google Login ---
+window.googleLogin = async () => {
+  const provider = new GoogleAuthProvider();
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    if (!userDoc.exists()) {
+      await setDoc(doc(db, "users", user.uid), {
+        username: user.displayName || "NewUser",
+        platform: "PC",
+        games: "",
+        playstyle: "Casual",
+        about: "",
+        photoURL: user.photoURL || ""
+      });
+    }
+  } catch (err) {
+    alert("Google login failed: " + err.message);
+  }
+};
+
+// --- Auth State ---
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    authSection.style.display = "none";
+    appSection.style.display = "block";
+    mainHeader.style.display = "flex";
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    userNameSpan.textContent = userDoc.exists() ? userDoc.data().username : "Player";
+  } else {
+    authSection.style.display = "flex";
+    appSection.style.display = "none";
+    mainHeader.style.display = "none";
+  }
+});
+
+// --- Logout ---
+document.getElementById("logoutBtnHeader").addEventListener("click", async () => {
+  await signOut(auth);
+});
+</script>
 </body>
 </html>
