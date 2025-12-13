@@ -1,110 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DuoUp - Social Gaming</title>
-<link rel="icon" type="image/png" href="https://i.imgur.com/3UQx9gR.png">
-
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-<style>
-/* --- 1. CORE VARIABLES --- */
-:root {
-    /* Core Neon Colors */
-    --duoup-primary: #00FFFF; /* Neon Blue (Cyan) */
-    --duoup-secondary: #FF5733; /* Neon Red/Orange */
-    --duoup-accent: #8A2BE2; /* Purple Glow */
-    --duoup-dark: #050510; /* Near Black Background */
-    --duoup-light: #F0F8FF;
-    --duoup-muted: #80809C;
-    --font-main: 'Rajdhani', sans-serif;
-    --font-header: 'Orbitron', sans-serif;
-    --status-online: #38A169;
-    --status-offline: #E53E3E;
-}
-
-/* --- 2. GLOBAL RESET & BACKGROUND --- */
-html, body {
-    margin: 0;
-    height: 100%;
-    /* Subtle radial glow from center dark to deep black */
-    background-color: var(--duoup-dark);
-    /* Neon Red/Black Background Effect */
-    background-image: radial-gradient(circle at top center, rgba(255, 87, 51, 0.08) 0%, rgba(5, 5, 16, 0.8) 40%, var(--duoup-dark) 100%);
-}
-
-body {
-    font-family: var(--font-main);
-    color: var(--duoup-light);
-    min-height: 100vh;
-}
-
-/* --- 3. TYPOGRAPHY --- */
-h1,h2,h3 { font-family: var(--font-header); margin:0; color: var(--duoup-light); }
-
-h2 {
-    display: flex; /* Allows the counter to be inline */
-    align-items: baseline;
-    border-bottom: 2px solid var(--duoup-secondary);
-    padding-bottom: 5px;
-    margin-bottom: 20px;
-    font-size: 1.8em;
-    /* Neon Blue/Purple Gradient for section headers */
-    background: linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-/* Style for the dynamic player count */
-#userCount {
-    color: var(--duoup-secondary);
-    font-size: 0.55em; 
-    font-weight: 600;
-    text-shadow: 0 0 5px var(--duoup-secondary);
-    margin-left: 10px;
-    letter-spacing: 1px;
-    /* Reset clip/fill color inheritance */
-    -webkit-background-clip: unset; 
-    -webkit-text-fill-color: unset;
-}
-
-a { color: var(--duoup-primary); text-decoration: none; transition: 0.2s; }
-a:hover { text-shadow: 0 0 8px var(--duoup-primary); }
-
-button { cursor: pointer; border: none; border-radius: 5px; transition: background 0.2s, transform 0.1s, box-shadow 0.3s; }
-
-/* --- 4. HEADER --- */
-header {
-    position: fixed; top: 0; width: 100%; height: 60px;
-    background: rgba(20, 20, 38, 0.98); /* Semi-transparent Dark */
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 15px; z-index: 1000;
-    border-bottom: 3px solid var(--duoup-secondary); /* Neon Red bottom border */
-}
-header .logo { display: flex; align-items: center; gap: 10px; }
-
-/* DUOUP Logo Text - Enforcing Neon Colors */
-header h1 {
-    font-size: 2em; font-weight: 700;
-    color: var(--duoup-primary); /* DUO is Neon Blue */
-    text-shadow: 0 0 10px var(--duoup-primary);
-}
-header h1 span {
-    color: var(--duoup-secondary); /* UP is Neon Red */
-    text-shadow: 0 0 5px var(--duoup-secondary), 0 0 15px rgba(255, 87, 51, 0.8);
-}
-header nav { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
-#logoutBtnHeader {
-    background: var(--duoup-secondary);
-    color: var(--duoup-dark);
-    padding: 6px 12px;
-    font-weight: bold;
-    display: flex; align-items: center; gap: 5px;
-    box-shadow: 0 0 10px rgba(255,87,51,0.5);
-}
-
 /* --- 5. AUTH FORMS & APP SECTIONS --- */
 #auth-section {
     display: flex; flex-direction: column;
@@ -117,14 +10,14 @@ form:not(#duoSearchForm) {
     display: flex; flex-direction: column;
     background: #141426; padding: 25px; border-radius: 12px;
     margin: 10px; width: 90%; max-width: 360px;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.15); 
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
 }
 #profileEditForm {
     /* Profile edit form container - no background/shadow */
     background: none;
     box-shadow: none;
     padding: 0;
-    max-width: 500px; 
+    max-width: 500px;
     width: 100%;
     margin: 0;
 }
@@ -141,13 +34,13 @@ button:not(.google-btn):not(#duoSearchForm button) {
     /* Aggressive gradient for main buttons (Blue to Purple) */
     background: linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent));
     color: var(--duoup-dark); text-transform: uppercase;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5); 
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
 }
 button:not(.google-btn):not(#duoSearchForm button):hover {
     /* Secondary button gradient on hover (Red/Purple) */
     background: linear-gradient(90deg, var(--duoup-accent), var(--duoup-secondary));
     transform: translateY(-2px);
-    box-shadow: 0 0 20px rgba(255, 87, 51, 0.8); 
+    box-shadow: 0 0 20px rgba(255, 87, 51, 0.8);
 }
 
 /* Search Button Specific Style */
@@ -381,7 +274,7 @@ const chatInput = document.getElementById("chatInput");
 // NEW ELEMENTS
 const duoSearchForm = document.getElementById("duoSearchForm");
 const searchQueryInput = document.getElementById("searchQuery");
-const profilePreviewContainer = document.getElementById("profilePreviewContainer"); // NEW: Preview Container
+const profilePreviewContainer = document.getElementById("profilePreviewContainer");
 
 
 // --- AUTH LISTENERS ---
@@ -426,14 +319,9 @@ function renderProfilePreview(data) {
     const playstyle = document.getElementById("profile-playstyle").value || data.playstyle || 'N/A';
     const photoURL = data.photoURL || '';
 
-    // Check if a file is currently selected for preview (overrides the Firestore URL)
-    const fileInput = document.getElementById("profile-photo");
+    // Determine the source for the avatar
     let avatarSrc = photoURL;
-    if (fileInput.files.length > 0) {
-        // We cannot use file reader here, we rely on the caller (setupProfilePreviewListeners) to pass a temp URL
-        // If photoURL is a DataURL, it means it's a temp preview.
-    }
-
+    
     // Generate the HTML for the preview card, mirroring the duo-card style
     profilePreviewContainer.innerHTML = `
         <div class="duo-card">
@@ -466,6 +354,7 @@ function setupProfilePreviewListeners(initialData) {
             const reader = new FileReader();
             reader.onload = (event) => {
                 // Pass the temporary local URL to the renderer, merging with existing data
+                // We use a clone of initialData but update the photoURL property for the preview
                 renderProfilePreview({...initialData, photoURL: event.target.result});
             };
             reader.readAsDataURL(file);
@@ -511,21 +400,11 @@ async function loadProfile(){
     document.getElementById("profile-about").value = data.about || "";
     
     // 2. Initial render and setup listeners
-    // Use the fetched data for the initial state of the preview
     renderProfilePreview(data);
     setupProfilePreviewListeners(data); 
 }
 
-// --- SECTIONS ---
-function showSection(section){
-    ["home","profile","messages"].forEach(s=>{
-        document.getElementById(s+"-section").style.display="none";
-    });
-    document.getElementById(section+"-section").style.display="block";
-    if(section==="profile") loadProfile();
-}
-
-// --- USERS / DUO SEARCH (Core Filtering Logic) ---
+// --- USERS / DUO SEARCH (Core Filtering Logic with Mobile Fix) ---
 async function loadUsers(){
     const q = query(collection(db,"users"));
     onSnapshot(q,snapshot=>{
@@ -556,17 +435,33 @@ function renderUsersGrid(queryText = ''){
          userCountElement.textContent = `(${filteredUsers.length} Players Matched)`;
     }
 
+    // FIX: Changed to programmatic button creation/event handling for mobile compatibility
     filteredUsers.forEach(userDoc => {
         const u = userDoc.data;
         const docId = userDoc.id;
+        
         const div = document.createElement("div");
         div.className="duo-card";
+        
+        // 1. Create the card structure (without the button)
         div.innerHTML=`<div class="card-header">
             <div class="avatar">${u.photoURL?`<img src="${u.photoURL}">`:u.username[0]}</div>
             <strong>${u.username}</strong>
         </div>
-        <div class="bio">Platform: ${u.platform||'N/A'}<br>Games: ${u.games||'N/A'}<br>Playstyle: ${u.playstyle||'N/A'}</div>
-        <button class="action-button" onclick="sendDuoRequest('${docId}','${u.username}')">Send Duo Request</button>`;
+        <div class="bio">Platform: ${u.platform||'N/A'}<br>Games: ${u.games||'N/A'}<br>Playstyle: ${u.playstyle||'N/A'}</div>`;
+        
+        // 2. Create the button element
+        const button = document.createElement("button");
+        button.className = "action-button";
+        button.textContent = "Send Duo Request";
+        
+        // 3. Attach the event listener programmatically (better for mobile)
+        button.addEventListener('click', () => {
+            window.sendDuoRequest(docId, u.username); 
+        });
+        
+        // 4. Append the button and the card
+        div.appendChild(button);
         usersGrid.appendChild(div);
     });
 }
@@ -709,7 +604,7 @@ onAuthStateChanged(auth,user=>{
 // CRITICAL FIX: Expose functions to the global window object for HTML onclick to work
 window.updateProfile = updateProfile;
 window.showSection = showSection;
-window.sendDuoRequest = sendDuoRequest;
+window.sendDuoRequest = sendDuoRequest; // This is now called programmatically
 window.acceptDuo = acceptDuo;
 window.openChat = openChat;
 window.closeChat = closeChat;
