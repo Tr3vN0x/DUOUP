@@ -119,6 +119,15 @@ form:not(#duoSearchForm) {
     margin: 10px; width: 90%; max-width: 360px;
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.15); 
 }
+#profileEditForm {
+    /* Profile edit form container - no background/shadow */
+    background: none;
+    box-shadow: none;
+    padding: 0;
+    max-width: 500px; 
+    width: 100%;
+    margin: 0;
+}
 input:not(#searchQuery), textarea {
     margin: 8px 0; padding: 12px; border-radius: 6px;
     border: 1px solid var(--duoup-primary);
@@ -275,14 +284,29 @@ button:not(.google-btn):not(#duoSearchForm button):hover {
     </div>
     
     <div id="profile-section" class="container" style="display:none;">
-        <h2>Profile Management</h2>
-        <input class="profile-field" id="profile-username" placeholder="Username">
-        <input class="profile-field" id="profile-platform" placeholder="Platform">
-        <input class="profile-field" id="profile-games" placeholder="Games">
-        <input class="profile-field" id="profile-playstyle" placeholder="Playstyle">
-        <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
-        <input type="file" id="profile-photo">
-        <button onclick="updateProfile()">Save Profile</button>
+        <h2 style="margin-bottom: 25px;">Profile Management</h2>
+        
+        <div style="display: flex; gap: 30px; flex-wrap: wrap;">
+            
+            <form id="profileEditForm">
+                <h3>Edit Details</h3>
+                <input class="profile-field" id="profile-username" placeholder="Username">
+                <input class="profile-field" id="profile-platform" placeholder="Platform">
+                <input class="profile-field" id="profile-games" placeholder="Games">
+                <input class="profile-field" id="profile-playstyle" placeholder="Playstyle">
+                <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
+                <label style="margin-top: 10px; color: var(--duoup-muted);">Upload/Update Profile Photo:</label>
+                <input type="file" id="profile-photo" style="margin-top: 5px;">
+                <button type="button" onclick="updateProfile()">Save Profile</button>
+            </form>
+            
+            <div style="flex-grow: 1; min-width: 300px; max-width: 320px;">
+                <h3>Your Current Duo Card Preview</h3>
+                <div id="profilePreviewContainer">
+                    </div>
+            </div>
+            
+        </div>
     </div>
     
     <div id="messages-section" class="container" style="display:none;">
@@ -354,9 +378,10 @@ const chatHeader = document.getElementById("chatHeader");
 const messageArea = document.getElementById("messageArea");
 const chatInput = document.getElementById("chatInput");
 
-// NEW SEARCH ELEMENTS
+// NEW ELEMENTS
 const duoSearchForm = document.getElementById("duoSearchForm");
 const searchQueryInput = document.getElementById("searchQuery");
+const profilePreviewContainer = document.getElementById("profilePreviewContainer"); // NEW: Preview Container
 
 
 // --- AUTH LISTENERS ---
@@ -392,7 +417,67 @@ signupForm.addEventListener("submit", async e=>{
 googleBtn.addEventListener("click", async ()=>{ try{await signInWithPopup(auth,provider);} catch(err){alert(err.message);} });
 logoutBtn.addEventListener("click", async ()=>{ await signOut(auth); });
 
-// --- PROFILE ---
+// --- PROFILE PREVIEW LOGIC ---
+function renderProfilePreview(data) {
+    // Read current values from the form inputs, falling back to data loaded from Firestore
+    const username = document.getElementById("profile-username").value || data.username || 'New Player';
+    const platform = document.getElementById("profile-platform").value || data.platform || 'N/A';
+    const games = document.getElementById("profile-games").value || data.games || 'N/A';
+    const playstyle = document.getElementById("profile-playstyle").value || data.playstyle || 'N/A';
+    const photoURL = data.photoURL || '';
+
+    // Check if a file is currently selected for preview (overrides the Firestore URL)
+    const fileInput = document.getElementById("profile-photo");
+    let avatarSrc = photoURL;
+    if (fileInput.files.length > 0) {
+        // We cannot use file reader here, we rely on the caller (setupProfilePreviewListeners) to pass a temp URL
+        // If photoURL is a DataURL, it means it's a temp preview.
+    }
+
+    // Generate the HTML for the preview card, mirroring the duo-card style
+    profilePreviewContainer.innerHTML = `
+        <div class="duo-card">
+            <div class="card-header">
+                <div class="avatar">${avatarSrc ? `<img src="${avatarSrc}">` : username[0]}</div>
+                <strong>${username}</strong>
+            </div>
+            <div class="bio">
+                Platform: ${platform}<br>
+                Games: ${games}<br>
+                Playstyle: ${playstyle}
+            </div>
+            <button class="action-button" disabled style="opacity: 0.7; cursor: default;">Profile Preview</button>
+        </div>
+    `;
+}
+
+// Helper function to attach change listeners to all fields
+function setupProfilePreviewListeners(initialData) {
+    const fields = document.querySelectorAll(".profile-field");
+    fields.forEach(field => {
+        // When the user types or changes a field, re-render the preview
+        field.addEventListener('input', () => renderProfilePreview(initialData));
+    });
+    
+    // Listen to photo file change (need to update the avatar)
+    document.getElementById("profile-photo").addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                // Pass the temporary local URL to the renderer, merging with existing data
+                renderProfilePreview({...initialData, photoURL: event.target.result});
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // If the user clears the file input, revert to the stored photoURL
+            renderProfilePreview(initialData);
+        }
+    });
+}
+
+
+// --- PROFILE UPDATE/LOAD ---
 async function updateProfile(){
     const user = auth.currentUser; if(!user) return;
     const username = document.getElementById("profile-username").value;
@@ -409,19 +494,26 @@ async function updateProfile(){
     }
     await updateDoc(doc(db,"users",user.uid),{username,platform,games,playstyle,about,photoURL});
     alert("Profile updated!");
+    loadProfile(); // Re-load to update saved data and preview
 }
 
 async function loadProfile(){
     const user = auth.currentUser; if(!user) return;
     const docSnap = await getDoc(doc(db,"users",user.uid));
-    if(docSnap.exists()){
-        const data = docSnap.data();
-        document.getElementById("profile-username").value = data.username || "";
-        document.getElementById("profile-platform").value = data.platform || "";
-        document.getElementById("profile-games").value = data.games || "";
-        document.getElementById("profile-playstyle").value = data.playstyle || "";
-        document.getElementById("profile-about").value = data.about || "";
-    }
+    
+    const data = docSnap.exists() ? docSnap.data() : {};
+
+    // 1. Populate the form fields
+    document.getElementById("profile-username").value = data.username || "";
+    document.getElementById("profile-platform").value = data.platform || "";
+    document.getElementById("profile-games").value = data.games || "";
+    document.getElementById("profile-playstyle").value = data.playstyle || "";
+    document.getElementById("profile-about").value = data.about || "";
+    
+    // 2. Initial render and setup listeners
+    // Use the fetched data for the initial state of the preview
+    renderProfilePreview(data);
+    setupProfilePreviewListeners(data); 
 }
 
 // --- SECTIONS ---
@@ -434,32 +526,25 @@ function showSection(section){
 }
 
 // --- USERS / DUO SEARCH (Core Filtering Logic) ---
-
-// Function to fetch all user data and start the real-time listener
 async function loadUsers(){
     const q = query(collection(db,"users"));
     onSnapshot(q,snapshot=>{
-        // Store all available user data (excluding current user) globally
         allUsersData = snapshot.docs
             .filter(doc => doc.id !== auth.currentUser.uid)
             .map(doc => ({ id: doc.id, data: doc.data() }));
         
-        // Initial render of the grid (with no search query)
-        renderUsersGrid();
+        renderUsersGrid(); // Initial render
     });
 }
 
-// Function to render the grid based on the current search query
 function renderUsersGrid(queryText = ''){
     const queryLower = queryText.toLowerCase();
     usersGrid.innerHTML="";
     
-    // Filter the global data array
     const filteredUsers = allUsersData.filter(userDoc => {
-        if (!queryLower) return true; // Show all if query is empty
+        if (!queryLower) return true;
         const data = userDoc.data;
         
-        // Check if the query matches username, platform, or games
         return (
             (data.username || '').toLowerCase().includes(queryLower) ||
             (data.platform || '').toLowerCase().includes(queryLower) ||
@@ -467,12 +552,10 @@ function renderUsersGrid(queryText = ''){
         );
     });
 
-    // Update the counter based on filtered results
     if (userCountElement) {
          userCountElement.textContent = `(${filteredUsers.length} Players Matched)`;
     }
 
-    // Populate the grid with filtered users
     filteredUsers.forEach(userDoc => {
         const u = userDoc.data;
         const docId = userDoc.id;
@@ -491,11 +574,9 @@ function renderUsersGrid(queryText = ''){
 // Attach search listeners
 duoSearchForm.addEventListener("submit", e => {
     e.preventDefault();
-    const queryText = searchQueryInput.value.trim();
-    renderUsersGrid(queryText);
+    renderUsersGrid(searchQueryInput.value.trim());
 });
 
-// Real-time filtering as user types (removes need for separate submit click)
 searchQueryInput.addEventListener("input", () => {
     renderUsersGrid(searchQueryInput.value.trim());
 });
@@ -572,7 +653,6 @@ async function acceptDuo(requestId){
 
 // --- CHAT ---
 function openChat(friendUid,friendUsername){
-    // Creates a consistent chat ID regardless of who is sender/receiver
     activeChatId = [auth.currentUser.uid,friendUid].sort().join("_");
     activeFriendUid = friendUid;
     chatModal.style.display="flex";
@@ -606,7 +686,6 @@ function loadChat(duoId){
             div.innerHTML=`<div class="message-content">${m.content}</div>`;
             messageArea.appendChild(div);
         });
-        // Scroll to the bottom of the chat area
         messageArea.scrollTop = messageArea.scrollHeight;
     });
 }
@@ -619,7 +698,7 @@ onAuthStateChanged(auth,user=>{
         mainHeader.style.display="flex";
         loadUsers();
         loadDuoRequests();
-        showSection('home'); // Ensure the home section is visible on login
+        showSection('home');
     } else {
         authSection.style.display="flex";
         appSection.style.display="none";
