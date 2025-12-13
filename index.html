@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Ink - Chapter & Edit Hub</title>
+    <title>Neon Ink - Story Key Auth Hub</title>
     <style>
         /* --- GLOBAL STYLES (Neon Theme) --- */
         :root {
@@ -100,7 +100,7 @@
         }
 
         /* --- FORM STYLES (Create/Edit View) --- */
-        #createView input[type="text"], #createView textarea, #createView select {
+        #createView input[type="text"], #createView input[type="password"], #createView textarea, #createView select {
             width: 100%; 
             padding: 10px; 
             background-color: #444; 
@@ -229,6 +229,13 @@
                     <label for="storyAuthor">Author / Pen Name</label>
                     <input type="text" id="storyAuthor" required value="Anonymous Writer">
                 </div>
+                
+                <div class="form-group" id="storyKeyGroup">
+                    <label for="storyKey">🔒 Story Key (REQUIRED for future edits/chapters)</label>
+                    <input type="password" id="storyKey" placeholder="Choose a private key (e.g., a short PIN)">
+                    <p style="font-size: 0.9em; color: var(--color-accent);">*Keep this key secret! You will need it to edit your story.*</p>
+                </div>
+                
                 <div class="form-group">
                     <label for="storyTitle">Story Title</label>
                     <input type="text" id="storyTitle" required>
@@ -306,9 +313,8 @@
             return Date.now().toString(36) + Math.random().toString(36).substring(2);
         }
 
-        // --- NAVIGATION & VIEW MANAGEMENT ---
+        // --- NAVIGATION & VIEW MANAGEMENT (Unchanged) ---
         function showView(viewId) {
-            // Mapping 'profileView' to 'authorView' for simplicity
             const viewMapping = {
                 'listView': 'listView',
                 'createView': 'createView',
@@ -333,7 +339,6 @@
             } else if (targetViewId === 'readView') {
                 document.getElementById('sidebar').classList.add('hidden');
             } else if (targetViewId === 'createView') {
-                // Reset editor for new story creation by default
                 resetEditor();
             }
         }
@@ -396,7 +401,6 @@
             document.getElementById('createViewTitle').textContent = '✍️ Post a Story Anonymously';
             document.getElementById('createViewNote').textContent = '*Enter your Pen Name below. You can use any name you like.*';
             document.getElementById('publishButton').textContent = 'Publish Story';
-            document.getElementById('publishButton').onclick = publishNewStory;
             
             document.getElementById('storyIdToEdit').value = '';
             document.getElementById('chapterIndexToEdit').value = '';
@@ -406,26 +410,29 @@
             document.getElementById('storyThumbnailUrl').value = '';
             document.getElementById('chapterTitle').value = 'Chapter 1';
             document.getElementById('storyContent').value = '';
+            document.getElementById('storyKey').value = '';
             
             // Show all fields for new creation
             document.getElementById('storyAuthor').style.display = 'block';
             document.querySelector('label[for="storyAuthor"]').style.display = 'block';
             document.getElementById('categoryGroup').style.display = 'block';
             document.getElementById('thumbnailGroup').style.display = 'block';
+            document.getElementById('storyKeyGroup').style.display = 'block'; // Show Key Field
         }
 
 
         function publishNewStory() {
             
             const author = document.getElementById('storyAuthor').value.trim() || 'Anonymous Writer';
+            const storyKey = document.getElementById('storyKey').value.trim();
             const title = document.getElementById('storyTitle').value.trim();
             const category = document.getElementById('storyCategory').value;
             const thumbnailUrl = document.getElementById('storyThumbnailUrl').value.trim();
             const chapterTitle = document.getElementById('chapterTitle').value.trim() || 'Chapter 1';
             const content = document.getElementById('storyContent').value.trim();
 
-            if (!title || !content) {
-                alert('Title and chapter content are required.');
+            if (!title || !content || !storyKey) {
+                alert('Title, chapter content, AND a private Story Key are required.');
                 return;
             }
 
@@ -433,6 +440,7 @@
                 id: generateId(),
                 title: title,
                 author: author, 
+                storyKey: storyKey, // New: Save the private key
                 category: category,
                 thumbnailUrl: thumbnailUrl,
                 chapters: [{
@@ -447,7 +455,7 @@
             stories.push(newStory);
             saveStories(stories);
 
-            alert('Story published successfully!');
+            alert('Story published successfully! Do not lose your Story Key!');
             showView('listView');
         }
 
@@ -461,11 +469,18 @@
                 return;
             }
 
-            const authorCheck = prompt(`To edit "${story.title}", please confirm the author name:`);
+            // --- AUTH CHECK ---
+            const authorCheck = prompt(`To edit "${story.title}", please confirm the Author Name:`);
             if (authorCheck !== story.author) {
-                alert('Author name does not match. Edit access denied.');
+                alert('Author name does not match. Access denied.');
                 return;
             }
+            const keyCheck = prompt(`Please enter the private Story Key for "${story.title}":`);
+            if (keyCheck !== story.storyKey) {
+                alert('Story Key is incorrect. Access denied.');
+                return;
+            }
+            // --- AUTH CHECK END ---
 
             // Load editor for editing Chapter 1 by default
             const chapter = story.chapters[0];
@@ -485,23 +500,33 @@
             document.getElementById('storyThumbnailUrl').value = story.thumbnailUrl;
             document.getElementById('chapterTitle').value = chapter.title;
             document.getElementById('storyContent').value = chapter.content;
-
+            
             // Hide fields that shouldn't be edited after creation
             document.getElementById('storyAuthor').style.display = 'none';
             document.querySelector('label[for="storyAuthor"]').style.display = 'none';
+            document.getElementById('storyTitle').style.display = 'none';
+            document.querySelector('label[for="storyTitle"]').style.display = 'none';
             document.getElementById('categoryGroup').style.display = 'none';
             document.getElementById('thumbnailGroup').style.display = 'none';
+            document.getElementById('storyKeyGroup').style.display = 'none'; // Hide Key Field during edit
 
             showView('createView');
         }
         
         // Triggered by Add Chapter button on Read View
-        function addChapter(storyId, author) {
-            const authorCheck = prompt(`To add a chapter to this story, please confirm the author name:`);
+        function addChapter(storyId, author, storyKey) {
+             // --- AUTH CHECK ---
+            const authorCheck = prompt(`To add a chapter to this story, please confirm the Author Name:`);
             if (authorCheck !== author) {
                 alert('Author name does not match. Chapter access denied.');
                 return;
             }
+            const keyCheck = prompt(`Please enter the private Story Key:`);
+            if (keyCheck !== storyKey) {
+                alert('Story Key is incorrect. Chapter access denied.');
+                return;
+            }
+            // --- AUTH CHECK END ---
             
             const stories = getStories();
             const story = stories.find(s => s.id === storyId);
@@ -525,11 +550,12 @@
             document.querySelector('label[for="storyTitle"]').style.display = 'none';
             document.getElementById('categoryGroup').style.display = 'none';
             document.getElementById('thumbnailGroup').style.display = 'none';
+            document.getElementById('storyKeyGroup').style.display = 'none'; // Hide Key Field
 
             showView('createView');
         }
 
-        // Unified save function for edits and new chapters
+        // Unified save function for edits and new chapters (Unchanged logic)
         function saveChapterChanges() {
             const storyId = document.getElementById('storyIdToEdit').value;
             const chapterIndex = parseInt(document.getElementById('chapterIndexToEdit').value);
@@ -568,10 +594,10 @@
             }
 
             saveStories(stories);
-            showView('listView'); // Return to list view or perhaps the read view
+            showView('listView'); 
         }
 
-        // --- 3. READ VIEW LOGIC (Modified for Chapter Navigation) ---
+        // --- 3. READ VIEW LOGIC (Modified to pass the Story Key) ---
         function renderStory(storyId, chapterIndex = 0) {
             currentStoryId = storyId;
             const stories = getStories();
@@ -583,7 +609,6 @@
                 return;
             }
 
-            // Ensure chapter index is valid
             const chapter = story.chapters[chapterIndex]; 
             if (!chapter) {
                 document.getElementById('chapterText').innerHTML = '<h1 style="color: var(--color-accent);">Chapter Not Found</h1>';
@@ -621,14 +646,14 @@
                 </p>
             `;
 
-            // 4. Set Add Chapter Button Action
+            // 4. Set Add Chapter Button Action (Pass the key for quick access)
             const addChapterBtn = document.getElementById('addChapterBtn');
-            addChapterBtn.onclick = () => addChapter(storyId, story.author);
+            addChapterBtn.onclick = () => addChapter(storyId, story.author, story.storyKey);
 
             showView('readView');
         }
 
-        // --- 4. AUTHOR VIEW LOGIC (Modified to include Edit button) ---
+        // --- 4. AUTHOR VIEW LOGIC (Unchanged) ---
         function renderAuthorView(targetAuthorName) {
             
             document.getElementById('authorName').textContent = targetAuthorName;
@@ -667,7 +692,10 @@
             filterStories('All'); 
             showView('listView');
             
-            // Ensure publish button is connected to the new story function by default
+            // Initial editor setup
+            resetEditor();
+
+            // Set up listener for the Publish/Save button
             document.getElementById('publishButton').addEventListener('click', () => {
                 if (document.getElementById('storyIdToEdit').value) {
                     // If an ID is present, we save/add chapter
@@ -677,9 +705,6 @@
                     publishNewStory();
                 }
             });
-            
-            // Initial editor setup
-            resetEditor();
         });
     </script>
 </body>
