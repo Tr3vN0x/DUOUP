@@ -146,14 +146,14 @@
             gap: 25px;
         }
         
-        /* --- Profile Card Styles (from previous step, adapted) --- */
+        /* --- Profile Card Styles --- */
         .duo-card {
             background-color: var(--card-color);
             border-radius: 12px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             border-top: 5px solid var(--accent-cyan);
-            color: var(--bg-primary); /* Ensure text on white card is dark */
+            color: var(--bg-primary); 
             transition: transform 0.3s, box-shadow 0.3s;
         }
         .duo-card:hover {
@@ -161,86 +161,19 @@
             box-shadow: 0 12px 20px rgba(0, 255, 255, 0.2);
         }
 
-        .card-header {
-            padding: 15px 20px;
-            display: flex;
-            align-items: center;
-            border-bottom: 1px solid #edf2f7;
-        }
-        .avatar {
-            width: 50px;
-            height: 50px;
-            background-color: var(--accent-cyan);
-            border-radius: 50%;
-            margin-right: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--bg-primary);
-            font-weight: 700;
-            font-size: 1.2em;
-        }
-        .name-platform h3 {
-            margin: 0;
-            font-size: 1.3em;
-        }
-        .name-platform p {
-            margin: 0;
-            color: #718096;
-            font-size: 0.85em;
-        }
-        .bio, .game-details {
-            padding: 15px 20px;
-        }
-        .bio p {
-            font-size: 0.9em;
-            line-height: 1.4;
-            margin-top: 0;
-            color: #4A5568;
-        }
-        
-        .game-details h4 {
-            color: #2D3748;
-            margin-top: 0;
-            font-size: 1.1em;
-            border-bottom: 2px dashed #E2E8F0;
-            padding-bottom: 5px;
-        }
-        
-        .details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            font-size: 0.9em;
-            padding-bottom: 15px;
-        }
-        .detail-item strong {
-            display: block;
-            color: #718096;
-            font-size: 0.8em;
-            margin-bottom: 2px;
-        }
-        .detail-item span {
-            color: var(--bg-primary);
-            font-weight: 600;
-        }
-        
-        .tag-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #E2E8F0;
-        }
-        .tag {
-            background-color: #FEEBC8; /* Light accent background */
-            color: #975A16; /* Dark accent text */
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75em;
-            font-weight: bold;
-        }
+        /* ... Card Inner Styles (Avatar, Bio, Tags, etc.) ... (Shortened for brevity) */
+        .card-header { padding: 15px 20px; display: flex; align-items: center; border-bottom: 1px solid #edf2f7; }
+        .avatar { width: 50px; height: 50px; background-color: var(--accent-cyan); border-radius: 50%; margin-right: 15px; display: flex; align-items: center; justify-content: center; color: var(--bg-primary); font-weight: 700; font-size: 1.2em; }
+        .name-platform h3 { margin: 0; font-size: 1.3em; }
+        .name-platform p { margin: 0; color: #718096; font-size: 0.85em; }
+        .bio, .game-details { padding: 15px 20px; }
+        .bio p { font-size: 0.9em; line-height: 1.4; margin-top: 0; color: #4A5568; }
+        .game-details h4 { color: #2D3748; margin-top: 0; font-size: 1.1em; border-bottom: 2px dashed #E2E8F0; padding-bottom: 5px; }
+        .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9em; padding-bottom: 15px; }
+        .detail-item strong { display: block; color: #718096; font-size: 0.8em; margin-bottom: 2px; }
+        .detail-item span { color: var(--bg-primary); font-weight: 600; }
+        .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #E2E8F0; }
+        .tag { background-color: #FEEBC8; color: #975A16; padding: 4px 8px; border-radius: 4px; font-size: 0.75em; font-weight: bold; }
         
         .action-button {
             width: 100%;
@@ -257,6 +190,112 @@
             background-color: #00E0E0;
         }
 
+        /* --- Messaging Modal Styles --- */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Dark overlay */
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 400px;
+            height: 500px;
+            background-color: var(--bg-secondary);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            background-color: var(--accent-cyan);
+            color: var(--bg-primary);
+            padding: 15px;
+            font-size: 1.2em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+        
+        .chat-header .close-btn {
+            cursor: pointer;
+            font-size: 1.5em;
+            transition: transform 0.2s;
+        }
+        .chat-header .close-btn:hover {
+            transform: rotate(90deg);
+        }
+
+        .message-area {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom: 1px solid #4A5568;
+        }
+        
+        /* Styling for individual messages */
+        .message {
+            margin-bottom: 10px;
+            display: flex;
+            max-width: 80%;
+            font-size: 0.9em;
+        }
+        .message.self {
+            margin-left: auto;
+            justify-content: flex-end;
+        }
+        .message-content {
+            padding: 8px 12px;
+            border-radius: 15px;
+            line-height: 1.3;
+        }
+        .message.other .message-content {
+            background-color: #4A5568;
+            color: var(--text-light);
+            border-top-left-radius: 2px;
+        }
+        .message.self .message-content {
+            background-color: var(--accent-cyan);
+            color: var(--bg-primary);
+            border-top-right-radius: 2px;
+        }
+
+        .chat-input-area {
+            padding: 15px;
+            display: flex;
+            background-color: #1A1A2E;
+        }
+        .chat-input {
+            flex-grow: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px 0 0 6px;
+            background-color: #2D3748;
+            color: var(--text-light);
+        }
+        .send-button {
+            padding: 10px 15px;
+            border: none;
+            background-color: var(--accent-cyan);
+            color: var(--bg-primary);
+            border-radius: 0 6px 6px 0;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        .send-button:hover {
+            background-color: #00E0E0;
+        }
+
     </style>
 </head>
 <body>
@@ -268,7 +307,7 @@
         <div class="nav-links">
             <a href="#"><i class="fas fa-home"></i> Home</a>
             <a href="#"><i class="fas fa-search"></i> Find Duo</a>
-            <a href="#"><i class="fas fa-user-circle"></i> Profile</a>
+            <a href="#" onclick="openChat('LunarFox_88')"><i class="fas fa-comment-alt"></i> Messages</a> <a href="#"><i class="fas fa-user-circle"></i> Profile</a>
             <a href="#"><i class="fas fa-cog"></i> Settings</a>
         </div>
     </header>
@@ -280,35 +319,10 @@
             <input type="text" class="search-input" placeholder="Search by Gamertag, Game, or Role...">
             
             <div class="filters">
-                <select id="game-filter">
-                    <option value="">-- Filter by Game --</option>
-                    <option value="valorant">Valorant</option>
-                    <option value="lol">League of Legends</option>
-                    <option value="apex">Apex Legends</option>
-                    <option value="bg3">Baldur's Gate 3</option>
-                </select>
-                
-                <select id="platform-filter">
-                    <option value="">-- Platform --</option>
-                    <option value="pc">PC</option>
-                    <option value="ps5">PlayStation</option>
-                    <option value="xbox">Xbox</option>
-                </select>
-                
-                <select id="playstyle-filter">
-                    <option value="">-- Playstyle --</option>
-                    <option value="competitive">Competitive</option>
-                    <option value="casual">Casual/Fun</option>
-                    <option value="coop">Story/Co-op</option>
-                </select>
-                
-                <select id="mic-filter">
-                    <option value="">-- Mic Preference --</option>
-                    <option value="required">Required</option>
-                    <option value="preferred">Preferred</option>
-                    <option value="never">Never</option>
-                </select>
-                
+                <select id="game-filter"><option value="">-- Filter by Game --</option><option value="valorant">Valorant</option><option value="lol">League of Legends</option></select>
+                <select id="platform-filter"><option value="">-- Platform --</option><option value="pc">PC</option><option value="ps5">PlayStation</option></select>
+                <select id="playstyle-filter"><option value="">-- Playstyle --</option><option value="competitive">Competitive</option><option value="casual">Casual/Fun</option></select>
+                <select id="mic-filter"><option value="">-- Mic Preference --</option><option value="required">Required</option><option value="preferred">Preferred</option></select>
                 <button onclick="applyFilters()"><i class="fas fa-filter"></i> Apply Filters</button>
             </div>
         </div>
@@ -316,88 +330,117 @@
         <div class="results-grid">
             
             <div class="duo-card">
-                <div class="card-header">
-                    <div class="avatar">JM</div>
-                    <div class="name-platform">
-                        <h3>JesterMight</h3>
-                        <p>Playing on: PC</p>
-                    </div>
-                </div>
-
-                <div class="bio">
-                    <p>Aggressive initiator main in Valorant, looking for a consistent entry fragger. Serious about climbing to Immortal. 25+, EST.</p>
-                </div>
-
+                <div class="card-header"><div class="avatar">JM</div><div class="name-platform"><h3>JesterMight</h3><p>Playing on: PC</p></div></div>
+                <div class="bio"><p>Aggressive initiator main in Valorant, looking for a consistent entry fragger. Serious about climbing to Immortal. 25+, EST.</p></div>
                 <div class="game-details">
                     <h4>Top Active Game: Valorant</h4>
-                    
                     <div class="details-grid">
                         <div class="detail-item"><strong>Rank/Level</strong><span>Diamond 1</span></div>
                         <div class="detail-item"><strong>Role Focus</strong><span>Initiator (Sova)</span></div>
                         <div class="detail-item"><strong>Time Zone</strong><span>EST (UTC-5)</span></div>
                         <div class="detail-item"><strong>Availability</strong><span>Weekdays 8 PM - 12 AM</span></div>
                     </div>
-                    
-                    <div class="tag-list">
-                        <span class="tag">Competitive/Ranked</span>
-                        <span class="tag">Advanced Skill</span>
-                        <span class="tag">Mic Required</span>
-                    </div>
+                    <div class="tag-list"><span class="tag">Competitive/Ranked</span><span class="tag">Advanced Skill</span><span class="tag">Mic Required</span></div>
                 </div>
-                <button class="action-button">Send Duo Request</button>
+                <button class="action-button" onclick="openChat('JesterMight')">Send Duo Request</button>
             </div>
             
             <div class="duo-card">
-                <div class="card-header">
-                    <div class="avatar">LF</div>
-                    <div class="name-platform">
-                        <h3>LunarFox_88</h3>
-                        <p>Playing on: PS5 & Switch</p>
-                    </div>
-                </div>
-
-                <div class="bio">
-                    <p>Casual gamer just looking for someone fun to raid/dungeon with in Destiny 2 or run some co-op missions. Open to new games!</p>
-                </div>
-
+                <div class="card-header"><div class="avatar">LF</div><div class="name-platform"><h3>LunarFox_88</h3><p>Playing on: PS5 & Switch</p></div></div>
+                <div class="bio"><p>Casual gamer just looking for someone fun to raid/dungeon with in Destiny 2 or run some co-op missions. Open to new games!</p></div>
                 <div class="game-details">
                     <h4>Top Active Game: Destiny 2</h4>
-                    
                     <div class="details-grid">
                         <div class="detail-item"><strong>Rank/Level</strong><span>Light 1810</span></div>
                         <div class="detail-item"><strong>Role Focus</strong><span>Warlock (Support)</span></div>
                         <div class="detail-item"><strong>Time Zone</strong><span>PST (UTC-8)</span></div>
                         <div class="detail-item"><strong>Availability</strong><span>Weekends All Day</span></div>
                     </div>
-                    
-                    <div class="tag-list">
-                        <span class="tag">Casual/Fun</span>
-                        <span class="tag">Intermediate Skill</span>
-                        <span class="tag">Mic Preferred</span>
-                        <span class="tag">PvE/Co-op</span>
-                    </div>
+                    <div class="tag-list"><span class="tag">Casual/Fun</span><span class="tag">Intermediate Skill</span><span class="tag">Mic Preferred</span><span class="tag">PvE/Co-op</span></div>
                 </div>
-                <button class="action-button">Send Duo Request</button>
+                <button class="action-button" onclick="openChat('LunarFox_88')">Send Duo Request</button>
             </div>
             
-            </div>
+        </div>
         
     </main>
 
+    <div id="chatModal" class="modal">
+        <div class="chat-container">
+            <div id="chatHeader" class="chat-header">
+                Chatting with [Duo Name]
+                <span class="close-btn" onclick="closeChat()">&times;</span>
+            </div>
+            <div class="message-area">
+                <div class="message other">
+                    <div class="message-content">Hey there! Saw your profile for Destiny 2. What kind of content are you usually running?</div>
+                </div>
+                <div class="message self">
+                    <div class="message-content">Mostly raids and grandmaster nightfalls, if we can find a third. You free tonight around 9 PM EST?</div>
+                </div>
+                <div class="message other">
+                    <div class="message-content">9 PM EST works perfectly for me. I'll send you a PSN invite later. Looking forward to it!</div>
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" placeholder="Type your message here..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                <button class="send-button" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+
     <script>
+        const chatModal = document.getElementById('chatModal');
+        const chatHeader = document.getElementById('chatHeader');
+        const messageArea = document.querySelector('.message-area');
+        const chatInput = document.querySelector('.chat-input');
+        
         function applyFilters() {
-            // In a real application, this function would:
-            // 1. Get values from the filter selectors (game-filter, platform-filter, etc.)
-            // 2. Make an AJAX call to the server to fetch matching user profiles.
-            // 3. Dynamically update the 'results-grid' with the new profile cards.
+            alert('Filters applied! (Placeholder: Server would fetch results)');
+        }
+
+        function openChat(duoName) {
+            // 1. Update the chat header
+            chatHeader.innerHTML = `Chatting with ${duoName} <span class="close-btn" onclick="closeChat()">&times;</span>`;
             
-            const game = document.getElementById('game-filter').value;
-            const platform = document.getElementById('platform-filter').value;
+            // 2. Show the modal
+            chatModal.style.display = 'flex';
             
-            if (game || platform) {
-                alert(`Searching for Duos...\nGame: ${game || 'Any'}\nPlatform: ${platform || 'Any'}\n\n(This is a placeholder. Real matching logic would run here!)`);
-            } else {
-                alert('Please select a game or platform to start your search!');
+            // 3. Focus on the input
+            chatInput.focus();
+            
+            // In a real app, this would also load the message history for this duo.
+        }
+
+        function closeChat() {
+            chatModal.style.display = 'none';
+        }
+
+        function sendMessage() {
+            const text = chatInput.value.trim();
+            if (text === '') return;
+
+            // 1. Create new message element (simulating a message sent by the user)
+            const newMessage = document.createElement('div');
+            newMessage.classList.add('message', 'self');
+            newMessage.innerHTML = `<div class="message-content">${text}</div>`;
+            
+            // 2. Append to message area and scroll to bottom
+            messageArea.appendChild(newMessage);
+            messageArea.scrollTop = messageArea.scrollHeight;
+            
+            // 3. Clear the input
+            chatInput.value = '';
+
+            // Placeholder for real logic:
+            // In a real app, the message would be sent via WebSockets or AJAX to the server.
+        }
+
+        // Close modal if user clicks outside of the chat container
+        window.onclick = function(event) {
+            if (event.target === chatModal) {
+                closeChat();
             }
         }
     </script>
