@@ -22,23 +22,30 @@ header h1 span{color:var(--duoup-secondary);}
 header nav{display:flex;align-items:center;gap:15px;flex-wrap:wrap;}
 #logoutBtnHeader{background:var(--duoup-secondary);color:var(--duoup-dark);padding:6px 12px;font-weight:bold;display:flex;align-items:center;gap:5px;}
 #auth-section{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding-top:60px;}
-form:not(#duoSearchForm){display:flex;flex-direction:column;background:#141426;padding:25px;border-radius:12px;margin:10px;width:90%;max-width:360px;}
+form:not(#duoSearchForm):not(#postForm){display:flex;flex-direction:column;background:#141426;padding:25px;border-radius:12px;margin:10px;width:90%;max-width:360px;}
 input,textarea{margin:8px 0;padding:12px;border-radius:6px;border:1px solid var(--duoup-primary);background:#2D2D44;color:var(--duoup-light);}
 button:not(.google-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;font-weight:bold;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);}
 .google-btn{background:linear-gradient(90deg,#DB4437,#EA4335);color:white;width:90%;max-width:360px;display:flex;align-items:center;justify-content:center;gap:10px;margin-top:15px;}
 #app-section{width:100%;padding-top:60px;display:none;}
 .container{max-width:1200px;margin:20px auto;padding:0 15px;}
 .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
-.duo-card{background:linear-gradient(145deg,#1A1A2E,#2D2D44);color:var(--duoup-light);border-radius:12px;overflow:hidden;border:1px solid #3A3A52;transition:.3s;box-shadow:0 4px 8px rgba(0,0,0,0.4);}
+.duo-card{background:linear-gradient(145deg,#1A1A2E,#2D2D44);color:var(--duoup-light);border-radius:12px;overflow:hidden;border:1px solid #3A3A52;transition:.3s;box-shadow:0 4px 8px rgba(0,0,0,0.4);margin-bottom:15px;}
 .card-header{display:flex;align-items:center;padding:10px 15px;border-bottom:1px solid #3A3A52;}
-.avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;background:var(--duoup-secondary);color:var(--duoup-dark);}
-.bio{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);}
+.avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;background:var(--duoup-secondary);color:var(--duoup-dark);flex-shrink: 0;} /* Added flex-shrink: 0 */
+.bio, .post-content{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);white-space: pre-wrap;}
 .action-button{width:100%;padding:12px;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);font-weight:bold;border-radius:0 0 12px 12px;}
-.username-display{display:flex;align-items:center;}
+.username-display{display:flex;align-items:center;font-size:1.1em;}
 .verified-badge{color:#1DA1F2;margin-left:5px;}
 /* Highlight disabled input for Google users */
 #profile-username:disabled { background: #1a1a2e; color: var(--duoup-muted); cursor: not-allowed; border-color: #3A3A52; }
 .input-help{font-size:0.8em;color:var(--duoup-muted);margin-top:-5px;margin-bottom:10px;}
+
+/* Post Specific Styles */
+#postForm{background:#1A1A2E;padding:15px;border-radius:12px;margin-bottom:20px;display:flex;flex-direction:column;}
+#postContent{resize:vertical;min-height:80px;}
+#postBtn{background:var(--duoup-secondary);color:var(--duoup-dark);font-weight:bold;padding:10px;}
+.post-meta{font-size:0.8em;color:var(--duoup-muted);margin-top:5px;}
+.post-list{max-width:700px;margin:0 auto;}
 @media(max-width:500px){.results-grid{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -50,6 +57,7 @@ button:not(.google-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;
         <h1>DUO<span>UP</span></h1>
     </div>
     <nav>
+        <a href="#" onclick="showSection('feed')">Feed</a>
         <a href="#" onclick="showSection('home')">Duo Search</a>
         <a href="#" onclick="showSection('profile')">Profile</a>
         <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
@@ -77,10 +85,22 @@ button:not(.google-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;
 </div>
 
 <div id="app-section">
-    <div id="home-section" class="container">
+    
+    <div id="feed-section" class="container" style="display:none;">
+        <h2>Global Feed</h2>
+        <form id="postForm">
+            <textarea id="postContent" placeholder="What's your duo thought?" required></textarea>
+            <button type="submit" id="postBtn">Post to Feed</button>
+        </form>
+        <div id="postsList" class="post-list">
+            </div>
+    </div>
+    
+    <div id="home-section" class="container" style="display:none;">
         <h2>Duo Search <span id="userCount"></span></h2>
         <div class="results-grid" id="usersGrid"></div>
     </div>
+    
     <div id="profile-section" class="container" style="display:none;">
         <h2>Profile Management</h2>
         <form id="profileEditForm">
@@ -96,7 +116,7 @@ button:not(.google-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, addDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
 
 // --- Firebase Config & Initialization ---
@@ -128,16 +148,34 @@ const profileAbout = document.getElementById("profile-about");
 const profilePhoto = document.getElementById("profile-photo");
 const profilePreviewContainer = document.getElementById("profilePreviewContainer");
 const usernameHelp = document.getElementById("username-help"); 
+const postForm = document.getElementById("postForm"); // New Post Form
+const postsList = document.getElementById("postsList"); // New Posts List Container
 
 // --- Constants & Local State ---
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
 let activityInterval; 
 let currentUsername = ""; // Tracks username fetched from DB/last saved
 let currentBio = "";      // Tracks bio fetched from DB/last saved
+let allUsersData = {}; // Cache all user data for joining with posts
 
 // --- Utility Functions ---
 function getVerifiedBadge(username) {
     return username === 'Tr3vN0x' ? '<i class="fas fa-badge-check verified-badge" title="Verified Player"></i>' : '';
+}
+
+function timeSince(timestamp) {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes";
+    return Math.floor(seconds) + " seconds";
 }
 
 async function updateLastActiveStatus(uid) {
@@ -160,10 +198,9 @@ async function ensureUserProfileLoaded(user) {
     const docSnap = await getDoc(userDocRef);
     let userData = docSnap.exists() ? docSnap.data() : {};
 
-    if (!docSnap.exists()) {
+    if (!docSnap.exists() || !userData.username) {
         const authType = user.providerData.some(p => p.providerId === GoogleAuthProvider.PROVIDER_ID) ? 'google' : 'email';
         
-        // Use a reasonable default for missing profiles
         const defaultUsername = user.displayName || user.email.split('@')[0] || "New Player";
 
         userData = {
@@ -212,8 +249,7 @@ signupForm.addEventListener("submit", async e=>{
 
 googleBtn.addEventListener("click", async ()=>{ 
     try{ 
-        const userCredential = await signInWithPopup(auth,provider); 
-        // ensureUserProfileLoaded handles the rest of the profile creation/update
+        await signInWithPopup(auth,provider); 
     } catch(err){ alert(err.message); }
 });
 document.getElementById("logoutBtnHeader").addEventListener("click", async ()=>{ 
@@ -226,20 +262,14 @@ async function loadProfile(){
     const user = auth.currentUser;
     if(!user) return;
     
-    // NOTE: We don't need to fetch from the database here because the data was set in onAuthStateChanged
-    // on app load. However, to ensure the absolute latest data is displayed (e.g. if another device changed it), 
-    // we'll run a quick fetch and update the local variables.
     const data = await ensureUserProfileLoaded(user);
 
-    // Set local state variables
     currentUsername = data.username || '';
     currentBio = data.bio || '';
 
-    // Populate input fields from local state
     profileUsername.value = currentUsername;
     profileAbout.value = currentBio;
     
-    // Set disabled state
     const isGoogleUser = data.authType === 'google';
     profileUsername.disabled = isGoogleUser;
     profileUsername.readOnly = isGoogleUser;
@@ -280,7 +310,6 @@ const saveProfile = async (updates) => {
     try{
         await updateDoc(doc(db,"users",user.uid), { ...updates, lastActive: Date.now() });
         
-        // Update local state variables on successful save
         if (updates.username) {
             currentUsername = updates.username; 
         }
@@ -319,7 +348,7 @@ profilePhoto.addEventListener("change", async e=>{
     loadProfile();
 });
 
-// --- Users & Active Filtering ---
+// --- User Search ---
 async function loadUsers(){
     const currentUser = auth.currentUser;
     if(!currentUser) return;
@@ -359,12 +388,75 @@ async function loadUsers(){
     userCountElement.innerText = count+" players online (active 7d)";
 }
 
+// --- Feed/Posts ---
+postForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const content = document.getElementById("postContent").value.trim();
+    if (!content) return;
+
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    try {
+        await addDoc(collection(db, "posts"), {
+            authorUid: user.uid,
+            content: content,
+            timestamp: Date.now(),
+        });
+        document.getElementById("postContent").value = ""; // Clear form
+        loadPosts(); // Reload posts
+    } catch (err) {
+        console.error("Error creating post:", err);
+        alert("Failed to create post.");
+    }
+});
+
+async function loadPosts() {
+    postsList.innerHTML = '';
+    
+    // 1. Fetch all posts ordered by newest first
+    const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+    const postSnap = await getDocs(postsQuery);
+
+    // 2. Render the posts
+    postSnap.forEach(doc => {
+        const post = doc.data();
+        const userData = allUsersData[post.authorUid] || {}; // Get user data from cache
+        const username = userData.username || 'Unknown User';
+        const avatarChar = username ? username[0] : 'U';
+        const verifiedBadgeHtml = getVerifiedBadge(username);
+        
+        postsList.innerHTML += `
+        <div class="duo-card">
+            <div class="card-header">
+                <div class="avatar">${avatarChar}</div>
+                <div>
+                    <div class="username-display">
+                        <strong>${username}</strong>
+                        ${verifiedBadgeHtml}
+                    </div>
+                    <div class="post-meta">Posted ${timeSince(post.timestamp)} ago</div>
+                </div>
+            </div>
+            <div class="post-content">${post.content}</div>
+        </div>
+        `;
+    });
+
+    if (postSnap.empty) {
+        postsList.innerHTML = `<p style="text-align:center; color:var(--duoup-muted);">No posts yet. Be the first to share your thoughts!</p>`;
+    }
+}
+
+
 // --- Sections ---
 function showSection(section){
-    ["home","profile"].forEach(s=>document.getElementById(s+"-section").style.display="none");
+    ["feed","home","profile"].forEach(s=>document.getElementById(s+"-section").style.display="none");
     document.getElementById(section+"-section").style.display="block";
+    
     if(section==="profile") loadProfile();
     if(section==="home") loadUsers();
+    if(section==="feed") loadPosts();
 }
 
 // --- Auth State ---
@@ -374,10 +466,17 @@ onAuthStateChanged(auth,async user=>{
         appSection.style.display="block";
         mainHeader.style.display="flex";
         
-        // FIX: Ensure profile data is loaded and local state is set immediately on login/refresh
+        // Ensure user data is set and cache all user data for feed loading
         const userData = await ensureUserProfileLoaded(user);
         currentUsername = userData.username || '';
         currentBio = userData.bio || '';
+        
+        // Cache all user data for use in the feed (joining posts with usernames)
+        const allUsersSnap = await getDocs(collection(db, "users"));
+        allUsersSnap.forEach(doc => {
+            const data = doc.data();
+            allUsersData[data.uid] = data;
+        });
         
         await updateLastActiveStatus(user.uid); 
         
@@ -385,7 +484,7 @@ onAuthStateChanged(auth,async user=>{
             activityInterval = setInterval(() => updateLastActiveStatus(user.uid), 60000); // 1 minute
         }
 
-        loadUsers();
+        showSection('feed'); // Set default view to the Feed
     } else {
         authSection.style.display="flex";
         appSection.style.display="none";
