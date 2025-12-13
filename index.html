@@ -80,7 +80,6 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
     <nav>
         <a href="#" onclick="showSection('feed')">Feed</a>
         <a href="#" onclick="showSection('home')">Duo Search</a>
-        <a href="#" onclick="showSection('profile')">Profile</a>
         <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </nav>
 </header>
@@ -119,26 +118,13 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
         <div class="results-grid" id="usersGrid"></div>
     </div>
     
-    <div id="profile-section" class="container" style="display:none;">
-        <h2>Profile Management</h2>
-        <form id="profileEditForm">
-            <input class="profile-field" id="profile-nickname" placeholder="Nickname" disabled readonly>
-            <p id="nickname-help" class="input-help">Your nickname is permanent and cannot be changed.</p>
-            
-            <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
-            
-            <label for="profile-photo" style="margin-top: 15px; color: var(--duoup-primary); font-weight: bold;">Change Profile Picture:</label>
-            <input type="file" id="profile-photo" accept="image/*" style="border: none; background: transparent; padding: 0;">
-        </form>
-        <div id="profilePreviewContainer"></div>
     </div>
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+// Removed getStorage, ref, uploadBytes, getDownloadURL since photo feature is gone
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, addDoc, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
 
 // --- Firebase Config & Initialization ---
 const firebaseConfig = {
@@ -152,7 +138,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
+// const storage = getStorage(app); // Storage is no longer used
 
 // --- DOM Elements ---
 const signinForm = document.getElementById("signin");
@@ -162,10 +148,7 @@ const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
 const usersGrid = document.getElementById("usersGrid");
 const userCountElement = document.getElementById("userCount");
-const profileNickname = document.getElementById("profile-nickname");
-const profileAbout = document.getElementById("profile-about");
-const profilePhoto = document.getElementById("profile-photo");
-const profilePreviewContainer = document.getElementById("profilePreviewContainer");
+// Profile elements removed: profileNickname, profileAbout, profilePhoto, profilePreviewContainer, nicknameHelp
 const postForm = document.getElementById("postForm"); 
 const postsList = document.getElementById("postsList"); 
 
@@ -173,7 +156,7 @@ const postsList = document.getElementById("postsList");
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
 let activityInterval; 
 let currentNickname = ""; 
-let currentBio = "";      
+let currentBio = ""; // Retained to fill the bio in the user search cards
 
 // --- Utility Functions ---
 function getVerifiedBadge(nickname) {
@@ -207,14 +190,15 @@ async function updateLastActiveStatus(uid) {
 }
 
 /**
- * Ensures a user's profile document exists in Firestore and returns its data.
+ * Ensures a user's profile document exists and loads the core data.
  */
-async function ensureUserProfileLoaded(user) {
+async function loadUserData(user) {
     const userDocRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(userDocRef);
     let userData = docSnap.exists() ? docSnap.data() : {};
 
     if (!docSnap.exists() || !userData.nickname) { 
+        // Logic for setting up a profile if it doesn't exist (only needed on first sign-up)
         const authType = 'email'; 
         const defaultNickname = user.email.split('@')[0] || "New Player";
 
@@ -267,89 +251,7 @@ document.getElementById("logoutBtnHeader").addEventListener("click", async ()=>{
     await signOut(auth); 
 });
 
-// --- Profile ---
-async function loadProfile(){
-    const user = auth.currentUser;
-    if(!user) return;
-    
-    const data = await ensureUserProfileLoaded(user);
-
-    currentNickname = data.nickname || ''; 
-    currentBio = data.bio || '';
-
-    // Nickname is loaded but permanently displayed as disabled
-    profileNickname.value = currentNickname; 
-    profileAbout.value = currentBio;
-    
-    renderProfilePreview(data);
-}
-
-function renderProfilePreview(data){
-    const nickname = data.nickname || 'New Player'; 
-    const verifiedBadgeHtml = getVerifiedBadge(nickname);
-    
-    profilePreviewContainer.innerHTML = `
-    <div class="duo-card">
-        <div class="card-header">
-            <div class="avatar">${nickname[0]}</div>
-            <div class="nickname-display">
-                <strong>${nickname}</strong>
-                ${verifiedBadgeHtml}
-            </div>
-        </div>
-        <div class="bio">${data.bio || 'Customize your bio!'}</div>
-        <button class="action-button" disabled>Profile Preview</button>
-    </div>
-    `;
-}
-
-// --- Auto-save profile (Bio and Profile Photo only) ---
-let saveTimeout;
-const saveProfile = async (updates) => {
-    const user = auth.currentUser;
-    if(!user) return;
-    
-    // Safety check: ensure 'nickname' is never in the updates object here
-    if (updates.nickname) delete updates.nickname; 
-
-    try{
-        await updateDoc(doc(db,"users",user.uid), { ...updates, lastActive: Date.now() });
-        
-        if (updates.bio !== undefined) { 
-            currentBio = updates.bio;
-        }
-    } catch(err){ console.error(err); }
-};
-
-// Bio Auto-save
-profileAbout.addEventListener("input", ()=>{
-    renderProfilePreview({nickname: currentNickname, bio: profileAbout.value}); 
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(()=>saveProfile({ bio: profileAbout.value }), 800); 
-});
-
-// Profile Photo Upload
-profilePhoto.addEventListener("change", async e=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    const user = auth.currentUser;
-    const storageRef = ref(storage,`profiles/${user.uid}`);
-    
-    alert("Uploading profile photo...");
-    
-    try {
-        await uploadBytes(storageRef,file);
-        const photoURL = await getDownloadURL(storageRef);
-        await updateDoc(doc(db,"users",user.uid), { profileImageUrl: photoURL, lastActive: Date.now() });
-        alert("Profile picture updated successfully!");
-        loadProfile(); // Reload profile to update avatar if used
-    } catch (err) {
-        console.error("Error uploading photo:", err);
-        alert("Failed to upload profile photo.");
-    }
-});
-
-// --- User Search ---
+// --- User Search (No profile updates here) ---
 async function loadUsers(){
     const currentUser = auth.currentUser;
     if(!currentUser) return;
@@ -495,10 +397,11 @@ async function loadPosts() {
 
 // --- Sections ---
 function showSection(section){
-    ["feed","home","profile"].forEach(s=>document.getElementById(s+"-section").style.display="none");
+    // Removed 'profile' from this list
+    ["feed","home"].forEach(s=>document.getElementById(s+"-section").style.display="none");
     document.getElementById(section+"-section").style.display="block";
     
-    if(section==="profile") loadProfile();
+    // loadProfile() removed
     if(section==="home") loadUsers();
     if(section==="feed") loadPosts();
 }
@@ -510,7 +413,8 @@ onAuthStateChanged(auth,async user=>{
         appSection.style.display="block";
         mainHeader.style.display="flex";
         
-        const userData = await ensureUserProfileLoaded(user);
+        // Load data just to set currentNickname/currentBio for posting/search cards
+        const userData = await loadUserData(user); 
         currentNickname = userData.nickname || ''; 
         currentBio = userData.bio || '';
         
