@@ -43,7 +43,10 @@ body {
 
 /* --- 3. TYPOGRAPHY --- */
 h1,h2,h3 { font-family: var(--font-header); margin:0; color: var(--duoup-light); }
+
 h2 {
+    display: flex; /* Allows the counter to be inline */
+    align-items: baseline;
     border-bottom: 2px solid var(--duoup-secondary);
     padding-bottom: 5px;
     margin-bottom: 20px;
@@ -52,6 +55,19 @@ h2 {
     background: linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+}
+
+/* NEW STYLE: Counter for available players */
+#userCount {
+    color: var(--duoup-secondary);
+    font-size: 0.55em; /* Adjusted size relative to h2 */
+    font-weight: 600;
+    text-shadow: 0 0 5px var(--duoup-secondary);
+    margin-left: 10px;
+    letter-spacing: 1px;
+    /* Reset clip/fill color inheritance */
+    -webkit-background-clip: unset; 
+    -webkit-text-fill-color: unset;
 }
 
 a { color: var(--duoup-primary); text-decoration: none; transition: 0.2s; }
@@ -94,7 +110,6 @@ header nav { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
     min-height: 100vh;
-    /* Use the dark background but don't override the radial gradient on body */
     padding-top: 60px;
 }
 
@@ -233,9 +248,10 @@ button:not(.google-btn):hover {
 
 <div id="app-section" style="display:none; width:100%; padding-top:60px;">
     <div id="home-section" class="container">
-        <h2>Duo Search (Available Players)</h2>
+        <h2 id="homeSectionHeader">Duo Search <span id="userCount"></span></h2> 
         <div class="results-grid" id="usersGrid"></div>
     </div>
+    
     <div id="profile-section" class="container" style="display:none;">
         <h2>Profile Management</h2>
         <input class="profile-field" id="profile-username" placeholder="Username">
@@ -246,6 +262,7 @@ button:not(.google-btn):hover {
         <input type="file" id="profile-photo">
         <button onclick="updateProfile()">Save Profile</button>
     </div>
+    
     <div id="messages-section" class="container" style="display:none;">
         <h2>Messages & Duo Requests</h2>
         <div id="messages-container" class="messages-container">
@@ -270,12 +287,13 @@ button:not(.google-btn):hover {
 </div>
 
 <script type="module">
-// FIX 1: Ensure correct Firebase Import URLs for Modular CDN (Looks good, keeping this structure)
+// Firebase Imports for Modular CDN
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc, addDoc, getDoc, updateDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
 
+// !!! REPLACE WITH YOUR ACTUAL FIREBASE CONFIG !!!
 const firebaseConfig = {
     apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
     authDomain: "duoup-cfae6.firebaseapp.com",
@@ -296,7 +314,7 @@ const provider = new GoogleAuthProvider();
 let activeChatId = "";
 let activeFriendUid = "";
 
-// --- AUTH ---
+// --- DOM ELEMENTS ---
 const signinForm = document.getElementById("signin");
 const signupForm = document.getElementById("signup");
 const googleBtn = document.querySelector(".google-btn");
@@ -304,7 +322,17 @@ const authSection = document.getElementById("auth-section");
 const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
 const logoutBtn = document.getElementById("logoutBtnHeader");
+const usersGrid = document.getElementById("usersGrid");
+const userCountElement = document.getElementById("userCount"); // NEW: For available player count
+const requestsGrid = document.getElementById("requestsGrid");
+const duosGrid = document.getElementById("duosGrid");
+const chatModal = document.getElementById("chatModal");
+const chatHeader = document.getElementById("chatHeader");
+const messageArea = document.getElementById("messageArea");
+const chatInput = document.getElementById("chatInput");
 
+
+// --- AUTH LISTENERS ---
 signinForm.addEventListener("submit", async e=>{
     e.preventDefault();
     try { await signInWithEmailAndPassword(auth,
@@ -378,14 +406,21 @@ function showSection(section){
     if(section==="profile") loadProfile();
 }
 
-// --- USERS / DUO SEARCH ---
-const usersGrid = document.getElementById("usersGrid");
+// --- USERS / DUO SEARCH (Includes NEW Counter Logic) ---
 async function loadUsers(){
     const q = query(collection(db,"users"));
     onSnapshot(q,snapshot=>{
         usersGrid.innerHTML="";
-        snapshot.forEach(docSnap=>{
-            if(docSnap.id===auth.currentUser.uid) return;
+        
+        // Filter out the current user and update the counter
+        const availableUsers = snapshot.docs.filter(doc => doc.id !== auth.currentUser.uid);
+        
+        if (userCountElement) {
+             userCountElement.textContent = `(${availableUsers.length} Players Online)`;
+        }
+
+        // Populate the grid
+        availableUsers.forEach(docSnap=>{
             const u = docSnap.data();
             const div = document.createElement("div");
             div.className="duo-card";
@@ -416,9 +451,6 @@ async function sendDuoRequest(toUid,toUsername){
 }
 
 // --- DUO REQUESTS / MESSAGES ---
-const requestsGrid = document.getElementById("requestsGrid");
-const duosGrid = document.getElementById("duosGrid");
-
 function loadDuoRequests(){
     const user = auth.currentUser;
     const duosMap = new Map();
@@ -473,11 +505,6 @@ async function acceptDuo(requestId){
 }
 
 // --- CHAT ---
-const chatModal = document.getElementById("chatModal");
-const chatHeader = document.getElementById("chatHeader");
-const messageArea = document.getElementById("messageArea");
-const chatInput = document.getElementById("chatInput");
-
 function openChat(friendUid,friendUsername){
     // Creates a consistent chat ID regardless of who is sender/receiver
     activeChatId = [auth.currentUser.uid,friendUid].sort().join("_");
@@ -518,7 +545,7 @@ function loadChat(duoId){
     });
 }
 
-// --- AUTH STATE ---
+// --- AUTH STATE (Main Application Switcher) ---
 onAuthStateChanged(auth,user=>{
     if(user){
         authSection.style.display="none";
@@ -534,7 +561,7 @@ onAuthStateChanged(auth,user=>{
     }
 });
 
-// FIX 2: Expose functions to the global window object for HTML onclick to work
+// CRITICAL FIX: Expose functions to the global window object for HTML onclick to work
 window.updateProfile = updateProfile;
 window.showSection = showSection;
 window.sendDuoRequest = sendDuoRequest;
