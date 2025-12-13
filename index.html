@@ -215,6 +215,7 @@ const notificationBadge = document.getElementById("notificationBadge");
 let activeChatId = "";
 let activeFriendUid = "";
 let allUsersData = [];
+let acceptedDuosMap = new Map();
 
 // ----- AUTH -----
 signinForm.addEventListener("submit", async e => { e.preventDefault(); try { await signInWithEmailAndPassword(auth, document.getElementById("signin-email").value, document.getElementById("signin-password").value); } catch(err){ alert(err.message); } });
@@ -314,6 +315,7 @@ async function loadUsers(){
         renderUsersGrid();
     });
 }
+
 function renderUsersGrid(queryText=''){
     const queryLower = queryText.toLowerCase();
     usersGrid.innerHTML="";
@@ -323,20 +325,29 @@ function renderUsersGrid(queryText=''){
         return (data.username||'').toLowerCase().includes(queryLower)||(data.platform||'').toLowerCase().includes(queryLower)||(data.games||'').toLowerCase().includes(queryLower);
     });
     if(userCountElement) userCountElement.textContent = `(${filteredUsers.length} Players Matched)`;
+
     filteredUsers.forEach(userDoc=>{
         const u = userDoc.data; const docId = userDoc.id;
         const div = document.createElement("div");
         div.className="duo-card";
+
+        let buttonHtml = "";
+        if(acceptedDuosMap.has(docId)){
+            buttonHtml = `<button class="action-button" onclick="openChat('${docId}','${acceptedDuosMap.get(docId)}')">Chat</button>`;
+        } else {
+            buttonHtml = `<button class="action-button" onclick="sendDuoRequest('${docId}','${u.username}')">Send Duo Request</button>`;
+        }
+
         div.innerHTML=`<div class="card-header"><div class="avatar">${u.photoURL?`<img src="${u.photoURL}">`:u.username[0]}</div><strong>${u.username}</strong></div>
         <div class="bio">Platform: ${u.platform||'N/A'}<br>Games: ${u.games||'N/A'}<br>Playstyle: ${u.playstyle||'N/A'}</div>
-        <button class="action-button" onclick="sendDuoRequest('${docId}','${u.username}')">Send Duo Request</button>`;
+        ${buttonHtml}`;
         usersGrid.appendChild(div);
     });
 }
 duoSearchForm.addEventListener("submit", e=>{ e.preventDefault(); renderUsersGrid(searchQueryInput.value.trim()); });
 searchQueryInput.addEventListener("input", ()=>{ renderUsersGrid(searchQueryInput.value.trim()); });
 
-// ----- SEND DUO REQUEST WITH MESSAGE NOTIFICATION -----
+// ----- SEND DUO REQUEST -----
 async function sendDuoRequest(toUid, toUsername){
     const fromUid = auth.currentUser.uid;
     const fromDoc = await getDoc(doc(db,"users",fromUid));
@@ -361,11 +372,21 @@ async function sendDuoRequest(toUid, toUsername){
     });
 
     alert("Duo request sent! The recipient has been notified in their messages.");
+
+    // Update the button to indicate pending
+    const btn = document.querySelector(`.duo-card button[onclick*="${toUid}"]`);
+    if(btn) { 
+        btn.textContent = "Request Sent"; 
+        btn.disabled = true;
+        btn.style.opacity = 0.6;
+        btn.style.cursor = "default";
+    }
 }
 
 // ----- LOAD DUO REQUESTS -----
 function loadDuoRequests(){
-    const user = auth.currentUser; const duosMap = new Map();
+    const user = auth.currentUser; if(!user) return;
+    const duosMap = new Map();
     const q1 = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","pending"));
     onSnapshot(q1,snap=>{
         requestsGrid.innerHTML="";
@@ -384,14 +405,15 @@ function loadDuoRequests(){
             const r=docSnap.data();
             const friendUid=r.fromUserId===user.uid?r.toUserId:r.fromUserId;
             const friendUsername=r.fromUserId===user.uid?r.toUsername:r.fromUsername;
-            if(!duosMap.has(friendUid)) duosMap.set(friendUid,{id:docSnap.id,username:friendUsername});
+            acceptedDuosMap.set(friendUid, friendUsername);
         });
+        renderUsersGrid(searchQueryInput.value.trim());
         duosGrid.innerHTML="";
-        duosMap.forEach((duo,friendUid)=>{
+        acceptedDuosMap.forEach((friendUsername,friendUid)=>{
             const div=document.createElement("div");
             div.className="duo-card";
-            div.innerHTML=`<div class="card-header"><strong>${duo.username}</strong></div>
-            <button class="action-button" onclick="openChat('${friendUid}','${duo.username}')">Chat</button>`;
+            div.innerHTML=`<div class="card-header"><strong>${friendUsername}</strong></div>
+            <button class="action-button" onclick="openChat('${friendUid}','${friendUsername}')">Chat</button>`;
             duosGrid.appendChild(div);
         });
     }
@@ -447,6 +469,34 @@ function setupNotificationBadge(){
     });
 }
 
+// ----- LOAD ACCEPTED DUOS FOR CHAT BUTTONS -----
+function loadAcceptedDuos(){
+    const user = auth.currentUser;
+    if(!user) return;
+
+    acceptedDuosMap.clear();
+
+    const qSent = query(collection(db,"duoRequests"), where("fromUserId","==",user.uid), where("status","==","accepted"));
+    onSnapshot(qSent, snap => {
+        snap.forEach(docSnap => {
+            const r = docSnap.data();
+            const friendUid = r.toUserId;
+            acceptedDuosMap.set(friendUid, r.toUsername);
+        });
+        renderUsersGrid(searchQueryInput.value.trim());
+    });
+
+    const qReceived = query(collection(db,"duoRequests"), where("toUserId","==",user.uid), where("status","==","accepted"));
+    onSnapshot(qReceived, snap => {
+        snap.forEach(docSnap => {
+            const r = docSnap.data();
+            const friendUid = r.fromUserId;
+            acceptedDuosMap.set(friendUid, r.fromUsername);
+        });
+        renderUsersGrid(searchQueryInput.value.trim());
+    });
+}
+
 // ----- AUTH STATE -----
 onAuthStateChanged(auth,user=>{
     if(user){
@@ -456,6 +506,7 @@ onAuthStateChanged(auth,user=>{
         loadUsers();
         loadDuoRequests();
         setupNotificationBadge();
+        loadAcceptedDuos();
         showSection('home');
     } else {
         authSection.style.display="flex";
@@ -476,3 +527,4 @@ window.sendMessage = sendMessage;
 </script>
 </body>
 </html>
+
