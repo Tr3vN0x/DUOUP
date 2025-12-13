@@ -3,1037 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Ink - Notification Hub</title>
+    <title>StoryVerse - Neon Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Monoton&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    
     <style>
-        /* --- GLOBAL STYLES (Neon Theme) --- */
+        /* CSS Variables for easy color adjustments */
         :root {
-            --color-bg: #1a1a1a;
-            --color-text: #e0e0e0;
-            --color-neon: #00ffcc; 
-            --color-accent: #ff0077; 
-            --color-border: #333;
-            --font-display: 'Segoe UI', Arial, sans-serif;
-            --font-mono: 'Consolas', monospace;
+            --neon-blue: #00ffff; /* Electric Blue for logo/CTA */
+            --neon-pink: #ff00ff; /* Hot Pink for card titles/buttons */
+            --background-dark: #000000;
+            --text-light: #cccccc; /* Off-white for general text */
+            --font-heading: 'Monoton', cursive;
+            --font-body: 'Orbitron', sans-serif;
         }
 
-        body { 
-            font-family: var(--font-display); 
-            margin: 0; 
-            background-color: var(--color-bg); 
-            color: var(--color-text); 
-            line-height: 1.6;
-            min-height: 100vh; /* Full height for mobile */
-        }
-        
-        h1, h2, h3 { color: var(--color-neon); text-shadow: 0 0 5px var(--color-neon); }
-        h1 { font-family: var(--font-mono); }
-        
-        .hidden { display: none !important; }
+        /* --- BASE STYLES --- */
 
-        /* --- NOTIFICATION STYLES (New) --- */
-        #notificationContainer {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
+        body {
+            background-color: var(--background-dark);
+            color: var(--text-light); 
+            font-family: var(--font-body);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* --- NEON TEXT EFFECT: LOGO --- */
+
+        .logo {
+            font-family: var(--font-heading);
+            font-size: 3.5em;
+            color: var(--neon-blue);
+            /* Multi-layered text shadow for the deep glow */
+            text-shadow:
+                0 0 7px var(--neon-blue),
+                0 0 10px var(--neon-blue),
+                0 0 21px var(--neon-blue),
+                0 0 42px rgba(0, 170, 255, 0.7), /* Wider, softer blue glow */
+                0 0 82px rgba(0, 170, 255, 0.5);
+        }
+
+        /* --- NEON TEXT EFFECT: CARD TITLES --- */
+
+        .neon-text {
+            font-family: var(--font-body);
+            font-size: 1.5em;
+            color: var(--neon-pink);
+            text-shadow: 
+                0 0 5px var(--neon-pink),
+                0 0 10px var(--neon-pink),
+                0 0 20px rgba(255, 0, 119, 0.6); /* Softer, slightly redder glow */
+            margin-bottom: 10px;
+        }
+
+        .author-name {
+            color: var(--neon-pink);
+        }
+
+        /* --- HEADER AND NAVIGATION --- */
+
+        .neon-header {
             display: flex;
-            flex-direction: column-reverse; /* Newest notifications on top */
-            gap: 10px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            /* Subtle glowing border bottom */
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2); 
+            box-shadow: 0 1px 10px rgba(0, 255, 255, 0.1);
         }
 
-        .notification-pop-up {
-            background-color: #333;
-            color: var(--color-text);
-            padding: 15px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            max-width: 300px;
-            opacity: 0;
-            transition: opacity 0.5s, transform 0.5s;
-            transform: translateY(-20px);
-            border-left: 5px solid;
-            font-weight: bold;
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+            margin: 0;
+            padding: 0;
         }
 
-        .notification-pop-up.show {
-            opacity: 1;
-            transform: translateY(0);
+        .neon-link {
+            text-decoration: none;
+            color: var(--text-light);
+            transition: color 0.3s, text-shadow 0.3s;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .notification-pop-up.success {
-            border-left-color: var(--color-neon);
+        .neon-link:hover {
+            color: var(--neon-blue);
+            text-shadow: 0 0 5px var(--neon-blue), 0 0 10px rgba(0, 255, 255, 0.5); /* Link glow on hover */
         }
 
-        .notification-pop-up.error {
-            border-left-color: var(--color-accent);
+        /* --- NEON BUTTON EFFECT (General and CTA) --- */
+
+        .neon-button, .neon-cta-button {
+            background: transparent;
+            border: 2px solid;
+            padding: 10px 20px;
+            font-family: var(--font-body);
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 700;
         }
 
-        /* --- HEADER & NAVIGATION --- */
-        header { 
-            background-color: #000000; 
-            padding: 15px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 2px solid var(--color-neon);
-            box-shadow: 0 0 10px var(--color-neon);
+        /* Pink Button Style */
+        .neon-button {
+            border-color: var(--neon-pink);
+            color: var(--neon-pink);
+            /* Initial button glow (inset for a recessed look) */
+            box-shadow: 
+                0 0 5px var(--neon-pink),
+                0 0 15px var(--neon-pink) inset;
+            margin-top: 15px;
         }
-        header h1 { 
-            margin: 0; 
-            cursor: pointer; 
-            font-size: 1.8em;
+
+        /* Blue CTA Button Style */
+        .neon-cta-button {
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: 
+                0 0 5px var(--neon-blue), 
+                0 0 15px var(--neon-blue) inset;
+        }
+
+        /* Button Hover Effect: Fill the button and intensify the glow */
+        .neon-button:hover {
+            color: var(--background-dark);
+            background: var(--neon-pink);
+            box-shadow: 
+                0 0 20px var(--neon-pink),
+                0 0 40px var(--neon-pink),
+                0 0 80px rgba(255, 0, 255, 0.8);
+        }
+        .neon-cta-button:hover {
+            color: var(--background-dark);
+            background: var(--neon-blue);
+            box-shadow: 
+                0 0 20px var(--neon-blue),
+                0 0 40px var(--neon-blue),
+                0 0 80px rgba(0, 255, 255, 0.8);
+        }
+
+        /* --- MAIN CONTENT: STORY GRID --- */
+
+        .story-grid {
+            display: grid;
+            /* Responsive grid: minimum card width of 280px */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            padding: 50px;
+        }
+
+        .story-card {
+            background-color: #0c0c0c; /* Slightly less dark background for contrast */
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 0, 255, 0.1);
+            text-align: center;
+            transition: transform 0.4s ease-out, box-shadow 0.4s ease-out;
+        }
+
+        .description {
+            color: #999;
+            font-size: 0.9em;
+            margin: 10px 0;
+            line-height: 1.4;
+        }
+
+        .story-card:hover {
+            /* Lift and give a gentle pink glow on hover */
+            transform: translateY(-8px);
+            box-shadow: 0 5px 30px rgba(255, 0, 255, 0.4); 
+        }
+
+        /* --- FOOTER --- */
+        .neon-footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid rgba(0, 255, 255, 0.1);
+            color: #444; /* Darker, subtle text */
+            font-size: 0.8em;
+            text-transform: uppercase;
             letter-spacing: 2px;
         }
-        
-        .nav-btn { 
-            background-color: var(--color-bg); 
-            color: var(--color-neon); 
-            padding: 8px 15px; 
-            text-decoration: none; 
-            border: 1px solid var(--color-neon); 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            margin-left: 10px;
-            box-shadow: 0 0 5px var(--color-neon);
-            transition: all 0.3s;
-        }
-        .nav-btn:hover { 
-            background-color: var(--color-neon); 
-            color: var(--color-bg); 
-            box-shadow: 0 0 10px var(--color-neon), 0 0 20px var(--color-neon);
-        }
-        .nav-btn.accent {
-            background-color: var(--color-accent);
-            color: var(--color-bg);
-            border-color: var(--color-accent);
-        }
 
-        #userInfo { font-size: 0.9em; margin-right: 15px; color: var(--color-text); }
-        #userInfo strong { color: var(--color-accent); }
-
-        /* --- MOBILE LAYOUT & CONTAINER --- */
-        .main-layout { 
-            display: flex; 
-            max-width: 1200px; 
-            margin: 20px auto; 
-            padding: 0 10px; /* Reduced padding for mobile */
-        }
-        .sidebar { 
-            width: 200px; 
-            margin-right: 20px; 
-            padding: 15px; 
-            background-color: #222; 
-            border-radius: 8px;
-            border: 1px solid var(--color-border);
-            align-self: flex-start;
-        }
-        .content { 
-            flex-grow: 1; 
-            padding: 15px; 
-            background-color: #222; 
-            border-radius: 8px;
-            border: 1px solid var(--color-border);
-        }
-        
-        /* Mobile Breakpoint */
+        /* --- RESPONSIVENESS (Optional but Recommended) --- */
         @media (max-width: 768px) {
-            .main-layout { flex-direction: column; }
-            .sidebar { 
-                width: 100%; 
-                margin-right: 0; 
-                margin-bottom: 20px; 
-                order: 2; /* Move sidebar below content for mobile */
+            .neon-header {
+                flex-direction: column;
+                text-align: center;
+                padding: 20px;
             }
-            .content { order: 1; }
-            #storyList { grid-template-columns: 1fr; }
-            #notificationContainer { right: 10px; top: 10px; }
-        }
 
+            .logo {
+                font-size: 2.5em;
+                margin-bottom: 15px;
+            }
 
-        /* --- AUTH/FORM STYLES --- */
-        .auth-form input[type="text"], .auth-form input[type="password"], 
-        #createView input[type="text"], #createView textarea, #createView select, 
-        #profileView input[type="text"], #profileView textarea {
-            width: 100%; 
-            padding: 10px; 
-            background-color: #444; 
-            color: var(--color-text);
-            border: 1px solid var(--color-neon); 
-            border-radius: 5px; 
-            box-sizing: border-box; 
-            margin-bottom: 15px;
-        }
-        
-        /* File/Image Upload Simulation Styling */
-        .upload-sim-box {
-            border: 2px dashed var(--color-accent);
-            padding: 20px;
-            text-align: center;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            background-color: #333;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .upload-sim-box:hover {
-            border-color: var(--color-neon);
-            background-color: #444;
-        }
-        .upload-sim-box p {
-            margin: 0;
-            color: var(--color-text);
-            font-size: 0.9em;
-        }
-        /* Hidden file input style for simulation */
-        .upload-sim-box input[type="file"], .upload-sim-box input[type="url"] {
-            opacity: 0;
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            left: 0;
-            top: 0;
-            cursor: pointer;
-        }
-        .form-group { position: relative; }
+            nav ul {
+                gap: 15px;
+            }
 
-        /* --- PROFILE VIEW --- */
-        #profileView { text-align: center; }
-        #profilePicture { 
-            width: 150px; 
-            height: 150px; 
-            border-radius: 50%; 
-            object-fit: cover; 
-            border: 4px solid var(--color-accent); 
-            margin-bottom: 15px;
+            .story-grid {
+                padding: 20px;
+                gap: 20px;
+            }
         }
-        #authorView #authorPicture { 
-            width: 150px; 
-            height: 150px; 
-            border-radius: 50%; 
-            object-fit: cover; 
-            border: 4px solid var(--color-accent); 
-            margin-bottom: 15px;
-        }
-        .form-switch { margin-top: 15px; cursor: pointer; color: var(--color-accent); }
-        .form-switch:hover { text-decoration: underline; }
-
     </style>
 </head>
 <body>
-    
-    <div id="notificationContainer"></div>
-    <header>
-        <h1 onclick="showView('listView')">
-            <span style="color: var(--color-accent);">N</span>eon <span style="color: var(--color-accent);">I</span>nk 💡
-        </h1>
+
+    <header class="neon-header">
+        <h1 class="logo">StoryVerse</h1>
         <nav>
-            <div id="userInfo"></div>
-            <button class="nav-btn" id="profileBtn" onclick="showView('profileView')" style="display: none;">👤 Profile</button>
-            <button class="nav-btn" id="writeBtn" onclick="showView('createView')" style="display: none;">✍️ Write</button>
-            <button class="nav-btn" id="loginBtn" onclick="showView('authView')">🔑 Sign In</button>
-            <button class="nav-btn" id="logoutBtn" onclick="logout()" style="display: none;">🚪 Sign Out</button>
-            <button class="nav-btn" onclick="showView('listView')">📖 Read</button>
+            <ul>
+                <li><a href="#" class="neon-link">Discover</a></li>
+                <li><a href="#" class="neon-link">My Library</a></li>
+                <li><a href="#" class="neon-link neon-cta-button">Write a Story</a></li>
+            </ul>
         </nav>
     </header>
 
-    <div class="main-layout">
-        
-        <aside class="sidebar" id="sidebar">
-            <h2>Categories</h2>
-            <ul class="category-list" id="categoryList">
-                <li><a class="category-item active" onclick="filterStories('All')">All Stories</a></li>
-                <li><a class="category-item" onclick="filterStories('Fantasy')">Fantasy</a></li>
-                <li><a class="category-item" onclick="filterStories('Sci-Fi')">Sci-Fi</a></li>
-                <li><a class="category-item" onclick="filterStories('Romance')">Romance</a></li>
-                <li><a class="category-item" onclick="filterStories('Thriller')">Thriller</a></li>
-            </ul>
-        </aside>
+    <main class="story-grid">
 
-        <div class="content">
-            
-            <section id="authView" class="hidden">
-                <h2>🔑 Account Access</h2>
-                
-                <div id="signInForm" class="auth-form">
-                    <h3>Sign In</h3>
-                    <div class="form-group">
-                        <label for="signinUsername">Username:</label>
-                        <input type="text" id="signinUsername" placeholder="Your username">
-                    </div>
-                    <div class="form-group">
-                        <label for="signinPassword">Password:</label>
-                        <input type="password" id="signinPassword" placeholder="Your password">
-                    </div>
-                    <button class="nav-btn" onclick="signIn()">Sign In</button>
-                    <button class="nav-btn" onclick="showNotification('Google sign-in is not implemented in this prototype.', 'error')">Sign In with Google (Simulated)</button>
-                    <p class="form-switch" onclick="switchAuthMode('signUp')">New here? Create an account.</p>
-                </div>
-
-                <div id="signUpForm" class="auth-form hidden">
-                    <h3>Create New Account</h3>
-                    <div class="form-group">
-                        <label for="signupUsername">Username:</label>
-                        <input type="text" id="signupUsername" placeholder="Choose a unique username">
-                    </div>
-                    <div class="form-group">
-                        <label for="signupPassword">Password:</label>
-                        <input type="password" id="signupPassword" placeholder="Choose a password">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="signupBio">Bio (Optional):</label>
-                        <textarea id="signupBio" placeholder="Tell us about yourself..." rows="3"></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                         <label for="signupPicUrl">Profile Picture URL (Simulated Upload)</label>
-                         <div class="upload-sim-box">
-                             <input type="text" id="signupPicUrl" placeholder="Paste image link here" style="position: static; opacity: 1; border: none; background: none; margin: 0; padding: 0;">
-                             <p>Tap to paste a link for your profile image.</p>
-                         </div>
-                    </div>
-
-                    <button class="nav-btn accent" onclick="signUp()">Create Account & Sign In</button>
-                    <p class="form-switch" onclick="switchAuthMode('signIn')">I have an account. Go back to Sign In.</p>
-                </div>
-            </section>
-            
-            <section id="listView">
-                <h2>Explore New Worlds</h2>
-                <div id="storyList">
-                    <p>Loading stories...</p>
-                </div>
-            </section>
-
-            <section id="createView" class="hidden">
-                <h2 id="createViewTitle">✍️ Post a Story</h2>
-                <p id="createViewNote" style="color: var(--color-neon);">
-                    *Your author name will be set to your signed-in username.*
-                </p>
-                
-                <input type="hidden" id="storyIdToEdit">
-                <input type="hidden" id="chapterIndexToEdit">
-
-                <div class="form-group">
-                    <label for="storyTitle">Story Title</label>
-                    <input type="text" id="storyTitle" required>
-                </div>
-                
-                <div class="form-group" id="thumbnailGroup">
-                    <label for="storyThumbnailUrl">Book Thumbnail URL (Simulated Upload)</label>
-                    <div class="upload-sim-box">
-                        <input type="text" id="storyThumbnailUrl" placeholder="Paste image link here" style="position: static; opacity: 1; border: none; background: none; margin: 0; padding: 0;">
-                        <p>Tap to paste a link for your book cover/thumbnail.</p>
-                    </div>
-                </div>
-
-                <div class="form-group" id="categoryGroup">
-                    <label for="storyCategory">Category</label>
-                    <select id="storyCategory">
-                        <option value="General">General</option>
-                        <option value="Fantasy">Fantasy</option>
-                        <option value="Sci-Fi">Sci-Fi</option>
-                        <option value="Romance">Romance</option>
-                        <option value="Thriller">Thriller</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="chapterTitle">Chapter Title</label>
-                    <input type="text" id="chapterTitle" value="Chapter 1">
-                </div>
-                <div class="form-group">
-                    <label for="storyContent">Chapter Content</label>
-                    <textarea id="storyContent" required></textarea>
-                </div>
-                <button id="publishButton" class="nav-btn accent">Publish Story</button>
-            </section>
-            
-            <section id="readView" class="hidden">
-                <button class="nav-btn" onclick="showView('listView')">← Back to Stories</button>
-                <div id="storyContentContainer">
-                    <h1 class="story-title" id="readTitle"></h1>
-                    <p class="story-author" id="readMeta"></p>
-                    
-                    <div id="chapterNav">
-                        <select id="chapterSelector"></select>
-                        <button class="nav-btn accent" id="addChapterBtn">➕ Add Chapter</button>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="chapter-text" id="chapterText"></div>
-                </div>
-            </section>
-
-            <section id="profileView" class="hidden">
-                <img id="profilePicture" src="https://via.placeholder.com/150/1a1a1a/00ffcc?text=U" alt="Profile Picture">
-                <h2 id="profileUsername"></h2>
-                
-                <p id="profileBioDisplay"></p>
-                <hr>
-
-                <h3>Update Profile</h3>
-                <div class="form-group">
-                    <label for="editBio">Edit Bio:</label>
-                    <textarea id="editBio" rows="3"></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="editPicUrl">Update Profile Picture URL:</label>
-                    <input type="text" id="editPicUrl" placeholder="New image URL">
-                </div>
-                <button class="nav-btn accent" onclick="updateProfile()">Save Profile Changes</button>
-
-                <div id="userStoriesList">
-                    <h3>My Published Stories</h3>
-                    </div>
-            </section>
-
-            <section id="authorView" class="hidden">
-                <img id="authorPicture" src="https://via.placeholder.com/150/1a1a1a/00ffcc?text=PEN" alt="Author Icon">
-                <h2 id="authorName"></h2>
-                <p id="authorBio">This page lists all stories published by this author.</p>
-                
-                <div id="authorStoriesList">
-                    <h3>Published Stories</h3>
-                    </div>
-            </section>
-
+        <div class="story-card">
+            <h2 class="neon-text">The Electric Dream</h2>
+            <p>By <span class="author-name">Cypher_Nerd</span></p>
+            <p class="description">A thrilling romance set in Neo-Tokyo's underbelly, where data streams are currency and love is a dangerous glitch.</p>
+            <button class="neon-button">Read Now</button>
         </div>
-    </div> <script>
-        // --- DATA KEYS ---
-        const STORIES_KEY = 'stories';
-        const USERS_KEY = 'users';
-        const LOGGED_IN_USER_KEY = 'loggedInUser';
-        let currentFilter = 'All';
-        let currentStoryId = null;
 
-        // --- NOTIFICATION HANDLER (NEW) ---
-        function showNotification(message, type = 'success', duration = 3000) {
-            const container = document.getElementById('notificationContainer');
-            const popUp = document.createElement('div');
-            
-            popUp.className = `notification-pop-up ${type}`;
-            popUp.textContent = message;
-            
-            // Add to container (reversed order, so newest is on top)
-            container.appendChild(popUp);
-
-            // Trigger CSS transition
-            setTimeout(() => {
-                popUp.classList.add('show');
-            }, 10); 
-
-            // Auto-hide and remove after duration
-            setTimeout(() => {
-                popUp.classList.remove('show');
-                // Wait for fade transition to finish before removing
-                setTimeout(() => {
-                    popUp.remove();
-                }, 500); 
-            }, duration);
-        }
-
-        // --- DATA RETRIEVAL/STORAGE UTILITIES ---
-        function getStories() {
-            const storiesJSON = localStorage.getItem(STORIES_KEY);
-            return storiesJSON ? JSON.parse(storiesJSON) : [];
-        }
-        function saveStories(storiesArray) {
-            localStorage.setItem(STORIES_KEY, JSON.stringify(storiesArray));
-        }
-        function getUsers() {
-            const usersJSON = localStorage.getItem(USERS_KEY);
-            return usersJSON ? JSON.parse(usersJSON) : [];
-        }
-        function saveUsers(usersArray) {
-            localStorage.setItem(USERS_KEY, JSON.stringify(usersArray));
-        }
-        function getLoggedInUser() {
-            return localStorage.getItem(LOGGED_IN_USER_KEY);
-        }
-        function setLoggedInUser(username) {
-            localStorage.setItem(LOGGED_IN_USER_KEY, username);
-            updateHeaderUI();
-        }
-        function generateId() {
-            return Date.now().toString(36) + Math.random().toString(36).substring(2);
-        }
-
-        // --- AUTHENTICATION & HEADER LOGIC ---
-
-        function updateHeaderUI() {
-            const username = getLoggedInUser();
-            const userInfo = document.getElementById('userInfo');
-            const loginBtn = document.getElementById('loginBtn');
-            const logoutBtn = document.getElementById('logoutBtn');
-            const writeBtn = document.getElementById('writeBtn');
-            const profileBtn = document.getElementById('profileBtn');
-
-            if (username) {
-                userInfo.innerHTML = `Welcome, <strong>${username}</strong>`;
-                loginBtn.style.display = 'none';
-                logoutBtn.style.display = 'inline-block';
-                writeBtn.style.display = 'inline-block';
-                profileBtn.style.display = 'inline-block';
-            } else {
-                userInfo.innerHTML = `Not signed in.`;
-                loginBtn.style.display = 'inline-block';
-                logoutBtn.style.display = 'none';
-                writeBtn.style.display = 'none';
-                profileBtn.style.display = 'none';
-            }
-        }
+        <div class="story-card">
+            <h2 class="neon-text">Protocol Omega</h2>
+            <p>By <span class="author-name">Data_Ghost</span></p>
+            <p class="description">A hacker fights a tyrannical AI in a quest for a forgotten human past. Sci-fi action that never slows down.</p>
+            <button class="neon-button">Read Now</button>
+        </div>
         
-        function switchAuthMode(mode) {
-            document.getElementById('signInForm').classList.toggle('hidden', mode === 'signUp');
-            document.getElementById('signUpForm').classList.toggle('hidden', mode === 'signIn');
-        }
-
-        function signUp() {
-            const username = document.getElementById('signupUsername').value.trim();
-            const password = document.getElementById('signupPassword').value.trim();
-            const bio = document.getElementById('signupBio').value.trim();
-            const picUrl = document.getElementById('signupPicUrl').value.trim();
-
-            if (!username || !password) {
-                showNotification('Username and Password are required to create an account.', 'error');
-                return;
-            }
-
-            let users = getUsers();
-            
-            if (users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
-                showNotification('Username already exists! Please try a different one or Sign In.', 'error');
-                return;
-            }
-
-            const newUser = {
-                username: username,
-                password: password, 
-                bio: bio || `The newest writer on Neon Ink! Follow ${username}'s stories.`,
-                profilePic: picUrl || `https://via.placeholder.com/150/ff0077/1a1a1a?text=${username.charAt(0).toUpperCase()}`
-            };
-
-            users.push(newUser);
-            saveUsers(users);
-            setLoggedInUser(username);
-            showNotification(`Welcome, ${username}! Account created and signed in.`, 'success');
-            
-            // Clear sign up form fields
-            document.getElementById('signupUsername').value = '';
-            document.getElementById('signupPassword').value = '';
-            document.getElementById('signupBio').value = '';
-            document.getElementById('signupPicUrl').value = '';
-            
-            showView('listView');
-        }
-
-        function signIn() {
-            const username = document.getElementById('signinUsername').value.trim();
-            const password = document.getElementById('signinPassword').value.trim();
-
-            if (!username || !password) {
-                showNotification('Both username and password are required.', 'error');
-                return;
-            }
-
-            const users = getUsers();
-
-            // Find user (case-insensitively for username)
-            const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
-
-            if (user && user.password === password) {
-                setLoggedInUser(user.username); 
-                showNotification(`Signed in successfully as ${user.username}.`, 'success');
-                document.getElementById('signinUsername').value = '';
-                document.getElementById('signinPassword').value = '';
-                showView('listView');
-            } else {
-                showNotification('Invalid username or password.', 'error');
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem(LOGGED_IN_USER_KEY);
-            updateHeaderUI();
-            showNotification('You have been signed out.', 'success');
-            showView('listView');
-        }
-
-        // --- PROFILE MANAGEMENT ---
-
-        function updateProfile() {
-            const loggedInUsername = getLoggedInUser();
-            if (!loggedInUsername) return;
-
-            const newBio = document.getElementById('editBio').value.trim();
-            const newPicUrl = document.getElementById('editPicUrl').value.trim();
-
-            let users = getUsers();
-            const userIndex = users.findIndex(u => u.username === loggedInUsername);
-
-            if (userIndex !== -1) {
-                users[userIndex].bio = newBio || users[userIndex].bio;
-                users[userIndex].profilePic = newPicUrl || users[userIndex].profilePic;
-                saveUsers(users);
-                showNotification('Profile updated successfully!', 'success');
-                renderProfileView(loggedInUsername);
-            }
-        }
-
-        // --- NAVIGATION & VIEW MANAGEMENT ---
-        function showView(viewId) {
-            
-            const targetViewId = viewId;
-            
-            // Hide all views
-            document.getElementById('listView').classList.add('hidden');
-            document.getElementById('createView').classList.add('hidden');
-            document.getElementById('readView').classList.add('hidden');
-            document.getElementById('authView').classList.add('hidden');
-            document.getElementById('profileView').classList.add('hidden');
-            document.getElementById('authorView').classList.add('hidden');
-            document.getElementById('sidebar').classList.remove('hidden');
-
-            // --- AUTH GUARD ---
-            if ((targetViewId === 'createView' || targetViewId === 'profileView') && !getLoggedInUser()) {
-                showNotification('You must be signed in to access this page.', 'error');
-                showView('authView');
-                return;
-            }
-
-            // Show the requested view
-            document.getElementById(targetViewId).classList.remove('hidden');
-
-            if (targetViewId === 'listView') {
-                renderStoryList();
-            } else if (targetViewId === 'readView') {
-                document.getElementById('sidebar').classList.add('hidden');
-            } else if (targetViewId === 'createView') {
-                resetEditor();
-            } else if (targetViewId === 'profileView') {
-                renderProfileView(getLoggedInUser());
-            } else if (targetViewId === 'authView') {
-                switchAuthMode('signIn');
-            }
-        }
-
-
-        // --- 1. LIST VIEW & CATEGORY FILTERING LOGIC (Unchanged) ---
-        function filterStories(category) {
-            currentFilter = category;
-            
-            document.querySelectorAll('.category-item').forEach(el => el.classList.remove('active'));
-            const categoryElement = document.querySelector(`.category-item[onclick*="'${category}'"]`);
-            if (categoryElement) {
-                categoryElement.classList.add('active');
-            }
-            
-            renderStoryList(); 
-        }
-
-        function renderStoryList() {
-            const allStories = getStories();
-            const listContainer = document.getElementById('storyList');
-            listContainer.innerHTML = ''; 
-
-            let filteredStories = allStories;
-
-            if (currentFilter !== 'All') {
-                filteredStories = allStories.filter(s => s.category === currentFilter);
-            }
-
-            if (filteredStories.length === 0) {
-                listContainer.innerHTML = `<p style="color: var(--color-accent);">
-                    No stories found in the '${currentFilter}' category yet.
-                </p>`;
-                return;
-            }
-
-            filteredStories.forEach(story => {
-                const storyCard = document.createElement('div');
-                storyCard.className = 'story-card';
-                
-                const thumbnailUrl = story.thumbnailUrl.trim() || 'https://via.placeholder.com/80x120/1a1a1a/00ffcc?text=NEON+INK';
-
-                storyCard.innerHTML = `
-                    <img src="${thumbnailUrl}" class="card-thumbnail" alt="Story Thumbnail">
-                    <div class="card-details">
-                        <h3>${story.title}</h3>
-                        <p><strong>Category:</strong> ${story.category}</p>
-                        <p><strong>By:</strong> <a class="read-link" onclick="renderAuthorView('${story.author}')">${story.author}</a></p>
-                        <a class="read-link" onclick="renderStory('${story.id}')">Read (${story.chapters.length} Chapters) &rarr;</a>
-                    </div>
-                `;
-                listContainer.appendChild(storyCard);
-            });
-        }
-
-        // --- 2. CREATE/EDIT VIEW LOGIC ---
-
-        function resetEditor() {
-            // Reset fields for new story creation
-            document.getElementById('createViewTitle').textContent = '✍️ Post a Story';
-            document.getElementById('createViewNote').textContent = `*Your author name is set to: ${getLoggedInUser()}*`;
-            document.getElementById('publishButton').textContent = 'Publish Story';
-            
-            document.getElementById('storyIdToEdit').value = '';
-            document.getElementById('chapterIndexToEdit').value = '';
-            
-            document.getElementById('storyTitle').value = '';
-            document.getElementById('storyCategory').value = 'General';
-            document.getElementById('storyThumbnailUrl').value = '';
-            document.getElementById('chapterTitle').value = 'Chapter 1';
-            document.getElementById('storyContent').value = '';
-            
-            // Show all fields for new creation
-            document.getElementById('storyTitle').style.display = 'block';
-            document.querySelector('label[for="storyTitle"]').style.display = 'block';
-            document.getElementById('categoryGroup').style.display = 'block';
-            document.getElementById('thumbnailGroup').style.display = 'block';
-        }
-
-
-        function publishNewStory() {
-            
-            const author = getLoggedInUser(); // Auto-set author
-            const title = document.getElementById('storyTitle').value.trim();
-            const category = document.getElementById('storyCategory').value;
-            const thumbnailUrl = document.getElementById('storyThumbnailUrl').value.trim();
-            const chapterTitle = document.getElementById('chapterTitle').value.trim() || 'Chapter 1';
-            const content = document.getElementById('storyContent').value.trim();
-
-            if (!title || !content || !author) {
-                showNotification('Title, chapter content, and being signed in are required.', 'error');
-                return;
-            }
-
-            const newStory = {
-                id: generateId(),
-                title: title,
-                author: author, 
-                category: category,
-                thumbnailUrl: thumbnailUrl,
-                chapters: [{
-                    title: chapterTitle,
-                    content: content,
-                    datePublished: new Date().toLocaleDateString()
-                }],
-                dateCreated: new Date().toLocaleDateString()
-            };
-
-            const stories = getStories();
-            stories.push(newStory);
-            saveStories(stories);
-
-            showNotification('Story published successfully!', 'success');
-            showView('listView');
-        }
-
-        // Triggered by Edit button on Profile/Author View
-        function editStory(storyId) {
-            const loggedInUsername = getLoggedInUser();
-            const stories = getStories();
-            const story = stories.find(s => s.id === storyId);
-
-            if (!story) {
-                showNotification('Story not found.', 'error');
-                return;
-            }
-
-            // --- AUTH CHECK: Must be the author ---
-            if (loggedInUsername !== story.author) {
-                showNotification('Access denied. You can only edit your own stories.', 'error');
-                return;
-            }
-            // --- AUTH CHECK END ---
-
-            // Load editor for editing Chapter 1 by default
-            const chapter = story.chapters[0];
-            
-            document.getElementById('createViewTitle').textContent = `✏️ Editing: ${story.title} (Chapter 1)`;
-            document.getElementById('createViewNote').textContent = `*Modifying Chapter 1 content.*`;
-            document.getElementById('publishButton').textContent = 'Save Changes';
-            document.getElementById('publishButton').onclick = saveChapterChanges;
-
-            document.getElementById('storyIdToEdit').value = storyId;
-            document.getElementById('chapterIndexToEdit').value = 0; // Default to Chapter 1 (index 0)
-
-            // Pre-fill existing data
-            document.getElementById('storyTitle').value = story.title;
-            document.getElementById('storyCategory').value = story.category;
-            document.getElementById('storyThumbnailUrl').value = story.thumbnailUrl;
-            document.getElementById('chapterTitle').value = chapter.title;
-            document.getElementById('storyContent').value = chapter.content;
-
-            // Hide fields that shouldn't be edited after creation
-            document.getElementById('storyTitle').style.display = 'none';
-            document.querySelector('label[for="storyTitle"]').style.display = 'none';
-            document.getElementById('categoryGroup').style.display = 'none';
-            document.getElementById('thumbnailGroup').style.display = 'none';
-
-
-            showView('createView');
-        }
+        <div class="story-card">
+            <h2 class="neon-text">Midnight Circuits</h2>
+            <p>By <span class="author-name">Synth_Bard</span></p>
+            <p class="description">Poetry and prose exploring themes of solitude, glowing rain, and analog memories in a digital world.</p>
+            <button class="neon-button">Read Now</button>
+        </div>
         
-        // Triggered by Add Chapter button on Read View
-        function addChapter(storyId, author) {
-            const loggedInUsername = getLoggedInUser();
+    </main>
 
-            // --- AUTH CHECK: Must be the author ---
-            if (loggedInUsername !== author) {
-                showNotification('Access denied. You can only add chapters to your own stories.', 'error');
-                return;
-            }
-            // --- AUTH CHECK END ---
-            
-            const stories = getStories();
-            const story = stories.find(s => s.id === storyId);
+    <footer class="neon-footer">
+        <p>&copy; 2025 StoryVerse. All Rights Reserved. // Glow Responsibly // </p>
+    </footer>
 
-            document.getElementById('createViewTitle').textContent = `➕ Add New Chapter to: ${story.title}`;
-            document.getElementById('createViewNote').textContent = `*Adding Chapter ${story.chapters.length + 1}*`;
-            document.getElementById('publishButton').textContent = 'Publish Chapter';
-            document.getElementById('publishButton').onclick = saveChapterChanges;
-
-            document.getElementById('storyIdToEdit').value = storyId;
-            document.getElementById('chapterIndexToEdit').value = story.chapters.length; // New chapter index
-
-            // Clear chapter fields for new content
-            document.getElementById('chapterTitle').value = `Chapter ${story.chapters.length + 1}`;
-            document.getElementById('storyContent').value = '';
-
-            // Hide story metadata fields
-            document.getElementById('storyTitle').style.display = 'none';
-            document.querySelector('label[for="storyTitle"]').style.display = 'none';
-            document.getElementById('categoryGroup').style.display = 'none';
-            document.getElementById('thumbnailGroup').style.display = 'none';
-
-            showView('createView');
-        }
-
-        // Unified save function for edits and new chapters (Unchanged logic)
-        function saveChapterChanges() {
-            const storyId = document.getElementById('storyIdToEdit').value;
-            const chapterIndex = parseInt(document.getElementById('chapterIndexToEdit').value);
-            
-            const chapterTitle = document.getElementById('chapterTitle').value.trim() || `Chapter ${chapterIndex + 1}`;
-            const content = document.getElementById('storyContent').value.trim();
-
-            if (!content) {
-                showNotification('Chapter content cannot be empty.', 'error');
-                return;
-            }
-
-            let stories = getStories();
-            const storyIndex = stories.findIndex(s => s.id === storyId);
-
-            if (storyIndex === -1) {
-                showNotification('Error: Story not found in database.', 'error');
-                return;
-            }
-
-            const isNewChapter = chapterIndex === stories[storyIndex].chapters.length;
-
-            if (isNewChapter) {
-                // Add new chapter
-                stories[storyIndex].chapters.push({
-                    title: chapterTitle,
-                    content: content,
-                    datePublished: new Date().toLocaleDateString()
-                });
-                showNotification('New chapter published successfully!', 'success');
-            } else {
-                // Update existing chapter
-                stories[storyIndex].chapters[chapterIndex].title = chapterTitle;
-                stories[storyIndex].chapters[chapterIndex].content = content;
-                showNotification('Chapter saved successfully!', 'success');
-            }
-
-            saveStories(stories);
-            showView('listView'); 
-        }
-
-        // --- 3. READ VIEW LOGIC (Unchanged functionality) ---
-        function renderStory(storyId, chapterIndex = 0) {
-            currentStoryId = storyId;
-            const stories = getStories();
-            const story = stories.find(s => s.id === storyId);
-            
-            if (!story) {
-                document.getElementById('chapterText').innerHTML = '<h1 style="color: var(--color-accent);">Story Not Found</h1>';
-                showView('readView');
-                return;
-            }
-
-            const chapter = story.chapters[chapterIndex]; 
-            if (!chapter) {
-                document.getElementById('chapterText').innerHTML = '<h1 style="color: var(--color-accent);">Chapter Not Found</h1>';
-                showView('readView');
-                return;
-            }
-
-            // 1. Update Header Info
-            document.getElementById('readTitle').textContent = story.title;
-            document.getElementById('readMeta').innerHTML = `
-                ${chapter.title} | By: <a class="read-link" style="display:inline;" onclick="renderAuthorView('${story.author}')">${story.author}</a> | Category: ${story.category}
-            `;
-            
-            // 2. Populate Chapter Selector (Dropdown)
-            const selector = document.getElementById('chapterSelector');
-            selector.innerHTML = '';
-            story.chapters.forEach((ch, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = ch.title;
-                if (index === chapterIndex) {
-                    option.selected = true;
-                }
-                selector.appendChild(option);
-            });
-
-            // Set the change listener for navigation
-            selector.onchange = (e) => renderStory(storyId, parseInt(e.target.value));
-
-            // 3. Update Chapter Content
-            document.getElementById('chapterText').innerHTML = `
-                ${chapter.content.replace(/\n/g, '<br>')}
-                <p class="publish-date" style="color:#777; font-size: 0.9em; margin-top: 30px;">
-                    Published on: ${chapter.datePublished}
-                </p>
-            `;
-
-            // 4. Set Add Chapter Button Action & Visibility
-            const addChapterBtn = document.getElementById('addChapterBtn');
-            addChapterBtn.onclick = () => addChapter(storyId, story.author);
-            
-            // Only show 'Add Chapter' if the current user is the story author
-            if (getLoggedInUser() === story.author) {
-                addChapterBtn.style.display = 'inline-block';
-            } else {
-                addChapterBtn.style.display = 'none';
-            }
-
-            showView('readView');
-        }
-
-        // --- 4. PROFILE VIEW (Current User) (Unchanged functionality) ---
-        function renderProfileView(targetUsername) {
-            if (!targetUsername) return; 
-
-            const users = getUsers();
-            const user = users.find(u => u.username === targetUsername);
-            
-            if (!user) {
-                document.getElementById('profileUsername').textContent = "User Not Found";
-                return;
-            }
-
-            // Update profile display area
-            document.getElementById('profileUsername').textContent = user.username;
-            document.getElementById('profileBioDisplay').textContent = user.bio;
-            document.getElementById('profilePicture').src = user.profilePic;
-
-            // Pre-fill edit form
-            document.getElementById('editBio').value = user.bio;
-            document.getElementById('editPicUrl').value = user.profilePic;
-
-            const userStoriesContainer = document.getElementById('userStoriesList');
-            userStoriesContainer.innerHTML = '<h3>My Published Stories</h3>';
-            
-            const userStories = getStories().filter(s => s.author === targetUsername);
-
-            if (userStories.length === 0) {
-                 userStoriesContainer.innerHTML += `<p style="color: var(--color-accent);">
-                    You have not published any stories yet.
-                </p>`;
-            } else {
-                userStories.forEach(story => {
-                    const storyDiv = document.createElement('div');
-                    storyDiv.className = 'story-card-profile';
-                    storyDiv.innerHTML = `
-                        <h4>${story.title} (${story.chapters.length} Ch.)</h4>
-                        <div class="actions">
-                            <button class="nav-btn" onclick="renderStory('${story.id}')">Read &rarr;</button>
-                            <button class="nav-btn accent" onclick="editStory('${story.id}')">Edit Story</button>
-                        </div>
-                    `;
-                    userStoriesContainer.appendChild(storyDiv);
-                });
-            }
-            showView('profileView');
-        }
-
-        // --- 5. AUTHOR VIEW (Other Users) (Unchanged functionality) ---
-        function renderAuthorView(targetAuthorName) {
-            
-            const users = getUsers();
-            const user = users.find(u => u.username === targetAuthorName);
-
-            // Redirect to profile if clicking on your own name
-            if (getLoggedInUser() === targetAuthorName) {
-                renderProfileView(targetAuthorName);
-                return;
-            }
-
-            document.getElementById('authorName').textContent = targetAuthorName;
-            document.getElementById('authorBio').textContent = user ? user.bio : `This author has not set a bio yet.`;
-            document.getElementById('authorPicture').src = user ? user.profilePic : `https://via.placeholder.com/150/1a1a1a/00ffcc?text=${targetAuthorName.charAt(0).toUpperCase()}`;
-
-            const authorStoriesContainer = document.getElementById('authorStoriesList');
-            authorStoriesContainer.innerHTML = '<h3>Stories by ' + targetAuthorName + '</h3>';
-            
-            const authorStories = getStories().filter(s => s.author === targetAuthorName);
-
-            if (authorStories.length === 0) {
-                 authorStoriesContainer.innerHTML += `<p style="color: var(--color-accent);">
-                    ${targetAuthorName} has not published any stories yet.
-                </p>`;
-            } else {
-                authorStories.forEach(story => {
-                    const storyDiv = document.createElement('div');
-                    storyDiv.className = 'story-card-profile';
-                    storyDiv.innerHTML = `
-                        <h4>${story.title} (${story.chapters.length} Ch.)</h4>
-                        <div class="actions">
-                            <button class="nav-btn" onclick="renderStory('${story.id}')">Read &rarr;</button>
-                        </div>
-                    `;
-                    authorStoriesContainer.appendChild(storyDiv);
-                });
-            }
-
-            showView('authorView');
-        }
-
-
-        // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            updateHeaderUI();
-            filterStories('All'); 
-            showView('listView');
-            
-            document.getElementById('publishButton').addEventListener('click', () => {
-                if (!getLoggedInUser()) {
-                    showNotification('You must be signed in to publish or edit stories!', 'error');
-                    showView('authView');
-                    return;
-                }
-
-                if (document.getElementById('storyIdToEdit').value) {
-                    saveChapterChanges();
-                } else {
-                    publishNewStory();
-                }
-            });
-            
-            // Initial editor setup
-            resetEditor();
-
-            // Clear old data keys if they exist from previous versions
-            localStorage.removeItem('storyKey');
-        });
-    </script>
 </body>
 </html>
