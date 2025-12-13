@@ -34,10 +34,10 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
 .avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;background:var(--duoup-secondary);color:var(--duoup-dark);flex-shrink: 0;}
 .bio, .post-content{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);white-space: pre-wrap;}
 .action-button{width:100%;padding:12px;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);font-weight:bold;border-radius:0 0 12px 12px;}
-.username-display{display:flex;align-items:center;font-size:1.1em;}
+.nickname-display{display:flex;align-items:center;font-size:1.1em;}
 .verified-badge{color:#1DA1F2;margin-left:5px;}
 /* Highlight disabled input for Google users */
-#profile-username:disabled { background: #1a1a2e; color: var(--duoup-muted); cursor: not-allowed; border-color: #3A3A52; }
+#profile-nickname:disabled { background: #1a1a2e; color: var(--duoup-muted); cursor: not-allowed; border-color: #3A3A52; }
 .input-help{font-size:0.8em;color:var(--duoup-muted);margin-top:-5px;margin-bottom:10px;}
 
 /* Post Specific Styles */
@@ -83,13 +83,13 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
     <h2>Welcome to DuoUp</h2>
     <form id="signin">
         <h3>Sign In</h3>
-        <input id="signin-email" type="text" placeholder="Username or Email" required>
+        <input id="signin-email" type="text" placeholder="Nickname or Email" required>
         <input id="signin-password" type="password" placeholder="Password" required>
         <button type="submit">Sign In</button>
     </form>
     <form id="signup">
         <h3>New Player? Sign Up</h3>
-        <input id="signup-username" type="text" placeholder="Username (Permanent)" required>
+        <input id="signup-nickname" type="text" placeholder="Nickname (Permanent)" required>
         <input id="signup-email" type="email" placeholder="Email" required>
         <input id="signup-password" type="password" placeholder="Password" required>
         <button type="submit">Create Account</button>
@@ -119,8 +119,8 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
     <div id="profile-section" class="container" style="display:none;">
         <h2>Profile Management</h2>
         <form id="profileEditForm">
-            <input class="profile-field" id="profile-username" placeholder="Username">
-            <p id="username-help" class="input-help"></p>
+            <input class="profile-field" id="profile-nickname" placeholder="Nickname">
+            <p id="nickname-help" class="input-help"></p>
             <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
             <input type="file" id="profile-photo">
         </form>
@@ -158,23 +158,23 @@ const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
 const usersGrid = document.getElementById("usersGrid");
 const userCountElement = document.getElementById("userCount");
-const profileUsername = document.getElementById("profile-username");
+const profileNickname = document.getElementById("profile-nickname"); // Renamed
 const profileAbout = document.getElementById("profile-about");
 const profilePhoto = document.getElementById("profile-photo");
 const profilePreviewContainer = document.getElementById("profilePreviewContainer");
-const usernameHelp = document.getElementById("username-help"); 
+const nicknameHelp = document.getElementById("nickname-help"); // Renamed
 const postForm = document.getElementById("postForm"); 
 const postsList = document.getElementById("postsList"); 
 
 // --- Constants & Local State ---
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
 let activityInterval; 
-let currentUsername = ""; // Tracks username fetched from DB/last saved
+let currentNickname = ""; // Tracks nickname fetched from DB/last saved
 let currentBio = "";      // Tracks bio fetched from DB/last saved
 
 // --- Utility Functions ---
-function getVerifiedBadge(username) {
-    return username === 'Tr3vN0x' ? '<i class="fas fa-badge-check verified-badge" title="Verified Player"></i>' : '';
+function getVerifiedBadge(nickname) {
+    return nickname === 'Tr3vN0x' ? '<i class="fas fa-badge-check verified-badge" title="Verified Player"></i>' : '';
 }
 
 function timeSince(timestamp) {
@@ -211,21 +211,22 @@ async function ensureUserProfileLoaded(user) {
     const docSnap = await getDoc(userDocRef);
     let userData = docSnap.exists() ? docSnap.data() : {};
 
-    if (!docSnap.exists() || !userData.username) {
+    if (!docSnap.exists() || !userData.nickname) { // Check for nickname
         const authType = user.providerData.some(p => p.providerId === GoogleAuthProvider.PROVIDER_ID) ? 'google' : 'email';
         
-        const defaultUsername = user.displayName || user.email.split('@')[0] || "New Player";
+        const defaultNickname = user.displayName || user.email.split('@')[0] || "New Player";
 
         userData = {
             uid: user.uid,
             email: user.email,
-            username: defaultUsername,
+            nickname: defaultNickname, // Renamed from username
             bio: "",
             profileImageUrl: user.photoURL || "",
             friends: "",
             lastActive: Date.now(),
             authType: authType 
         };
+        // NOTE: The Firebase rule for 'users' will need to be updated to check for 'nickname' instead of 'username'
         await setDoc(userDocRef, userData);
     }
     return userData;
@@ -243,14 +244,14 @@ signupForm.addEventListener("submit", async e=>{
     e.preventDefault();
     const email = document.getElementById("signup-email").value;
     const password = document.getElementById("signup-password").value;
-    const username = document.getElementById("signup-username").value;
+    const nickname = document.getElementById("signup-nickname").value; // Renamed
 
     try{
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         await setDoc(doc(db,"users",userCredential.user.uid),{
             uid:userCredential.user.uid,
             email: email,
-            username: username,
+            nickname: nickname, // Renamed
             bio:"",
             profileImageUrl:"",
             friends:"",
@@ -277,30 +278,30 @@ async function loadProfile(){
     
     const data = await ensureUserProfileLoaded(user);
 
-    currentUsername = data.username || '';
+    currentNickname = data.nickname || ''; // Renamed
     currentBio = data.bio || '';
 
-    profileUsername.value = currentUsername;
+    profileNickname.value = currentNickname; // Renamed
     profileAbout.value = currentBio;
     
     const isGoogleUser = data.authType === 'google';
-    profileUsername.disabled = isGoogleUser;
-    profileUsername.readOnly = isGoogleUser;
+    profileNickname.disabled = isGoogleUser; // Renamed
+    profileNickname.readOnly = isGoogleUser; // Renamed
     
-    usernameHelp.innerText = isGoogleUser ? "Username is locked for Google sign-in users." : "Username auto-saves as you type.";
+    nicknameHelp.innerText = isGoogleUser ? "Nickname is locked for Google sign-in users." : "Nickname auto-saves as you type."; // Renamed
 
     renderProfilePreview(data);
 }
 function renderProfilePreview(data){
-    const username = data.username || 'New Player';
-    const verifiedBadgeHtml = getVerifiedBadge(username);
+    const nickname = data.nickname || 'New Player'; // Renamed
+    const verifiedBadgeHtml = getVerifiedBadge(nickname);
     
     profilePreviewContainer.innerHTML = `
     <div class="duo-card">
         <div class="card-header">
-            <div class="avatar">${username[0]}</div>
-            <div class="username-display">
-                <strong>${username}</strong>
+            <div class="avatar">${nickname[0]}</div>
+            <div class="nickname-display">
+                <strong>${nickname}</strong>
                 ${verifiedBadgeHtml}
             </div>
         </div>
@@ -316,15 +317,15 @@ const saveProfile = async (updates) => {
     const user = auth.currentUser;
     if(!user) return;
     
-    if (profileUsername.disabled && updates.username) {
+    if (profileNickname.disabled && updates.nickname) { // Renamed
         return; 
     }
 
     try{
         await updateDoc(doc(db,"users",user.uid), { ...updates, lastActive: Date.now() });
         
-        if (updates.username) {
-            currentUsername = updates.username; 
+        if (updates.nickname) { // Renamed
+            currentNickname = updates.nickname; // Renamed
         }
         if (updates.bio !== undefined) { 
             currentBio = updates.bio;
@@ -332,20 +333,20 @@ const saveProfile = async (updates) => {
     } catch(err){ console.error(err); }
 };
 
-profileUsername.addEventListener("input", ()=>{
-    if (profileUsername.disabled) {
-        profileUsername.value = currentUsername; 
-        alert("This username is locked and cannot be changed.");
+profileNickname.addEventListener("input", ()=>{ // Renamed
+    if (profileNickname.disabled) { // Renamed
+        profileNickname.value = currentNickname; // Renamed
+        alert("This nickname is locked and cannot be changed.");
         return;
     }
     
-    renderProfilePreview({username: profileUsername.value, bio: profileAbout.value});
+    renderProfilePreview({nickname: profileNickname.value, bio: profileAbout.value}); // Renamed
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(()=>saveProfile({ username: profileUsername.value }), 800);
+    saveTimeout = setTimeout(()=>saveProfile({ nickname: profileNickname.value }), 800); // Renamed
 });
 
 profileAbout.addEventListener("input", ()=>{
-    renderProfilePreview({username: profileUsername.value, bio: profileAbout.value}); 
+    renderProfilePreview({nickname: profileNickname.value, bio: profileAbout.value}); // Renamed
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(()=>saveProfile({ bio: profileAbout.value }), 800); 
 });
@@ -381,20 +382,21 @@ async function loadUsers(){
             return; 
         }
         
-        const verifiedBadgeHtml = getVerifiedBadge(data.username);
+        const nickname = data.nickname; // Renamed
+        const verifiedBadgeHtml = getVerifiedBadge(nickname);
 
         count++;
         usersGrid.innerHTML+=`
         <div class="duo-card">
             <div class="card-header">
-                <div class="avatar">${data.username[0]}</div>
-                <div class="username-display">
-                    <strong>${data.username}</strong>
+                <div class="avatar">${nickname[0]}</div>
+                <div class="nickname-display">
+                    <strong>${nickname}</strong>
                     ${verifiedBadgeHtml}
                 </div>
             </div>
             <div class="bio">${data.bio||'No bio set.'}</div>
-            <button class="action-button" onclick="alert('Duo request sent to ${data.username}!')">Send Duo Request</button>
+            <button class="action-button" onclick="alert('Duo request sent to ${nickname}!')">Send Duo Request</button>
         </div>
         `;
     });
@@ -413,10 +415,10 @@ postForm.addEventListener("submit", async e => {
     try {
         await addDoc(collection(db, "posts"), {
             authorUid: user.uid,
-            authorUsername: currentUsername,
+            authorNickname: currentNickname, // Renamed
             content: content,
             timestamp: Date.now(),
-            likes: [], // Initialize likes array
+            likes: [], 
         });
         document.getElementById("postContent").value = ""; 
         loadPosts(); 
@@ -428,8 +430,6 @@ postForm.addEventListener("submit", async e => {
 
 /**
  * Toggles the like status of a post.
- * @param {string} postId - The ID of the post document.
- * @param {boolean} isLiked - True if the post is currently liked by the user.
  */
 window.toggleLikePost = async function(postId, isLiked) {
     const user = auth.currentUser;
@@ -438,18 +438,15 @@ window.toggleLikePost = async function(postId, isLiked) {
     const postRef = doc(db, "posts", postId);
     try {
         if (isLiked) {
-            // Unlike: Remove UID from the likes array
             await updateDoc(postRef, {
                 likes: arrayRemove(user.uid)
             });
         } else {
-            // Like: Add UID to the likes array
             await updateDoc(postRef, {
                 likes: arrayUnion(user.uid)
             });
         }
         
-        // Refresh the feed to reflect the change
         loadPosts(); 
 
     } catch (err) {
@@ -470,9 +467,9 @@ async function loadPosts() {
         const post = doc.data();
         const postId = doc.id;
         
-        const username = post.authorUsername || 'Unknown User';
-        const avatarChar = username ? username[0] : 'U';
-        const verifiedBadgeHtml = getVerifiedBadge(username);
+        const nickname = post.authorNickname || 'Unknown User'; // Renamed
+        const avatarChar = nickname ? nickname[0] : 'U';
+        const verifiedBadgeHtml = getVerifiedBadge(nickname);
         
         const likesArray = post.likes || [];
         const likeCount = likesArray.length;
@@ -486,8 +483,8 @@ async function loadPosts() {
             <div class="card-header">
                 <div class="avatar">${avatarChar}</div>
                 <div>
-                    <div class="username-display">
-                        <strong>${username}</strong>
+                    <div class="nickname-display">
+                        <strong>${nickname}</strong>
                         ${verifiedBadgeHtml}
                     </div>
                     <div class="post-meta">Posted ${timeSince(post.timestamp)} ago</div>
@@ -527,7 +524,7 @@ onAuthStateChanged(auth,async user=>{
         mainHeader.style.display="flex";
         
         const userData = await ensureUserProfileLoaded(user);
-        currentUsername = userData.username || '';
+        currentNickname = userData.nickname || ''; // Renamed
         currentBio = userData.bio || '';
         
         await updateLastActiveStatus(user.uid); 
