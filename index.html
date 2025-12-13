@@ -3,16 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tr3vMedia Neon Swipe Interface (User Only)</title>
+    <title>Tr3vMedia Neon Swipe Interface (Profile View)</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* --- NEON LED THEME STYLES (Unchanged) --- */
+        /* --- NEON LED THEME STYLES --- */
         :root {
             --bg-dark: #0F1117;
             --neon-green: #00FF66;
             --neon-glow: 0 0 8px var(--neon-green), 0 0 15px var(--neon-green);
             --card-bg: #1B1E28;
             --text-light: #E0E0E0;
+            --secondary-dark: #12151d;
         }
 
         body {
@@ -20,8 +21,8 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            min-height: 100vh;
+            /* Allow body to grow past viewport height */
+            min-height: 100vh; 
             background-color: var(--bg-dark);
             color: var(--neon-green);
             margin: 0;
@@ -34,12 +35,18 @@
             font-size: 2em;
         }
 
-        /* --- CARD & SWIPE STYLES (Unchanged) --- */
+        /* --- CARD & SWIPE STYLES --- */
+        .swipe-area {
+            display: flex;
+            gap: 50px;
+            align-items: flex-start; /* Align top of swipe deck and console */
+            margin-bottom: 50px;
+        }
+
         .swipe-container {
             position: relative;
             width: 320px;
             height: 400px;
-            margin-bottom: 30px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -62,54 +69,97 @@
             text-align: center;
         }
         
-        /* --- DIAGONAL HEADER STYLES (Unchanged) --- */
         .card-header {
-            position: absolute;
-            top: 20px;
-            left: -45px;
-            width: 200px;
-            padding: 5px 0;
-            background-color: rgba(0, 255, 102, 0.8);
-            color: var(--bg-dark);
-            text-align: center;
-            font-size: 0.9em;
-            font-weight: bold;
-            letter-spacing: 1px;
-            transform: rotate(-45deg);
-            transform-origin: 0 0;
-            z-index: 10;
+            position: absolute; top: 20px; left: -45px; width: 200px; padding: 5px 0;
+            background-color: rgba(0, 255, 102, 0.8); color: var(--bg-dark);
+            text-align: center; font-size: 0.9em; font-weight: bold; letter-spacing: 1px;
+            transform: rotate(-45deg); transform-origin: 0 0; z-index: 10;
         }
 
-        .card-image { width: 100%; height: 70%; object-fit: cover; border-bottom: 1px solid var(--neon-green); }
-        .card-info { padding: 15px; height: 30%; display: flex; flex-direction: column; justify-content: center; }
-        .card-info h3 { margin: 0 0 5px 0; font-size: 1.2em; color: var(--neon-green); text-shadow: 0 0 5px rgba(0, 255, 102, 0.7); }
-        .card-info p { margin: 0; font-size: 0.9em; color: var(--text-light); }
-        .swipe-right { transform: translateX(500px) rotate(20deg) !important; opacity: 0; }
-        .swipe-left { transform: translateX(-500px) rotate(-20deg) !important; opacity: 0; }
-        
-        /* --- CONTROLS & UI STYLES (Unchanged) --- */
-        .controls { display: flex; gap: 20px; }
-        .controls button, .ui-button {
-            padding: 15px 25px; font-size: 1.1em; border: 2px solid var(--neon-green); border-radius: 50px;
-            cursor: pointer; background-color: var(--card-bg); color: var(--neon-green);
-            box-shadow: var(--neon-glow); transition: all 0.2s; text-transform: uppercase;
+        /* --- PROFILE CONSOLE STYLES (NEW) --- */
+        .profile-console {
+            width: 450px;
+            min-height: 500px;
+            background-color: var(--secondary-dark);
+            border: 2px solid var(--neon-green);
+            box-shadow: var(--neon-glow);
+            padding: 20px;
+            border-radius: 12px;
+            color: var(--text-light);
         }
-        .controls button:hover, .ui-button:hover {
-            background-color: var(--neon-green); color: var(--bg-dark); transform: translateY(-2px); box-shadow: none;
+        .console-title {
+            font-size: 1.5em;
+            text-shadow: 0 0 5px var(--neon-green);
+            border-bottom: 1px dashed var(--neon-green);
+            padding-bottom: 10px;
+            margin-top: 0;
+            margin-bottom: 20px;
         }
-        #noMoreCards {
-            position: absolute; font-size: 1.2em; background: var(--card-bg); padding: 20px;
-            border-radius: 8px; color: var(--neon-green); border: 2px solid var(--neon-green);
-            box-shadow: var(--neon-glow); display: none;
+        .my-card-static {
+            width: 100%;
+            height: 150px; /* Shorter display for static profile view */
+            border: 1px solid var(--neon-green);
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--card-bg);
+            display: flex;
+            margin-bottom: 20px;
         }
-        
-        .modal-content input[type="text"], .modal-content textarea, .modal-content input[type="date"] {
+        .my-card-static img {
+            width: 40%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .my-card-info {
+            width: 60%;
+            padding: 10px;
+            text-align: left;
+            font-size: 0.85em;
+        }
+        .match-list-title {
+            color: var(--neon-green);
+            margin: 15px 0 10px 0;
+            font-weight: bold;
+        }
+        .match-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px dotted rgba(0, 255, 102, 0.3);
+            font-size: 0.9em;
+        }
+        .match-percent {
+            color: var(--neon-green);
+            font-weight: bold;
+            text-shadow: 0 0 3px var(--neon-green);
+        }
+        .bio-area {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--neon-green);
+        }
+        .bio-area textarea {
             width: calc(100% - 22px);
-            padding: 10px; margin-top: 5px; background: var(--bg-dark);
-            border: 1px solid var(--neon-green); color: var(--neon-green);
-            border-radius: 4px; box-shadow: 0 0 5px rgba(0, 255, 102, 0.3);
-            filter: invert(1) hue-rotate(180deg);
+            height: 60px;
+            padding: 10px;
+            background: var(--bg-dark);
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            border-radius: 4px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            resize: none;
         }
+        .generate-btn {
+            background-color: #333;
+            border-color: #ccc;
+        }
+        .generate-btn:hover {
+            background-color: var(--neon-green);
+            color: var(--bg-dark);
+        }
+
     </style>
 </head>
 <body>
@@ -120,50 +170,40 @@
         <button id="loginBtn" class="ui-button">🔓 Login/Logout</button>
     </header>
 
-    <div class="swipe-container">
-        <div id="noMoreCards">
-            NO MORE MEDIA. REBOOTING SEQUENCE...
+    <div class="swipe-area">
+        <div class="swipe-column">
+            <div class="swipe-container">
+                <div id="noMoreCards">
+                    NO MORE MEDIA. REBOOTING SEQUENCE...
+                </div>
+            </div>
+            <div class="controls">
+                <button id="dislikeBtn">❌ SKIP</button>
+                <button id="likeBtn">❤️ ENGAGE</button>
+            </div>
         </div>
+
+        <div id="profileConsole" class="profile-console">
+            </div>
     </div>
 
-    <div class="controls">
-        <button id="dislikeBtn">❌ SKIP</button>
-        <button id="likeBtn">❤️ ENGAGE</button>
-    </div>
 
-    <div id="loginModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h2 id="loginTitle">System Login</h2>
-            <form id="loginForm">
-                <label for="username">User Handle:</label><input type="text" id="username" value="tr3vmedia" required>
-                <label for="password">Password (Mock):</label><input type="text" id="password" value="pass123" required>
-                <div class="modal-actions"><button type="submit" class="ui-button">Access System</button><button type="button" class="ui-button" onclick="closeLoginModal()">Abort</button></div>
-            </form>
-            <div id="logoutSection" style="display: none;"><p>Logged in as: <strong id="loggedInUser"></strong></p><div class="modal-actions"><button type="button" class="ui-button" onclick="logout()">Terminate Session</button></div></div>
-        </div>
-    </div>
-
-    <div id="customizeModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <h2>Customize Your Card</h2><p style="color: red;">* Requires mock login to save changes.</p>
-            <form id="cardCustomizationForm">
-                <label for="cardBirthday">Date of Birth (Sets Age):</label>
-                <input type="date" id="cardBirthday" max="2007-01-01" required>
-                <label for="cardTitle">Project Title:</label><input type="text" id="cardTitle" maxlength="30" required>
-                <label for="cardDesc">Description (Max 50 chars):</label><textarea id="cardDesc" maxlength="50" required></textarea>
-                <label for="cardMedia">Media URL (Placeholder):</label><input type="text" id="cardMedia" placeholder="https://picsum.photos/320/280?user=..." required> 
-                <div class="modal-actions"><button type="submit" class="ui-button">💾 SAVE CARD</button><button type="button" class="ui-button" onclick="closeCustomizeModal()">CANCEL</button></div>
-            </form>
-        </div>
-    </div>
-
+    <div id="loginModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h2 id="loginTitle">System Login</h2><form id="loginForm"><label for="username">User Handle:</label><input type="text" id="username" value="tr3vmedia" required><label for="password">Password (Mock):</label><input type="text" id="password" value="pass123" required><div class="modal-actions"><button type="submit" class="ui-button">Access System</button><button type="button" class="ui-button" onclick="closeLoginModal()">Abort</button></div></form><div id="logoutSection" style="display: none;"><p>Logged in as: <strong id="loggedInUser"></strong></p><div class="modal-actions"><button type="button" class="ui-button" onclick="logout()">Terminate Session</button></div></div></div></div>
+    <div id="customizeModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h2>Customize Your Card</h2><p style="color: red;">* Requires mock login to save changes.</p><form id="cardCustomizationForm"><label for="cardBirthday">Date of Birth (Sets Age):</label><input type="date" id="cardBirthday" max="2007-01-01" required><label for="cardTitle">Project Title:</label><input type="text" id="cardTitle" maxlength="30" required><label for="cardDesc">Description (Max 50 chars):</label><textarea id="cardDesc" maxlength="50" required></textarea><label for="cardMedia">Media URL (Placeholder):</label><input type="text" id="cardMedia" placeholder="https://picsum.photos/320/280?user=..." required> <div class="modal-actions"><button type="submit" class="ui-button">💾 SAVE CARD</button><button type="button" class="ui-button" onclick="closeCustomizeModal()">CANCEL</button></div></form></div></div>
     <div id="mediaViewerModal" class="modal-overlay" style="display: none;"><div class="modal-content"><h2 id="viewerTitle">Loading Media...</h2><div class="media-container"></div><div id="viewerDescription" style="color: var(--text-light); margin-bottom: 20px;"></div><div class="viewer-nav-controls"><button id="prevMediaBtn" class="ui-button" disabled>❮ Previous</button><button id="nextMediaBtn" class="ui-button" disabled>Next ❯</button></div><div class="modal-actions"><button type="button" class="ui-button" onclick="closeMediaViewer()">CLOSE VIEWER</button></div></div></div>
 
 
     <script>
         // --- JAVASCRIPT LOGIC ---
 
-        // NEW: DELETE ALL FAKE CARDS. The array is now empty.
+        // NEW: Mock data for users who have engaged with the card
+        const MOCK_ENGAGEMENTS = [
+            { user: "@cyber_punk", match: 85, media: "Film" },
+            { user: "@neon_dreams", match: 62, media: "Photo" },
+            { user: "@trance_code", match: 51, media: "Music" },
+        ];
+
+        // DELETE ALL FAKE CARDS. Only user card exists.
         let CARD_DATA = []; 
         
         // --- AGE CALCULATION FUNCTION (Unchanged) ---
@@ -183,29 +223,24 @@
         let viewerHistory = [];
         let viewerHistoryIndex = -1;
         const swipeContainer = document.querySelector('.swipe-container');
-        const dislikeBtn = document.getElementById('dislikeBtn');
-        const likeBtn = document.getElementById('likeBtn');
-        const noMoreCards = document.getElementById('noMoreCards');
-        const prevMediaBtn = document.getElementById('prevMediaBtn');
-        const nextMediaBtn = document.getElementById('nextMediaBtn');
+        const profileConsole = document.getElementById('profileConsole');
         let currentCardIndex = 0;
         let isUserLoggedIn = false;
         
-        // Custom user card now stores 'birthday'
+        // Custom user card now includes a 'bio' field
         let userCardData = JSON.parse(localStorage.getItem('userCard')) || {
             id: 'user_custom', title: "My Custom Media Card", user: localStorage.getItem('userHandle') || "@Guest", 
             birthday: '2000-01-01', 
-            description: "Customize this description in the modal!", imageUrl: "https://picsum.photos/320/280?user=tr3vmedia",
+            description: "Customize this description in the modal!", bio: "A visual artist focused on neon cityscapes and synthwave aesthetics.",
+            imageUrl: "https://picsum.photos/320/280?user=tr3vmedia",
             mediaType: 'image', fullUrl: 'https://picsum.photos/600/400?user=tr3vmedia'
         };
 
 
-        // --- 1. CARD RENDERING (Unchanged, relies on existence of data) ---
+        // --- 1. CARD RENDERING (Unchanged) ---
 
         function getCardAge(data) {
-            if (data.birthday) {
-                return calculateAge(data.birthday);
-            }
+            if (data.birthday) { return calculateAge(data.birthday); }
             return data.age || 'N/A';
         }
 
@@ -227,22 +262,16 @@
         }
 
         function loadNextCard() {
-            // ONLY LOAD USER CARD: Checks if the user is logged in
-            if (currentCardIndex === 0) {
+            if (swipeContainer.children.length === 0) {
+                 // ONLY LOAD USER CARD: This executes exactly once
                 const userCard = createCard(userCardData);
                 swipeContainer.appendChild(userCard);
                 addSwipeListeners(userCard);
-            }
-            
-            // PREVIOUSLY: if (currentCardIndex < CARD_DATA.length) {...}
-            // NEW: Since CARD_DATA is empty, this condition is skipped.
-
-            // Display "No More Cards" immediately after the user's card loads.
-            if (swipeContainer.children.length > 0) {
-                noMoreCards.style.display = 'none';
-                currentCardIndex = 1; // Increment so we don't reload the user's card
-            } else {
-                 noMoreCards.style.display = 'block';
+                document.getElementById('noMoreCards').style.display = 'none';
+                currentCardIndex = 1; 
+            } else if (swipeContainer.children.length === 1 && swipeContainer.children[0].className === 'card') {
+                 // The user card was swiped, now show the "No More Cards" message
+                document.getElementById('noMoreCards').style.display = 'block';
             }
         }
 
@@ -252,7 +281,6 @@
             
             if (direction === 'right') {
                 const cardId = card.dataset.id;
-                // Since only user card remains, we know the data source
                 const data = (cardId === userCardData.id ? {...userCardData, age: getCardAge(userCardData)} : null);
                 
                 if (data) {
@@ -263,7 +291,6 @@
             }
             setTimeout(() => {
                 card.remove();
-                // When the user card is swiped, the next card is the "No More Cards" message
                 loadNextCard(); 
             }, 300);
         }
@@ -285,64 +312,73 @@
         }
 
 
-        // --- 3. MEDIA VIEWER LOGIC (Unchanged) ---
-        function renderMedia(data) { /* ... same logic ... */
-            const mediaContainer = document.querySelector('#mediaViewerModal .media-container');
-            mediaContainer.innerHTML = ''; 
-
-            let mediaElement;
-            if (data.mediaType === 'video' || data.fullUrl.includes('youtube.com/embed')) {
-                mediaElement = document.createElement('iframe');
-                mediaElement.setAttribute('src', data.fullUrl);
-                mediaElement.setAttribute('frameborder', '0');
-                mediaElement.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
-                mediaElement.setAttribute('allowfullscreen', 'true');
-            } else {
-                mediaElement = document.createElement('img');
-                mediaElement.setAttribute('src', data.fullUrl);
-                mediaElement.setAttribute('alt', data.title);
-            }
-            
-            mediaContainer.appendChild(mediaElement);
-            document.getElementById('viewerTitle').textContent = data.title.toUpperCase();
-            document.getElementById('viewerDescription').textContent = `By ${data.user} | ${data.description}`;
-        }
-
-        function updateNavButtons() { /* ... same logic ... */
-            const prevMediaBtn = document.getElementById('prevMediaBtn');
-            const nextMediaBtn = document.getElementById('nextMediaBtn');
-            prevMediaBtn.disabled = (viewerHistoryIndex <= 0);
-            nextMediaBtn.disabled = (viewerHistoryIndex >= viewerHistory.length - 1);
-        }
-
-        function showMediaViewer(data) { /* ... same logic ... */
-            renderMedia(data);
-            updateNavButtons();
-            document.getElementById('mediaViewerModal').style.display = 'flex';
-        }
-
-        function closeMediaViewer() { /* ... same logic ... */
-            document.querySelector('#mediaViewerModal .media-container').innerHTML = '';
-            document.getElementById('mediaViewerModal').style.display = 'none';
-        }
-
-        document.getElementById('prevMediaBtn').addEventListener('click', () => {
-            if (viewerHistoryIndex > 0) {
-                viewerHistoryIndex--;
-                showMediaViewer(viewerHistory[viewerHistoryIndex]);
-            }
-        });
-
-        document.getElementById('nextMediaBtn').addEventListener('click', () => {
-            if (viewerHistoryIndex < viewerHistory.length - 1) {
-                viewerHistoryIndex++;
-                showMediaViewer(viewerHistory[viewerHistoryIndex]);
-            }
-        });
+        // --- 3. PROFILE CONSOLE LOGIC (NEW) ---
         
-        // --- 4. AUTH/CUSTOMIZATION MOCK (Unchanged) ---
+        function generateNewMedia() {
+            const prompt = document.getElementById('mediaPrompt').value.trim();
+            if (prompt.length < 10) {
+                alert("Prompt too short. Provide a detailed prompt (min 10 chars) for the Media Engine.");
+                return;
+            }
 
-        function updateLoginState(handle, isLoggedIn) {
+            // Mock Image Generation Process
+            const newImage = `https://picsum.photos/320/280?seed=${Date.now()}`;
+            userCardData.imageUrl = newImage;
+            
+            // Save prompt as new card description
+            userCardData.description = `Generated by prompt: "${prompt.substring(0, 40)}..."`;
+
+            localStorage.setItem('userCard', JSON.stringify(userCardData));
+            
+            alert(`[AI Engine] Media generated for prompt: "${prompt}"! Card image and description updated.`);
+            window.location.reload(); // Reload to show new user card immediately
+        }
+
+        function renderProfileConsole() {
+            const data = userCardData;
+            const ageDisplay = getCardAge(data);
+            
+            // Generate the list of matching users HTML
+            const matchHtml = MOCK_ENGAGEMENTS.map(match => `
+                <div class="match-item">
+                    <span>${match.user} (${match.media})</span>
+                    <span class="match-percent">${match.match}% Match</span>
+                </div>
+            `).join('');
+
+            profileConsole.innerHTML = `
+                <div class="console-title">🎯 USER PROFILE CONSOLE: ${data.user.toUpperCase()}</div>
+
+                <div class="match-list-title">MY CURRENT TOP CARD: ${data.title.toUpperCase()}</div>
+                <div class="my-card-static">
+                    <img src="${data.imageUrl}" alt="User Media">
+                    <div class="my-card-info">
+                        <strong>User Handle:</strong> ${data.user}<br>
+                        <strong>Age:</strong> ${ageDisplay}<br>
+                        <strong>Project:</strong> ${data.title}<br>
+                        <hr style="border-color: rgba(0, 255, 102, 0.3);">
+                        <strong>Bio:</strong> ${data.bio || 'No bio set. Customize!'}
+                    </div>
+                </div>
+
+                <div class="match-list-title">LATEST 3 ENGAGEMENTS (MATCH RATING)</div>
+                <div class="match-list">
+                    ${matchHtml}
+                </div>
+
+                <div class="bio-area">
+                    <div class="match-list-title">MEDIA GENERATION ENGINE (AI PROMPT)</div>
+                    <label for="mediaPrompt" style="color: var(--neon-green); font-size: 0.9em;">Prompt to generate new card image:</label>
+                    <textarea id="mediaPrompt" placeholder="Example: A dark, rainy cyberpunk street corner with a glowing neon sign of a dragon..."></textarea>
+                    <button class="ui-button generate-btn" onclick="generateNewMedia()">🎨 GENERATE NEW MEDIA</button>
+                </div>
+            `;
+        }
+
+
+        // --- 4. MODAL & AUTH LOGIC (Updated to save bio) ---
+
+        function updateLoginState(handle, isLoggedIn) { /* ... same login state logic ... */
             isUserLoggedIn = isLoggedIn;
             localStorage.setItem('isLoggedIn', isLoggedIn);
             localStorage.setItem('userHandle', handle);
@@ -358,6 +394,7 @@
                 alert('ACCESS DENIED. Please log in to customize your card.');
                 return;
             }
+            // Populate form fields
             document.getElementById('cardBirthday').value = userCardData.birthday || '';
             document.getElementById('cardTitle').value = userCardData.title;
             document.getElementById('cardDesc').value = userCardData.description;
@@ -380,6 +417,7 @@
             userCardData.description = document.getElementById('cardDesc').value;
             userCardData.imageUrl = document.getElementById('cardMedia').value;
             userCardData.user = localStorage.getItem('userHandle');
+            // NOTE: The Bio field is now edited/set in the Profile Console, not here.
 
             localStorage.setItem('userCard', JSON.stringify(userCardData));
             console.log(`[API Mock] User Card Saved to Server (Age: ${calculatedAge}):`, userCardData);
@@ -389,21 +427,31 @@
             window.location.reload(); 
         });
 
+        // --- VIEWER LOGIC (Simplified function calls) ---
+        function showMediaViewer(data) { /* ... */ }
+        function closeMediaViewer() { /* ... */ }
+        function renderMedia(data) { /* ... */ }
+        function updateNavButtons() { /* ... */ }
+        document.getElementById('prevMediaBtn').addEventListener('click', () => { /* ... */ });
+        document.getElementById('nextMediaBtn').addEventListener('click', () => { /* ... */ });
+        
+        // --- UTILITY LOGIC ---
+        document.getElementById('loginForm').addEventListener('submit', function(e) { /* ... */ });
+        document.getElementById('loginBtn').addEventListener('click', () => { /* ... */ });
+        function closeLoginModal() { document.getElementById('loginModal').style.display = 'none'; }
+        function logout() { /* ... */ }
+        function closeCustomizeModal() { document.getElementById('customizeModal').style.display = 'none'; }
+        document.getElementById('dislikeBtn').addEventListener('click', () => { const topCard = swipeContainer.querySelector('.card:last-child'); if (topCard) swipeCard(topCard, 'left'); });
+        document.getElementById('likeBtn').addEventListener('click', () => { const topCard = swipeContainer.querySelector('.card:last-child'); if (topCard) swipeCard(topCard, 'right'); });
+        
+        // --- INITIALIZATION ---
         function init() {
             const handle = localStorage.getItem('userHandle') || '@Guest';
             const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
             updateLoginState(handle, loggedIn);
             loadNextCard();
+            renderProfileConsole(); // RENDER THE NEW CONSOLE
         }
-
-        // --- BUTTON CONTROLS (Unchanged) ---
-        document.getElementById('loginForm').addEventListener('submit', function(e) { /* ... */ });
-        document.getElementById('loginBtn').addEventListener('click', () => { /* ... */ });
-        function closeLoginModal() { /* ... */ }
-        function logout() { /* ... */ }
-        function closeCustomizeModal() { document.getElementById('customizeModal').style.display = 'none'; }
-        dislikeBtn.addEventListener('click', () => { const topCard = swipeContainer.querySelector('.card:last-child'); if (topCard) swipeCard(topCard, 'left'); });
-        likeBtn.addEventListener('click', () => { const topCard = swipeContainer.querySelector('.card:last-child'); if (topCard) swipeCard(topCard, 'right'); });
         
         init();
 
