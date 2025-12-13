@@ -9,63 +9,64 @@
 
 <style>
 :root {
-  --bg-primary:#1A1A2E;
-  --bg-secondary:#24263B;
-  --accent-cyan:#00FFFF;
-  --text-light:#F0F0F0;
-  --text-muted:#A0AEC0;
-  --card-color:#ffffff;
+  --bg-primary:#0d0d1a;
+  --bg-secondary:#1a1a2e;
+  --accent-cyan:#00ffff;
+  --text-light:#f0f0f0;
+  --text-muted:#a0aec0;
+  --card-color:#1f1f2e;
   --font-main:'Rajdhani',sans-serif;
   --font-header:'Orbitron',sans-serif;
-  --status-online:#38A169;
+  --status-online:#38a169;
 }
 
 body { margin:0; font-family:var(--font-main); background:var(--bg-primary); color:var(--text-light); min-height:100vh; }
-
 h1,h2,h3 {font-family:var(--font-header); margin:0;}
 a {color:var(--accent-cyan); text-decoration:none;}
-
-button { cursor:pointer; border:none; border-radius:5px; }
+button { cursor:pointer; border:none; border-radius:6px; font-weight:bold; transition:.2s; }
 
 #auth-section, #app-section { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; }
 
-form { display:flex; flex-direction:column; background:var(--bg-secondary); padding:20px; border-radius:8px; margin:10px; width:300px; }
-input { margin:8px 0; padding:10px; border-radius:5px; border:none; }
-button { margin-top:10px; padding:10px; font-weight:bold; }
+form { display:flex; flex-direction:column; background:var(--bg-secondary); padding:20px; border-radius:12px; margin:10px; width:300px; box-shadow:0 0 15px rgba(0,255,255,.1);}
+input { margin:8px 0; padding:10px; border-radius:6px; border:none; background:#2d2d44; color:white; }
+button { margin-top:10px; padding:10px; }
+button:hover { opacity:.85; }
 
-.google-btn { background:#DB4437; color:white; margin-top:10px; padding:10px; width:300px; }
+.google-btn { background:#db4437; color:white; width:300px; display:flex; align-items:center; justify-content:center; gap:8px; }
 
-#logoutBtn { background:var(--accent-cyan); color:#1A1A2E; padding:10px; margin-bottom:20px; }
+#logoutBtn { background:var(--accent-cyan); color:#0d0d1a; padding:12px 20px; margin-bottom:20px; }
 
 .container { max-width:1200px; margin:30px auto; padding:0 20px; width:100%; }
-.results-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:25px; width:100%; }
-.duo-card { background:var(--card-color); color:#1A1A2E; border-radius:12px; overflow:hidden; border-top:5px solid var(--accent-cyan); transition:.3s; }
-.duo-card:hover { transform:translateY(-5px); box-shadow:0 12px 20px rgba(0,255,255,.2); }
-.card-header { padding:15px 20px; display:flex; border-bottom:1px solid #edf2f7; }
-.avatar { width:50px;height:50px; background:var(--accent-cyan); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:15px; }
-.bio { padding:15px 20px; font-size:0.9em; color:#4A5568; }
-.action-button { width:100%; padding:12px; background:var(--accent-cyan); color:#1A1A2E; font-weight:bold; margin-bottom:20px; }
+.results-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:25px; width:100%; }
 
-.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); justify-content:center; align-items:center; z-index:2000; }
-.chat-container { width:400px; height:500px; background:var(--bg-secondary); border-radius:10px; display:flex; flex-direction:column; }
-.chat-header { padding:10px 15px; background:#313349; display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--accent-cyan); color:var(--text-light); }
+.duo-card { background:var(--card-color); color:var(--text-light); border-radius:12px; overflow:hidden; border-top:5px solid var(--accent-cyan); transition:.3s; box-shadow:0 0 15px rgba(0,255,255,.1);}
+.duo-card:hover { transform:translateY(-5px); box-shadow:0 0 25px var(--accent-cyan); }
+
+.card-header { padding:15px 20px; display:flex; border-bottom:1px solid #333; }
+.avatar { width:50px;height:50px; background:var(--accent-cyan); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:15px; color:#0d0d1a; }
+.bio { padding:15px 20px; font-size:0.9em; color:#b0b0b0; }
+.action-button { width:100%; padding:12px; background:var(--accent-cyan); color:#0d0d1a; margin-bottom:15px; }
+.action-button:hover { background:#00e0e0; }
+
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); justify-content:center; align-items:center; z-index:2000; }
+.chat-container { width:400px; height:500px; background:var(--bg-secondary); border-radius:10px; display:flex; flex-direction:column; box-shadow:0 0 25px var(--accent-cyan);}
+.chat-header { padding:10px 15px; background:#12122b; display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--accent-cyan); color:var(--text-light); }
 .status-dot { width:8px;height:8px; border-radius:50%; margin-right:8px; background:var(--status-online); }
 .message-area { flex:1; padding:15px; overflow-y:auto; }
 .message { max-width:80%; margin-bottom:10px; }
 .message.self { margin-left:auto; }
 .message-content { padding:8px 12px; border-radius:15px; }
-.message.other .message-content { background:#4A5568; color:white; }
-.message.self .message-content { background:var(--accent-cyan); color:#1A1A2E; }
+.message.other .message-content { background:#2d2d44; color:white; }
+.message.self .message-content { background:var(--accent-cyan); color:#0d0d1a; }
 .chat-input-area { display:flex; padding:15px; }
-.chat-input { flex:1; padding:10px; border:none; background:#2D3748; color:white; }
-.send-button { padding:10px 15px; border:none; background:var(--accent-cyan); color:#1A1A2E; font-weight:bold; }
+.chat-input { flex:1; padding:10px; border:none; background:#2d2d44; color:white; border-radius:6px 0 0 6px; }
+.send-button { padding:10px 15px; border:none; background:var(--accent-cyan); color:#0d0d1a; border-radius:0 6px 6px 0; }
 .chat-locked { text-align:center; color:var(--text-muted); padding-top:50px; }
-
 </style>
 </head>
 <body>
 
-<!-- AUTH SECTION -->
+<!-- AUTH -->
 <div id="auth-section">
   <h2>Sign In</h2>
   <form id="signin">
@@ -86,27 +87,15 @@ button { margin-top:10px; padding:10px; font-weight:bold; }
   </button>
 </div>
 
-<!-- MAIN APP SECTION -->
+<!-- APP -->
 <div id="app-section" style="display:none;">
   <button id="logoutBtn">Logout</button>
   <div class="container">
-    <div class="results-grid">
-      <div class="duo-card">
-        <div class="card-header">
-          <div class="avatar">LF</div>
-          <div>
-            <h3>LunarFox_88</h3>
-            <p>PS5 & Switch</p>
-          </div>
-        </div>
-        <div class="bio">Casual gamer, co-op focused.</div>
-        <button class="action-button" onclick="openChat('LunarFox_88', true)">Send Duo Request</button>
-      </div>
-    </div>
+    <div class="results-grid"></div>
   </div>
 </div>
 
-<!-- CHAT MODAL -->
+<!-- CHAT -->
 <div id="chatModal" class="modal">
   <div class="chat-container">
     <div id="chatHeader" class="chat-header"></div>
@@ -121,8 +110,9 @@ button { margin-top:10px; padding:10px; font-weight:bold; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase Config
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
   authDomain: "duoup-cfae6.firebaseapp.com",
@@ -135,11 +125,13 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-// DOM Elements
+// DOM
 const authSection = document.getElementById("auth-section");
 const appSection = document.getElementById("app-section");
 const logoutBtn = document.getElementById("logoutBtn");
+const duoCards = document.querySelector(".results-grid");
 const chatModal = document.getElementById('chatModal');
 const chatHeader = document.getElementById('chatHeader');
 const messageArea = document.getElementById('messageArea');
@@ -149,62 +141,92 @@ let currentDuo = '';
 let chatActive = false;
 
 // --- AUTH ---
-document.getElementById("signup").addEventListener("submit", async (e) => {
+document.getElementById("signup").addEventListener("submit", async (e)=>{
   e.preventDefault();
   const email = document.getElementById("signup-email").value;
   const password = document.getElementById("signup-password").value;
-  try {
-    await createUserWithEmailAndPassword(auth, email, password);
-  } catch(err) { alert(err.message); }
-});
-
-document.getElementById("signin").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("signin-email").value;
-  const password = document.getElementById("signin-password").value;
-  try { await signInWithEmailAndPassword(auth, email, password); }
+  try { await createUserWithEmailAndPassword(auth,email,password); } 
   catch(err){ alert(err.message); }
 });
 
-window.googleLogin = async () => {
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  } catch(err){ alert(err.message); }
-};
-
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
+document.getElementById("signin").addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const email = document.getElementById("signin-email").value;
+  const password = document.getElementById("signin-password").value;
+  try{ await signInWithEmailAndPassword(auth,email,password);} 
+  catch(err){ alert(err.message); }
 });
 
-// --- SHOW/HIDE APP BASED ON LOGIN ---
-onAuthStateChanged(auth, user => {
+window.googleLogin = async ()=>{
+  try{
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth,provider);
+  }catch(err){ alert(err.message);}
+};
+
+logoutBtn.addEventListener("click", async ()=>{ await signOut(auth); });
+
+// --- PROFILE & USERS ---
+async function saveProfile(uid){
+  await setDoc(doc(db,"users",uid),{
+    username: uid,
+    platform:"PC",
+    games:["Valorant","LoL"],
+    playstyle:"Casual",
+    mic:"Preferred",
+    uid
+  });
+}
+
+async function loadDuoCards(){
+  const snapshot = await getDocs(collection(db,"users"));
+  duoCards.innerHTML = "";
+  snapshot.forEach(doc=>{
+    if(doc.id!==auth.currentUser.uid){
+      const data = doc.data();
+      duoCards.innerHTML += `
+      <div class="duo-card">
+        <div class="card-header">
+          <div class="avatar">${data.username.charAt(0).toUpperCase()}</div>
+          <div>
+            <h3>${data.username}</h3>
+            <p>${data.platform}</p>
+          </div>
+        </div>
+        <div class="bio">${data.games.join(", ")} | ${data.playstyle} | Mic: ${data.mic}</div>
+        <button class="action-button" onclick="openChat('${data.username}',true)">Send Duo Request</button>
+      </div>`;
+    }
+  });
+}
+
+// --- AUTH STATE ---
+onAuthStateChanged(auth,user=>{
   if(user){
-    authSection.style.display = 'none';
-    appSection.style.display = 'flex';
-  } else {
-    authSection.style.display = 'flex';
-    appSection.style.display = 'none';
+    authSection.style.display="none";
+    appSection.style.display="flex";
+    saveProfile(user.uid);
+    loadDuoCards();
+  }else{
+    authSection.style.display="flex";
+    appSection.style.display="none";
   }
 });
 
 // --- CHAT ---
-function openChat(duoName, isAccepted){
+window.openChat = (duoName,isAccepted)=>{
   currentDuo = duoName;
   chatActive = isAccepted;
   chatInput.value='';
-  chatInput.disabled = !chatActive;
-
+  chatInput.disabled=!chatActive;
   chatHeader.innerHTML = chatActive
     ? `<div><span class="status-dot"></span>${duoName} (Online)</div><span onclick="closeChat()">×</span>`
     : `<div style="color:#FFC107;">Request Pending with ${duoName}</div><span onclick="closeChat()">×</span>`;
-
   messageArea.innerHTML = chatActive
     ? `<div class="message other"><div class="message-content">Hey! Ready to play?</div></div>`
     : `<p class="chat-locked">Chat locked until request accepted.</p>`;
-
-  chatModal.style.display='flex';
-}
+  chatModal.style.display="flex";
+};
 
 function closeChat(){ chatModal.style.display='none'; }
 
@@ -215,9 +237,7 @@ function sendMessage(){
   messageArea.scrollTop = messageArea.scrollHeight;
 }
 
-// Close chat if click outside
-window.onclick = e => { if(e.target===chatModal) closeChat(); }
-
+window.onclick = e=>{ if(e.target===chatModal) closeChat(); };
 </script>
 </body>
 </html>
