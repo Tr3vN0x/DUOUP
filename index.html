@@ -6,7 +6,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
@@ -22,65 +21,19 @@
 }
 
 * { box-sizing:border-box;margin:0;padding:0; }
+body { font-family: Inter, Segoe UI, sans-serif; background: var(--bg); color: var(--text); min-height:100vh; }
 
-body {
-  font-family: Inter, Segoe UI, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  min-height:100vh;
-}
-
-nav {
-  display:none;
-  justify-content:space-between;
-  padding:15px 30px;
-  background: var(--panel);
-  border-bottom:2px solid var(--cyan);
-}
+nav { display:none; justify-content:space-between; padding:15px 30px; background: var(--panel); border-bottom:2px solid var(--cyan); }
 nav span { cursor:pointer; margin-left:20px; }
 
 section { display:none; padding:30px; }
-
-.card {
-  background: var(--panel);
-  padding:25px;
-  border-radius: var(--radius);
-  max-width:400px;
-  margin:auto;
-}
-
-input, select {
-  width:100%;
-  margin-bottom:15px;
-  padding:12px;
-  background:#0F0F1A;
-  border:1px solid #333;
-  color:#fff;
-  border-radius: var(--radius);
-}
-
-button {
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius: var(--radius);
-  font-weight:bold;
-  cursor:pointer;
-}
-
+.card { background: var(--panel); padding:25px; border-radius: var(--radius); max-width:400px; margin:auto; }
+input, select { width:100%; margin-bottom:15px; padding:12px; background:#0F0F1A; border:1px solid #333; color:#fff; border-radius: var(--radius); }
+button { width:100%; padding:12px; border:none; border-radius: var(--radius); font-weight:bold; cursor:pointer; }
 .btn-primary { background: var(--pink); color:#000; }
 .btn-secondary { background: var(--cyan); color:#000; }
-
-.player-grid {
-  display:grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px,1fr));
-  gap:20px;
-}
-.player {
-  background: var(--panel);
-  padding:15px;
-  border-radius: var(--radius);
-}
+.player-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(240px,1fr)); gap:20px; }
+.player { background: var(--panel); padding:15px; border-radius: var(--radius); }
 </style>
 </head>
 <body>
@@ -93,7 +46,7 @@ button {
   </div>
 </nav>
 
-<!-- SIGN IN -->
+<!-- AUTH -->
 <section id="auth">
   <div class="card">
     <h2 style="color:var(--cyan);margin-bottom:20px;">Sign In</h2>
@@ -112,7 +65,7 @@ button {
   <div class="card">
     <h2 style="color:var(--cyan);margin-bottom:15px;">Quick Setup</h2>
     <input id="username" placeholder="Gamertag">
-    <input id="game" placeholder="Main Game (Valorant, Fortnite...)">
+    <input id="game" placeholder="Main Game">
     <select id="availability">
       <option value="">Availability</option>
       <option>Casual</option>
@@ -152,10 +105,10 @@ const views = {
 const toggleBtn = document.getElementById('toggle-lfd');
 const feed = document.getElementById('feed');
 
-function showView(id) {
-  Object.values(views).forEach(v => v.style.display = 'none');
-  views[id].style.display = 'block';
-  document.getElementById('nav').style.display = id==='auth' ? 'none':'flex';
+function showView(id){
+  Object.values(views).forEach(v=>v.style.display='none');
+  views[id].style.display='block';
+  document.getElementById('nav').style.display = id==='auth'?'none':'flex';
 }
 
 /* 🔐 AUTH STATE */
@@ -180,11 +133,7 @@ auth.onAuthStateChanged(async user => {
   }
 
   const data = doc.data();
-
-  if(!data.onboarded){
-    showView('onboarding');
-    return;
-  }
+  if(!data.onboarded){ showView('onboarding'); return; }
 
   updateToggleUI(data.lookingForDuo);
   showView('home');
@@ -195,22 +144,27 @@ auth.onAuthStateChanged(async user => {
 async function emailSignup(){
   const e = document.getElementById('email').value;
   const p = document.getElementById('password').value;
-  await auth.createUserWithEmailAndPassword(e,p);
+  if(!e||!p) return alert('Email & password required');
+  try { await auth.createUserWithEmailAndPassword(e,p); } catch(err){ alert(err.message); }
 }
 
 /* 🔑 GOOGLE SIGN IN */
 async function googleSignIn(){
-  const provider = new firebase.auth.GoogleAuthProvider();
-  await auth.signInWithPopup(provider);
+  try { await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); } 
+  catch(err){ alert(err.message); }
 }
 
 /* 🧭 COMPLETE ONBOARDING */
 async function completeOnboarding(){
   const user = auth.currentUser;
+  const uname = document.getElementById('username').value;
+  const game = document.getElementById('game').value;
+  const avail = document.getElementById('availability').value;
+  if(!uname||!game||!avail) return alert('Fill all fields');
   await db.collection('users').doc(user.uid).update({
-    username: document.getElementById('username').value,
-    game: document.getElementById('game').value,
-    availability: document.getElementById('availability').value,
+    username: uname,
+    game: game,
+    availability: avail,
     onboarded:true,
     lookingForDuo:true
   });
@@ -228,7 +182,7 @@ async function updateToggleUI(state){
 async function toggleLFD(){
   const ref = db.collection('users').doc(auth.currentUser.uid);
   const doc = await ref.get();
-  const current = doc.data().lookingForDuo;
+  const current = doc.data()?.lookingForDuo ?? true;
   await ref.update({ lookingForDuo: !current });
   updateToggleUI(!current);
 }
@@ -237,29 +191,30 @@ toggleBtn.onclick = toggleLFD;
 
 /* 📡 FEED */
 async function loadFeed(){
-  const snap = await db.collection('users')
-    .where('uid','!=',auth.currentUser.uid)
-    .where('lookingForDuo','==',true)
-    .limit(12)
-    .get();
-
-  feed.innerHTML='';
-  snap.forEach(doc=>{
-    const u = doc.data();
-    feed.innerHTML += `
-      <div class="player">
-        <strong>${u.username}</strong>
-        <p>${u.game}</p>
-        <small>${u.availability}</small>
-      </div>
-    `;
-  });
+  feed.innerHTML = '<p style="color:var(--cyan)">Loading...</p>';
+  try{
+    const snap = await db.collection('users')
+      .where('uid','!=',auth.currentUser.uid)
+      .where('lookingForDuo','==',true)
+      .limit(12)
+      .get();
+    feed.innerHTML='';
+    if(snap.empty){ feed.innerHTML='<p>No users currently looking for Duo.</p>'; return; }
+    snap.forEach(doc=>{
+      const u = doc.data();
+      feed.innerHTML += `
+        <div class="player">
+          <strong>${u.username}</strong>
+          <p>${u.game}</p>
+          <small>${u.availability}</small>
+        </div>
+      `;
+    });
+  }catch(err){ feed.innerHTML='<p>Error loading feed.</p>'; console.error(err);}
 }
 
 /* 🚪 LOGOUT */
-function logout(){
-  auth.signOut();
-}
+function logout(){ auth.signOut(); }
 </script>
 </body>
 </html>
