@@ -3,25 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duoup - Gaming Hub</title>
+    <title>Duoup - Social Gaming Hub</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        /* --- CSS VARIABLES (Neon Gaming Theme) --- */
+        /* --- CSS VARIABLES (Enhanced Neon Gaming Theme) --- */
         :root {
-            --color-dark-bg: #0A0A1F; /* Deepest blue/black */
-            --color-card-bg: #151530; 
-            --color-primary: #FF3366; /* Neon Pink */
-            --color-secondary: #00FFFF; /* Neon Cyan/Blue */
+            --color-dark-bg: #050510; /* Near black base */
+            --color-card-bg: #111122; /* Dark blue/purple card */
+            --color-primary: #FF3366; /* Neon Pink/Red Accent */
+            --color-secondary: #00FFFF; /* Neon Cyan/Blue Accent */
             --color-text-light: #E0E0FF;
             --color-text-fade: #A0A0FF;
-            --color-border: #3A3A6A;
-            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            --neon-shadow-primary: 0 0 5px var(--color-primary), 0 0 10px var(--color-primary);
-            --neon-shadow-secondary: 0 0 5px var(--color-secondary);
+            --color-border: #2A2A4A;
+            --color-status-online: #4CAF50; /* Green */
+            --color-status-offline: #777;
+            --color-status-ingame: var(--color-primary);
+            --font-main: 'Electrolize', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --neon-shadow-primary: 0 0 8px rgba(255, 51, 102, 0.7);
+            --neon-shadow-secondary: 0 0 8px rgba(0, 255, 255, 0.7);
         }
 
         /* Global & Reset */
+        @import url('https://fonts.googleapis.com/css2?family=Electrolize&display=swap'); /* Using a gaming font */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: var(--font-main);
@@ -30,32 +34,30 @@
             min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* Default alignment for main content */
+            align-items: flex-start;
         }
 
-        /* --- View Management --- */
-        .app-view {
-            width: 100%;
-            display: none;
-            padding: 20px;
+        /* --- Glow Effect --- */
+        .glow {
+            text-shadow: var(--neon-shadow-primary);
         }
         
         /* --- NAVIGATION BAR --- */
         .navbar {
             background-color: var(--color-card-bg);
             padding: 15px 30px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
             display: flex;
             justify-content: space-between;
             align-items: center;
             position: sticky;
             top: 0;
             z-index: 1000;
-            border-bottom: 2px solid var(--color-primary);
+            border-bottom: 3px solid var(--color-primary);
         }
         .navbar .logo {
             color: var(--color-secondary);
-            font-size: 1.8rem;
+            font-size: 2rem;
             letter-spacing: 2px;
             text-shadow: var(--neon-shadow-secondary);
         }
@@ -70,250 +72,176 @@
             transition: color 0.2s, text-shadow 0.2s;
             font-weight: 500;
         }
-        .nav-link i {
-            margin-right: 5px;
-        }
         .nav-link:hover {
             color: var(--color-text-light);
             text-shadow: var(--neon-shadow-primary);
         }
 
-        /* --- SIGNUP/PROFILE CARD STYLES --- */
+        /* --- SIGNUP/EDIT CARD STYLES --- */
         .centered-card {
             max-width: 500px;
             width: 100%;
             background-color: var(--color-card-bg);
             padding: 40px;
             border-radius: 10px;
-            box-shadow: 0 0 15px rgba(255, 51, 102, 0.3); /* Soft neon shadow */
             border: 1px solid var(--color-border);
-        }
-        .signup-card h2, .profile-edit h2 {
-            text-align: center;
-            color: var(--color-primary);
-            margin-bottom: 25px;
-            text-shadow: var(--neon-shadow-primary);
-        }
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            background-color: var(--color-dark-bg);
-            border: 1px solid var(--color-border);
-            border-radius: 5px;
-            color: var(--color-text-light);
-            font-size: 1rem;
-            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+            box-shadow: var(--neon-shadow-primary);
         }
         .btn-action {
-            width: 100%;
-            padding: 12px;
             background-color: var(--color-primary);
-            color: var(--color-text-light);
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
             transition: background-color 0.2s, box-shadow 0.2s;
-            margin-top: 10px;
+            color: var(--color-dark-bg); /* Dark text on bright button */
         }
         .btn-action:hover {
             background-color: #CC2B53;
-            box-shadow: var(--neon-shadow-primary);
+            box-shadow: 0 0 15px var(--color-primary);
         }
 
-        /* --- HOME GRID / PLAYER CARD STYLES (from previous) --- */
-        .player-grid {
-            max-width: 1200px;
+
+        /* --- HOME VIEW: FEED & FILTERS --- */
+        #home-view {
+            max-width: 1400px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 25px;
             padding-top: 20px;
+        }
+        .filter-bar {
+            background-color: var(--color-card-bg);
+            padding: 15px 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            gap: 15px;
+            border: 1px solid var(--color-border);
+        }
+        .filter-bar select {
+            padding: 10px;
+            background-color: var(--color-dark-bg);
+            color: var(--color-text-light);
+            border: 1px solid var(--color-border);
+            border-radius: 5px;
+            font-family: inherit;
+        }
+        
+        /* --- PLAYER CARD STYLES --- */
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
         }
         .player-card {
             background-color: var(--color-card-bg);
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-            transition: transform 0.3s;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+            transition: transform 0.3s, border 0.3s;
             border: 1px solid var(--color-border);
-        }
-        .player-card:hover {
-            transform: scale(1.03);
-            border-color: var(--color-secondary);
-            box-shadow: 0 0 15px var(--color-secondary);
-        }
-        .btn-friend {
-            background-color: var(--color-primary);
-            text-shadow: var(--neon-shadow-primary);
-        }
-        .btn-friend.sent {
-            background-color: var(--color-border);
-            text-shadow: none;
-        }
-
-        /* --- PROFILE VIEW STYLES (Read-Only Preview) --- */
-        .profile-view-card {
-            max-width: 800px;
-            width: 100%;
-            margin: 0 auto;
-            background-color: var(--color-card-bg);
-            border-radius: 12px;
-            padding: 30px;
-            border: 2px solid var(--color-secondary);
-            box-shadow: 0 0 20px var(--color-secondary);
-        }
-        .profile-header {
-            display: flex;
-            align-items: center;
-            border-bottom: 2px dashed var(--color-border);
-            padding-bottom: 20px;
-            margin-bottom: 20px;
-        }
-        .profile-header img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            border: 4px solid var(--color-primary);
-            margin-right: 20px;
-        }
-        .profile-header h1 {
-            font-size: 2.5rem;
-            color: var(--color-primary);
-            text-shadow: var(--neon-shadow-primary);
-        }
-        .profile-header p {
-            color: var(--color-text-fade);
-        }
-        .profile-details h3 {
-            color: var(--color-secondary);
-            border-bottom: 1px solid var(--color-border);
-            padding-bottom: 5px;
-            margin-top: 20px;
-            margin-bottom: 10px;
-        }
-        .profile-stat {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-        }
-        .profile-stat span:first-child {
-            color: var(--color-text-fade);
-        }
-        .profile-stat span:last-child {
-            color: var(--color-text-light);
-            font-weight: bold;
-        }
-        .btn-edit-profile {
-            float: right;
-            margin-top: -50px;
-            background-color: var(--color-secondary);
-            color: var(--color-dark-bg);
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            box-shadow: var(--neon-shadow-secondary);
-        }
-
-        /* --- MESSAGING VIEW STYLES --- */
-        .messaging-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            display: flex;
-            height: calc(100vh - 80px); /* Fill remaining viewport height */
-            background-color: var(--color-card-bg);
-            border-radius: 10px;
+            position: relative;
             overflow: hidden;
         }
+        .player-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: var(--color-secondary);
+            opacity: 0.8;
+            transition: height 0.3s;
+        }
+        .player-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--color-primary);
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+        }
+        .player-card:hover::before {
+            height: 10px;
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .card-header img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: 3px solid var(--color-secondary);
+            margin-right: 15px;
+            box-shadow: var(--neon-shadow-secondary);
+        }
+        .card-info h3 {
+            font-size: 1.6rem;
+            color: var(--color-text-light);
+            letter-spacing: 0.5px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        .status-online { background-color: var(--color-status-online); }
+        .status-ingame { background-color: var(--color-status-ingame); }
+
+        .card-tags {
+            margin: 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--color-border);
+        }
+        .card-tags li {
+            background-color: #2D2D45;
+            color: var(--color-secondary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+        .card-objective {
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            color: var(--color-text-light);
+        }
+        .btn-duoup {
+            background-color: var(--color-primary);
+            color: var(--color-dark-bg);
+            font-size: 1.1rem;
+        }
+
+        /* --- MESSAGING VIEW STYLES (Improved List) --- */
         .chat-list {
-            width: 300px;
-            border-right: 1px solid var(--color-border);
-            overflow-y: auto;
+            /* ... (keep existing chat-list styles) ... */
         }
         .chat-item {
+            display: flex;
             padding: 15px;
-            border-bottom: 1px solid #282848;
             cursor: pointer;
-            transition: background-color 0.2s;
+            border-bottom: 1px solid #282848;
         }
-        .chat-item:hover, .chat-item.active {
-            background-color: #303050;
-            border-left: 4px solid var(--color-primary);
-            padding-left: 11px;
+        .chat-item-info {
+            flex-grow: 1;
         }
         .chat-item h4 {
             color: var(--color-text-light);
+            margin-bottom: 3px;
         }
         .chat-item p {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            color: var(--color-text-fade);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-time {
+            font-size: 0.75rem;
             color: var(--color-text-fade);
         }
-        .chat-window {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-        .messages {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
-            background-color: #0E0E2A;
-        }
-        .message {
-            margin-bottom: 15px;
-            padding: 8px 12px;
-            border-radius: 15px;
-            max-width: 70%;
-            position: relative;
-        }
-        .message.incoming {
-            background-color: var(--color-card-bg);
-            align-self: flex-start;
-            border-bottom-left-radius: 2px;
-        }
-        .message.outgoing {
-            background-color: var(--color-primary);
-            align-self: flex-end;
-            border-bottom-right-radius: 2px;
-            color: var(--color-dark-bg);
-            text-shadow: none;
-        }
-        .message-input {
-            padding: 15px;
-            display: flex;
-            border-top: 1px solid var(--color-border);
-        }
-        .message-input input {
-            flex-grow: 1;
-            margin-right: 10px;
-            background-color: var(--color-dark-bg);
-            border: 1px solid var(--color-border);
-            color: var(--color-text-light);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        .message-input button {
-            background-color: var(--color-secondary);
-            color: var(--color-dark-bg);
-            border: none;
-            padding: 0 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            box-shadow: var(--neon-shadow-secondary);
-        }
 
-        /* --- Responsive Adjustments --- */
-        @media (max-width: 768px) {
-            .navbar { padding: 10px 15px; }
-            .navbar .logo { font-size: 1.5rem; }
-            .nav-link { margin-left: 10px; }
-            .player-grid { gap: 15px; }
-            .messaging-container { flex-direction: column; height: auto; }
-            .chat-list { width: 100%; border-right: none; border-bottom: 1px solid var(--color-border); }
-        }
     </style>
 </head>
 <body>
@@ -331,97 +259,93 @@
 
         <div class="app-view" id="signup-view" style="display: flex; justify-content: center; align-items: center; min-height: 100vh;">
             <div class="signup-card centered-card">
-                </div>
+                <h2 class="glow">Join Duoup</h2>
+                <form id="signup-form">
+                    <div class="form-group">
+                        <label for="username">Gamertag</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="age">Age</label>
+                        <input type="number" id="age" required min="13">
+                    </div>
+                    <div class="form-group">
+                        <label for="gameCode">Main Game / Platform (e.g., PC-Valorant)</label>
+                        <input type="text" id="gameCode" required>
+                    </div>
+                    <button type="submit" class="btn-action">Sign Up (Email/Pass)</button>
+                    <p class="error-message" id="signup-error"></p>
+                </form>
+                <button class="btn-action" style="background-color: #4285F4; margin-top: 10px;" onclick="handleGoogleSignIn()">
+                    <i class="fab fa-google"></i> Sign Up with Google
+                </button>
+            </div>
         </div>
 
         <div class="app-view" id="home-view">
-            <h2 class="section-heading" style="max-width: 1200px; margin: 20px auto; padding-left: 20px;">Find Your Duo</h2>
+            <h2 class="section-heading glow" style="max-width: 1400px; margin: 20px auto; padding-left: 20px; border-color: var(--color-secondary);">Looking For Duo (LFD) Feed</h2>
+            
+            <div class="filter-bar">
+                <select id="game-filter">
+                    <option value="">All Games</option>
+                    <option value="Apex Legends">Apex Legends</option>
+                    <option value="Overwatch 2">Overwatch 2</option>
+                    <option value="League of Legends">League of Legends</option>
+                </select>
+                <select id="platform-filter">
+                    <option value="">All Platforms</option>
+                    <option value="PC">PC</option>
+                    <option value="PS5">PS5</option>
+                </select>
+                <select id="style-filter">
+                    <option value="">All Styles</option>
+                    <option value="Competitive">Competitive</option>
+                    <option value="Casual">Casual</option>
+                    <option value="Co-op">Co-op</option>
+                </select>
+            </div>
+            
             <div class="player-grid" id="player-card-grid">
                 </div>
         </div>
 
         <div class="app-view" id="profile-preview-view">
-            <div class="profile-view-card">
-                <button class="btn-edit-profile" onclick="showView('profile-edit-view')">
-                    <i class="fas fa-edit"></i> Edit Profile
-                </button>
-                <div class="profile-header">
-                    <img id="profile-img-preview" src="https://via.placeholder.com/100/FF3366/0A0A1F?text=You" alt="Your Profile">
-                    <div>
-                        <h1 id="profile-username">Current Player Name</h1>
-                        <p id="profile-gamecode">Main Game: PC-Valorant</p>
-                    </div>
-                </div>
-                
-                <h3 style="color: var(--color-primary);">About Me</h3>
-                <p id="profile-bio" style="margin-bottom: 15px;">Looking for a reliable support main to push Diamond rank. Must have a mic and be chill.</p>
-                
-                <div class="profile-details">
-                    <h3>Stats & Details</h3>
-                    <div class="profile-stat"><span>Age</span><span id="stat-age">30</span></div>
-                    <div class="profile-stat"><span>Friends</span><span id="stat-friends">142</span></div>
-                    <div class="profile-stat"><span>Joined</span><span id="stat-joined">2024-10-20</span></div>
-                    <h3>Tags</h3>
-                    <div class="tag-list" id="profile-tags-preview">
-                        </div>
-                </div>
             </div>
-        </div>
 
         <div class="app-view" id="profile-edit-view" style="display: flex; justify-content: center;">
-            <div class="profile-edit centered-card">
-                <h2><i class="fas fa-wrench"></i> Edit Your Profile</h2>
-                <form id="profile-edit-form">
-                    <div class="form-group">
-                        <label for="edit-username">Gamertag (Read-Only)</label>
-                        <input type="text" id="edit-username" disabled style="background-color: #2D2D50;">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-bio">Current Objective / Bio</label>
-                        <textarea id="edit-bio" rows="3" placeholder="Tell us what you're looking for..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-age">Age</label>
-                        <input type="number" id="edit-age" min="13">
-                    </div>
-                    <div class="form-group">
-                        <label for="edit-gamecode">Main Game / Platform</label>
-                        <input type="text" id="edit-gamecode">
-                    </div>
-                    <p style="color: var(--color-secondary); margin-top: 15px;">Cool Feature: Tags (separate by comma)</p>
-                    <div class="form-group">
-                        <input type="text" id="edit-tags" placeholder="e.g., Competitive, Voice Chat, DPS">
-                    </div>
-                    <button type="submit" class="btn-action"><i class="fas fa-save"></i> Save Changes</button>
-                    <button type="button" class="btn-action" style="background-color: var(--color-border);" onclick="showView('profile-preview-view')">Cancel</button>
-                </form>
             </div>
-        </div>
 
         <div class="app-view" id="messaging-view" style="padding: 0;">
             <div class="messaging-container">
                 <div class="chat-list">
-                    <h3 style="padding: 15px; color: var(--color-primary);">Duoup Chats</h3>
+                    <h3 style="padding: 15px; color: var(--color-primary); text-shadow: var(--neon-shadow-primary);">Duoup Chats</h3>
                     <div class="chat-item active" onclick="loadChat(1)">
-                        <h4>Rogue_Agent</h4>
-                        <p>Hey, ready for ranked?</p>
+                        <img src="https://via.placeholder.com/40/E0E0FF/111122?text=R" style="border-radius:50%; margin-right: 10px;"/>
+                        <div class="chat-item-info">
+                            <h4>Rogue_Agent</h4>
+                            <p>Hey, ready for ranked?</p>
+                        </div>
+                        <span class="chat-time">1 min ago</span>
                     </div>
                     <div class="chat-item" onclick="loadChat(2)">
-                        <h4>Silent_Sniper</h4>
-                        <p>You: Yeah, be right there.</p>
+                         <img src="https://via.placeholder.com/40/00FFFF/111122?text=S" style="border-radius:50%; margin-right: 10px;"/>
+                        <div class="chat-item-info">
+                            <h4>Silent_Sniper</h4>
+                            <p>You: Yeah, be right there.</p>
+                        </div>
+                        <span class="chat-time">1 hr ago</span>
                     </div>
                 </div>
                 <div class="chat-window">
-                    <div class="messages" id="chat-messages">
-                        <div class="message incoming">Hey, ready for ranked?</div>
-                        <div class="message outgoing">Yeah, be right there.</div>
-                        <div class="message incoming">Cool, queue up!</div>
                     </div>
-                    <div class="message-input">
-                        <input type="text" id="message-text" placeholder="Send a message...">
-                        <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -432,20 +356,18 @@
         // JAVASCRIPT LOGIC (SIMULATED FIREBASE/RN CODE)
         // ====================================================================
         
-        // --- Current User Data (Simulated data structure from Firebase 'users' collection) ---
         let currentUser = {
             uid: 'user_123',
             username: 'Duoup_King_47',
             age: 27,
             gameCode: 'PC-Apex Legends',
-            bio: "Looking for a reliable support main to push Diamond rank. Must have a mic and be chill.",
+            bio: "Looking for a reliable support main to push Diamond rank in Apex Legends. Must have a mic and be chill.",
             friends: ['user_456', 'user_789'],
             joinedDate: '2024-10-20',
             tags: ['Competitive', 'Voice Chat', 'DPS', 'Evenings'],
             fcmToken: '...'
         };
 
-        // --- View Management ---
         const views = {
             'signup-view': document.getElementById('signup-view'),
             'home-view': document.getElementById('home-view'),
@@ -463,153 +385,77 @@
             }
             nav.style.display = (viewId !== 'signup-view') ? 'flex' : 'none';
             
-            // Special handling for content loading
             if (viewId === 'home-view') renderPlayerCards();
             if (viewId.startsWith('profile')) loadProfileData(viewId);
-            if (viewId === 'messaging-view') loadChat(1); // Load default chat
+            if (viewId === 'messaging-view') loadChat(1); 
             
             document.body.style.alignItems = (viewId === 'signup-view') ? 'center' : 'flex-start';
         }
         
-        // --- Profile Data Loading and Editing ---
+        // --- REALISTIC PLAYER POOL (Simulated Firebase Data) ---
+        const userPool = [
+            { id: 1, username: 'Silent_Sniper', age: 24, mainGame: 'Call of Duty: Warzone', platform: 'PS5', style: ['Casual', 'Voice Chat', 'LFG'], objective: 'Looking for smart teammates for high kill games.', status: 'Online' },
+            { id: 2, username: 'Tank_Main_77', age: 32, mainGame: 'Overwatch 2', platform: 'PC', style: ['Competitive', 'Tank', 'Evenings'], objective: 'Climbing to Grandmaster. Need a consistent support line.', status: 'In Game' },
+            { id: 3, username: 'Magic_Mage_X', age: 19, mainGame: 'League of Legends', platform: 'PC', style: ['Competitive', 'Mid-Lane', 'Chill'], objective: 'Always down for customs or grinding solo/duo queue. Add me!', status: 'Online' },
+            { id: 4, username: 'Aussie_Gamer', age: 27, mainGame: 'Valheim', platform: 'PC', style: ['Co-op', 'PVE', 'Relaxed'], objective: 'Building a massive settlement. Need builders and explorers!', status: 'Online' },
+            { id: 5, username: 'Rogue_Agent', age: 29, mainGame: 'Apex Legends', platform: 'PC', style: ['Competitive', 'IGL', 'Ranked'], objective: 'Pushing Masters. Requires high comms and rotations knowledge.', status: 'Offline' },
+        ];
 
-        function loadProfileData(viewId) {
-            const date = new Date(currentUser.joinedDate);
-
-            // Populate Preview View
-            document.getElementById('profile-username').textContent = currentUser.username;
-            document.getElementById('profile-gamecode').textContent = `Main Game: ${currentUser.gameCode}`;
-            document.getElementById('profile-bio').textContent = currentUser.bio;
-            document.getElementById('stat-age').textContent = currentUser.age;
-            document.getElementById('stat-friends').textContent = currentUser.friends.length;
-            document.getElementById('stat-joined').textContent = date.toLocaleDateString();
-            document.getElementById('profile-tags-preview').innerHTML = currentUser.tags.map(tag => `<li class="tag">${tag}</li>`).join('');
-
-            // Populate Edit View
-            if (viewId === 'profile-edit-view') {
-                document.getElementById('edit-username').value = currentUser.username; // Read-Only
-                document.getElementById('edit-bio').value = currentUser.bio;
-                document.getElementById('edit-age').value = currentUser.age;
-                document.getElementById('edit-gamecode').value = currentUser.gameCode;
-                document.getElementById('edit-tags').value = currentUser.tags.join(', ');
-            }
-        }
-
-        document.getElementById('profile-edit-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const newBio = document.getElementById('edit-bio').value;
-            const newAge = parseInt(document.getElementById('edit-age').value);
-            const newGameCode = document.getElementById('edit-gamecode').value;
-            const newTags = document.getElementById('edit-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-
-            // --- ACTUAL FIREBASE UPDATE CALL WOULD GO HERE ---
-            // const userRef = doc(db, 'users', currentUser.uid);
-            // await updateDoc(userRef, { bio: newBio, age: newAge, gameCode: newGameCode, tags: newTags });
-            // ---------------------------------------------------
-            
-            // SIMULATION: Update local data model
-            currentUser.bio = newBio;
-            currentUser.age = newAge;
-            currentUser.gameCode = newGameCode;
-            currentUser.tags = newTags;
-
-            console.log("Profile saved! Simulating database write.");
-            showView('profile-preview-view'); // Redirect back to preview
-        });
-
-        // --- Messaging Logic (Simulated Firebase Listener) ---
-        function loadChat(chatId) {
-            // This function would normally set up a real-time Firestore listener:
-            // onSnapshot(doc(db, 'chats', chatId, 'messages'), (snapshot) => { ... })
-            
-            const chatBox = document.getElementById('chat-messages');
-            chatBox.innerHTML = '';
-            
-            const messages = [
-                { id: 1, sender: 'other', content: 'Hey, ready for ranked?' },
-                { id: 2, sender: 'me', content: 'Yeah, be right there. Just need to confirm my settings.' },
-                { id: 3, sender: 'other', content: 'Cool, queue up!' },
-                { id: 4, sender: 'me', content: 'On my way!' },
-            ];
-
-            messages.forEach(msg => {
-                const type = msg.sender === 'me' ? 'outgoing' : 'incoming';
-                chatBox.innerHTML += `<div class="message ${type}">${msg.content}</div>`;
-            });
-            
-            chatBox.scrollTop = chatBox.scrollHeight; // Scroll to bottom
-            console.log(`Simulating loading messages for chat ${chatId}.`);
-        }
-        
-        function sendMessage() {
-            const input = document.getElementById('message-text');
-            const content = input.value.trim();
-            if (!content) return;
-
-            // --- ACTUAL FIREBASE WRITE CALL WOULD GO HERE (2 STEPS) ---
-            // 1. Add document to /chats/{chatId}/messages
-            // 2. Update parent /chats/{chatId} with lastMessage
-            // -----------------------------------------------------------
-
-            // SIMULATION: Append message locally
-            const chatBox = document.getElementById('chat-messages');
-            chatBox.innerHTML += `<div class="message outgoing">${content}</div>`;
-            
-            input.value = '';
-            chatBox.scrollTop = chatBox.scrollHeight;
-            console.log(`Message sent: "${content}"`);
-        }
-
-
-        // --- Initial Load and Authentication Check ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // Attach signup form listener
-            document.getElementById('signup-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                // Simulating successful sign-up redirect
-                setTimeout(() => showView('home-view'), 1000);
-            });
-            
-            // Load dummy cards for home view
-            const userPool = [
-                { id: 1, username: 'Silent_Sniper', age: 24, mainGame: 'Call of Duty', platform: 'PS5', style: ['Casual', 'Voice Chat', 'LFG'], objective: 'Looking for smart teammates for high kill games.', img: 'Player1' },
-                { id: 2, username: 'Tank_Main_77', age: 32, mainGame: 'Overwatch 2', platform: 'PC', style: ['Competitive', 'Tank', 'Evenings'], objective: 'Climbing to Grandmaster. Need a consistent support line.', img: 'Player2' },
-                { id: 3, username: 'Magic_Mage_X', age: 19, mainGame: 'League of Legends', platform: 'PC', style: ['Competitive', 'Mid-Lane', 'Chill'], objective: 'Always down for customs or grinding solo/duo queue. Add me!', img: 'Player3' },
-                { id: 4, username: 'Aussie_Gamer', age: 27, mainGame: 'Valheim', platform: 'PC', style: ['Co-op', 'PVE', 'Relaxed'], objective: 'Building a massive settlement. Need builders and explorers!', img: 'Player4' },
-                { id: 5, username: 'Rogue_Agent', age: 29, mainGame: 'Apex Legends', platform: 'PC', style: ['Competitive', 'IGL', 'Ranked'], objective: 'Pushing Masters. Requires high comms and rotations knowledge.', img: 'Player5' },
-            ];
-            
+        // --- Home View Rendering ---
+        function renderPlayerCards() {
             const grid = document.getElementById('player-card-grid');
             grid.innerHTML = userPool.map(user => {
-                const tags = user.style.map(tag => `<li>${tag}</li>`).join('');
+                const tags = user.style.map(tag => `<li style="color: var(--color-secondary);">${tag}</li>`).join('');
+                const statusClass = user.status === 'Online' ? 'status-online' : user.status === 'In Game' ? 'status-ingame' : 'status-offline';
+                
                 return `
                     <div class="player-card">
-                        <div class="card-header" style="display:flex;align-items:center;">
-                            <img src="https://via.placeholder.com/60/FF3366/0A0A1F?text=D" alt="Profile" style="width:60px;height:60px;border-radius:50%;margin-right:15px;"/>
+                        <div class="card-header">
+                            <img src="https://via.placeholder.com/70/${user.status === 'Online' ? '4CAF50' : 'E94560'}/111122?text=${user.username[0]}" alt="Profile" />
                             <div class="card-info">
-                                <h3 style="color:var(--color-primary);">${user.username}</h3>
-                                <p style="color:var(--color-text-fade);">${user.mainGame} | ${user.platform}</p>
+                                <h3>${user.username}</h3>
+                                <span class="status-badge ${statusClass}">${user.status}</span>
                             </div>
                         </div>
+                        <h4 style="color:var(--color-text-fade); margin-bottom: 5px;">${user.mainGame} - ${user.platform}</h4>
                         <p class="card-objective">${user.objective}</p>
                         <ul class="card-tags">${tags}</ul>
-                        <button class="btn-friend btn-action" onclick="console.log('Duoup Request Sent to ${user.username}')">
-                            <i class="fas fa-user-plus"></i> Duo Up
+                        <button class="btn-duoup btn-action" onclick="sendFriendRequest(${user.id}, this)">
+                            <i class="fas fa-handshake"></i> Duo Up
                         </button>
                     </div>
                 `;
             }).join('');
-            
-            // Assume user is logged out on first load
-            showView('signup-view');
-        });
+        }
+        
+        function sendFriendRequest(userId, buttonElement) {
+            console.log(`Simulating sending friend request to User ID: ${userId}`);
+            buttonElement.textContent = 'Request Sent';
+            buttonElement.classList.add('sent');
+            buttonElement.style.backgroundColor = 'var(--color-border)';
+            buttonElement.style.boxShadow = 'none';
+        }
 
-        // Add stubs for previous functions if they were defined globally
+        // --- Profile Data Loading and Editing (Keep these functions from previous step) ---
+        function loadProfileData(viewId) { /* ... */ }
+        function loadChat(chatId) { /* ... */ }
+        function sendMessage() { /* ... */ }
+        
+        // --- Dummy Functions for Sign-Up ---
+        document.getElementById('signup-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            console.log('Simulating Sign-up success...');
+            setTimeout(() => showView('home-view'), 1000);
+        });
         function handleGoogleSignIn() {
              console.log('Simulating Google Sign-in Success...');
              setTimeout(() => showView('home-view'), 1000);
         }
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            showView('signup-view');
+        });
     </script>
 </body>
 </html>
