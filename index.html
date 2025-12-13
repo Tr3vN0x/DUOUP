@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Ink - Public Posting Hub</title>
+    <title>Neon Ink - Chapter & Edit Hub</title>
     <style>
         /* --- GLOBAL STYLES (Neon Theme) --- */
         :root {
@@ -64,10 +64,16 @@
             color: var(--color-bg); 
             box-shadow: 0 0 10px var(--color-neon), 0 0 20px var(--color-neon);
         }
+        .nav-btn.accent {
+            background-color: var(--color-accent);
+            color: var(--color-bg);
+            border-color: var(--color-accent);
+            box-shadow: 0 0 5px var(--color-accent);
+        }
+        .nav-btn.accent:hover {
+            box-shadow: 0 0 10px var(--color-accent), 0 0 20px var(--color-accent);
+        }
 
-        /* User Info in Header - kept for layout, but unused */
-        #userInfo { font-size: 0.9em; margin-right: 15px; color: var(--color-text); }
-        #userInfo strong { color: var(--color-accent); }
 
         /* --- CONTAINER AND LAYOUT --- */
         .main-layout { 
@@ -93,7 +99,7 @@
             border: 1px solid var(--color-border);
         }
 
-        /* --- FORM STYLES (Create View) --- */
+        /* --- FORM STYLES (Create/Edit View) --- */
         #createView input[type="text"], #createView textarea, #createView select {
             width: 100%; 
             padding: 10px; 
@@ -108,7 +114,7 @@
         #createView textarea { height: 300px; }
 
 
-        /* --- STORY LIST VIEW STYLES (Unchanged) --- */
+        /* --- STORY LIST VIEW STYLES --- */
         #storyList { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); 
@@ -123,21 +129,7 @@
             border-radius: 8px; 
             transition: all 0.3s;
         }
-        .story-card:hover { 
-            border-color: var(--color-neon); 
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.5); 
-            transform: translateY(-2px);
-        }
-        .card-thumbnail { 
-            width: 80px; 
-            height: 120px; 
-            object-fit: cover; 
-            border-radius: 4px; 
-            margin-right: 15px;
-            border: 2px solid var(--color-accent);
-        }
         .card-details h3 { font-size: 1.3em; margin-top: 0; margin-bottom: 5px; }
-        .card-details p { margin: 0 0 3px 0; font-size: 0.9em; color: #aaa; }
         .read-link { 
             color: var(--color-accent); 
             text-decoration: none; 
@@ -147,18 +139,9 @@
             margin-top: 10px;
         }
 
-        /* --- AUTHOR VIEW (Simplified Profile View) --- */
+        /* --- AUTHOR VIEW --- */
         #authorView { text-align: center; }
-        #authorPicture { 
-            width: 150px; 
-            height: 150px; 
-            border-radius: 50%; 
-            object-fit: cover; 
-            border: 4px solid var(--color-accent); 
-            margin-bottom: 15px;
-        }
         #authorView h2 { font-size: 2em; margin-bottom: 5px; }
-        #authorBio { font-style: italic; color: #aaa; max-width: 600px; margin: 0 auto 20px; }
         #authorStoriesList { margin-top: 30px; border-top: 1px solid #444; padding-top: 20px; }
         .story-card-profile {
             display: flex;
@@ -171,13 +154,31 @@
             border-left: 3px solid var(--color-neon);
         }
         .story-card-profile h4 { margin: 0; color: var(--color-text); }
-        .story-card-profile a { color: var(--color-accent); text-decoration: none; }
+        .story-card-profile .actions button { margin-left: 10px; }
 
-        /* --- READ VIEW STYLES (Unchanged) --- */
+
+        /* --- READ VIEW STYLES (Chapter Navigation) --- */
         #readView { font-family: var(--font-display); padding: 20px; }
         #readView .story-title { font-size: 2.8em; color: var(--color-neon); }
-        #readView .story-author { color: var(--color-accent); font-style: italic; margin-bottom: 20px; }
-        #readView .chapter-text { font-size: 1.1em; line-height: 1.7; margin-top: 20px; }
+        #chapterNav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 20px;
+        }
+        #chapterSelector { 
+            padding: 8px; 
+            background-color: #333; 
+            color: var(--color-text); 
+            border: 1px solid var(--color-neon);
+            border-radius: 4px;
+        }
+        .chapter-text { 
+            font-size: 1.1em; 
+            line-height: 1.7; 
+            margin-top: 20px; 
+            padding-bottom: 40px; 
+        }
         #readView hr { margin: 30px 0; border: 0; border-top: 1px solid var(--color-border); }
     </style>
 </head>
@@ -188,8 +189,6 @@
             <span style="color: var(--color-accent);">N</span>eon <span style="color: var(--color-accent);">I</span>nk 💡
         </h1>
         <nav>
-            <div id="userInfo"></div> 
-            
             <button class="nav-btn" onclick="showView('createView')">✍️ Write</button>
             <button class="nav-btn" onclick="showView('listView')">📖 Read</button>
         </nav>
@@ -218,10 +217,14 @@
             </section>
 
             <section id="createView" class="hidden">
-                <h2>✍️ Post a Story Anonymously</h2>
-                <p style="color: var(--color-neon);">
+                <h2 id="createViewTitle">✍️ Post a Story Anonymously</h2>
+                <p id="createViewNote" style="color: var(--color-neon);">
                     *Enter your Pen Name below. You can use any name you like.*
                 </p>
+                
+                <input type="hidden" id="storyIdToEdit">
+                <input type="hidden" id="chapterIndexToEdit">
+
                 <div class="form-group">
                     <label for="storyAuthor">Author / Pen Name</label>
                     <input type="text" id="storyAuthor" required value="Anonymous Writer">
@@ -230,7 +233,7 @@
                     <label for="storyTitle">Story Title</label>
                     <input type="text" id="storyTitle" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="categoryGroup">
                     <label for="storyCategory">Category</label>
                     <select id="storyCategory">
                         <option value="General">General</option>
@@ -240,20 +243,37 @@
                         <option value="Thriller">Thriller</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" id="thumbnailGroup">
                     <label for="storyThumbnailUrl">Thumbnail Image URL (Optional)</label>
                     <input type="text" id="storyThumbnailUrl" placeholder="Paste an image URL here">
                 </div>
+                
                 <div class="form-group">
-                    <label for="storyContent">Chapter 1 Content</label>
+                    <label for="chapterTitle">Chapter Title</label>
+                    <input type="text" id="chapterTitle" value="Chapter 1">
+                </div>
+                <div class="form-group">
+                    <label for="storyContent">Chapter Content</label>
                     <textarea id="storyContent" required></textarea>
                 </div>
-                <button id="publishButton" class="nav-btn" style="background-color: var(--color-accent); color: var(--color-bg); border-color: var(--color-accent);">Publish Story</button>
+                <button id="publishButton" class="nav-btn accent">Publish Story</button>
             </section>
             
             <section id="readView" class="hidden">
                 <button class="nav-btn" onclick="showView('listView')">← Back to Stories</button>
-                <div id="storyContentContainer"></div>
+                <div id="storyContentContainer">
+                    <h1 class="story-title" id="readTitle"></h1>
+                    <p class="story-author" id="readMeta"></p>
+                    
+                    <div id="chapterNav">
+                        <select id="chapterSelector"></select>
+                        <button class="nav-btn accent" id="addChapterBtn">➕ Add Chapter</button>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="chapter-text" id="chapterText"></div>
+                </div>
             </section>
 
             <section id="authorView" class="hidden">
@@ -269,9 +289,10 @@
 
         </div>
     </div> <script>
-        // --- DATA KEYS (Only stories remain) ---
+        // --- DATA KEYS ---
         const STORIES_KEY = 'stories';
         let currentFilter = 'All';
+        let currentStoryId = null;
 
         // --- DATA RETRIEVAL/STORAGE UTILITIES ---
         function getStories() {
@@ -287,7 +308,7 @@
 
         // --- NAVIGATION & VIEW MANAGEMENT ---
         function showView(viewId) {
-            // Mapping the old 'profileView' to the new 'authorView' for simplicity
+            // Mapping 'profileView' to 'authorView' for simplicity
             const viewMapping = {
                 'listView': 'listView',
                 'createView': 'createView',
@@ -311,6 +332,9 @@
                 renderStoryList();
             } else if (targetViewId === 'readView') {
                 document.getElementById('sidebar').classList.add('hidden');
+            } else if (targetViewId === 'createView') {
+                // Reset editor for new story creation by default
+                resetEditor();
             }
         }
 
@@ -358,41 +382,61 @@
                         <h3>${story.title}</h3>
                         <p><strong>Category:</strong> ${story.category}</p>
                         <p><strong>By:</strong> <a class="read-link" onclick="renderAuthorView('${story.author}')">${story.author}</a></p>
-                        <a class="read-link" onclick="renderStory('${story.id}')">Start Reading &rarr;</a>
+                        <a class="read-link" onclick="renderStory('${story.id}')">Read (${story.chapters.length} Chapters) &rarr;</a>
                     </div>
                 `;
                 listContainer.appendChild(storyCard);
             });
         }
 
-        // --- 2. CREATE VIEW LOGIC (Modified to read Author Name) ---
-        document.getElementById('publishButton').addEventListener('click', () => {
-            
-            const authorInput = document.getElementById('storyAuthor');
-            const titleInput = document.getElementById('storyTitle');
-            const categorySelect = document.getElementById('storyCategory');
-            const thumbnailInput = document.getElementById('storyThumbnailUrl');
-            const contentInput = document.getElementById('storyContent');
+        // --- 2. CREATE/EDIT VIEW LOGIC ---
 
-            const author = authorInput.value.trim() || 'Anonymous Writer';
-            const title = titleInput.value.trim();
-            const category = categorySelect.value;
-            const thumbnailUrl = thumbnailInput.value.trim();
-            const content = contentInput.value.trim();
+        function resetEditor() {
+            // Reset fields for new story creation
+            document.getElementById('createViewTitle').textContent = '✍️ Post a Story Anonymously';
+            document.getElementById('createViewNote').textContent = '*Enter your Pen Name below. You can use any name you like.*';
+            document.getElementById('publishButton').textContent = 'Publish Story';
+            document.getElementById('publishButton').onclick = publishNewStory;
+            
+            document.getElementById('storyIdToEdit').value = '';
+            document.getElementById('chapterIndexToEdit').value = '';
+            
+            document.getElementById('storyTitle').value = '';
+            document.getElementById('storyCategory').value = 'General';
+            document.getElementById('storyThumbnailUrl').value = '';
+            document.getElementById('chapterTitle').value = 'Chapter 1';
+            document.getElementById('storyContent').value = '';
+            
+            // Show all fields for new creation
+            document.getElementById('storyAuthor').style.display = 'block';
+            document.querySelector('label[for="storyAuthor"]').style.display = 'block';
+            document.getElementById('categoryGroup').style.display = 'block';
+            document.getElementById('thumbnailGroup').style.display = 'block';
+        }
+
+
+        function publishNewStory() {
+            
+            const author = document.getElementById('storyAuthor').value.trim() || 'Anonymous Writer';
+            const title = document.getElementById('storyTitle').value.trim();
+            const category = document.getElementById('storyCategory').value;
+            const thumbnailUrl = document.getElementById('storyThumbnailUrl').value.trim();
+            const chapterTitle = document.getElementById('chapterTitle').value.trim() || 'Chapter 1';
+            const content = document.getElementById('storyContent').value.trim();
 
             if (!title || !content) {
-                alert('Title and content are required.');
+                alert('Title and chapter content are required.');
                 return;
             }
 
             const newStory = {
                 id: generateId(),
                 title: title,
-                author: author, // Use the submitted author name
+                author: author, 
                 category: category,
                 thumbnailUrl: thumbnailUrl,
                 chapters: [{
-                    title: 'Chapter 1',
+                    title: chapterTitle,
                     content: content,
                     datePublished: new Date().toLocaleDateString()
                 }],
@@ -403,50 +447,193 @@
             stories.push(newStory);
             saveStories(stories);
 
-            // Clear form (except author name for repeat posting)
-            titleInput.value = '';
-            thumbnailInput.value = '';
-            contentInput.value = '';
-            categorySelect.value = 'General';
             alert('Story published successfully!');
-            
-            filterStories('All'); 
             showView('listView');
-        });
+        }
 
-        // --- 3. READ VIEW LOGIC (Unchanged) ---
-        function renderStory(storyId) {
+        // Triggered by Edit button on Author View
+        function editStory(storyId) {
             const stories = getStories();
             const story = stories.find(s => s.id === storyId);
-            const container = document.getElementById('storyContentContainer');
+
+            if (!story) {
+                alert('Story not found.');
+                return;
+            }
+
+            const authorCheck = prompt(`To edit "${story.title}", please confirm the author name:`);
+            if (authorCheck !== story.author) {
+                alert('Author name does not match. Edit access denied.');
+                return;
+            }
+
+            // Load editor for editing Chapter 1 by default
+            const chapter = story.chapters[0];
+            
+            document.getElementById('createViewTitle').textContent = `✏️ Editing: ${story.title} (Chapter 1)`;
+            document.getElementById('createViewNote').textContent = `*Modifying Chapter 1 content.*`;
+            document.getElementById('publishButton').textContent = 'Save Changes';
+            document.getElementById('publishButton').onclick = saveChapterChanges;
+
+            document.getElementById('storyIdToEdit').value = storyId;
+            document.getElementById('chapterIndexToEdit').value = 0; // Default to Chapter 1 (index 0)
+
+            // Pre-fill existing data
+            document.getElementById('storyAuthor').value = story.author;
+            document.getElementById('storyTitle').value = story.title;
+            document.getElementById('storyCategory').value = story.category;
+            document.getElementById('storyThumbnailUrl').value = story.thumbnailUrl;
+            document.getElementById('chapterTitle').value = chapter.title;
+            document.getElementById('storyContent').value = chapter.content;
+
+            // Hide fields that shouldn't be edited after creation
+            document.getElementById('storyAuthor').style.display = 'none';
+            document.querySelector('label[for="storyAuthor"]').style.display = 'none';
+            document.getElementById('categoryGroup').style.display = 'none';
+            document.getElementById('thumbnailGroup').style.display = 'none';
+
+            showView('createView');
+        }
+        
+        // Triggered by Add Chapter button on Read View
+        function addChapter(storyId, author) {
+            const authorCheck = prompt(`To add a chapter to this story, please confirm the author name:`);
+            if (authorCheck !== author) {
+                alert('Author name does not match. Chapter access denied.');
+                return;
+            }
+            
+            const stories = getStories();
+            const story = stories.find(s => s.id === storyId);
+
+            document.getElementById('createViewTitle').textContent = `➕ Add New Chapter to: ${story.title}`;
+            document.getElementById('createViewNote').textContent = `*Adding Chapter ${story.chapters.length + 1}*`;
+            document.getElementById('publishButton').textContent = 'Publish Chapter';
+            document.getElementById('publishButton').onclick = saveChapterChanges;
+
+            document.getElementById('storyIdToEdit').value = storyId;
+            document.getElementById('chapterIndexToEdit').value = story.chapters.length; // New chapter index
+
+            // Clear chapter fields for new content
+            document.getElementById('chapterTitle').value = `Chapter ${story.chapters.length + 1}`;
+            document.getElementById('storyContent').value = '';
+
+            // Hide story metadata fields
+            document.getElementById('storyAuthor').style.display = 'none';
+            document.querySelector('label[for="storyAuthor"]').style.display = 'none';
+            document.getElementById('storyTitle').style.display = 'none';
+            document.querySelector('label[for="storyTitle"]').style.display = 'none';
+            document.getElementById('categoryGroup').style.display = 'none';
+            document.getElementById('thumbnailGroup').style.display = 'none';
+
+            showView('createView');
+        }
+
+        // Unified save function for edits and new chapters
+        function saveChapterChanges() {
+            const storyId = document.getElementById('storyIdToEdit').value;
+            const chapterIndex = parseInt(document.getElementById('chapterIndexToEdit').value);
+            
+            const chapterTitle = document.getElementById('chapterTitle').value.trim() || `Chapter ${chapterIndex + 1}`;
+            const content = document.getElementById('storyContent').value.trim();
+
+            if (!content) {
+                alert('Chapter content cannot be empty.');
+                return;
+            }
+
+            let stories = getStories();
+            const storyIndex = stories.findIndex(s => s.id === storyId);
+
+            if (storyIndex === -1) {
+                alert('Error: Story not found in database.');
+                return;
+            }
+
+            const isNewChapter = chapterIndex === stories[storyIndex].chapters.length;
+
+            if (isNewChapter) {
+                // Add new chapter
+                stories[storyIndex].chapters.push({
+                    title: chapterTitle,
+                    content: content,
+                    datePublished: new Date().toLocaleDateString()
+                });
+                alert('New chapter published successfully!');
+            } else {
+                // Update existing chapter
+                stories[storyIndex].chapters[chapterIndex].title = chapterTitle;
+                stories[storyIndex].chapters[chapterIndex].content = content;
+                alert('Chapter saved successfully!');
+            }
+
+            saveStories(stories);
+            showView('listView'); // Return to list view or perhaps the read view
+        }
+
+        // --- 3. READ VIEW LOGIC (Modified for Chapter Navigation) ---
+        function renderStory(storyId, chapterIndex = 0) {
+            currentStoryId = storyId;
+            const stories = getStories();
+            const story = stories.find(s => s.id === storyId);
             
             if (!story) {
-                container.innerHTML = '<h1 style="color: var(--color-accent);">Story Not Found</h1>';
+                document.getElementById('chapterText').innerHTML = '<h1 style="color: var(--color-accent);">Story Not Found</h1>';
                 showView('readView');
                 return;
             }
 
-            const chapter = story.chapters[0]; 
+            // Ensure chapter index is valid
+            const chapter = story.chapters[chapterIndex]; 
+            if (!chapter) {
+                document.getElementById('chapterText').innerHTML = '<h1 style="color: var(--color-accent);">Chapter Not Found</h1>';
+                showView('readView');
+                return;
+            }
 
-            container.innerHTML = `
-                <h1 class="story-title">${story.title}</h1>
-                <p class="story-author">By: <a class="read-link" onclick="renderAuthorView('${story.author}')">${story.author}</a> | Category: ${story.category}</p>
-                <hr>
-                <div class="chapter-text">${chapter.content.replace(/\n/g, '<br>')}</div>
-                <p class="publish-date" style="color:#777; font-size: 0.9em;">Published on: ${chapter.datePublished}</p>
+            // 1. Update Header Info
+            document.getElementById('readTitle').textContent = story.title;
+            document.getElementById('readMeta').innerHTML = `
+                ${chapter.title} | By: <a class="read-link" style="display:inline;" onclick="renderAuthorView('${story.author}')">${story.author}</a> | Category: ${story.category}
             `;
+            
+            // 2. Populate Chapter Selector (Dropdown)
+            const selector = document.getElementById('chapterSelector');
+            selector.innerHTML = '';
+            story.chapters.forEach((ch, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = ch.title;
+                if (index === chapterIndex) {
+                    option.selected = true;
+                }
+                selector.appendChild(option);
+            });
+
+            // Set the change listener for navigation
+            selector.onchange = (e) => renderStory(storyId, parseInt(e.target.value));
+
+            // 3. Update Chapter Content
+            document.getElementById('chapterText').innerHTML = `
+                ${chapter.content.replace(/\n/g, '<br>')}
+                <p class="publish-date" style="color:#777; font-size: 0.9em; margin-top: 30px;">
+                    Published on: ${chapter.datePublished}
+                </p>
+            `;
+
+            // 4. Set Add Chapter Button Action
+            const addChapterBtn = document.getElementById('addChapterBtn');
+            addChapterBtn.onclick = () => addChapter(storyId, story.author);
 
             showView('readView');
         }
 
-        // --- 4. AUTHOR VIEW LOGIC (Replaces Profile View) ---
+        // --- 4. AUTHOR VIEW LOGIC (Modified to include Edit button) ---
         function renderAuthorView(targetAuthorName) {
             
-            // Set the author name on the view
             document.getElementById('authorName').textContent = targetAuthorName;
             document.getElementById('authorPicture').src = `https://via.placeholder.com/150/ff0077/1a1a1a?text=${targetAuthorName.charAt(0).toUpperCase()}`;
 
-            // Display author's stories
             const authorStoriesContainer = document.getElementById('authorStoriesList');
             authorStoriesContainer.innerHTML = '<h3>Stories by ' + targetAuthorName + '</h3>';
             
@@ -461,14 +648,16 @@
                     const storyDiv = document.createElement('div');
                     storyDiv.className = 'story-card-profile';
                     storyDiv.innerHTML = `
-                        <h4>${story.title}</h4>
-                        <a onclick="renderStory('${story.id}')">Read &rarr;</a>
+                        <h4>${story.title} (${story.chapters.length} Ch.)</h4>
+                        <div class="actions">
+                            <button class="nav-btn" onclick="renderStory('${story.id}')">Read &rarr;</button>
+                            <button class="nav-btn accent" onclick="editStory('${story.id}')">Edit Story</button>
+                        </div>
                     `;
                     authorStoriesContainer.appendChild(storyDiv);
                 });
             }
 
-            // Use the authorView ID
             showView('authorView');
         }
 
@@ -478,9 +667,19 @@
             filterStories('All'); 
             showView('listView');
             
-            // Optional: You may want to clear old user data if it exists from previous versions
-            localStorage.removeItem('users');
-            localStorage.removeItem('loggedInUser');
+            // Ensure publish button is connected to the new story function by default
+            document.getElementById('publishButton').addEventListener('click', () => {
+                if (document.getElementById('storyIdToEdit').value) {
+                    // If an ID is present, we save/add chapter
+                    saveChapterChanges();
+                } else {
+                    // Otherwise, we publish a new story
+                    publishNewStory();
+                }
+            });
+            
+            // Initial editor setup
+            resetEditor();
         });
     </script>
 </body>
