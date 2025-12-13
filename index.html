@@ -20,63 +20,38 @@
     --status-online: #38A169;
     --status-offline: #E53E3E;
 }
-html, body { margin: 0; height: 100%; background-color: var(--duoup-dark); font-family: var(--font-main); color: var(--duoup-light); }
-h1,h2,h3 { font-family: var(--font-header); margin:0; color: var(--duoup-light); }
-h2 { display:flex; align-items:baseline; border-bottom:2px solid var(--duoup-secondary); padding-bottom:5px; margin-bottom:20px; font-size:1.8em; background: linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-#userCount { color: var(--duoup-secondary); font-size:0.55em; font-weight:600; text-shadow:0 0 5px var(--duoup-secondary); margin-left:10px; letter-spacing:1px; }
-a { color: var(--duoup-primary); text-decoration:none; transition:0.2s; }
-a:hover { text-shadow:0 0 8px var(--duoup-primary); }
-button { cursor:pointer; border:none; border-radius:5px; transition: background 0.2s, transform 0.1s, box-shadow 0.3s; }
-header { position:fixed; top:0; width:100%; height:60px; background:rgba(20,20,38,0.98); display:flex; align-items:center; justify-content:space-between; padding:0 15px; z-index:1000; border-bottom:3px solid var(--duoup-secondary); }
-header .logo { display:flex; align-items:center; gap:10px; }
-header h1 { font-size:2em; font-weight:700; color: var(--duoup-primary); text-shadow:0 0 10px var(--duoup-primary); }
-header h1 span { color: var(--duoup-secondary); text-shadow:0 0 5px var(--duoup-secondary),0 0 15px rgba(255,87,51,0.8); }
-header nav { display:flex; align-items:center; gap:15px; flex-wrap:wrap; }
-#logoutBtnHeader { background: var(--duoup-secondary); color: var(--duoup-dark); padding:6px 12px; font-weight:bold; display:flex; align-items:center; gap:5px; box-shadow:0 0 10px rgba(255,87,51,0.5); }
-#auth-section { display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding-top:60px; }
-form:not(#duoSearchForm) { display:flex; flex-direction:column; background:#141426; padding:25px; border-radius:12px; margin:10px; width:90%; max-width:360px; box-shadow:0 0 20px rgba(0,255,255,0.15); }
-#profileEditForm { background:none; box-shadow:none; padding:0; max-width:500px; width:100%; margin:0; }
-input:not(#searchQuery), textarea { margin:8px 0; padding:12px; border-radius:6px; border:1px solid var(--duoup-primary); background:#2D2D44; color:var(--duoup-light); font-family: var(--font-main); }
-textarea { resize:none; min-height:80px; }
-button:not(.google-btn):not(#duoSearchForm button) { margin-top:10px; padding:12px; font-weight:bold; background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark); text-transform:uppercase; box-shadow:0 0 15px rgba(0,255,255,0.5); }
-button:not(.google-btn):not(#duoSearchForm button):hover { background:linear-gradient(90deg, var(--duoup-accent), var(--duoup-secondary)); transform:translateY(-2px); box-shadow:0 0 20px rgba(255,87,51,0.8); }
-#duoSearchForm button { background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark); font-weight:bold; box-shadow:0 0 10px rgba(0,255,255,0.3); }
-.google-btn { background: linear-gradient(90deg, #DB4437, #EA4335); color:white; width:90%; max-width:360px; display:flex; align-items:center; justify-content:center; gap:10px; margin-top:15px; }
-.google-btn:hover { background: linear-gradient(90deg, #EA4335, #DB4437); transform:translateY(-2px); }
-#app-section { width:100%; padding-top:60px; }
-.container { max-width:1200px; margin:20px auto; padding:0 15px; width:100%; }
-.results-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:20px; width:100%; }
-.duo-card { background:linear-gradient(145deg,#1A1A2E,#2D2D44); color: var(--duoup-light); border-radius:12px; overflow:hidden; border:1px solid #3A3A52; transition:.3s; box-shadow:0 4px 8px rgba(0,0,0,0.4); }
-.duo-card:hover { transform:translateY(-5px); box-shadow:0 0 10px var(--duoup-primary),0 0 20px var(--duoup-secondary),0 0 30px var(--duoup-accent); border-color: var(--duoup-accent); }
-.card-header { display:flex; align-items:center; padding:10px 15px; border-bottom:1px solid #3A3A52; }
-.avatar { width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:15px; background: var(--duoup-secondary); color: var(--duoup-dark); font-family: var(--font-header); font-size:1.5em; border:2px solid var(--duoup-primary); overflow:hidden; box-shadow:0 0 10px var(--duoup-primary); }
-.avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
-.bio { padding:10px 15px; font-size:0.9em; color: var(--duoup-muted); }
-.action-button { width:100%; padding:12px; background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark); font-weight:bold; border-radius:0 0 12px 12px; text-transform:uppercase; }
-.duo-request-card { border-top:5px solid var(--duoup-secondary); }
-.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); justify-content:center; align-items:center; z-index:2000; }
-.chat-container { width:90%; max-width:420px; height:80%; background:#141426; border-radius:12px; display:flex; flex-direction:column; }
-.chat-header { padding:10px 15px; background:#1A1A2E; display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid var(--duoup-primary); color: var(--duoup-light);}
-.status-dot { width:8px; height:8px; border-radius:50%; margin-right:8px; display:inline-block;}
-.status-dot.online { background: var(--status-online); }
-.status-dot.offline { background: var(--status-offline); }
-.message-area { flex:1; padding:10px; overflow-y:auto; }
-.message { max-width:80%; margin-bottom:10px; }
-.message.self { margin-left:auto; }
-.message-content { padding:8px 12px; border-radius:12px; }
-.message.other .message-content { background:linear-gradient(135deg, #2D2D44, #3A3A52); color:white; }
-.message.self .message-content { background:linear-gradient(135deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark); }
-.chat-input-area { display:flex; padding:10px; gap:5px; }
-.chat-input { flex:1; padding:10px; border-radius:6px; border:none; background:#2D2D44; color:white; }
-.send-button { padding:10px 15px; border:none; background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark); font-weight:bold; border-radius:6px; }
-@media(max-width:500px){ header h1 { font-size:1.6em; } .results-grid { grid-template-columns:1fr; } }
+html, body { margin:0; height:100%; background-color: var(--duoup-dark); font-family: var(--font-main); color: var(--duoup-light);}
+h1,h2,h3{font-family: var(--font-header); margin:0;}
+h2{display:flex; align-items:baseline; border-bottom:2px solid var(--duoup-secondary); padding-bottom:5px; margin-bottom:20px; font-size:1.8em; background: linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;}
+#userCount{color: var(--duoup-secondary); font-size:0.55em; font-weight:600; margin-left:10px;}
+a{color: var(--duoup-primary); text-decoration:none;}
+button{cursor:pointer;border:none;border-radius:5px;transition:0.2s;}
+header{position:fixed; top:0;width:100%;height:60px;background:rgba(20,20,38,0.98);display:flex;align-items:center;justify-content:space-between;padding:0 15px; z-index:1000;border-bottom:3px solid var(--duoup-secondary);}
+header .logo{display:flex;align-items:center;gap:10px;}
+header h1{font-size:2em;font-weight:700;color: var(--duoup-primary);text-shadow:0 0 10px var(--duoup-primary);}
+header h1 span{color: var(--duoup-secondary);}
+header nav{display:flex;align-items:center;gap:15px;flex-wrap:wrap;}
+#logoutBtnHeader{background: var(--duoup-secondary); color: var(--duoup-dark); padding:6px 12px; font-weight:bold; display:flex; align-items:center; gap:5px;}
+#auth-section{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding-top:60px;}
+form:not(#duoSearchForm){display:flex; flex-direction:column; background:#141426; padding:25px; border-radius:12px; margin:10px; width:90%; max-width:360px;}
+input, textarea{margin:8px 0; padding:12px; border-radius:6px; border:1px solid var(--duoup-primary); background:#2D2D44; color:var(--duoup-light);}
+button:not(.google-btn):not(#duoSearchForm button){margin-top:10px; padding:12px; font-weight:bold; background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark);}
+.google-btn{background: linear-gradient(90deg, #DB4437, #EA4335); color:white; width:90%; max-width:360px; display:flex; align-items:center; justify-content:center; gap:10px; margin-top:15px;}
+#app-section{width:100%; padding-top:60px; display:none;}
+.container{max-width:1200px;margin:20px auto; padding:0 15px;}
+.results-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(280px,1fr)); gap:20px;}
+.duo-card{background:linear-gradient(145deg,#1A1A2E,#2D2D44); color: var(--duoup-light); border-radius:12px; overflow:hidden; border:1px solid #3A3A52; transition:.3s; box-shadow:0 4px 8px rgba(0,0,0,0.4);}
+.card-header{display:flex; align-items:center; padding:10px 15px; border-bottom:1px solid #3A3A52;}
+.avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;background: var(--duoup-secondary); color: var(--duoup-dark);}
+.bio{padding:10px 15px; font-size:0.9em; color: var(--duoup-muted);}
+.action-button{width:100%; padding:12px; background:linear-gradient(90deg, var(--duoup-primary), var(--duoup-accent)); color: var(--duoup-dark); font-weight:bold; border-radius:0 0 12px 12px;}
 </style>
 </head>
 <body>
 
 <header style="display:none;" id="mainHeader">
     <div class="logo">
-        <img src="https://i.imgur.com/3UQx9gR.png" alt="DuoUp" width="40" style="border-radius:8px;"/>
+        <img src="https://i.imgur.com/3UQx9gR.png" alt="DuoUp" width="40"/>
         <h1>DUO<span>UP</span></h1>
     </div>
     <nav>
@@ -95,76 +70,96 @@ button:not(.google-btn):not(#duoSearchForm button):hover { background:linear-gra
         <input id="signin-password" type="password" placeholder="Password" required>
         <button type="submit">Sign In</button>
     </form>
-
     <form id="signup">
         <h3>New Player? Sign Up</h3>
         <input id="signup-email" type="email" placeholder="Email" required>
         <input id="signup-password" type="password" placeholder="Password" required>
         <button type="submit">Create Account</button>
     </form>
-
     <button class="google-btn">
         <i class="fab fa-google"></i> Continue with Google
     </button>
 </div>
 
-<div id="app-section" style="display:none; width:100%; padding-top:60px;">
-    <!-- HOME / DUO SEARCH -->
+<div id="app-section">
     <div id="home-section" class="container">
-        <h2 id="homeSectionHeader">Duo Search <span id="userCount"></span></h2> 
-        <form id="duoSearchForm" style="display:flex; gap:10px; margin-bottom:20px;">
-            <input type="text" id="searchQuery" placeholder="Search by Username or Bio" style="flex-grow:1; padding:12px; border:1px solid var(--duoup-primary); border-radius:6px; background:#2D2D44; color:var(--duoup-light); font-family: var(--font-main);">
-            <button type="submit" style="padding:12px 20px;"><i class="fas fa-search"></i> Find Duo</button>
-        </form>
+        <h2>Duo Search <span id="userCount"></span></h2>
         <div class="results-grid" id="usersGrid"></div>
     </div>
-
-    <!-- PROFILE -->
     <div id="profile-section" class="container" style="display:none;">
-        <h2 style="margin-bottom:25px;">Profile Management</h2>
-        <div style="display:flex; gap:30px; flex-wrap:wrap;">
-            <form id="profileEditForm">
-                <h3>Edit Details</h3>
-                <input class="profile-field" id="profile-username" placeholder="Username">
-                <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
-                <label style="margin-top:10px; color: var(--duoup-muted);">Upload/Update Profile Photo:</label>
-                <input type="file" id="profile-photo" style="margin-top:5px;">
-            </form>
-            <div style="flex-grow:1; min-width:300px; max-width:320px;">
-                <h3>Your Current Duo Card Preview</h3>
-                <div id="profilePreviewContainer"></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- MESSAGES -->
-    <div id="messages-section" class="container" style="display:none;">
-        <h2>Messages & Duo Requests</h2>
-        <div id="messages-container" class="messages-container">
-            <h3>Pending Requests</h3>
-            <div class="results-grid" id="requestsGrid"></div>
-            <h3>Your Accepted Duos (Click to Chat)</h3>
-            <div class="results-grid" id="duosGrid"></div>
-        </div>
+        <h2>Profile Management</h2>
+        <form id="profileEditForm">
+            <input class="profile-field" id="profile-username" placeholder="Username">
+            <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
+            <input type="file" id="profile-photo">
+        </form>
+        <div id="profilePreviewContainer"></div>
     </div>
 </div>
 
-<!-- CHAT MODAL -->
-<div id="chatModal" class="modal">
-    <div class="chat-container">
-        <div id="chatHeader" class="chat-header"></div>
-        <div id="messageArea" class="message-area"></div>
-        <div class="chat-input-area">
-            <input id="chatInput" class="chat-input" placeholder="Type message">
-            <button class="send-button" onclick="sendMessage()">Send</button>
-            <span onclick="closeChat()" style="cursor:pointer; padding:10px; color: var(--duoup-light);"><i class="fas fa-times"></i></span>
-        </div>
-    </div>
-</div>
-
-<!-- FIREBASE SCRIPT -->
 <script type="module">
-/* Paste the full Firebase script I provided in the previous message here */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+  authDomain: "duoup-cfae6.firebaseapp.com",
+  projectId: "duoup-cfae6",
+  storageBucket: "duoup-cfae6.appspot.com",
+  messagingSenderId: "812263060524",
+  appId: "1:812263060524:web:ac09c3ae610db1cd110d89"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const provider = new GoogleAuthProvider();
+
+const signinForm = document.getElementById("signin");
+const signupForm = document.getElementById("signup");
+const googleBtn = document.querySelector(".google-btn");
+const authSection = document.getElementById("auth-section");
+const appSection = document.getElementById("app-section");
+const mainHeader = document.getElementById("mainHeader");
+const logoutBtn = document.getElementById("logoutBtnHeader");
+
+signinForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    try {
+        await signInWithEmailAndPassword(auth, document.getElementById("signin-email").value, document.getElementById("signin-password").value);
+    } catch(err){ alert(err.message); }
+});
+signupForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, document.getElementById("signup-email").value, document.getElementById("signup-password").value);
+        await setDoc(doc(db,"users",userCredential.user.uid),{
+            uid:userCredential.user.uid,
+            username:"New Player",
+            bio:"",
+            profileImageUrl:"",
+            friends:"",
+        });
+    } catch(err){ alert(err.message); }
+});
+googleBtn.addEventListener("click", async ()=>{
+    try { await signInWithPopup(auth,provider); } catch(err){ alert(err.message); }
+});
+logoutBtn.addEventListener("click", async ()=>{ await signOut(auth); });
+
+onAuthStateChanged(auth, user => {
+    if(user){
+        authSection.style.display="none";
+        appSection.style.display="block";
+        mainHeader.style.display="flex";
+    } else {
+        authSection.style.display="flex";
+        appSection.style.display="none";
+        mainHeader.style.display="none";
+    }
+});
 </script>
 
 </body>
