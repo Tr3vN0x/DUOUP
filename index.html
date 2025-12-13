@@ -8,17 +8,16 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root {
-	--duoup-primary: #00FFFF;
-	--duoup-secondary: #FF5733;
-	--duoup-accent: #8A2BE2;
-	--duoup-dark: #050510;
-	--duoup-light: #F0F8FF;
-	--duoup-muted: #80809C;
-	--font-main: 'Rajdhani', sans-serif;
-	--font-header: 'Orbitron', sans-serif;
-	--status-online: #38A169;
+  --duoup-primary: #00FFFF;
+  --duoup-secondary: #FF5733;
+  --duoup-accent: #8A2BE2;
+  --duoup-dark: #050510;
+  --duoup-light: #F0F8FF;
+  --duoup-muted: #80809C;
+  --font-main: 'Rajdhani', sans-serif;
+  --font-header: 'Orbitron', sans-serif;
+  --status-online: #38A169;
 }
-
 body { margin:0; font-family: var(--font-main); background: var(--duoup-dark); color: var(--duoup-light); min-height:100vh;}
 h1,h2,h3 { font-family: var(--font-header); margin:0; color: var(--duoup-light); }
 h2 { border-bottom: 2px solid var(--duoup-secondary); padding-bottom:5px; margin-bottom:20px; font-size:1.8em; color: var(--duoup-primary); }
@@ -28,7 +27,7 @@ button { cursor:pointer; border:none; border-radius:5px; transition: background 
 
 /* Header */
 header { position: fixed; top:0; width:100%; height:60px; background: rgba(20,20,38,0.98);
-	display:flex; align-items:center; justify-content:space-between; padding:0 15px; z-index:1000; border-bottom:3px solid var(--duoup-secondary);}
+  display:flex; align-items:center; justify-content:space-between; padding:0 15px; z-index:1000; border-bottom:3px solid var(--duoup-secondary);}
 header .logo { display:flex; align-items:center; gap:10px; }
 header h1 { font-size:2em; font-weight:700; text-shadow:0 0 5px var(--duoup-primary), 0 0 15px rgba(0,255,255,0.6);}
 header h1 span { color: var(--duoup-secondary); text-shadow:0 0 5px var(--duoup-secondary), 0 0 15px rgba(255,87,51,0.6); }
@@ -76,76 +75,74 @@ button:hover { background: var(--duoup-accent); transform: translateY(-2px); box
 <body>
 
 <header style="display:none;" id="mainHeader">
-	<div class="logo">
-		<h1>DUO<span>UP</span></h1>
-	</div>
-	<nav>
-		<a href="#" onclick="showSection('home')">Duo Search</a>
-		<a href="#" onclick="showSection('profile')">Profile</a>
-		<a href="#" onclick="showSection('messages')">Messages</a>
-		<button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
-	</nav>
+  <div class="logo">
+    <h1>DUO<span>UP</span></h1>
+  </div>
+  <nav>
+    <a href="#" onclick="showSection('home')">Duo Search</a>
+    <a href="#" onclick="showSection('profile')">Profile</a>
+    <a href="#" onclick="showSection('messages')">Messages</a>
+    <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </nav>
 </header>
 
 <div id="auth-section">
-	<h2>Welcome to DuoUp</h2>
-	<form id="signin">
-		<h3>Sign In</h3>
-		<input id="signin-email" type="email" placeholder="Email" required>
-		<input id="signin-password" type="password" placeholder="Password" required>
-		<button type="submit">Sign In</button>
-	</form>
+  <h2>Welcome to DuoUp</h2>
+  <form id="signin">
+    <h3>Sign In</h3>
+    <input id="signin-email" type="email" placeholder="Email" required>
+    <input id="signin-password" type="password" placeholder="Password" required>
+    <button type="submit">Sign In</button>
+  </form>
 
-	<form id="signup">
-		<h3>New Player? Sign Up</h3>
-		<input id="signup-email" type="email" placeholder="Email" required>
-		<input id="signup-password" type="password" placeholder="Password" required>
-		<button type="submit">Create Account</button>
-	</form>
+  <form id="signup">
+    <h3>New Player? Sign Up</h3>
+    <input id="signup-email" type="email" placeholder="Email" required>
+    <input id="signup-password" type="password" placeholder="Password" required>
+    <button type="submit">Create Account</button>
+  </form>
 
-	<button class="google-btn">
-		<i class="fab fa-google"></i> Continue with Google
-	</button>
+  <button class="google-btn">
+    <i class="fab fa-google"></i> Continue with Google
+  </button>
 </div>
 
 <div id="app-section" style="display:none; width:100%; padding-top:60px;">
-	<div id="home-section" class="container">
-		<h2>Duo Search (Available Players)</h2>
-		<div class="results-grid" id="usersGrid"></div>
-	</div>
-	<div id="profile-section" class="container" style="display:none;">
-		<h2>Profile Management</h2>
-		<input class="profile-field" id="profile-username" placeholder="Username">
-		<input class="profile-field" id="profile-platform" placeholder="Platform">
-		<input class="profile-field" id="profile-games" placeholder="Games (e.g., Valorant, LoL)">
-		<input class="profile-field" id="profile-playstyle" placeholder="Playstyle (e.g., Casual, Competitive)">
-		<textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
-		<input type="file" id="profile-photo">
-		<button onclick="updateProfile()">Save Profile</button>
-	</div>
-	<div id="messages-section" class="container" style="display:none;">
-		<h2>Messages & Duo Requests</h2>
-		<div id="messages-container" class="messages-container">
-			<h3>Pending Requests</h3>
-			<div class="results-grid" id="requestsGrid"></div>
-			<h3>Your Accepted Duos (Click to Chat)</h3>
-			<div class="results-grid" id="duosGrid"></div>
-		</div>
-	</div>
+  <div id="home-section" class="container">
+    <h2>Duo Search (Available Players)</h2>
+    <div class="results-grid" id="usersGrid"></div>
+  </div>
+  <div id="profile-section" class="container" style="display:none;">
+    <h2>Profile Management</h2>
+    <input class="profile-field" id="profile-username" placeholder="Username">
+    <input class="profile-field" id="profile-platform" placeholder="Platform">
+    <input class="profile-field" id="profile-games" placeholder="Games">
+    <input class="profile-field" id="profile-playstyle" placeholder="Playstyle">
+    <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
+    <input type="file" id="profile-photo">
+    <button onclick="updateProfile()">Save Profile</button>
+  </div>
+  <div id="messages-section" class="container" style="display:none;">
+    <h2>Messages & Duo Requests</h2>
+    <div id="messages-container" class="messages-container">
+      <h3>Pending Requests</h3>
+      <div class="results-grid" id="requestsGrid"></div>
+      <h3>Your Accepted Duos (Click to Chat)</h3>
+      <div class="results-grid" id="duosGrid"></div>
+    </div>
+  </div>
 </div>
 
 <div id="chatModal" class="modal">
-	<div class="chat-container">
-		<div id="chatHeader" class="chat-header">
-			<span>Chatting with: <strong id="chatFriendName"></strong></span>
-			<span onclick="closeChat()" style="cursor:pointer; color: var(--duoup-light);"><i class="fas fa-times"></i></span>
-		</div>
-		<div id="messageArea" class="message-area"></div>
-		<div class="chat-input-area">
-			<input id="chatInput" class="chat-input" placeholder="Type message">
-			<button class="send-button" onclick="sendMessage()">Send</button>
-		</div>
-	</div>
+  <div class="chat-container">
+    <div id="chatHeader" class="chat-header"></div>
+    <div id="messageArea" class="message-area"></div>
+    <div class="chat-input-area">
+      <input id="chatInput" class="chat-input" placeholder="Type message">
+      <button class="send-button" onclick="sendMessage()">Send</button>
+      <span onclick="closeChat()" style="cursor:pointer; padding: 10px; color: var(--duoup-light);"><i class="fas fa-times"></i></span>
+    </div>
+  </div>
 </div>
 
 <script type="module">
@@ -155,15 +152,14 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPas
 import { getFirestore, collection, doc, setDoc, addDoc, getDoc, updateDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.23.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.23.0/firebase-storage.js";
 
-// YOUR FIREBASE CONFIGURATION (Provided by user)
 const firebaseConfig = {
-    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-    authDomain: "duoup-cfae6.firebaseapp.com",
-    projectId: "duoup-cfae6",
-    storageBucket: "duoup-cfae6.firebasestorage.app",
-    messagingSenderId: "812263060524",
-    appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
-    measurementId: "G-46B67F90FK"
+  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+  authDomain: "duoup-cfae6.firebaseapp.com",
+  projectId: "duoup-cfae6",
+  storageBucket: "duoup-cfae6.appspot.com",
+  messagingSenderId: "812263060524",
+  appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
+  measurementId: "G-46B67F90FK"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -172,11 +168,7 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const provider = new GoogleAuthProvider();
 
-// Global variables for state management and caching
-let usersCache = {}; // UID -> {username, photoURL, etc.}
-let currentUserId = null;
-
-// ----------------- DOM ELEMENTS -----------------
+// ----------------- AUTH -----------------
 const signinForm = document.getElementById("signin");
 const signupForm = document.getElementById("signup");
 const googleBtn = document.querySelector(".google-btn");
@@ -184,327 +176,199 @@ const authSection = document.getElementById("auth-section");
 const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
 const logoutBtn = document.getElementById("logoutBtnHeader");
-const usersGrid = document.getElementById("usersGrid");
-const requestsGrid = document.getElementById("requestsGrid");
-const duosGrid = document.getElementById("duosGrid");
-const chatModal = document.getElementById("chatModal");
-const messageArea = document.getElementById("messageArea");
-const chatInput = document.getElementById("chatInput");
-const chatFriendName = document.getElementById("chatFriendName");
 
-// ----------------- AUTH LISTENERS -----------------
 signinForm.addEventListener("submit", async e => {
-	e.preventDefault();
-	const email = document.getElementById("signin-email").value;
-	const password = document.getElementById("signin-password").value;
-	try { await signInWithEmailAndPassword(auth,email,password); }	
-	catch(err){alert(err.message);}
+  e.preventDefault();
+  try {
+    await signInWithEmailAndPassword(auth,
+      document.getElementById("signin-email").value,
+      document.getElementById("signin-password").value
+    );
+  } catch(err){ alert(err.message); }
 });
 
 signupForm.addEventListener("submit", async e => {
-	e.preventDefault();
-	const email = document.getElementById("signup-email").value;
-	const password = document.getElementById("signup-password").value;
-	try{
-		const userCredential = await createUserWithEmailAndPassword(auth,email,password);
-		const uid = userCredential.user.uid;
-		await setDoc(doc(db,"users",uid),{
-			uid, 
-			username:`Player-${uid.substring(0,4)}`,
-			email,
-			platform:"PC",
-			games:"All Games",
-			playstyle:"Casual",
-			about:"Looking for a duo!",
-			photoURL:"",
-			timestamp:serverTimestamp()
-		});
-	} catch(err){alert(err.message);}
+  e.preventDefault();
+  const email = document.getElementById("signup-email").value;
+  const password = document.getElementById("signup-password").value;
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth,email,password);
+    await setDoc(doc(db,"users",userCredential.user.uid),{
+      uid: userCredential.user.uid,
+      username:"New Player",
+      email,
+      platform:"",
+      games:"",
+      playstyle:"",
+      about:"",
+      photoURL:"",
+      mic:"",
+      timestamp:serverTimestamp()
+    });
+  } catch(err){ alert(err.message); }
 });
 
 googleBtn.addEventListener("click", async ()=>{ try{await signInWithPopup(auth,provider);} catch(err){alert(err.message);} });
 logoutBtn.addEventListener("click", async ()=>{ await signOut(auth); });
 
-onAuthStateChanged(auth, user=>{
-	if(user){
-		currentUserId = user.uid;
-		authSection.style.display="none";
-		appSection.style.display="block";
-		mainHeader.style.display="flex";
-		loadUsers(); // This populates usersCache and the grid
-		loadDuoRequests();
-	} else {
-		authSection.style.display="flex";
-		appSection.style.display="none";
-		mainHeader.style.display="none";
-		currentUserId = null;
-		usersCache = {}; 
-	}
-});
-
-// ----------------- PROFILE MANAGEMENT -----------------
-
-async function loadProfile(){
-	const user = auth.currentUser;
-	if(!user) return;
-
-	// Use cached data if available, otherwise fetch
-	const data = usersCache[user.uid];
-	
-	if(data){
-		document.getElementById("profile-username").value = data.username || "";
-		document.getElementById("profile-platform").value = data.platform || "";
-		document.getElementById("profile-games").value = data.games || "";
-		document.getElementById("profile-playstyle").value = data.playstyle || "";
-		document.getElementById("profile-about").value = data.about || "";
-	}
-}
-
+// ----------------- PROFILE -----------------
 async function updateProfile(){
-	const user = auth.currentUser;
-	if(!user) return;
-	
-	const username = document.getElementById("profile-username").value;
-	const platform = document.getElementById("profile-platform").value;
-	const games = document.getElementById("profile-games").value;
-	const playstyle = document.getElementById("profile-playstyle").value;
-	const about = document.getElementById("profile-about").value;
-	const file = document.getElementById("profile-photo").files[0];
-	let photoURL = usersCache[user.uid]?.photoURL || ""; 
-
-	if(file){
-		const storageRef = ref(storage,`profiles/${user.uid}`);
-		await uploadBytes(storageRef,file);
-		photoURL = await getDownloadURL(storageRef);
-	}
-
-	const userRef = doc(db,"users",user.uid);
-	await updateDoc(userRef,{username,platform,games,playstyle,about,photoURL});
-	alert("Profile updated!");
-	
-	// Update cache immediately
-	usersCache[user.uid] = {...usersCache[user.uid], username, platform, games, playstyle, about, photoURL};
+  const user = auth.currentUser; if(!user) return;
+  const username = document.getElementById("profile-username").value;
+  const platform = document.getElementById("profile-platform").value;
+  const games = document.getElementById("profile-games").value;
+  const playstyle = document.getElementById("profile-playstyle").value;
+  const about = document.getElementById("profile-about").value;
+  const file = document.getElementById("profile-photo").files[0];
+  let photoURL="";
+  if(file){
+    const storageRef = ref(storage,`profiles/${user.uid}`);
+    await uploadBytes(storageRef,file);
+    photoURL = await getDownloadURL(storageRef);
+  }
+  await updateDoc(doc(db,"users",user.uid),{username,platform,games,playstyle,about,photoURL});
+  alert("Profile updated!");
 }
 
-// ----------------- SECTIONS / NAVIGATION -----------------
+// ----------------- SECTIONS -----------------
 function showSection(section){
-	document.getElementById("home-section").style.display="none";
-	document.getElementById("profile-section").style.display="none";
-	document.getElementById("messages-section").style.display="none";
-
-	if(section==="home") {
-		document.getElementById("home-section").style.display="block";
-	}
-	if(section==="profile") {
-		document.getElementById("profile-section").style.display="block";
-		loadProfile(); // Load existing data
-	}
-	if(section==="messages") {
-		document.getElementById("messages-section").style.display="block";
-	}
-}
-
-// Helper: Generates avatar HTML (Photo or Initial)
-function getAvatarHtml(user) {
-	const initial = user.username?.[0] || "P";
-	if (user.photoURL) {
-		return `<img src="${user.photoURL}" alt="${initial}">`;
-	}
-	return initial;
+  ["home","profile","messages"].forEach(s=>{
+    document.getElementById(s+"-section").style.display="none";
+  });
+  document.getElementById(section+"-section").style.display="block";
 }
 
 // ----------------- USERS / DUO SEARCH -----------------
+const usersGrid = document.getElementById("usersGrid");
 async function loadUsers(){
-	// Listener for all users to keep the cache updated
-	const q = query(collection(db,"users"));
-	onSnapshot(q, snapshot=>{
-		
-		// 1. Populate/Update the global cache with all users
-		usersCache = {};
-		snapshot.forEach(docSnap => {
-			const u = docSnap.data();
-			usersCache[docSnap.id] = u;
-		});
-		
-		renderUserGrid();
-		
-		// Re-render requests/duos to use the updated usernames/photos
-		loadDuoRequests(false); // Pass false to avoid setting up new listeners
-	});
+  const q = query(collection(db,"users"));
+  onSnapshot(q, snapshot=>{
+    usersGrid.innerHTML="";
+    snapshot.forEach(docSnap=>{
+      if(docSnap.id===auth.currentUser.uid) return;
+      const u = docSnap.data();
+      const div=document.createElement("div");
+      div.className="duo-card";
+      div.innerHTML=`<div class="card-header">
+        <div class="avatar">${u.photoURL?`<img src="${u.photoURL}">`:u.username[0]}</div>
+        <strong>${u.username}</strong>
+      </div>
+      <div class="bio">Platform: ${u.platform}<br>Games: ${u.games}<br>Playstyle: ${u.playstyle}</div>
+      <button class="action-button" onclick="sendDuoRequest('${docSnap.id}','${u.username}')">Send Duo Request</button>`;
+      usersGrid.appendChild(div);
+    });
+  });
 }
 
-function renderUserGrid() {
-	usersGrid.innerHTML="";
-	if (!currentUserId) return;
-	
-	// 2. Render the user grid (excluding self)
-	Object.keys(usersCache).forEach(uid => {
-		if(uid === currentUserId) return; 
-		const u = usersCache[uid];
-
-		const div=document.createElement("div");
-		div.className="duo-card";
-		div.innerHTML=`
-			<div class="card-header">
-				<div class="avatar">${getAvatarHtml(u)}</div>
-				<strong>${u.username}</strong>
-			</div>
-			<div class="bio">
-				Platform: ${u.platform || 'N/A'}<br>
-				Games: ${u.games || 'N/A'}<br>
-				Playstyle: ${u.playstyle || 'N/A'}
-			</div>
-			<button class="action-button" onclick="sendDuoRequest('${uid}')">Send Duo Request</button>`;
-		usersGrid.appendChild(div);
-	});
-}
-
-async function sendDuoRequest(toUid){
-	const fromUid = auth.currentUser.uid;
-	
-	// Note: For production, you should add logic to prevent duplicate requests.
-	
-	await addDoc(collection(db,"duoRequests"),{
-		fromUserId:fromUid,
-		toUserId:toUid,
-		status:"pending",
-		timestamp:serverTimestamp()
-	});
-	alert("Duo request sent!");
+async function sendDuoRequest(toUid,toUsername){
+  const fromUid = auth.currentUser.uid;
+  const fromDoc = await getDoc(doc(db,"users",fromUid));
+  const fromUsername = fromDoc.data().username;
+  await addDoc(collection(db,"duoRequests"),{
+    fromUserId:fromUid,
+    fromUsername,
+    toUserId:toUid,
+    status:"pending",
+    timestamp:serverTimestamp()
+  });
+  alert("Duo request sent!");
 }
 
 // ----------------- DUO REQUESTS / MESSAGES -----------------
-function loadDuoRequests(setupListeners = true){
-	const user = auth.currentUser;
-	if (!user) return;
-	
-	if (setupListeners) {
-		// Pending Requests (To Me)
-		const q1 = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","pending"));
-		onSnapshot(q1, snap=>{
-			requestsGrid.innerHTML="";
-			snap.forEach(docSnap=>{
-				const r = docSnap.data();
-				renderRequestCard(r.fromUserId, docSnap.id);
-			});
-		});
+const requestsGrid = document.getElementById("requestsGrid");
+const duosGrid = document.getElementById("duosGrid");
 
-		// Accepted Duos (Both directions)
-		const q2ToMe = query(collection(db,"duoRequests"),where("status","==","accepted"),where("toUserId","==",user.uid));
-		const q3FromMe = query(collection(db,"duoRequests"),where("status","==","accepted"),where("fromUserId","==",user.uid));
+function loadDuoRequests(){
+  const user = auth.currentUser;
+  const q1 = query(collection(db,"duoRequests"),where("toUserId","==",user.uid),where("status","==","pending"));
+  onSnapshot(q1, snap=>{
+    requestsGrid.innerHTML="";
+    snap.forEach(docSnap=>{
+      const r = docSnap.data();
+      const div=document.createElement("div");
+      div.className="duo-card duo-request-card";
+      div.innerHTML=`<div class="card-header"><strong>${r.fromUsername}</strong></div>
+        <button class="action-button" onclick="acceptDuo('${docSnap.id}')">Accept</button>`;
+      requestsGrid.appendChild(div);
+    });
+  });
 
-		// Monitor Duos where I was the receiver
-		onSnapshot(q2ToMe, snap1=>{
-			duosGrid.innerHTML=""; // Clear for new render
-			const duos = [];
-			snap1.forEach(docSnap => duos.push({id: docSnap.id, data: docSnap.data(), isReceiver: true}));
-			
-			// Monitor Duos where I was the sender
-			onSnapshot(q3FromMe, snap2 => {
-				duosGrid.innerHTML=""; // Clear again to include both sets
-				snap2.forEach(docSnap => duos.push({id: docSnap.id, data: docSnap.data(), isReceiver: false}));
-				
-				// Render the combined list, ensuring no duplicates if a user has two accepted requests
-				const renderedUids = new Set();
-				duos.forEach(duo => {
-					const friendId = duo.isReceiver ? duo.data.fromUserId : duo.data.toUserId;
-					if (!renderedUids.has(friendId)) {
-						renderDuoCard(friendId, duo.id);
-						renderedUids.add(friendId);
-					}
-				});
-			});
-		});
-	}
-}
-
-function renderRequestCard(fromId, requestId){
-	const fromUser = usersCache[fromId] || {username: "Unknown Player", photoURL: ""};
-	
-	const div=document.createElement("div");
-	div.className="duo-card duo-request-card";
-	div.innerHTML=`
-		<div class="card-header">
-			<div class="avatar">${getAvatarHtml(fromUser)}</div>
-			<strong>${fromUser.username} wants to duo!</strong>
-		</div>
-		<button class="action-button" onclick="acceptDuo('${requestId}')">Accept</button>`;
-	requestsGrid.appendChild(div);
-}
-
-function renderDuoCard(friendId, requestId){
-	const friend = usersCache[friendId] || {username: "Unknown Player", photoURL: ""};
-	const div = document.createElement("div");
-	div.className="duo-card";
-	div.innerHTML=`
-		<div class="card-header">
-			<div class="avatar">${getAvatarHtml(friend)}</div>
-			<strong>${friend.username}</strong>
-		</div>
-		<button class="action-button" onclick="openChat('${friendId}', '${friend.username}')">Chat</button>`;
-	duosGrid.appendChild(div);
+  const q2 = query(collection(db,"duoRequests"),where("status","==","accepted"),where("toUserId","==",user.uid));
+  onSnapshot(q2,snap=>{
+    duosGrid.innerHTML="";
+    snap.forEach(docSnap=>{
+      const r = docSnap.data();
+      const div=document.createElement("div");
+      div.className="duo-card";
+      div.innerHTML=`<div class="card-header"><strong>${r.fromUsername}</strong></div>
+        <button class="action-button" onclick="openChat('${r.fromUserId}','${r.fromUsername}')">Chat</button>`;
+      duosGrid.appendChild(div);
+    });
+  });
 }
 
 async function acceptDuo(requestId){
-	await updateDoc(doc(db,"duoRequests",requestId),{status:"accepted"});
-	alert("Duo request accepted! You can now chat.");
+  await updateDoc(doc(db,"duoRequests",requestId),{status:"accepted"});
 }
 
 // ----------------- CHAT -----------------
 let activeChatId = "";
-let activeFriendUid = "";
+const chatModal = document.getElementById("chatModal");
+const chatHeader = document.getElementById("chatHeader");
+const messageArea = document.getElementById("messageArea");
+const chatInput = document.getElementById("chatInput");
 
-function openChat(friendUid, friendUsername){
-	activeFriendUid = friendUid;
-	activeChatId = [currentUserId, friendUid].sort().join("_"); 
-	
-	chatModal.style.display="flex";
-	chatFriendName.innerText = friendUsername;
-	loadChat(activeChatId);
+function openChat(friendUid,friendUsername){
+  activeChatId = [auth.currentUser.uid,friendUid].sort().join("_");
+  chatModal.style.display="flex";
+  chatHeader.innerText = friendUsername;
+  loadChat(activeChatId);
 }
 
-function closeChat(){ chatModal.style.display="none"; messageArea.innerHTML=""; activeChatId = ""; }
+function closeChat(){ chatModal.style.display="none"; messageArea.innerHTML=""; }
 
 function sendMessage(){
-	const content = chatInput.value.trim();
-	if(!content || !activeChatId) return;
-
-	addDoc(collection(db,"messages"),{
-		content,
-		fromUid:currentUserId,
-		toUid:activeFriendUid,
-		duoId:activeChatId,
-		timestamp:serverTimestamp()
-	});
-	chatInput.value="";
+  const content = chatInput.value.trim();
+  if(!content) return;
+  addDoc(collection(db,"messages"),{
+    content,
+    fromUid:auth.currentUser.uid,
+    toUid:chatHeader.innerText,
+    duoId:activeChatId,
+    timestamp:serverTimestamp()
+  });
+  chatInput.value="";
 }
 
 function loadChat(duoId){
-	const q = query(collection(db,"messages"),where("duoId","==",duoId),orderBy("timestamp"));
-	onSnapshot(q,snap=>{
-		messageArea.innerHTML="";
-		snap.forEach(docSnap=>{
-			const m=docSnap.data();
-			const div=document.createElement("div");
-			div.className="message "+(m.fromUid===currentUserId?"self":"other");
-			div.innerHTML=`<div class="message-content">${m.content}</div>`;
-			messageArea.appendChild(div);
-		});
-		// Scroll to the latest message
-		messageArea.scrollTop=messageArea.scrollHeight;
-	});
+  const q = query(collection(db,"messages"),where("duoId","==",duoId),orderBy("timestamp"));
+  onSnapshot(q,snap=>{
+    messageArea.innerHTML="";
+    snap.forEach(docSnap=>{
+      const m=docSnap.data();
+      const div=document.createElement("div");
+      div.className="message "+(m.fromUid===auth.currentUser.uid?"self":"other");
+      div.innerHTML=`<div class="message-content">${m.content}</div>`;
+      messageArea.appendChild(div);
+    });
+    messageArea.scrollTop=messageArea.scrollHeight;
+  });
 }
 
-// ----------------- EXPORT TO GLOBAL SCOPE (CRITICAL FIX) -----------------
-// Make all necessary module functions accessible from inline HTML (onclick)
-window.showSection = showSection;
-window.updateProfile = updateProfile;
-window.sendDuoRequest = sendDuoRequest;
-window.acceptDuo = acceptDuo;
-window.openChat = openChat;
-window.closeChat = closeChat;
-window.sendMessage = sendMessage;
-
+// ----------------- AUTH STATE -----------------
+onAuthStateChanged(auth, user=>{
+  if(user){
+    authSection.style.display="none";
+    appSection.style.display="block";
+    mainHeader.style.display="flex";
+    loadUsers();
+    loadDuoRequests();
+  } else {
+    authSection.style.display="flex";
+    appSection.style.display="none";
+    mainHeader.style.display="none";
+  }
+});
 </script>
 </body>
 </html>
