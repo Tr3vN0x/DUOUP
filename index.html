@@ -14,7 +14,7 @@ h1,h2,h3{margin:0;font-family:var(--font-header);}
 h2{display:flex;align-items:baseline;border-bottom:2px solid var(--duoup-secondary);padding-bottom:5px;margin-bottom:20px;font-size:1.8em;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 #userCount{color:var(--duoup-secondary);font-size:0.55em;font-weight:600;margin-left:10px;}
 a{color:var(--duoup-primary);text-decoration:none;}
-button, select{cursor:pointer;border:none;border-radius:5px;transition:0.2s;}
+button{cursor:pointer;border:none;border-radius:5px;transition:0.2s;}
 header{position:fixed;top:0;width:100%;height:60px;background:rgba(20,20,38,0.98);display:flex;align-items:center;justify-content:space-between;padding:0 15px;z-index:1000;border-bottom:3px solid var(--duoup-secondary);}
 header .logo{display:flex;align-items:center;gap:10px;}
 header h1{font-size:2em;font-weight:700;color:var(--duoup-primary);text-shadow:0 0 10px var(--duoup-primary);}
@@ -22,57 +22,52 @@ header h1 span{color:var(--duoup-secondary);}
 header nav{display:flex;align-items:center;gap:15px;flex-wrap:wrap;}
 #logoutBtnHeader{background:var(--duoup-secondary);color:var(--duoup-dark);padding:6px 12px;font-weight:bold;display:flex;align-items:center;gap:5px;}
 #auth-section{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding-top:60px;}
-form:not(#duoSearchForm):not(#postForm):not(#profileEditForm):not(#messageForm){display:flex;flex-direction:column;background:#141426;padding:25px;border-radius:12px;margin:10px;width:90%;max-width:360px;}
-input,textarea,select{margin:8px 0;padding:12px;border-radius:6px;border:1px solid var(--duoup-primary);background:#2D2D44;color:var(--duoup-light);}
+form:not(#duoSearchForm):not(#postForm){display:flex;flex-direction:column;background:#141426;padding:25px;border-radius:12px;margin:10px;width:90%;max-width:360px;}
+input,textarea{margin:8px 0;padding:12px;border-radius:6px;border:1px solid var(--duoup-primary);background:#2D2D44;color:var(--duoup-light);}
 button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10px;padding:12px;font-weight:bold;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);}
 .google-btn{background:linear-gradient(90deg,#DB4437,#EA4335);color:white;width:90%;max-width:360px;display:none;align-items:center;justify-content:center;gap:10px;margin-top:15px;}
-#app-section{width:100%;padding-top:60px;}
-.app-layout { display: flex; max-width: 1200px; margin: 20px auto; padding: 0 15px; gap: 20px; }
-.main-content { flex-grow: 1; min-width: 0; }
-.side-panel { width: 300px; flex-shrink: 0; background: #141426; padding: 15px; border-radius: 12px; height: calc(100vh - 100px); overflow-y: auto; border: 1px solid var(--duoup-accent); }
-.side-panel h3 { color: var(--duoup-primary); border-bottom: 1px solid var(--duoup-muted); padding-bottom: 5px; margin-bottom: 10px;}
-.friend-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #2D2D44; cursor: pointer;}
-.friend-item:last-child { border-bottom: none; }
-.friend-item span { color: var(--duoup-light); }
-.status-icon { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; display: inline-block;}
-.status-online { background-color: #3CFF3C; }
-.status-offline { background-color: var(--duoup-muted); }
-.request-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; margin-bottom: 5px; border-bottom: 1px solid #2D2D44;}
-.request-actions button { padding: 5px 10px; margin-left: 5px;}
-.accept-btn { background-color: #3CFF3C; color: var(--duoup-dark); }
-.reject-btn { background-color: var(--duoup-secondary); color: var(--duoup-dark); }
-
+#app-section{width:100%;padding-top:60px;display:none;}
+.container{max-width:1200px;margin:20px auto;padding:0 15px;}
 .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
 .duo-card{background:linear-gradient(145deg,#1A1A2E,#2D2D44);color:var(--duoup-light);border-radius:12px;overflow:hidden;border:1px solid #3A3A52;transition:.3s;box-shadow:0 4px 8px rgba(0,0,0,0.4);margin-bottom:15px;}
 .card-header{display:flex;align-items:center;padding:10px 15px;border-bottom:1px solid #3A3A52;}
 .avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;background:var(--duoup-secondary);color:var(--duoup-dark);flex-shrink: 0;}
-.bio, .post-content, .card-footer-info{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);white-space: pre-wrap;}
+.bio, .post-content{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);white-space: pre-wrap;}
 .action-button{width:100%;padding:12px;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);font-weight:bold;border-radius:0 0 12px 12px;}
 .nickname-display{display:flex;align-items:center;font-size:1.1em;}
 .verified-badge{color:#1DA1F2;margin-left:5px;}
+/* Highlight disabled input */
+#profile-nickname { 
+    background: #1a1a2e; 
+    color: var(--duoup-muted); 
+    cursor: not-allowed; 
+    border-color: #3A3A52; 
+    font-weight: 700;
+}
+.input-help{font-size:0.8em;color:var(--duoup-muted);margin-top:-5px;margin-bottom:10px;}
 
-/* Filter Form */
-#duoSearchForm { 
-    background: #141426; 
-    padding: 15px; 
-    border-radius: 12px; 
-    margin-bottom: 20px; 
-    display: flex; 
-    gap: 10px;
-    flex-wrap: wrap;
+/* Post Specific Styles */
+#postForm{background:#1A1A2E;padding:15px;border-radius:12px;margin-bottom:20px;display:flex;flex-direction:column;}
+#postContent{resize:vertical;min-height:80px;}
+#postBtn{background:var(--duoup-secondary);color:var(--duoup-dark);font-weight:bold;padding:10px;}
+.post-meta{font-size:0.8em;color:var(--duoup-muted);margin-top:5px;}
+.post-list{max-width:700px;margin:0 auto;}
+
+.post-footer { display: flex; align-items: center; justify-content: space-between; padding: 0 15px 10px; }
+.like-btn { 
+    background: transparent; 
+    color: var(--duoup-muted); 
+    padding: 5px 10px; 
+    font-size: 1em;
+    display: flex;
     align-items: center;
+    gap: 5px;
 }
-#duoSearchForm select, #duoSearchForm input[type="text"] {
-    flex-grow: 1;
-    min-width: 150px;
-    margin: 0;
-}
-#filterBtn {
-    padding: 12px 20px;
-    background: var(--duoup-secondary);
-    color: var(--duoup-dark);
-    font-weight: bold;
-}
+.like-btn:hover { color: var(--duoup-primary); }
+.like-btn.liked { color: var(--duoup-secondary); }
+.like-btn.liked i { color: var(--duoup-secondary); }
+
+@media(max-width:500px){.results-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -85,237 +80,200 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
     <nav>
         <a href="#" onclick="showSection('feed')">Feed</a>
         <a href="#" onclick="showSection('home')">Duo Search</a>
-        <a href="#" onclick="showSection('gaming-status')">Status</a> 
         <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </nav>
 </header>
 
 <div id="auth-section">
-    </div>
-
-<div id="app-section">
-    <div class="app-layout">
-        
-        <div id="sidePanel" class="side-panel">
-            <h3>Friend Requests (<span id="requestsCount">0</span>)</h3>
-            <div id="requestsList"></div>
-            
-            <h3 style="margin-top: 20px;">Friends (<span id="friendsCount">0</span>)</h3>
-            <div id="friendsList"></div>
-        </div>
-        
-        <div class="main-content">
-            
-            <div id="feed-section" style="display:none;">
-                <h2>Global Feed</h2>
-                </div>
-            
-            <div id="gaming-status-section" style="display:none;">
-                <h2>My Gaming Status</h2>
-                <form id="gamingStatusForm" style="max-width: 500px; padding: 25px; background: #1A1A2E;">
-                    <label for="lfgStatus">Looking For Group (LFG) Status:</label>
-                    <select id="lfgStatus">
-                        <option value="Available">Available - Ready to play!</option>
-                        <option value="Busy">Busy - Maybe later</option>
-                        <option value="Not Looking">Not Looking - Solo or taking a break</option>
-                    </select>
-
-                    <label for="primaryGame">Primary Game (e.g., Valorant, WoW, Apex Legends):</label>
-                    <input type="text" id="primaryGame" placeholder="Enter your main game" maxlength="50">
-
-                    <label for="platform">Platform (e.g., PC, PS5, Xbox, Switch):</label>
-                    <input type="text" id="platform" placeholder="Enter your platform" maxlength="20">
-                    
-                    <button type="submit" disabled style="background: var(--duoup-muted);">Status Auto-saves</button>
-                </form>
-            </div>
-            
-            <div id="home-section" style="display:none;">
-                <h2>Duo Search <span id="userCount"></span></h2>
-                
-                <form id="duoSearchForm" onsubmit="event.preventDefault(); loadUsers();">
-                    <select id="filterLFGStatus">
-                        <option value="">LFG Status (Any)</option>
-                        <option value="Available">Available</option>
-                        <option value="Busy">Busy</option>
-                        <option value="Not Looking">Not Looking</option>
-                    </select>
-                    <input type="text" id="filterGame" placeholder="Filter by Primary Game">
-                    <input type="text" id="filterPlatform" placeholder="Filter by Platform">
-                    <button type="submit" id="filterBtn"><i class="fas fa-filter"></i> Filter</button>
-                </form>
-
-                <div class="results-grid" id="usersGrid"></div>
-            </div>
-            
-            <div id="chat-section" style="display:none;">
-                </div>
-        </div>
-    </div>
+    <h2>Welcome to DuoUp</h2>
+    <form id="signin">
+        <h3>Sign In</h3>
+        <input id="signin-email" type="text" placeholder="Nickname or Email" required>
+        <input id="signin-password" type="password" placeholder="Password" required>
+        <button type="submit">Sign In</button>
+    </form>
+    <form id="signup">
+        <h3>New Player? Sign Up</h3>
+        <input id="signup-nickname" type="text" placeholder="Nickname (Permanent)" required>
+        <input id="signup-email" type="email" placeholder="Email" required>
+        <input id="signup-password" type="password" placeholder="Password" required>
+        <button type="submit">Create Account</button>
+    </form>
 </div>
 
+<div id="app-section">
+    
+    <div id="feed-section" class="container" style="display:none;">
+        <h2>Global Feed</h2>
+        <form id="postForm">
+            <textarea id="postContent" placeholder="What's your duo thought?" required></textarea>
+            <button type="submit" id="postBtn">Post to Feed</button>
+        </form>
+        <div id="postsList" class="post-list">
+            </div>
+    </div>
+    
+    <div id="home-section" class="container" style="display:none;">
+        <h2>Duo Search <span id="userCount"></span></h2>
+        <div class="results-grid" id="usersGrid"></div>
+    </div>
+    
+    </div>
+
 <script type="module">
-// ... imports ...
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+// Removed getStorage, ref, uploadBytes, getDownloadURL since photo feature is gone
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, addDoc, query, orderBy, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+
+// --- Firebase Config & Initialization ---
+const firebaseConfig = {
+    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+    authDomain: "duoup-cfae6.firebaseapp.com",
+    projectId: "duoup-cfae6",
+    storageBucket: "duoup-cfae6.appspot.com",
+    messagingSenderId: "812263060524",
+    appId: "1:812263060524:web:ac09c3ae610db1cd110d89"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+// const storage = getStorage(app); // Storage is no longer used
 
 // --- DOM Elements ---
-// ... existing elements ...
-const sidePanel = document.getElementById("sidePanel");
-const requestsList = document.getElementById("requestsList");
-const friendsList = document.getElementById("friendsList");
-const requestsCount = document.getElementById("requestsCount");
-const friendsCount = document.getElementById("friendsCount");
-const chatSection = document.getElementById("chat-section");
-const messagesContainer = document.getElementById("messagesContainer");
-const messageForm = document.getElementById("messageForm");
-const messageInput = document.getElementById("messageInput");
-const chatHeader = document.getElementById("chatHeader");
-
-// New Gaming Status DOM Elements
-const gamingStatusForm = document.getElementById("gamingStatusForm");
-const lfgStatusSelect = document.getElementById("lfgStatus");
-const primaryGameInput = document.getElementById("primaryGame");
-const platformInput = document.getElementById("platform");
-
-// New Filter DOM Elements
-const filterLFGStatusSelect = document.getElementById("filterLFGStatus");
-const filterGameInput = document.getElementById("filterGame");
-const filterPlatformInput = document.getElementById("filterPlatform");
-
+const signinForm = document.getElementById("signin");
+const signupForm = document.getElementById("signup");
+const authSection = document.getElementById("auth-section");
+const appSection = document.getElementById("app-section");
+const mainHeader = document.getElementById("mainHeader");
+const usersGrid = document.getElementById("usersGrid");
+const userCountElement = document.getElementById("userCount");
+// Profile elements removed: profileNickname, profileAbout, profilePhoto, profilePreviewContainer, nicknameHelp
+const postForm = document.getElementById("postForm"); 
+const postsList = document.getElementById("postsList"); 
 
 // --- Constants & Local State ---
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
 let activityInterval; 
 let currentNickname = ""; 
-let currentBio = "";      
-let currentFriendsData = {};
-let currentChatId = null; 
-let unsubscribeChat = null; 
-let unsubscribeRequests = null;
-let unsubscribeFriends = null;
-let allUsersMap = {};
+let currentBio = ""; // Retained to fill the bio in the user search cards
 
-// --- Utility Functions (unchanged) ---
-// ...
+// --- Utility Functions ---
+function getVerifiedBadge(nickname) {
+    return nickname === 'Tr3vN0x' ? '<i class="fas fa-badge-check verified-badge" title="Verified Player"></i>' : '';
+}
 
-// --- Auth Functions (unchanged) ---
-// ...
+function timeSince(timestamp) {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes";
+    return Math.floor(seconds) + " seconds";
+}
 
-// --- GAMING STATUS Logic ---
-
-let statusSaveTimeout;
+async function updateLastActiveStatus(uid) {
+    if (!uid) return;
+    try {
+        await updateDoc(doc(db, "users", uid), {
+            lastActive: Date.now()
+        });
+    } catch (err) {
+        console.warn("Could not update lastActive status:", err.message);
+    }
+}
 
 /**
- * Loads the current user's gaming status into the form fields.
+ * Ensures a user's profile document exists and loads the core data.
  */
-async function loadGamingStatus() {
-    const user = auth.currentUser;
-    if (!user) return;
-    
+async function loadUserData(user) {
     const userDocRef = doc(db, "users", user.uid);
     const docSnap = await getDoc(userDocRef);
-    if (!docSnap.exists()) return;
-    
-    const data = docSnap.data();
-    
-    lfgStatusSelect.value = data.lfgStatus || 'Not Looking';
-    primaryGameInput.value = data.primaryGame || '';
-    platformInput.value = data.platform || '';
-}
+    let userData = docSnap.exists() ? docSnap.data() : {};
 
-/**
- * Auto-saves status changes to Firestore.
- */
-function saveGamingStatus() {
-    clearTimeout(statusSaveTimeout);
-    statusSaveTimeout = setTimeout(async () => {
-        const user = auth.currentUser;
-        if (!user) return;
+    if (!docSnap.exists() || !userData.nickname) { 
+        // Logic for setting up a profile if it doesn't exist (only needed on first sign-up)
+        const authType = 'email'; 
+        const defaultNickname = user.email.split('@')[0] || "New Player";
 
-        const updates = {
-            lfgStatus: lfgStatusSelect.value,
-            primaryGame: primaryGameInput.value,
-            platform: platformInput.value,
-            lastActive: Date.now()
+        userData = {
+            uid: user.uid,
+            email: user.email,
+            nickname: defaultNickname, 
+            bio: "",
+            profileImageUrl: user.photoURL || "",
+            friends: "",
+            lastActive: Date.now(),
+            authType: authType 
         };
-
-        try {
-            await updateDoc(doc(db, "users", user.uid), updates);
-        } catch (err) {
-            console.error("Error saving gaming status:", err);
-        }
-    }, 800);
+        await setDoc(userDocRef, userData);
+    }
+    return userData;
 }
 
-// Attach auto-save listeners
-lfgStatusSelect.addEventListener('change', saveGamingStatus);
-primaryGameInput.addEventListener('input', saveGamingStatus);
-platformInput.addEventListener('input', saveGamingStatus);
+// --- Auth ---
+signinForm.addEventListener("submit", async e=>{
+    e.preventDefault();
+    try{
+        await signInWithEmailAndPassword(auth, document.getElementById("signin-email").value, document.getElementById("signin-password").value);
+    } catch(err){ alert(err.message); }
+});
 
+signupForm.addEventListener("submit", async e=>{
+    e.preventDefault();
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    const nickname = document.getElementById("signup-nickname").value; 
 
-// --- Core Logic: Friend Requests & Chat Management (unchanged) ---
-// ... getChatId, sendFriendRequest, handleFriendRequest, openChat, startSidePanelListeners, messageForm listener ...
+    try{
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db,"users",userCredential.user.uid),{
+            uid:userCredential.user.uid,
+            email: email,
+            nickname: nickname, 
+            bio:"",
+            profileImageUrl:"",
+            friends:"",
+            lastActive: Date.now(),
+            authType: 'email' 
+        });
+    } catch(err){ alert(err.message); }
+});
 
-// --- User Search Update (Implementing Filtering) ---
+document.getElementById("logoutBtnHeader").addEventListener("click", async ()=>{ 
+    clearInterval(activityInterval); 
+    await signOut(auth); 
+});
+
+// --- User Search (No profile updates here) ---
 async function loadUsers(){
     const currentUser = auth.currentUser;
     if(!currentUser) return;
 
     const SEVEN_DAYS_AGO = Date.now() - SEVEN_DAYS_IN_MS;
 
-    // --- 1. Get Filter Values ---
-    const filterLFG = filterLFGStatusSelect.value;
-    const filterGame = filterGameInput.value.trim().toLowerCase();
-    const filterPlatform = filterPlatformInput.value.trim().toLowerCase();
-
-    // --- 2. Query Firestore (We must fetch ALL to filter in JS, as complex filtering is limited in Firestore) ---
-    // The query is limited to active users
-    const q = query(
-        collection(db, "users"),
-        orderBy("lastActive", "desc"), // Order by activity first
-    );
-    
-    // NOTE: For complex filtering (like multiple 'where' clauses on different fields), 
-    // it's often easier and more flexible to fetch all relevant data and filter in the client 
-    // code, especially since we only want to show recent players anyway.
-    
-    const qSnap = await getDocs(q);
+    const qSnap = await getDocs(collection(db,"users"));
     usersGrid.innerHTML='';
     let count=0;
-    
+
     qSnap.forEach(doc=>{
         const data = doc.data();
         
-        // --- 3. Base Filtering (Excluding self and inactive players) ---
         if(!data.uid || data.uid === currentUser.uid) return;
+
         if (!data.lastActive || data.lastActive < SEVEN_DAYS_AGO) {
             return; 
         }
-
-        // --- 4. Apply User-defined Filters in JavaScript ---
         
-        // Filter by LFG Status
-        if (filterLFG && data.lfgStatus !== filterLFG) {
-            return;
-        }
-
-        // Filter by Game (Partial match check for flexibility)
-        const userGame = (data.primaryGame || '').toLowerCase();
-        if (filterGame && !userGame.includes(filterGame)) {
-            return;
-        }
-        
-        // Filter by Platform (Partial match check)
-        const userPlatform = (data.platform || '').toLowerCase();
-        if (filterPlatform && !userPlatform.includes(filterPlatform)) {
-            return;
-        }
-        
-        // --- 5. Render Card ---
         const nickname = data.nickname; 
         const verifiedBadgeHtml = getVerifiedBadge(nickname);
-        const isFriend = !!currentFriendsData[data.uid];
-        const lfgStatus = data.lfgStatus || 'Not Looking';
-        
+
         count++;
         usersGrid.innerHTML+=`
         <div class="duo-card">
@@ -326,58 +284,159 @@ async function loadUsers(){
                     ${verifiedBadgeHtml}
                 </div>
             </div>
-            
-            <div class="card-footer-info">
-                <strong>Status:</strong> <span style="color: ${lfgStatus === 'Available' ? '#3CFF3C' : (lfgStatus === 'Busy' ? 'var(--duoup-secondary)' : 'var(--duoup-muted)')}">${lfgStatus}</span><br>
-                <strong>Game:</strong> ${data.primaryGame || 'N/A'}<br>
-                <strong>Platform:</strong> ${data.platform || 'N/A'}
-            </div>
-
             <div class="bio">${data.bio||'No bio set.'}</div>
-            
-            <button 
-                class="action-button" 
-                ${isFriend ? '' : ''}
-                onclick="${isFriend ? `openChat('${data.uid}')` : `sendFriendRequest('${data.uid}')`}"
-            >
-                ${isFriend ? 'Message Friend' : 'Send Duo Request'}
-            </button>
+            <button class="action-button" onclick="alert('Duo request sent to ${nickname}!')">Send Duo Request</button>
         </div>
         `;
     });
-    userCountElement.innerText = count+" players online (active 7d) shown";
+    userCountElement.innerText = count+" players online (active 7d)";
+}
+
+// --- Feed/Posts ---
+postForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const content = document.getElementById("postContent").value.trim();
+    if (!content) return;
+
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    try {
+        await addDoc(collection(db, "posts"), {
+            authorUid: user.uid,
+            authorNickname: currentNickname, 
+            content: content,
+            timestamp: Date.now(),
+            likes: [], 
+        });
+        document.getElementById("postContent").value = ""; 
+        loadPosts(); 
+    } catch (err) {
+        console.error("Error creating post:", err);
+        alert("Failed to create post.");
+    }
+});
+
+/**
+ * Toggles the like status of a post.
+ */
+window.toggleLikePost = async function(postId, isLiked) {
+    const user = auth.currentUser;
+    if (!user) return alert("You must be logged in to like posts.");
+
+    const postRef = doc(db, "posts", postId);
+    try {
+        if (isLiked) {
+            await updateDoc(postRef, {
+                likes: arrayRemove(user.uid)
+            });
+        } else {
+            await updateDoc(postRef, {
+                likes: arrayUnion(user.uid)
+            });
+        }
+        
+        loadPosts(); 
+
+    } catch (err) {
+        console.error("Error toggling like:", err);
+        alert("Failed to update like status.");
+    }
 }
 
 
-// --- Sections Update (Added Gaming Status) ---
+async function loadPosts() {
+    postsList.innerHTML = '';
+    const user = auth.currentUser;
+
+    const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+    const postSnap = await getDocs(postsQuery);
+
+    postSnap.forEach(doc => {
+        const post = doc.data();
+        const postId = doc.id;
+        
+        const nickname = post.authorNickname || 'Unknown User'; 
+        const avatarChar = nickname ? nickname[0] : 'U';
+        const verifiedBadgeHtml = getVerifiedBadge(nickname);
+        
+        const likesArray = post.likes || [];
+        const likeCount = likesArray.length;
+        const isLiked = user && likesArray.includes(user.uid);
+        
+        const likeIcon = isLiked ? 'fas fa-heart' : 'far fa-heart';
+        const likeClass = isLiked ? 'liked' : '';
+        
+        postsList.innerHTML += `
+        <div class="duo-card">
+            <div class="card-header">
+                <div class="avatar">${avatarChar}</div>
+                <div>
+                    <div class="nickname-display">
+                        <strong>${nickname}</strong>
+                        ${verifiedBadgeHtml}
+                    </div>
+                    <div class="post-meta">Posted ${timeSince(post.timestamp)} ago</div>
+                </div>
+            </div>
+            <div class="post-content">${post.content}</div>
+            <div class="post-footer">
+                <button class="like-btn ${likeClass}" onclick="toggleLikePost('${postId}', ${isLiked})">
+                    <i class="${likeIcon}"></i> ${likeCount}
+                </button>
+            </div>
+        </div>
+        `;
+    });
+
+    if (postSnap.empty) {
+        postsList.innerHTML = `<p style="text-align:center; color:var(--duoup-muted);">No posts yet. Be the first to share your thoughts!</p>`;
+    }
+}
+
+
+// --- Sections ---
 function showSection(section){
-    // Include 'gaming-status' section
-    ["feed","home","chat","gaming-status"].forEach(s=>document.getElementById(s+"-section").style.display="none");
+    // Removed 'profile' from this list
+    ["feed","home"].forEach(s=>document.getElementById(s+"-section").style.display="none");
     document.getElementById(section+"-section").style.display="block";
     
-    // Unsubscribe from chat when moving away
-    if (section !== 'chat' && unsubscribeChat) {
-        unsubscribeChat();
-        unsubscribeChat = null;
-        currentChatId = null;
-    }
-
-    if(section==="gaming-status") loadGamingStatus();
+    // loadProfile() removed
     if(section==="home") loadUsers();
     if(section==="feed") loadPosts();
 }
 
+// --- Auth State ---
+onAuthStateChanged(auth,async user=>{
+    if(user){
+        authSection.style.display="none";
+        appSection.style.display="block";
+        mainHeader.style.display="flex";
+        
+        // Load data just to set currentNickname/currentBio for posting/search cards
+        const userData = await loadUserData(user); 
+        currentNickname = userData.nickname || ''; 
+        currentBio = userData.bio || '';
+        
+        await updateLastActiveStatus(user.uid); 
+        
+        if (!activityInterval) {
+            activityInterval = setInterval(() => updateLastActiveStatus(user.uid), 60000); // 1 minute
+        }
 
-// --- Auth State (unchanged) ---
-// ...
+        showSection('feed'); // Set default view to the Feed
+    } else {
+        authSection.style.display="flex";
+        appSection.style.display="none";
+        mainHeader.style.display="none";
+        clearInterval(activityInterval); 
+        activityInterval = null;
+    }
+});
 
 // Expose functions
 window.showSection = showSection;
 window.toggleLikePost = toggleLikePost;
-window.sendFriendRequest = sendFriendRequest;
-window.handleFriendRequest = handleFriendRequest;
-window.openChat = openChat;
-window.loadUsers = loadUsers; // Exposed for the form's onsubmit
 </script>
 
 </body>
