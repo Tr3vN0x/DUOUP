@@ -38,6 +38,7 @@ button:not(.google-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;
 .verified-badge{color:#1DA1F2;margin-left:5px;}
 /* Highlight disabled input for Google users */
 #profile-username:disabled { background: #1a1a2e; color: var(--duoup-muted); cursor: not-allowed; border-color: #3A3A52; }
+.input-help{font-size:0.8em;color:var(--duoup-muted);margin-top:-5px;margin-bottom:10px;}
 @media(max-width:500px){.results-grid{grid-template-columns:1fr;}}
 </style>
 </head>
@@ -83,7 +84,8 @@ button:not(.google-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;
     <div id="profile-section" class="container" style="display:none;">
         <h2>Profile Management</h2>
         <form id="profileEditForm">
-            <input class="profile-field" id="profile-username" placeholder="Username" readonly>
+            <input class="profile-field" id="profile-username" placeholder="Username">
+            <p id="username-help" class="input-help"></p>
             <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
             <input type="file" id="profile-photo">
         </form>
@@ -125,10 +127,12 @@ const profileUsername = document.getElementById("profile-username");
 const profileAbout = document.getElementById("profile-about");
 const profilePhoto = document.getElementById("profile-photo");
 const profilePreviewContainer = document.getElementById("profilePreviewContainer");
+const usernameHelp = document.getElementById("username-help"); // New element for helper text
 
 // --- Constants ---
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
-let activityInterval; // To hold the interval timer
+let activityInterval; 
+let currentUsername = ""; // Store the actual current username
 
 // --- Utility Functions ---
 function getVerifiedBadge(username) {
@@ -150,7 +154,6 @@ async function updateLastActiveStatus(uid) {
 signinForm.addEventListener("submit", async e=>{
     e.preventDefault();
     try{
-        // NOTE: For simplicity, we assume the user enters their email in the 'username or email' field.
         await signInWithEmailAndPassword(auth, document.getElementById("signin-email").value, document.getElementById("signin-password").value);
     } catch(err){ alert(err.message); }
 });
@@ -171,7 +174,7 @@ signupForm.addEventListener("submit", async e=>{
             profileImageUrl:"",
             friends:"",
             lastActive: Date.now(),
-            authType: 'email' // Identify the auth type
+            authType: 'email' 
         });
     } catch(err){ alert(err.message); }
 });
@@ -183,7 +186,6 @@ googleBtn.addEventListener("click", async ()=>{
         const docSnap = await getDoc(userDocRef);
         
         if(!docSnap.exists()) {
-             // Set username based on Google display name, and lock it
              await setDoc(userDocRef, {
                 uid: userCredential.user.uid,
                 email: userCredential.user.email,
@@ -192,16 +194,15 @@ googleBtn.addEventListener("click", async ()=>{
                 profileImageUrl: userCredential.user.photoURL || "",
                 friends: "",
                 lastActive: Date.now(),
-                authType: 'google' // Identify the auth type
+                authType: 'google' 
             });
         } else {
-             // For existing Google users, just update activity status
              await updateLastActiveStatus(userCredential.user.uid);
         }
     } catch(err){ alert(err.message); }
 });
 document.getElementById("logoutBtnHeader").addEventListener("click", async ()=>{ 
-    clearInterval(activityInterval); // Stop activity tracking on logout
+    clearInterval(activityInterval); 
     await signOut(auth); 
 });
 
@@ -212,17 +213,16 @@ async function loadProfile(){
     const docSnap = await getDoc(doc(db,"users",user.uid));
     const data = docSnap.exists()?docSnap.data():{};
     
-    profileUsername.value = data.username || '';
+    currentUsername = data.username || '';
+    profileUsername.value = currentUsername;
     profileAbout.value = data.bio || '';
     
-    // Lock username field if signed in with Google
-    if (data.authType === 'google') {
-        profileUsername.setAttribute('readonly', true);
-        profileUsername.setAttribute('disabled', true);
-    } else {
-        profileUsername.removeAttribute('readonly');
-        profileUsername.removeAttribute('disabled');
-    }
+    // Fix: Set the correct disabled state based on authType
+    const isGoogleUser = data.authType === 'google';
+    profileUsername.disabled = isGoogleUser;
+    profileUsername.readOnly = isGoogleUser;
+    
+    usernameHelp.innerText = isGoogleUser ? "Username is locked for Google sign-in users." : "Username auto-saves as you type.";
 
     renderProfilePreview(data);
 }
@@ -251,24 +251,27 @@ const saveProfile = async (updates) => {
     const user = auth.currentUser;
     if(!user) return;
     
-    // Prevent username change if authType is google
-    const docSnap = await getDoc(doc(db,"users",user.uid));
-    const userData = docSnap.exists() ? docSnap.data() : {};
-
-    if (userData.authType === 'google' && updates.username) {
-        // If they are trying to change the username and they are a google user, revert the preview and stop save
-        profileUsername.value = userData.username; 
-        renderProfilePreview(userData);
-        alert("Google users cannot change their username.");
-        return; 
+    // We only need to check if the field is disabled to prevent saving a username update.
+    if (profileUsername.disabled && updates.username) {
+        return; // Username is locked, do not save.
     }
 
     try{
         await updateDoc(doc(db,"users",user.uid), { ...updates, lastActive: Date.now() });
+        if (updates.username) {
+            currentUsername = updates.username; // Update local state on successful save
+        }
     } catch(err){ console.error(err); }
 };
 
 profileUsername.addEventListener("input", ()=>{
+    if (profileUsername.disabled) {
+        // Fix: Immediately prevent changes and revert the input field visually
+        profileUsername.value = currentUsername; 
+        alert("This username is locked and cannot be changed.");
+        return;
+    }
+    
     renderProfilePreview({username: profileUsername.value, bio: profileAbout.value});
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(()=>saveProfile({ username: profileUsername.value }), 800);
@@ -305,12 +308,10 @@ async function loadUsers(){
     qSnap.forEach(doc=>{
         const data = doc.data();
         
-        // 1. Filter out the current user
         if(!data.uid || data.uid === currentUser.uid) return;
 
-        // 2. Filter for active users: only show if lastActive is defined and more recent than 7 days ago
         if (!data.lastActive || data.lastActive < SEVEN_DAYS_AGO) {
-            return; // Skip inactive user
+            return; 
         }
         
         const verifiedBadgeHtml = getVerifiedBadge(data.username);
@@ -348,10 +349,8 @@ onAuthStateChanged(auth,async user=>{
         appSection.style.display="block";
         mainHeader.style.display="flex";
         
-        // Initial active status update
         await updateLastActiveStatus(user.uid); 
         
-        // Start background activity tracking (every 60 seconds)
         if (!activityInterval) {
             activityInterval = setInterval(() => updateLastActiveStatus(user.uid), 60000); // 1 minute
         }
@@ -361,7 +360,7 @@ onAuthStateChanged(auth,async user=>{
         authSection.style.display="flex";
         appSection.style.display="none";
         mainHeader.style.display="none";
-        clearInterval(activityInterval); // Ensure interval is cleared on logout
+        clearInterval(activityInterval); 
         activityInterval = null;
     }
 });
