@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StoryVerse Cafe - Cozy Reading</title>
-    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Lora:wght@400;700&display=swap" rel="stylesheet">
+    <title>The Quiet Corner - Relaxing Reading</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
-        /* CSS Variables for Cafe Colors */
+        /* CSS Variables for Relaxing Cafe Colors */
         :root {
-            --cafe-cream: #f9f4f1;        /* Light background */
-            --cafe-brown: #5d4037;        /* Deep coffee brown (Text/Accents) */
-            --cafe-latte: #c5a484;        /* Muted accent color */
-            --cafe-red: #7c2d12;          /* Deep red/maroon for highlights */
-            --font-logo: 'Pacifico', cursive;
+            --quiet-cream: #fbf9f4;        /* Very light background */
+            --quiet-gray: #545b59;         /* Dark stone gray (Text/Accents) */
+            --quiet-green-soft: #a1b09b;   /* Muted olive green accent */
+            --quiet-green-deep: #475940;   /* Deep forest green for highlights */
+            --font-logo: 'Playfair Display', serif;
             --font-body: 'Lora', serif;
         }
 
         /* --- BASE STYLES --- */
 
         body {
-            background-color: var(--cafe-cream);
-            color: var(--cafe-brown); 
+            background-color: var(--quiet-cream);
+            color: var(--quiet-gray); 
             font-family: var(--font-body);
             margin: 0;
             padding: 0;
@@ -34,34 +34,35 @@
         .logo {
             font-family: var(--font-logo);
             font-size: 3em;
-            color: var(--cafe-red); /* Highlight color */
+            color: var(--quiet-green-deep); /* Deep, comforting highlight */
             margin: 0;
-            /* Remove harsh shadow, use a subtle drop shadow for depth */
-            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); 
+            font-style: italic;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.05); /* Very subtle shadow */
         }
 
-        .cafe-text {
-            font-family: var(--font-body);
+        .quiet-text {
+            font-family: var(--font-logo);
             font-weight: 700;
-            font-size: 1.5em;
-            color: var(--cafe-brown);
-            margin-bottom: 10px;
+            font-size: 1.6em;
+            color: var(--quiet-gray);
+            margin-bottom: 5px;
         }
 
         .author-name {
-            color: var(--cafe-latte); /* Muted accent for author name */
+            color: var(--quiet-green-soft); /* Soft accent for author name */
             font-weight: 700;
+            font-style: italic;
         }
 
         /* --- HEADER AND NAVIGATION --- */
 
-        .cafe-header {
+        .quiet-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 20px 50px;
-            background-color: #ffffff; /* White header background for cleanliness */
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Soft, subtle bottom shadow */
+            background-color: #ffffff; /* Clean white header background */
+            border-bottom: 1px solid #e0e0e0; /* Very soft dividing line */
         }
 
         nav ul {
@@ -72,49 +73,51 @@
             padding: 0;
         }
 
-        .cafe-link {
+        .quiet-link {
             text-decoration: none;
-            color: var(--cafe-brown);
+            color: var(--quiet-gray);
             transition: color 0.3s;
             font-weight: 400;
-            text-transform: uppercase;
+            text-transform: capitalize; /* More relaxed case than uppercase */
             letter-spacing: 0.5px;
         }
 
-        .cafe-link:hover {
-            color: var(--cafe-red); /* Soft accent on hover */
+        .quiet-link:hover {
+            color: var(--quiet-green-soft); /* Soft accent on hover */
         }
 
         /* --- BUTTONS --- */
 
-        .cafe-button, .cafe-cta-button {
-            background: var(--cafe-latte);
-            border: none;
+        .quiet-button, .quiet-cta-button {
+            background: var(--quiet-green-soft);
+            border: 1px solid var(--quiet-green-soft);
             color: white;
-            padding: 10px 20px;
+            padding: 8px 18px;
             font-family: var(--font-body);
             text-transform: uppercase;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 700;
-            border-radius: 4px; /* Rounded corners for a softer look */
-            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.2); /* Lifted appearance */
+            border-radius: 20px; /* Fully rounded corners for a soft pill shape */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Minimal shadow */
+            letter-spacing: 1px;
         }
 
-        .cafe-cta-button {
-            background: var(--cafe-red); /* Stronger accent for the CTA */
+        .quiet-cta-button {
+            background: var(--quiet-green-deep); /* Deeper green for the CTA */
+            border-color: var(--quiet-green-deep);
         }
 
-        /* Hover Effect: Darken slightly and lift */
-        .cafe-button:hover {
-            background: #b5987a; 
-            transform: translateY(-2px);
-            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
+        /* Hover Effect: Soften the color and lift minimally */
+        .quiet-button:hover {
+            background: #90a08b; 
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
         }
-        .cafe-cta-button:hover {
-            background: #9d381c; 
-            transform: translateY(-2px);
-            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
+        .quiet-cta-button:hover {
+            background: #3e4f37; 
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
         }
 
 
@@ -130,28 +133,28 @@
         .story-card {
             background-color: #ffffff; 
             padding: 25px;
-            border-radius: 8px; /* Soft, inviting corners */
-            border-left: 5px solid var(--cafe-latte); /* Accent border */
+            border-radius: 8px; 
+            border: 1px solid #e0e0e0; /* Thin, soft border */
             text-align: center;
-            transition: transform 0.4s ease-out, box-shadow 0.4s ease-out;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Standard card shadow */
+            transition: transform 0.3s ease-out, box-shadow 0.3s ease-out;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); /* Very light shadow */
         }
 
         .description {
             color: #777;
-            font-size: 0.9em;
+            font-size: 0.95em;
             margin: 10px 0;
             line-height: 1.5;
         }
 
         .story-card:hover {
             /* Subtle lift and shadow change on hover */
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); 
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1); 
         }
 
         /* --- FOOTER (The Closing Time) --- */
-        .cafe-footer {
+        .quiet-footer {
             text-align: center;
             padding: 20px;
             border-top: 1px solid #e0e0e0;
@@ -159,12 +162,12 @@
             font-size: 0.8em;
             text-transform: uppercase;
             letter-spacing: 1px;
-            background-color: #f0f0f0;
+            background-color: #f7f7f7;
         }
 
         /* --- RESPONSIVENESS --- */
         @media (max-width: 768px) {
-            .cafe-header {
+            .quiet-header {
                 flex-direction: column;
                 text-align: center;
                 padding: 20px;
@@ -188,13 +191,13 @@
 </head>
 <body>
 
-    <header class="cafe-header">
-        <h1 class="logo">StoryVerse Cafe</h1>
+    <header class="quiet-header">
+        <h1 class="logo">The Quiet Corner</h1>
         <nav>
             <ul>
-                <li><a href="#" class="cafe-link">☕ Menu (Discover)</a></li>
-                <li><a href="#" class="cafe-link">📚 My Table (Library)</a></li>
-                <li><a href="#" class="cafe-link cafe-cta-button">🖋️ Order a Story</a></li>
+                <li><a href="#" class="quiet-link">Reading Nooks</a></li>
+                <li><a href="#" class="quiet-link">My Shelf</a></li>
+                <li><a href="#" class="quiet-link quiet-cta-button">Publish Quietly</a></li>
             </ul>
         </nav>
     </header>
@@ -202,30 +205,30 @@
     <main class="story-grid">
 
         <div class="story-card">
-            <h2 class="cafe-text">The Scent of Old Pages</h2>
-            <p>By <span class="author-name">A_Quiet_Corner</span></p>
-            <p class="description">A heartwarming tale of a bookstore owner and a forgotten diary found hidden beneath a table in the cafe.</p>
-            <button class="cafe-button">Enjoy Chapter 1</button>
+            <h2 class="quiet-text">The Scent of Old Pages</h2>
+            <p>By <span class="author-name">A Quiet Corner</span></p>
+            <p class="description">A heartwarming tale of finding solace and forgotten stories in the quiet moments between sips of tea.</p>
+            <button class="quiet-button">Open Chapter 1</button>
         </div>
 
         <div class="story-card">
-            <h2 class="cafe-text">Rainy Day Notebook</h2>
-            <p>By <span class="author-name">The_Barista</span></p>
-            <p class="description">Short, contemplative pieces written on napkins and steam-filled windows. Perfect reading for a cloudy afternoon.</p>
-            <button class="cafe-button">Enjoy Chapter 1</button>
+            <h2 class="quiet-text">Rainy Day Notebook</h2>
+            <p>By <span class="author-name">The Barista</span></p>
+            <p class="description">Contemplative short pieces written on the last page of notebooks. Ideal reading for a peaceful afternoon.</p>
+            <button class="quiet-button">Open Chapter 1</button>
         </div>
         
         <div class="story-card">
-            <h2 class="cafe-text">Late Night Brew</h2>
-            <p>By <span class="author-name">Hidden_Mug</span></p>
-            <p class="description">A fantasy adventure that begins when the protagonist drinks a mysterious, shimmering coffee and steps through a portal.</p>
-            <button class="cafe-button">Enjoy Chapter 1</button>
+            <h2 class="quiet-text">Stillness in the City</h2>
+            <p>By <span class="author-name">Silent Observer</span></p>
+            <p class="description">Poetry and prose exploring how to find moments of deep quietude even in the busiest urban spaces.</p>
+            <button class="quiet-button">Open Chapter 1</button>
         </div>
         
     </main>
 
-    <footer class="cafe-footer">
-        <p>&copy; 2025 StoryVerse Cafe. Find your perfect reading spot. // Served with Warmth // </p>
+    <footer class="quiet-footer">
+        <p>&copy; 2025 The Quiet Corner. Find your peace. // Where Every Page is a Moment of Rest // </p>
     </footer>
 
 </body>
