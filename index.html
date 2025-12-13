@@ -3,21 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tr3vMedia Swipe Card Demo</title>
+    <title>Tr3vMedia Neon Swipe Interface</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* --- CSS STYLES --- */
+        /* --- NEON LED THEME STYLES --- */
+        :root {
+            --bg-dark: #0F1117;          /* Deep Black/Navy */
+            --neon-green: #00FF66;       /* Bright Neon Accent */
+            --neon-glow: 0 0 8px var(--neon-green), 0 0 15px var(--neon-green); /* The Glow Effect */
+            --card-bg: #1B1E28;          /* Slightly lighter dark background for cards */
+            --text-light: #E0E0E0;
+        }
+
         body {
-            font-family: sans-serif;
+            font-family: 'Share Tech Mono', monospace, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background-color: #f4f7f9;
+            background-color: var(--bg-dark);
+            color: var(--neon-green);
             margin: 0;
             padding: 20px;
         }
 
+        h1 {
+            text-shadow: var(--neon-glow);
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        /* --- CARD & SWIPE STYLES --- */
         .swipe-container {
             position: relative;
             width: 320px;
@@ -32,13 +49,15 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background-color: white;
+            background-color: var(--card-bg);
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            /* Neon Border and Glow */
+            border: 2px solid var(--neon-green);
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.5); 
             overflow: hidden;
             cursor: grab;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-            will-change: transform, opacity; /* Optimization for smooth animation */
+            will-change: transform, opacity;
             display: flex;
             flex-direction: column;
             text-align: center;
@@ -52,7 +71,8 @@
             width: 100%;
             height: 70%;
             object-fit: cover;
-            border-bottom: 1px solid #eee;
+            /* Subtle separation line */
+            border-bottom: 1px solid var(--neon-green);
         }
 
         .card-info {
@@ -66,16 +86,17 @@
         .card-info h3 {
             margin: 0 0 5px 0;
             font-size: 1.2em;
-            color: #333;
+            color: var(--neon-green);
+            text-shadow: 0 0 5px rgba(0, 255, 102, 0.7);
         }
 
         .card-info p {
             margin: 0;
             font-size: 0.9em;
-            color: #777;
+            color: var(--text-light);
         }
 
-        /* Classes added by JavaScript for final animation */
+        /* Classes added by JavaScript for final swipe animation */
         .swipe-right {
             transform: translateX(500px) rotate(20deg) !important;
             opacity: 0;
@@ -86,193 +107,292 @@
             opacity: 0;
         }
 
+        /* --- CONTROLS & UI STYLES --- */
+
         .controls {
             display: flex;
             gap: 20px;
         }
 
-        .controls button {
+        .controls button, .ui-button {
             padding: 15px 25px;
             font-size: 1.1em;
-            border: none;
+            border: 2px solid var(--neon-green);
             border-radius: 50px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, background-color 0.2s;
+            background-color: var(--card-bg);
+            color: var(--neon-green);
+            box-shadow: var(--neon-glow);
+            transition: all 0.2s;
+            text-transform: uppercase;
         }
 
-        #dislikeBtn {
-            background-color: #ff5e5e;
-            color: white;
-        }
-
-        #likeBtn {
-            background-color: #64e397;
-            color: white;
-        }
-
-        .controls button:hover {
+        .controls button:hover, .ui-button:hover {
+            background-color: var(--neon-green);
+            color: var(--bg-dark);
             transform: translateY(-2px);
+            box-shadow: none; /* Turn off glow on hover for a 'pressed' look */
         }
 
-        /* Message when cards run out */
         #noMoreCards {
             position: absolute;
-            font-size: 1.5em;
-            color: #555;
-            background: #fff;
+            font-size: 1.2em;
+            background: var(--card-bg);
             padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            display: none; /* Hidden by default */
+            color: var(--neon-green);
+            border: 2px solid var(--neon-green);
+            box-shadow: var(--neon-glow);
+            display: none;
+        }
+
+        /* --- MODAL/FORM STYLES --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid var(--neon-green);
+            box-shadow: var(--neon-glow);
+            width: 90%;
+            max-width: 400px;
+            color: var(--text-light);
+        }
+        
+        .modal-content h2 {
+            color: var(--neon-green);
+            text-shadow: var(--neon-glow);
+            margin-top: 0;
+            border-bottom: 1px dashed var(--neon-green);
+            padding-bottom: 10px;
+        }
+
+        .modal-content label {
+            display: block;
+            margin-top: 15px;
+            color: var(--neon-green);
+        }
+
+        .modal-content input[type="text"], .modal-content textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-top: 5px;
+            background: var(--bg-dark);
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+            border-radius: 4px;
+            box-shadow: 0 0 5px rgba(0, 255, 102, 0.3);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
         }
     </style>
 </head>
 <body>
 
+    <header>
+        <h1>TR3VMEDIA // ENGAGE</h1>
+        <button id="customizeBtn" class="ui-button">⚙️ Customize Card</button>
+        <button id="loginBtn" class="ui-button">🔓 Login/Logout</button>
+    </header>
+
     <div class="swipe-container">
         <div id="noMoreCards">
-            No more media for now! Check back later.
+            NO MORE MEDIA. REBOOTING SEQUENCE...
         </div>
         </div>
 
     <div class="controls">
-        <button id="dislikeBtn">❌ Skip</button>
-        <button id="likeBtn">❤️ Engage</button>
+        <button id="dislikeBtn">❌ SKIP</button>
+        <button id="likeBtn">❤️ ENGAGE</button>
+    </div>
+
+    <div id="loginModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2 id="loginTitle">System Login</h2>
+            <form id="loginForm">
+                <label for="username">User Handle:</label>
+                <input type="text" id="username" value="tr3vmedia" required>
+                <label for="password">Password (Mock):</label>
+                <input type="text" id="password" value="pass123" required>
+                <div class="modal-actions">
+                    <button type="submit" class="ui-button">Access System</button>
+                    <button type="button" class="ui-button" onclick="closeLoginModal()">Abort</button>
+                </div>
+            </form>
+            <div id="logoutSection" style="display: none;">
+                <p>Logged in as: <strong id="loggedInUser"></strong></p>
+                <div class="modal-actions">
+                    <button type="button" class="ui-button" onclick="logout()">Terminate Session</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="customizeModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h2>Customize Your Card</h2>
+            <p style="color: red;">* Requires mock login to save changes.</p>
+            <form id="cardCustomizationForm">
+                <label for="cardTitle">Project Title:</label>
+                <input type="text" id="cardTitle" maxlength="30" required>
+
+                <label for="cardDesc">Description (Max 50 chars):</label>
+                <textarea id="cardDesc" maxlength="50" required></textarea>
+
+                <label for="cardMedia">Media URL (Placeholder):</label>
+                <input type="text" id="cardMedia" placeholder="https://picsum.photos/320/280?user=..." required> 
+                
+                <div class="modal-actions">
+                    <button type="submit" class="ui-button">💾 SAVE CARD</button>
+                    <button type="button" class="ui-button" onclick="closeCustomizeModal()">CANCEL</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script>
         // --- JAVASCRIPT LOGIC ---
 
-        const CARD_DATA = [
+        // Mock Database of Cards (This is what a server would send)
+        let CARD_DATA = [
             { id: 1, title: "City Sunset Time-lapse", user: "@trev_photo", description: "A beautiful 4K time-lapse project.", imageUrl: "https://picsum.photos/320/280?random=1" },
             { id: 2, title: "Street Interview Series", user: "@urban_media", description: "Asking strangers about their biggest dreams.", imageUrl: "https://picsum.photos/320/280?random=2" },
             { id: 3, title: "Experimental Film Trailer", user: "@arthouse_vid", description: "A sneak peek at my new short film.", imageUrl: "https://picsum.photos/320/280?random=3" },
             { id: 4, title: "Nature Photography Gallery", user: "@wildlens", description: "Capturing the beauty of the PNW forests.", imageUrl: "https://picsum.photos/320/280?random=4" },
         ];
-
-        let currentCardIndex = 0;
+        
+        // --- UI ELEMENTS ---
         const swipeContainer = document.querySelector('.swipe-container');
         const dislikeBtn = document.getElementById('dislikeBtn');
         const likeBtn = document.getElementById('likeBtn');
         const noMoreCards = document.getElementById('noMoreCards');
+        const customizeBtn = document.getElementById('customizeBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        
+        let currentCardIndex = 0;
+        let isUserLoggedIn = false;
+        let userCardData = JSON.parse(localStorage.getItem('userCard')) || {
+            id: 'user_custom',
+            title: "My Custom Media Card",
+            user: localStorage.getItem('userHandle') || "@Guest",
+            description: "Customize this description in the modal!",
+            imageUrl: "https://picsum.photos/320/280?user=tr3vmedia"
+        };
 
-        // --- 1. CARD RENDERING FUNCTION ---
 
-        /**
-         * Creates and returns a new card element for the given data.
-         * @param {object} data - The card data object.
-         */
+        // --- 1. CARD RENDERING ---
+
         function createCard(data) {
             const card = document.createElement('div');
             card.className = 'card';
-            card.dataset.id = data.id; // Store data ID on the element
+            card.dataset.id = data.id;
 
             card.innerHTML = `
                 <img class="card-image" src="${data.imageUrl}" alt="${data.title}">
                 <div class="card-info">
-                    <h3>${data.title}</h3>
+                    <h3>${data.title.toUpperCase()}</h3>
                     <p>By ${data.user} | ${data.description}</p>
                 </div>
             `;
             return card;
         }
 
-        /**
-         * Loads and displays the next card from the CARD_DATA array.
-         */
         function loadNextCard() {
+            // Check if user's own card should be inserted
+            if (currentCardIndex === 0 && isUserLoggedIn) {
+                const userCard = createCard(userCardData);
+                swipeContainer.appendChild(userCard);
+                addSwipeListeners(userCard);
+            }
+            
+            // Load from the mock database
             if (currentCardIndex < CARD_DATA.length) {
                 const cardData = CARD_DATA[currentCardIndex];
                 const newCard = createCard(cardData);
                 swipeContainer.appendChild(newCard);
                 currentCardIndex++;
-                addSwipeListeners(newCard); // Add listeners to the new card
+                addSwipeListeners(newCard);
+                noMoreCards.style.display = 'none';
             } else if (swipeContainer.children.length === 0 || (swipeContainer.children.length === 1 && swipeContainer.children[0].id === 'noMoreCards')) {
                 // All cards processed and cleared
                 noMoreCards.style.display = 'block';
+                // Reset index to allow looping/reloading for demo purposes
+                currentCardIndex = 0; 
+                // A real app would stop or refresh here
             }
         }
 
-        // --- 2. SWIPE AND DRAG LOGIC ---
+        // --- 2. SWIPE AND DRAG LOGIC (From previous response) ---
 
-        /**
-         * Animates the card off-screen and triggers the load of the next card.
-         * @param {HTMLElement} card - The card being swiped.
-         * @param {string} direction - 'right' for like, 'left' for dislike.
-         */
         function swipeCard(card, direction) {
-            // Apply the appropriate CSS class for the final animation
             card.classList.add(`swipe-${direction}`);
 
-            // Log the interaction (this would be your AJAX call in a real app)
-            console.log(`Card ID ${card.dataset.id} was swiped ${direction}.`);
+            // Mock API call to record interaction
+            console.log(`[API Mock] Card ID ${card.dataset.id} swiped ${direction}.`);
 
-            // Remove the card after the transition completes (0.3s defined in CSS)
             setTimeout(() => {
                 card.remove();
-                loadNextCard(); // Load the next card in the sequence
+                loadNextCard();
             }, 300);
         }
-
-        /**
-         * Attaches the mouse/touch event listeners for dragging.
-         * @param {HTMLElement} card - The card to make draggable.
-         */
+        
         function addSwipeListeners(card) {
             let startX, startY;
             let isDragging = false;
-
-            // Start Dragging
+            
             function handleStart(e) {
-                e.preventDefault(); // Prevent default mobile scrolling/actions
+                e.preventDefault();
                 isDragging = true;
-                // Get the starting position (account for touch vs mouse)
                 startX = e.clientX || e.touches[0].clientX;
                 startY = e.clientY || e.touches[0].clientY;
-                // Ensure card transitions are disabled while dragging for instant movement
                 card.style.transition = 'none';
             }
 
-            // During Dragging
             function handleMove(e) {
                 if (!isDragging) return;
 
                 const currentX = e.clientX || e.touches[0].clientX;
                 const deltaX = currentX - startX;
-                const rotate = deltaX / 20; // Rotate the card slightly
+                const rotate = deltaX / 20;
 
-                // Apply the transform for movement and rotation
                 card.style.transform = `translateX(${deltaX}px) rotate(${rotate}deg)`;
-                
-                // Optional: Fade in a "LIKE" or "SKIP" indicator based on deltaX
-                // (Not implemented here, but good for user feedback)
             }
 
-            // End Dragging
             function handleEnd(e) {
                 if (!isDragging) return;
                 isDragging = false;
                 
-                // Re-enable CSS transition for the final action
                 card.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
 
-                // Check how far the card was dragged
                 const finalX = e.clientX || e.changedTouches[0].clientX;
                 const deltaX = finalX - startX;
-                const threshold = 100; // Distance needed to trigger a full swipe
+                const threshold = 100;
 
                 if (deltaX > threshold) {
-                    swipeCard(card, 'right'); // Trigger 'Like'
+                    swipeCard(card, 'right');
                 } else if (deltaX < -threshold) {
-                    swipeCard(card, 'left'); // Trigger 'Dislike'
+                    swipeCard(card, 'left');
                 } else {
-                    // Snap back to the center if not dragged far enough
                     card.style.transform = 'translate(0) rotate(0)';
                 }
             }
 
-            // Attach all listeners
             card.addEventListener('mousedown', handleStart);
             card.addEventListener('touchstart', handleStart);
 
@@ -282,7 +402,6 @@
             document.addEventListener('mouseup', handleEnd);
             document.addEventListener('touchend', handleEnd);
             
-            // Clean up listeners when the card is removed (best practice)
             card.addEventListener('remove', () => {
                 document.removeEventListener('mousemove', handleMove);
                 document.removeEventListener('touchmove', handleMove);
@@ -291,26 +410,119 @@
             });
         }
 
-        // --- 3. BUTTON CONTROLS ---
+        // --- 3. LOGIN / AUTHENTICATION MOCK ---
+        
+        function updateLoginState(handle, isLoggedIn) {
+            isUserLoggedIn = isLoggedIn;
+            localStorage.setItem('isLoggedIn', isLoggedIn);
+            localStorage.setItem('userHandle', handle);
+            
+            loginBtn.textContent = isLoggedIn ? `🔒 LOGOUT (${handle})` : '🔓 LOGIN/LOGOUT';
+            document.getElementById('loggedInUser').textContent = handle;
+            document.getElementById('logoutSection').style.display = isLoggedIn ? 'block' : 'none';
+            document.getElementById('loginForm').style.display = isLoggedIn ? 'none' : 'block';
+            document.getElementById('loginTitle').textContent = isLoggedIn ? 'System Status' : 'System Login';
+        }
 
-        dislikeBtn.addEventListener('click', () => {
-            const topCard = swipeContainer.querySelector('.card:last-child');
-            if (topCard) {
-                swipeCard(topCard, 'left');
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            // In a real app, this would send credentials to a server
+            
+            if (username) {
+                updateLoginState(username, true);
+                closeLoginModal();
+                alert(`[API Mock] Token received. Welcome, ${username}!`);
+                loadNextCard(); // Reload the cards to show user's own card
+            } else {
+                alert('Please enter a username.');
             }
         });
+        
+        function logout() {
+            // In a real app, this would destroy the JWT
+            updateLoginState('@Guest', false);
+            localStorage.removeItem('userToken');
+            closeLoginModal();
+            alert('[API Mock] Session Terminated.');
+            window.location.reload(); // Simple way to reset demo state
+        }
+        
+        loginBtn.addEventListener('click', () => {
+            const modal = document.getElementById('loginModal');
+            modal.style.display = 'flex';
+        });
 
-        likeBtn.addEventListener('click', () => {
-            const topCard = swipeContainer.querySelector('.card:last-child');
-            if (topCard) {
-                swipeCard(topCard, 'right');
+        function closeLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
+
+
+        // --- 4. CUSTOMIZATION MOCK ---
+
+        customizeBtn.addEventListener('click', () => {
+            if (!isUserLoggedIn) {
+                alert('ACCESS DENIED. Please log in to customize your card.');
+                return;
             }
+            
+            // Populate form with current user card data
+            document.getElementById('cardTitle').value = userCardData.title;
+            document.getElementById('cardDesc').value = userCardData.description;
+            document.getElementById('cardMedia').value = userCardData.imageUrl;
+            
+            document.getElementById('customizeModal').style.display = 'flex';
+        });
+
+        function closeCustomizeModal() {
+            document.getElementById('customizeModal').style.display = 'none';
+        }
+
+        document.getElementById('cardCustomizationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 1. Update the local userCardData object
+            userCardData.title = document.getElementById('cardTitle').value;
+            userCardData.description = document.getElementById('cardDesc').value;
+            userCardData.imageUrl = document.getElementById('cardMedia').value;
+            userCardData.user = localStorage.getItem('userHandle');
+
+            // 2. Mock persistence (Save to browser storage)
+            localStorage.setItem('userCard', JSON.stringify(userCardData));
+
+            // 3. Mock API Call
+            console.log(`[API Mock] User Card Saved to Server:`, userCardData);
+            
+            alert('Card data successfully saved and updated!');
+            closeCustomizeModal();
+            window.location.reload(); // Simple way to ensure the new card is at the top
         });
 
 
         // --- INITIALIZATION ---
-        // Start by loading the first card(s)
-        loadNextCard();
+        function init() {
+            // Check for previous login state
+            const handle = localStorage.getItem('userHandle') || '@Guest';
+            const loggedIn = localStorage.getItem('isLoggedIn') === 'true';
+            updateLoginState(handle, loggedIn);
+
+            // Start the card loading sequence
+            loadNextCard();
+        }
+
+        // --- BUTTON CONTROLS (Swipe without dragging) ---
+
+        dislikeBtn.addEventListener('click', () => {
+            const topCard = swipeContainer.querySelector('.card:last-child');
+            if (topCard) swipeCard(topCard, 'left');
+        });
+
+        likeBtn.addEventListener('click', () => {
+            const topCard = swipeContainer.querySelector('.card:last-child');
+            if (topCard) swipeCard(topCard, 'right');
+        });
+        
+        init();
 
     </script>
 </body>
