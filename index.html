@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neon Ink - Secure Account Hub</title>
+    <title>Neon Ink - Notification Hub</title>
     <style>
         /* --- GLOBAL STYLES (Neon Theme) --- */
         :root {
@@ -29,6 +29,44 @@
         h1 { font-family: var(--font-mono); }
         
         .hidden { display: none !important; }
+
+        /* --- NOTIFICATION STYLES (New) --- */
+        #notificationContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column-reverse; /* Newest notifications on top */
+            gap: 10px;
+        }
+
+        .notification-pop-up {
+            background-color: #333;
+            color: var(--color-text);
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            max-width: 300px;
+            opacity: 0;
+            transition: opacity 0.5s, transform 0.5s;
+            transform: translateY(-20px);
+            border-left: 5px solid;
+            font-weight: bold;
+        }
+
+        .notification-pop-up.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .notification-pop-up.success {
+            border-left-color: var(--color-neon);
+        }
+
+        .notification-pop-up.error {
+            border-left-color: var(--color-accent);
+        }
 
         /* --- HEADER & NAVIGATION --- */
         header { 
@@ -109,6 +147,7 @@
             }
             .content { order: 1; }
             #storyList { grid-template-columns: 1fr; }
+            #notificationContainer { right: 10px; top: 10px; }
         }
 
 
@@ -182,7 +221,8 @@
     </style>
 </head>
 <body>
-
+    
+    <div id="notificationContainer"></div>
     <header>
         <h1 onclick="showView('listView')">
             <span style="color: var(--color-accent);">N</span>eon <span style="color: var(--color-accent);">I</span>nk 💡
@@ -226,7 +266,7 @@
                         <input type="password" id="signinPassword" placeholder="Your password">
                     </div>
                     <button class="nav-btn" onclick="signIn()">Sign In</button>
-                    <button class="nav-btn" onclick="alert('Google login not implemented in this prototype.')">Sign In with Google (Simulated)</button>
+                    <button class="nav-btn" onclick="showNotification('Google sign-in is not implemented in this prototype.', 'error')">Sign In with Google (Simulated)</button>
                     <p class="form-switch" onclick="switchAuthMode('signUp')">New here? Create an account.</p>
                 </div>
 
@@ -369,6 +409,32 @@
         let currentFilter = 'All';
         let currentStoryId = null;
 
+        // --- NOTIFICATION HANDLER (NEW) ---
+        function showNotification(message, type = 'success', duration = 3000) {
+            const container = document.getElementById('notificationContainer');
+            const popUp = document.createElement('div');
+            
+            popUp.className = `notification-pop-up ${type}`;
+            popUp.textContent = message;
+            
+            // Add to container (reversed order, so newest is on top)
+            container.appendChild(popUp);
+
+            // Trigger CSS transition
+            setTimeout(() => {
+                popUp.classList.add('show');
+            }, 10); 
+
+            // Auto-hide and remove after duration
+            setTimeout(() => {
+                popUp.classList.remove('show');
+                // Wait for fade transition to finish before removing
+                setTimeout(() => {
+                    popUp.remove();
+                }, 500); 
+            }, duration);
+        }
+
         // --- DATA RETRIEVAL/STORAGE UTILITIES ---
         function getStories() {
             const storiesJSON = localStorage.getItem(STORIES_KEY);
@@ -432,14 +498,14 @@
             const picUrl = document.getElementById('signupPicUrl').value.trim();
 
             if (!username || !password) {
-                alert('Username and Password are required to create an account.');
+                showNotification('Username and Password are required to create an account.', 'error');
                 return;
             }
 
             let users = getUsers();
             
             if (users.find(u => u.username.toLowerCase() === username.toLowerCase())) {
-                alert('Username already exists! Please try a different one or Sign In.');
+                showNotification('Username already exists! Please try a different one or Sign In.', 'error');
                 return;
             }
 
@@ -453,7 +519,7 @@
             users.push(newUser);
             saveUsers(users);
             setLoggedInUser(username);
-            alert(`Welcome, ${username}! Account created and signed in.`);
+            showNotification(`Welcome, ${username}! Account created and signed in.`, 'success');
             
             // Clear sign up form fields
             document.getElementById('signupUsername').value = '';
@@ -469,7 +535,7 @@
             const password = document.getElementById('signinPassword').value.trim();
 
             if (!username || !password) {
-                alert('Both username and password are required.');
+                showNotification('Both username and password are required.', 'error');
                 return;
             }
 
@@ -480,19 +546,19 @@
 
             if (user && user.password === password) {
                 setLoggedInUser(user.username); 
-                alert(`Signed in successfully as ${user.username}.`);
+                showNotification(`Signed in successfully as ${user.username}.`, 'success');
                 document.getElementById('signinUsername').value = '';
                 document.getElementById('signinPassword').value = '';
                 showView('listView');
             } else {
-                alert('Invalid username or password.');
+                showNotification('Invalid username or password.', 'error');
             }
         }
 
         function logout() {
             localStorage.removeItem(LOGGED_IN_USER_KEY);
             updateHeaderUI();
-            alert('You have been signed out.');
+            showNotification('You have been signed out.', 'success');
             showView('listView');
         }
 
@@ -512,7 +578,7 @@
                 users[userIndex].bio = newBio || users[userIndex].bio;
                 users[userIndex].profilePic = newPicUrl || users[userIndex].profilePic;
                 saveUsers(users);
-                alert('Profile updated!');
+                showNotification('Profile updated successfully!', 'success');
                 renderProfileView(loggedInUsername);
             }
         }
@@ -533,7 +599,7 @@
 
             // --- AUTH GUARD ---
             if ((targetViewId === 'createView' || targetViewId === 'profileView') && !getLoggedInUser()) {
-                alert('You must be signed in to access this page.');
+                showNotification('You must be signed in to access this page.', 'error');
                 showView('authView');
                 return;
             }
@@ -640,7 +706,7 @@
             const content = document.getElementById('storyContent').value.trim();
 
             if (!title || !content || !author) {
-                alert('Title, chapter content, and being signed in are required.');
+                showNotification('Title, chapter content, and being signed in are required.', 'error');
                 return;
             }
 
@@ -662,7 +728,7 @@
             stories.push(newStory);
             saveStories(stories);
 
-            alert('Story published successfully!');
+            showNotification('Story published successfully!', 'success');
             showView('listView');
         }
 
@@ -673,13 +739,13 @@
             const story = stories.find(s => s.id === storyId);
 
             if (!story) {
-                alert('Story not found.');
+                showNotification('Story not found.', 'error');
                 return;
             }
 
             // --- AUTH CHECK: Must be the author ---
             if (loggedInUsername !== story.author) {
-                alert('Access denied. You can only edit your own stories.');
+                showNotification('Access denied. You can only edit your own stories.', 'error');
                 return;
             }
             // --- AUTH CHECK END ---
@@ -718,7 +784,7 @@
 
             // --- AUTH CHECK: Must be the author ---
             if (loggedInUsername !== author) {
-                alert('Access denied. You can only add chapters to your own stories.');
+                showNotification('Access denied. You can only add chapters to your own stories.', 'error');
                 return;
             }
             // --- AUTH CHECK END ---
@@ -756,7 +822,7 @@
             const content = document.getElementById('storyContent').value.trim();
 
             if (!content) {
-                alert('Chapter content cannot be empty.');
+                showNotification('Chapter content cannot be empty.', 'error');
                 return;
             }
 
@@ -764,7 +830,7 @@
             const storyIndex = stories.findIndex(s => s.id === storyId);
 
             if (storyIndex === -1) {
-                alert('Error: Story not found in database.');
+                showNotification('Error: Story not found in database.', 'error');
                 return;
             }
 
@@ -777,19 +843,19 @@
                     content: content,
                     datePublished: new Date().toLocaleDateString()
                 });
-                alert('New chapter published successfully!');
+                showNotification('New chapter published successfully!', 'success');
             } else {
                 // Update existing chapter
                 stories[storyIndex].chapters[chapterIndex].title = chapterTitle;
                 stories[storyIndex].chapters[chapterIndex].content = content;
-                alert('Chapter saved successfully!');
+                showNotification('Chapter saved successfully!', 'success');
             }
 
             saveStories(stories);
             showView('listView'); 
         }
 
-        // --- 3. READ VIEW LOGIC (Modified to pass the Story Key) ---
+        // --- 3. READ VIEW LOGIC (Unchanged functionality) ---
         function renderStory(storyId, chapterIndex = 0) {
             currentStoryId = storyId;
             const stories = getStories();
@@ -852,7 +918,7 @@
             showView('readView');
         }
 
-        // --- 4. PROFILE VIEW (Current User) ---
+        // --- 4. PROFILE VIEW (Current User) (Unchanged functionality) ---
         function renderProfileView(targetUsername) {
             if (!targetUsername) return; 
 
@@ -899,7 +965,7 @@
             showView('profileView');
         }
 
-        // --- 5. AUTHOR VIEW (Other Users) ---
+        // --- 5. AUTHOR VIEW (Other Users) (Unchanged functionality) ---
         function renderAuthorView(targetAuthorName) {
             
             const users = getUsers();
@@ -950,7 +1016,7 @@
             
             document.getElementById('publishButton').addEventListener('click', () => {
                 if (!getLoggedInUser()) {
-                    alert('You must be signed in to publish or edit stories!');
+                    showNotification('You must be signed in to publish or edit stories!', 'error');
                     showView('authView');
                     return;
                 }
