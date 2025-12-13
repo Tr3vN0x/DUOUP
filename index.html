@@ -12,104 +12,76 @@
 
 <style>
 :root {
-  --bg-dark: #0F0F1A;
-  --panel: #1A1A2E;
-  --cyan: #00FFFF;
-  --pink: #FF3366;
-  --text: #C0C0D8;
-  --text-light: #E0FFFF;
-  --border: #33335A;
-  --radius: 10px;
+  --bg-dark:#0F0F1A;
+  --panel:#1A1A2E;
+  --cyan:#00FFFF;
+  --pink:#FF3366;
+  --text:#C0C0D8;
+  --border:#33335A;
+  --radius:10px;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'Segoe UI', Tahoma, sans-serif;
-  background: var(--bg-dark);
-  color: var(--text);
-  min-height: 100vh;
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Segoe UI',Tahoma,sans-serif;
+  background:var(--bg-dark);
+  color:var(--text);
 }
 
-/* ================= NAV ================= */
-.navbar {
-  display: none;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 30px;
-  background: var(--panel);
-  border-bottom: 2px solid var(--cyan);
+.navbar{
+  display:none;
+  justify-content:space-between;
+  padding:15px 30px;
+  background:var(--panel);
+  border-bottom:2px solid var(--cyan);
+}
+.logo{color:var(--cyan);font-size:2rem}
+.nav-link{margin-left:20px;cursor:pointer}
+
+.app-view{display:none;padding:30px}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  padding:20px;
+  border-radius:var(--radius);
+  box-shadow:0 0 10px rgba(0,255,255,.2);
 }
 
-.logo {
-  font-size: 2rem;
-  color: var(--cyan);
+input{
+  width:100%;
+  padding:12px;
+  margin-bottom:15px;
+  background:var(--bg-dark);
+  border:1px solid var(--border);
+  color:#E0FFFF;
+  border-radius:var(--radius);
 }
 
-.nav-link {
-  margin-left: 20px;
-  color: var(--text);
-  cursor: pointer;
+.btn{
+  width:100%;
+  padding:12px;
+  background:var(--pink);
+  border:none;
+  font-weight:bold;
+  border-radius:var(--radius);
+  cursor:pointer;
 }
-.nav-link:hover { color: var(--cyan); }
-
-/* ================= VIEWS ================= */
-.app-view {
-  display: none;
-  padding: 30px;
-  animation: fade .25s ease;
-}
-
-@keyframes fade {
-  from { opacity: 0; transform: translateY(5px); }
-  to { opacity: 1; transform: none; }
+.btn.google{
+  background:#4285F4;
+  color:white;
+  margin-top:10px;
 }
 
-/* ================= UI ================= */
-.card {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0,255,255,.2);
+#home-view{display:flex;gap:30px}
+.player-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:20px;
 }
 
-.btn {
-  background: var(--pink);
-  border: none;
-  color: #000;
-  padding: 12px 18px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-weight: bold;
-}
-.btn.secondary { background: var(--cyan); }
-
-input {
-  width: 100%;
-  margin-bottom: 15px;
-  padding: 12px;
-  background: var(--bg-dark);
-  border: 1px solid var(--border);
-  color: var(--text-light);
-  border-radius: var(--radius);
-}
-
-/* ================= HOME ================= */
-#home-view {
-  display: flex;
-  gap: 30px;
-}
-
-.player-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
-  gap: 20px;
-}
-
-/* ================= MOBILE ================= */
-@media (max-width: 900px) {
-  #home-view { flex-direction: column; }
+@media(max-width:900px){
+  #home-view{flex-direction:column}
 }
 </style>
 </head>
@@ -127,25 +99,28 @@ input {
 
 <!-- SIGNUP -->
 <section id="signup-view" class="app-view">
-  <div class="card" style="width:350px;margin:auto;margin-top:10vh;">
-    <h2 style="color:var(--cyan);margin-bottom:20px;">Access Network</h2>
+  <div class="card" style="width:360px;margin:10vh auto;">
+    <h2 style="color:var(--cyan);margin-bottom:15px;">Access Network</h2>
+
     <form id="signup-form">
-      <input id="email" type="email" placeholder="Email" required />
-      <input id="password" type="password" placeholder="Password" required />
-      <input id="username" placeholder="Gamertag" required />
-      <input id="game" placeholder="Main Game" required />
+      <input id="email" type="email" placeholder="Email" required>
+      <input id="password" type="password" placeholder="Password" required>
+      <input id="username" placeholder="Gamertag">
+      <input id="game" placeholder="Main Game">
       <button class="btn">Authorize</button>
     </form>
+
+    <button class="btn google" id="googleSignIn">
+      <i class="fab fa-google"></i> Sign in with Google
+    </button>
   </div>
 </section>
 
 <!-- HOME -->
 <section id="home-view" class="app-view">
   <div class="card" style="width:260px;">
-    <h3 style="color:var(--cyan);">Filters</h3>
-    <button class="btn secondary" id="refresh">Refresh Feed</button>
+    <button class="btn" id="refresh">Refresh Feed</button>
   </div>
-
   <div style="flex:1;">
     <h2 style="color:var(--cyan);margin-bottom:20px;">Live Duoup Requests</h2>
     <div class="player-grid" id="feed"></div>
@@ -155,13 +130,13 @@ input {
 <!-- PROFILE -->
 <section id="profile-view" class="app-view">
   <div class="card" style="max-width:600px;">
-    <h2 id="profile-name" style="color:var(--cyan);">Your Profile</h2>
+    <h2 id="profile-name" style="color:var(--cyan);"></h2>
     <p id="profile-game"></p>
   </div>
 </section>
 
 <script>
-/* ================= FIREBASE ================= */
+/* FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
   authDomain: "duoup-cfae6.firebaseapp.com",
@@ -170,102 +145,92 @@ firebase.initializeApp({
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+const provider = new firebase.auth.GoogleAuthProvider();
 
-/* ================= VIEW HANDLING ================= */
+/* VIEW */
 const views = document.querySelectorAll('.app-view');
 const nav = document.getElementById('nav');
 
-function showView(id) {
-  views.forEach(v => v.style.display = 'none');
-  document.getElementById(id).style.display = 'block';
+function showView(id){
+  views.forEach(v=>v.style.display='none');
+  document.getElementById(id).style.display='block';
   nav.style.display = id === 'signup-view' ? 'none' : 'flex';
 }
 
-/* ================= AUTH ================= */
-auth.onAuthStateChanged(async user => {
-  if (!user) {
+/* AUTH STATE */
+auth.onAuthStateChanged(async user=>{
+  if(!user){
     showView('signup-view');
     return;
   }
 
-  const doc = await db.collection('users').doc(user.uid).get();
+  const ref = db.collection('users').doc(user.uid);
+  const doc = await ref.get();
 
-  if (!doc.exists) {
-    await auth.signOut();
-    showView('signup-view');
-    return;
+  if(!doc.exists){
+    await ref.set({
+      uid:user.uid,
+      username:user.displayName || 'Agent',
+      game:'Unknown',
+      created:firebase.firestore.FieldValue.serverTimestamp()
+    });
   }
 
   showView('home-view');
   loadFeed();
 });
 
-/* ================= SIGNUP ================= */
-document.getElementById('signup-form').onsubmit = async e => {
+/* EMAIL SIGNUP */
+document.getElementById('signup-form').onsubmit = async e=>{
   e.preventDefault();
-
-  try {
-    const emailVal = document.getElementById('email').value;
-    const passVal = document.getElementById('password').value;
-    const userVal = document.getElementById('username').value;
-    const gameVal = document.getElementById('game').value;
-
-    const cred = await auth.createUserWithEmailAndPassword(emailVal, passVal);
-
+  try{
+    const cred = await auth.createUserWithEmailAndPassword(
+      email.value,
+      password.value
+    );
     await db.collection('users').doc(cred.user.uid).set({
-      uid: cred.user.uid,
-      username: userVal,
-      game: gameVal,
-      created: firebase.firestore.FieldValue.serverTimestamp()
+      uid:cred.user.uid,
+      username:username.value || 'Agent',
+      game:game.value || 'Unknown',
+      created:firebase.firestore.FieldValue.serverTimestamp()
     });
+  }catch(err){ alert(err.message); }
+};
 
-  } catch (err) {
+/* GOOGLE SIGN IN */
+document.getElementById('googleSignIn').onclick = async ()=>{
+  try{
+    await auth.signInWithPopup(provider);
+  }catch(err){
     alert(err.message);
     console.error(err);
   }
 };
 
-/* ================= FEED ================= */
-async function loadFeed() {
-  const feed = document.getElementById('feed');
-  feed.innerHTML = '';
+/* FEED */
+async function loadFeed(){
+  const feed=document.getElementById('feed');
+  feed.innerHTML='';
+  const snap=await db.collection('users').orderBy('uid').limit(12).get();
 
-  try {
-    const snap = await db.collection('users')
-      .orderBy('uid')
-      .limit(12)
-      .get();
-
-    if (snap.empty) {
-      feed.innerHTML = '<p>No players found.</p>';
-    }
-
-    snap.forEach(doc => {
-      if (doc.id === auth.currentUser.uid) return;
-      const u = doc.data();
-
-      feed.innerHTML += `
-        <div class="card">
-          <h3 style="color:var(--text-light);">${u.username}</h3>
-          <p>${u.game}</p>
-          <button class="btn">Duo Up</button>
-        </div>
-      `;
-    });
-
-  } catch (err) {
-    console.error(err);
-    feed.innerHTML = '<p>Error loading feed.</p>';
-  }
+  snap.forEach(doc=>{
+    if(doc.id===auth.currentUser.uid)return;
+    const u=doc.data();
+    feed.innerHTML+=`
+      <div class="card">
+        <h3 style="color:#E0FFFF">${u.username}</h3>
+        <p>${u.game}</p>
+        <button class="btn">Duo Up</button>
+      </div>`;
+  });
 }
 
-/* ================= NAV ================= */
-document.addEventListener('click', e => {
-  if (e.target.dataset.view) showView(e.target.dataset.view);
+/* NAV */
+document.addEventListener('click',e=>{
+  if(e.target.dataset.view) showView(e.target.dataset.view);
 });
-
-document.getElementById('logout').onclick = () => auth.signOut();
-document.getElementById('refresh').onclick = loadFeed;
+document.getElementById('logout').onclick=()=>auth.signOut();
+document.getElementById('refresh').onclick=loadFeed;
 </script>
 
 </body>
