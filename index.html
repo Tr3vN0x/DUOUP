@@ -93,12 +93,12 @@ import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } fro
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-  authDomain: "duoup-cfae6.firebaseapp.com",
-  projectId: "duoup-cfae6",
-  storageBucket: "duoup-cfae6.appspot.com",
-  messagingSenderId: "812263060524",
-  appId: "1:812263060524:web:ac09c3ae610db1cd110d89"
+    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+    authDomain: "duoup-cfae6.firebaseapp.com",
+    projectId: "duoup-cfae6",
+    storageBucket: "duoup-cfae6.appspot.com",
+    messagingSenderId: "812263060524",
+    appId: "1:812263060524:web:ac09c3ae610db1cd110d89"
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -136,11 +136,30 @@ signupForm.addEventListener("submit", async e=>{
             username:"New Player",
             bio:"",
             profileImageUrl:"",
-            friends:""
+            friends:"",
+            lastActive: Date.now() // Initialize lastActive on signup
         });
     } catch(err){ alert(err.message); }
 });
-googleBtn.addEventListener("click", async ()=>{ try{ await signInWithPopup(auth,provider); } catch(err){ alert(err.message); }});
+googleBtn.addEventListener("click", async ()=>{ 
+    try{ 
+        const userCredential = await signInWithPopup(auth,provider); 
+        // For new Google sign-ups, ensure their profile document and lastActive is set
+        const userDocRef = doc(db,"users",userCredential.user.uid);
+        const docSnap = await getDoc(userDocRef);
+        if(!docSnap.exists()) {
+             await setDoc(userDocRef, {
+                uid: userCredential.user.uid,
+                email: userCredential.user.email,
+                username: userCredential.user.displayName || "New Player",
+                bio: "",
+                profileImageUrl: userCredential.user.photoURL || "",
+                friends: "",
+                lastActive: Date.now()
+            });
+        }
+    } catch(err){ alert(err.message); }
+});
 document.getElementById("logoutBtnHeader").addEventListener("click", async ()=>{ await signOut(auth); });
 
 // --- Profile ---
@@ -166,20 +185,27 @@ function renderProfilePreview(data){
     `;
 }
 
-// --- Auto-save username permanently ---
+// --- Auto-save username/bio and update lastActive timestamp ---
 let saveTimeout;
+const saveProfile = async (updates) => {
+    const user = auth.currentUser;
+    if(!user) return;
+    try{
+        await updateDoc(doc(db,"users",user.uid), { ...updates, lastActive: Date.now() });
+    } catch(err){ console.error(err); }
+};
+
 profileUsername.addEventListener("input", ()=>{
     renderProfilePreview({username: profileUsername.value, bio: profileAbout.value});
     clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(async ()=>{
-        const user = auth.currentUser;
-        if(!user) return;
-        try{
-            await updateDoc(doc(db,"users",user.uid), { username: profileUsername.value });
-        } catch(err){ console.error(err); }
-    },800);
+    saveTimeout = setTimeout(()=>saveProfile({ username: profileUsername.value }), 800);
 });
-profileAbout.addEventListener("input", ()=>renderProfilePreview({username: profileUsername.value, bio: profileAbout.value}));
+
+profileAbout.addEventListener("input", ()=>{
+    renderProfilePreview({username: profileUsername.value, bio: profileAbout.value});
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(()=>saveProfile({ bio: profileAbout.value }), 800);
+});
 
 profilePhoto.addEventListener("change", async e=>{
     const file = e.target.files[0];
@@ -188,20 +214,35 @@ profilePhoto.addEventListener("change", async e=>{
     const storageRef = ref(storage,`profiles/${user.uid}`);
     await uploadBytes(storageRef,file);
     const photoURL = await getDownloadURL(storageRef);
-    await updateDoc(doc(db,"users",user.uid), { profileImageUrl: photoURL });
+    await updateDoc(doc(db,"users",user.uid), { profileImageUrl: photoURL, lastActive: Date.now() });
     loadProfile();
 });
 
-// --- Users ---
+// --- Users & Active Filtering ---
+const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
+
 async function loadUsers(){
     const currentUser = auth.currentUser;
     if(!currentUser) return;
+
+    const SEVEN_DAYS_AGO = Date.now() - SEVEN_DAYS_IN_MS;
+
     const qSnap = await getDocs(collection(db,"users"));
     usersGrid.innerHTML='';
     let count=0;
+
     qSnap.forEach(doc=>{
         const data = doc.data();
-        if(!data.uid || data.uid===currentUser.uid) return;
+        
+        // 1. Filter out the current user
+        if(!data.uid || data.uid === currentUser.uid) return;
+
+        // 2. Filter for active users: only show if lastActive is defined and more recent than 7 days ago
+        // Note: Using Date.now() comparison is simple but requires all clients to have reasonably synchronized time.
+        if (!data.lastActive || data.lastActive < SEVEN_DAYS_AGO) {
+            return; // Skip inactive user
+        }
+        
         count++;
         usersGrid.innerHTML+=`
         <div class="duo-card">
@@ -214,8 +255,21 @@ async function loadUsers(){
         </div>
         `;
     });
-    userCountElement.innerText = count+" players online";
+    userCountElement.innerText = count+" players online (active 7d)";
 }
+
+// --- Initial Activity Update (on Login) ---
+async function updateLastActiveStatus(uid) {
+    try {
+        await updateDoc(doc(db, "users", uid), {
+            lastActive: Date.now()
+        });
+    } catch (err) {
+        // If the document doesn't exist (e.g., initial Google sign-in), the error is handled in the sign-in flow
+        console.warn("Could not update lastActive status:", err.message);
+    }
+}
+
 
 // --- Sections ---
 function showSection(section){
@@ -226,11 +280,12 @@ function showSection(section){
 }
 
 // --- Auth State ---
-onAuthStateChanged(auth,user=>{
+onAuthStateChanged(auth,async user=>{
     if(user){
         authSection.style.display="none";
         appSection.style.display="block";
         mainHeader.style.display="flex";
+        await updateLastActiveStatus(user.uid); // Update status on login
         loadUsers();
     } else {
         authSection.style.display="flex";
