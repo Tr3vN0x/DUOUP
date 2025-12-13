@@ -81,7 +81,6 @@ button:not(.google-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;
             <input class="profile-field" id="profile-username" placeholder="Username">
             <textarea class="profile-field" id="profile-about" placeholder="About Me"></textarea>
             <input type="file" id="profile-photo">
-            <button type="button" id="saveProfileBtn">Save Profile</button>
         </form>
         <div id="profilePreviewContainer"></div>
     </div>
@@ -118,7 +117,6 @@ const userCountElement = document.getElementById("userCount");
 const profileUsername = document.getElementById("profile-username");
 const profileAbout = document.getElementById("profile-about");
 const profilePhoto = document.getElementById("profile-photo");
-const saveProfileBtn = document.getElementById("saveProfileBtn");
 const profilePreviewContainer = document.getElementById("profilePreviewContainer");
 
 // --- Auth ---
@@ -167,17 +165,22 @@ function renderProfilePreview(data){
     </div>
     `;
 }
-profileUsername.addEventListener("input", ()=>renderProfilePreview({username:profileUsername.value, bio:profileAbout.value}));
-profileAbout.addEventListener("input", ()=>renderProfilePreview({username:profileUsername.value, bio:profileAbout.value}));
-saveProfileBtn.addEventListener("click", async ()=>{
-    const user = auth.currentUser;
-    if(!user) return;
-    await updateDoc(doc(db,"users",user.uid),{
-        username: profileUsername.value,
-        bio: profileAbout.value
-    });
-    alert("Profile updated!");
+
+// --- Auto-save username permanently ---
+let saveTimeout;
+profileUsername.addEventListener("input", ()=>{
+    renderProfilePreview({username: profileUsername.value, bio: profileAbout.value});
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(async ()=>{
+        const user = auth.currentUser;
+        if(!user) return;
+        try{
+            await updateDoc(doc(db,"users",user.uid), { username: profileUsername.value });
+        } catch(err){ console.error(err); }
+    },800);
 });
+profileAbout.addEventListener("input", ()=>renderProfilePreview({username: profileUsername.value, bio: profileAbout.value}));
+
 profilePhoto.addEventListener("change", async e=>{
     const file = e.target.files[0];
     if(!file) return;
@@ -223,7 +226,7 @@ function showSection(section){
 }
 
 // --- Auth State ---
-onAuthStateChanged(auth, user=>{
+onAuthStateChanged(auth,user=>{
     if(user){
         authSection.style.display="none";
         appSection.style.display="block";
