@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tr3vMedia NEON Messenger Terminal</title>
+    <title>Tr3vMedia NEON Messenger Terminal - Multi-Channel</title>
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         /* --- CORE NEON STYLES --- */
         :root {
-            --bg-dark: #07090F; /* Darker background for contrast */
+            --bg-dark: #07090F; 
             --neon-primary: #00FF66; /* Main Green Neon */
             --neon-secondary: #0088FF; /* Blue accent */
             --neon-glow-primary: 0 0 10px var(--neon-primary), 0 0 20px rgba(0, 255, 102, 0.7);
             --neon-glow-secondary: 0 0 8px var(--neon-secondary);
-            --interface-bg: #101520; /* Slightly lighter inner components */
+            --interface-bg: #101520; 
             --text-light: #E0E0E0;
+            --unread-badge: #FF4444; /* Red for notifications */
         }
 
         body {
@@ -30,178 +31,154 @@
             overflow-x: hidden;
         }
 
-        /* --- HEADER & ICON STYLES --- */
-        .app-header {
-            width: 100%;
-            height: 100px;
-            background-color: var(--interface-bg);
-            border-bottom: 3px solid var(--neon-primary);
-            box-shadow: 0 0 15px rgba(0, 255, 102, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 0 20px;
+        /* --- HEADER (Unchanged) --- */
+        .app-header { /* ... */
+            width: 100%; height: 100px; background-color: var(--interface-bg);
+            border-bottom: 3px solid var(--neon-primary); box-shadow: 0 0 15px rgba(0, 255, 102, 0.5);
+            display: flex; align-items: center; justify-content: flex-start; padding: 0 20px;
             margin-bottom: 20px;
         }
-        .header-icon {
-            width: 100px;
-            height: 65px;
-            object-fit: contain;
+        .header-icon { /* ... */
+            width: 100px; height: 65px; object-fit: contain;
             filter: drop-shadow(0 0 5px var(--neon-primary));
         }
-        .header-title {
-            color: var(--neon-primary);
-            font-size: 2.2em;
-            text-shadow: var(--neon-glow-primary);
-            margin-left: 20px;
-            letter-spacing: 2px;
+        .header-title { /* ... */
+            color: var(--neon-primary); font-size: 2.2em; text-shadow: var(--neon-glow-primary);
+            margin-left: 20px; letter-spacing: 2px;
         }
 
-        /* --- MESSENGER LAYOUT --- */
+        /* --- MESSENGER LAYOUT (Unchanged) --- */
         .messenger-container {
-            display: flex;
-            width: 90%;
-            max-width: 1200px;
-            height: 80vh;
-            background-color: var(--interface-bg);
-            border: 2px solid var(--neon-primary);
-            box-shadow: var(--neon-glow-primary);
-            border-radius: 10px;
-            overflow: hidden;
+            display: flex; width: 90%; max-width: 1200px; height: 80vh;
+            background-color: var(--interface-bg); border: 2px solid var(--neon-primary);
+            box-shadow: var(--neon-glow-primary); border-radius: 10px; overflow: hidden;
         }
 
-        /* --- CONTACTS / SIDEBAR --- */
+        /* --- CONTACTS / SIDEBAR (Updated) --- */
         .contact-list {
-            width: 300px;
-            border-right: 1px solid var(--neon-primary);
-            background-color: rgba(0, 0, 0, 0.3);
-            overflow-y: auto;
+            width: 300px; border-right: 1px solid var(--neon-primary);
+            background-color: rgba(0, 0, 0, 0.3); overflow-y: auto;
         }
-        .contact-header {
-            padding: 15px;
-            border-bottom: 1px solid var(--neon-primary);
-            color: var(--neon-secondary);
-            text-shadow: var(--neon-glow-secondary);
-            font-size: 1.1em;
-            text-align: center;
+        .contact-header { /* ... */
+            padding: 15px; border-bottom: 1px solid var(--neon-primary);
+            color: var(--neon-secondary); text-shadow: var(--neon-glow-secondary);
+            font-size: 1.1em; text-align: center;
         }
         .contact-item {
-            display: flex;
-            align-items: center;
-            padding: 15px 10px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            border-bottom: 1px dotted rgba(0, 255, 102, 0.2);
+            position: relative;
+            display: flex; align-items: center; padding: 15px 10px; cursor: pointer;
+            transition: background-color 0.2s; border-bottom: 1px dotted rgba(0, 255, 102, 0.2);
         }
         .contact-item:hover, .contact-item.active {
-            background-color: rgba(0, 255, 102, 0.15);
-            border-left: 5px solid var(--neon-primary);
+            background-color: rgba(0, 255, 102, 0.15); border-left: 5px solid var(--neon-primary);
             padding-left: 5px;
         }
         .contact-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--neon-secondary);
-            background-color: var(--bg-dark);
-            margin-right: 10px;
+            position: relative;
+            width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--neon-secondary);
+            background-color: var(--bg-dark); margin-right: 10px;
         }
-        .contact-info strong {
-            color: var(--text-light);
-            font-weight: normal;
+        .contact-info strong { font-weight: bold; }
+        .contact-info span { display: block; font-size: 0.75em; opacity: 0.8; }
+        
+        /* Contact Status & Badges */
+        .status-dot {
+            position: absolute; bottom: 0; right: 0; width: 10px; height: 10px;
+            border-radius: 50%; border: 2px solid var(--interface-bg);
+            background-color: var(--neon-primary);
+            box-shadow: 0 0 5px var(--neon-primary);
         }
-        .contact-info span {
-            display: block;
-            font-size: 0.75em;
-            color: var(--neon-primary);
-            opacity: 0.8;
+        .unread-badge {
+            position: absolute; top: 10px; right: 10px; padding: 3px 7px;
+            background-color: var(--unread-badge); color: white;
+            border-radius: 10px; font-size: 0.7em; font-weight: bold;
+            box-shadow: 0 0 5px var(--unread-badge);
         }
+        .group-indicator {
+            color: var(--neon-secondary);
+            margin-left: 5px;
+            font-size: 0.7em;
+        }
+
 
         /* --- CHAT WINDOW --- */
         .chat-window {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-dark);
+            flex-grow: 1; display: flex; flex-direction: column; background-color: var(--bg-dark);
         }
         .chat-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--neon-primary);
-            color: var(--neon-primary);
-            text-shadow: 0 0 5px rgba(0, 255, 102, 0.5);
+            padding: 15px 20px; border-bottom: 1px solid var(--neon-primary);
+            color: var(--neon-primary); text-shadow: 0 0 5px rgba(0, 255, 102, 0.5);
             font-size: 1.2em;
         }
         .message-area {
-            flex-grow: 1;
-            padding: 20px;
-            overflow-y: auto;
+            flex-grow: 1; padding: 20px; overflow-y: auto;
         }
         
-        /* Message Bubbles */
-        .message {
-            margin-bottom: 15px;
-            display: flex;
-        }
-        .message.self {
-            justify-content: flex-end;
+        /* Message Bubbles (Updated for Image content) */
+        .message { margin-bottom: 15px; display: flex; }
+        .message.self { justify-content: flex-end; }
+        
+        .message-content {
+            display: flex; /* Allows image to sit next to text in the bubble */
+            flex-direction: column;
         }
         .message-bubble {
-            max-width: 60%;
-            padding: 10px 15px;
-            border-radius: 15px;
-            font-size: 0.9em;
-            line-height: 1.4;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+            max-width: 60%; padding: 10px 15px; border-radius: 15px; font-size: 0.9em;
+            line-height: 1.4; box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
         }
         .message.other .message-bubble {
-            background-color: var(--neon-secondary);
-            color: var(--bg-dark);
-            border-bottom-left-radius: 2px;
-            box-shadow: var(--neon-glow-secondary);
+            background-color: var(--neon-secondary); color: var(--bg-dark);
+            border-bottom-left-radius: 2px; box-shadow: var(--neon-glow-secondary);
         }
         .message.self .message-bubble {
-            background-color: var(--neon-primary);
-            color: var(--bg-dark);
-            border-bottom-right-radius: 2px;
-            box-shadow: var(--neon-glow-primary);
+            background-color: var(--neon-primary); color: var(--bg-dark);
+            border-bottom-right-radius: 2px; box-shadow: var(--neon-glow-primary);
         }
         
-        /* Input Area */
+        .message-image-preview {
+            max-width: 100%;
+            max-height: 200px; /* Limit size in chat */
+            margin-top: 5px;
+            border-radius: 8px;
+            object-fit: contain;
+            border: 2px solid var(--bg-dark);
+        }
+        
+        /* Input Area (Extended) */
         .chat-input {
+            display: flex; padding: 10px 15px; border-top: 2px solid var(--neon-primary);
+            background-color: var(--interface-bg); align-items: center;
+        }
+        .input-controls {
             display: flex;
-            padding: 15px;
-            border-top: 2px solid var(--neon-primary);
-            background-color: var(--interface-bg);
-        }
-        .chat-input input[type="text"] {
-            flex-grow: 1;
-            padding: 10px;
-            border: 2px solid var(--neon-secondary);
-            background-color: var(--bg-dark);
-            color: var(--neon-primary);
-            font-family: 'Share Tech Mono', monospace;
-            border-radius: 5px;
+            gap: 5px;
             margin-right: 10px;
-            text-shadow: 0 0 3px var(--neon-primary);
-            box-shadow: 0 0 8px rgba(0, 136, 255, 0.5);
         }
-        .chat-input input[type="text"]:focus {
-            outline: none;
-            border-color: var(--neon-primary);
+        .input-controls button, .send-button {
+            width: 40px; height: 40px; padding: 0; border: none; border-radius: 50%;
+            background-color: var(--neon-secondary); color: var(--bg-dark);
+            font-weight: bold; cursor: pointer; transition: background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 5px var(--neon-secondary);
+            font-size: 1.2em;
+            line-height: 1;
+        }
+        .send-button {
+            width: auto; padding: 0 15px; border-radius: 5px; background-color: var(--neon-primary);
             box-shadow: var(--neon-glow-primary);
         }
-        .chat-input button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            background-color: var(--neon-primary);
-            color: var(--bg-dark);
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.2s;
+        .input-controls button:hover {
+            background-color: #00AAFF;
+            box-shadow: 0 0 10px #00AAFF;
         }
-        .chat-input button:hover {
-            background-color: #00FF99;
+        .chat-input input[type="text"] {
+            flex-grow: 1; padding: 10px; border: 2px solid var(--neon-secondary);
+            background-color: var(--bg-dark); color: var(--neon-primary);
+            font-family: 'Share Tech Mono', monospace; border-radius: 5px;
+            margin-right: 10px; text-shadow: 0 0 3px var(--neon-primary);
+            box-shadow: 0 0 8px rgba(0, 136, 255, 0.5);
+        }
+        .file-upload-input {
+            display: none; /* Hide the default file input */
         }
 
     </style>
@@ -212,35 +189,52 @@
         <img src="https://see.fontimg.com/api/rf5/vXL4/YTM3ZmYyMWFkMzNiNGY5MGEwY2ZmZTZmNDhiZGI4NzkudHRm/VHIzdk1lZGlh/chimpanzee-website-report.png?r=fs&h=65&w=1000&fg=E8E4E4&bg=27E2A1&tb=1&s=65" 
              alt="Tr3vMedia Icon" 
              class="header-icon">
-        <h1 class="header-title">NEON MESSENGER // INITIATE COMMS</h1>
+        <h1 class="header-title">NEON MESSENGER // MULTI-CHANNEL COMMS</h1>
     </header>
 
     <div class="messenger-container">
         
         <div class="contact-list">
-            <div class="contact-header">ACTIVE CHANNELS (3)</div>
+            <div class="contact-header">ACTIVE CHANNELS (4)</div>
             
-            <div class="contact-item active" data-id="1" data-name="@CyberGhost">
-                <div class="contact-avatar" style="background-color: #ff33ff;"></div>
+            <div class="contact-item active" data-id="1" data-type="private" data-name="@CyberGhost">
+                <div class="contact-avatar" style="background-color: #ff33ff;">
+                    <div class="status-dot"></div>
+                </div>
                 <div class="contact-info">
                     <strong>@CyberGhost</strong>
-                    <span>[NEW] Awaiting data transfer...</span>
+                    <span>Awaiting data transfer...</span>
                 </div>
+                <span class="unread-badge">3</span>
             </div>
 
-            <div class="contact-item" data-id="2" data-name="@Synapse_AI">
-                <div class="contact-avatar" style="background-color: #ffcc00;"></div>
+            <div class="contact-item" data-id="2" data-type="group" data-name="Project_SYNAPSE_G-01">
+                <div class="contact-avatar" style="background-color: var(--neon-secondary);">
+                    <div class="status-dot" style="background-color: #ffcc00; box-shadow: 0 0 5px #ffcc00;"></div>
+                </div>
                 <div class="contact-info">
-                    <strong>@Synapse_AI</strong>
-                    <span>System update complete.</span>
+                    <strong>Project_SYNAPSE_G-01</strong>
+                    <span><span class="group-indicator">👥</span> @Bot Alpha: System up.</span>
                 </div>
             </div>
 
-            <div class="contact-item" data-id="3" data-name="@CodeMonkey">
-                <div class="contact-avatar" style="background-color: #00ffcc;"></div>
+            <div class="contact-item" data-id="3" data-type="private" data-name="@CodeMonkey">
+                <div class="contact-avatar" style="background-color: #00ffcc;">
+                    <div class="status-dot" style="background-color: var(--unread-badge); box-shadow: 0 0 5px var(--unread-badge);"></div>
+                </div>
                 <div class="contact-info">
                     <strong>@CodeMonkey</strong>
                     <span>Last seen: 02:45 AM</span>
+                </div>
+            </div>
+            
+            <div class="contact-item" data-id="4" data-type="group" data-name="TCG_Dev_Group">
+                <div class="contact-avatar" style="background-color: var(--neon-primary);">
+                    <div class="status-dot"></div>
+                </div>
+                <div class="contact-info">
+                    <strong>TCG_Dev_Group</strong>
+                    <span><span class="group-indicator">👥</span> @You: Sent a test image.</span>
                 </div>
             </div>
             
@@ -249,61 +243,104 @@
         <div class="chat-window">
             
             <div class="chat-header">
-                Channel: <span id="currentChatName">@CyberGhost</span>
+                <span id="chatType">Private Channel:</span> <span id="currentChatName">@CyberGhost</span>
             </div>
 
             <div class="message-area" id="messageArea">
                 
                 <div class="message other">
                     <div class="message-bubble">
-                        Establishing secure connection... Protocol 7 initiated. Have you seen the new firmware update for the synth rigs?
+                        <div class="message-content">
+                            Establishing secure connection... Protocol 7 initiated. Have you seen the new firmware update?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message other">
+                    <div class="message-bubble">
+                        <div class="message-content">
+                            <img src="https://picsum.photos/300/200?random=1" alt="Image received" class="message-image-preview">
+                            <p style="margin-top: 5px; color: var(--bg-dark); font-size: 0.85em;">Look at this new neon glitch art. It's beautiful.</p>
+                        </div>
                     </div>
                 </div>
 
                 <div class="message self">
                     <div class="message-bubble">
-                        Affirmative. Running diagnostics now. The latency is almost zero. Neon is looking sharper than ever.
-                    </div>
-                </div>
-                
-                <div class="message other">
-                    <div class="message-bubble">
-                        Good. Send the encrypted TCG manifest when ready.
+                        <div class="message-content">
+                            Affirmative. Running diagnostics now. The latency is almost zero. Neon is looking sharper than ever.
+                        </div>
                     </div>
                 </div>
 
             </div>
 
             <div class="chat-input">
+                <div class="input-controls">
+                    <button title="Image/File" onclick="document.getElementById('imageUpload').click()">🖼️</button>
+                    <button title="Mock Call" onclick="alert('Initiating secure voice comm...');">📞</button>
+                    <button title="Mock Location" onclick="alert('Sending current Geo-Hash...');">📍</button>
+                </div>
+                
+                <input type="file" id="imageUpload" accept="image/*, .zip, .pdf" class="file-upload-input" onchange="previewFile(event)">
+                
                 <input type="text" id="messageInput" placeholder="Type data stream here...">
-                <button onclick="sendMessage()">SEND</button>
+                
+                <button class="send-button" onclick="sendMessage()">SEND</button>
             </div>
         </div>
     </div>
     
     <script>
+        // Global state for mock messaging
+        let currentChatId = 1;
+        let pendingImageURL = null;
+
+        // Mock chat history data (for switching chats)
+        const mockChatHistories = {
+            1: [ // @CyberGhost
+                { type: 'other', content: 'Establishing secure connection... Protocol 7 initiated. Have you seen the new firmware update?' },
+                { type: 'other', image: 'https://picsum.photos/300/200?random=1', content: 'Look at this new neon glitch art. It\'s beautiful.' },
+                { type: 'self', content: 'Affirmative. Running diagnostics now. The latency is almost zero. Neon is looking sharper than ever.' }
+            ],
+            2: [ // Project_SYNAPSE_G-01 (Group)
+                { type: 'other', content: '@Bot Alpha: System check passed. All nodes green.' },
+                { type: 'other', content: '@Bot Beta: Ready for code deployment at 0800 hours.' },
+                { type: 'self', content: 'Understood. Deploying a new TCG patch soon.' }
+            ],
+            3: [ // @CodeMonkey
+                { type: 'other', content: 'Still debugging the main rendering loop. Expect delay on delivery.' },
+                { type: 'self', content: 'Need a hand with the buffer overflow? I have some tools.' }
+            ],
+            4: [ // TCG_Dev_Group (Group)
+                { type: 'self', content: 'Sending a test image to check the renderer.' },
+                { type: 'self', image: 'https://picsum.photos/300/200?random=4', content: 'Test image sent successfully.' }
+            ]
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
             const messageArea = document.getElementById('messageArea');
-            messageArea.scrollTop = messageArea.scrollHeight; // Scroll to bottom on load
+            messageArea.scrollTop = messageArea.scrollHeight; 
 
-            // Mock selection logic for contacts
+            // Initialize chat history for the first active chat
+            renderChatHistory(1);
+            
+            // Event listeners for switching contacts
             document.querySelectorAll('.contact-item').forEach(item => {
                 item.addEventListener('click', function() {
+                    const newChatId = parseInt(this.getAttribute('data-id'));
+                    if (newChatId === currentChatId) return;
+
                     document.querySelector('.contact-item.active')?.classList.remove('active');
                     this.classList.add('active');
                     
                     const chatName = this.getAttribute('data-name');
+                    const chatType = this.getAttribute('data-type');
                     document.getElementById('currentChatName').textContent = chatName;
+                    document.getElementById('chatType').textContent = (chatType === 'group' ? 'Group Channel:' : 'Private Channel:');
                     
-                    // Mock: Clear and show a new message for context
-                    messageArea.innerHTML = `
-                        <div class="message other">
-                            <div class="message-bubble">
-                                Switched to chat with ${chatName}. Initializing chat history...
-                            </div>
-                        </div>
-                    `;
-                    messageArea.scrollTop = messageArea.scrollHeight;
+                    currentChatId = newChatId;
+                    renderChatHistory(newChatId);
                 });
             });
             
@@ -314,34 +351,94 @@
                 }
             });
         });
+        
+        // --- CHAT RENDERING FUNCTIONS ---
+        
+        function renderChatHistory(chatId) {
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = '';
+            
+            const history = mockChatHistories[chatId] || [];
+            
+            history.forEach(msg => {
+                appendMessage(msg.type, msg.content, msg.image);
+            });
+            
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+
+        function appendMessage(type, content, imageURL = null) {
+            const messageArea = document.getElementById('messageArea');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            let contentHTML = '';
+            if (imageURL) {
+                contentHTML += `<img src="${imageURL}" alt="Media Sent" class="message-image-preview">`;
+            }
+            if (content) {
+                contentHTML += `<p style="margin-top: ${imageURL ? '5px' : '0'}; color: var(--bg-dark); font-size: 0.9em;">${content}</p>`;
+            }
+
+            messageDiv.innerHTML = `
+                <div class="message-bubble">
+                    <div class="message-content">${contentHTML}</div>
+                </div>
+            `;
+            
+            messageArea.appendChild(messageDiv);
+        }
+
+        // --- INPUT HANDLING ---
+
+        function previewFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pendingImageURL = e.target.result;
+                    document.getElementById('messageInput').placeholder = `Image Ready: ${file.name} - Add caption or send directly.`;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
 
         function sendMessage() {
             const input = document.getElementById('messageInput');
-            const messageArea = document.getElementById('messageArea');
             const messageText = input.value.trim();
-
-            if (messageText === "") return;
-
-            // 1. Create and append the message bubble (Self)
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message self';
-            messageDiv.innerHTML = `<div class="message-bubble">${messageText}</div>`;
             
-            messageArea.appendChild(messageDiv);
+            if (messageText === "" && pendingImageURL === null) return;
+
+            // 1. Append the message (Self)
+            appendMessage('self', messageText, pendingImageURL);
             
-            // 2. Clear input
+            // MOCK: Add to the mock history for persistence on switch
+            mockChatHistories[currentChatId].push({
+                type: 'self',
+                content: messageText,
+                image: pendingImageURL
+            });
+            
+            // 2. Clear state
             input.value = '';
+            input.placeholder = "Type data stream here...";
+            pendingImageURL = null;
+            document.getElementById('imageUpload').value = ''; // Clear file input value
             
-            // 3. Scroll to the new message
+            // 3. Scroll
+            const messageArea = document.getElementById('messageArea');
             messageArea.scrollTop = messageArea.scrollHeight;
             
             // 4. Mock Bot Response
             setTimeout(() => {
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'message other';
-                const responseText = `[BOT] Received: "${messageText.substring(0, 15)}...". Processing query. Standby.`;
-                responseDiv.innerHTML = `<div class="message-bubble">${responseText}</div>`;
-                messageArea.appendChild(responseDiv);
+                const responseText = (messageText || pendingImageURL) 
+                    ? `[BOT] Received data. Processing...` 
+                    : `[BOT] Standby.`;
+                appendMessage('other', responseText);
+                 mockChatHistories[currentChatId].push({
+                    type: 'other',
+                    content: responseText
+                });
                 messageArea.scrollTop = messageArea.scrollHeight;
             }, 1500);
         }
