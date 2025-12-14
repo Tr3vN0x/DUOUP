@@ -9,17 +9,12 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <style>
-/* ---------- BASE ---------- */
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
 .container { width:90%; max-width:1000px; margin:auto; padding:20px; }
 .hidden { display:none !important; }
-
-/* ---------- HEADER ---------- */
-.header { display:flex; align-items:center; justify-content:center; padding:10px 0; background:#111; border-bottom:3px solid cyan; box-shadow:0 0 20px rgba(0,255,255,0.5);}
+.header { background:#111; border-bottom:3px solid cyan; box-shadow:0 0 20px rgba(0,255,255,0.5); padding:10px 0; margin-bottom:20px; display:flex; align-items:center; justify-content:center; }
 .header h1 { font-size:2.5em; color:#fff; text-shadow:0 0 5px cyan,0 0 10px cyan,0 0 15px magenta; margin:0; }
 .icon-container { margin-right:15px; font-size:2.5em; color:cyan; text-shadow:0 0 5px cyan,0 0 10px magenta; }
-
-/* ---------- BUTTONS & INPUTS ---------- */
 .neon-btn { border:2px solid cyan; background:transparent; color:white; padding:8px 14px; margin:5px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px cyan; transition:all 0.2s ease-in-out; text-transform:uppercase; font-family:'Orbitron',sans-serif; }
 .neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
 .neon-btn.remove { border-color:red; box-shadow:0 0 10px red; }
@@ -27,14 +22,9 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 #messageInput, #profileNickname, #profileBio, #profileSkillRating, #profileStatus { 
     flex-grow:1; padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px; font-family:inherit; outline:none; 
 }
-#messageInput:focus, #profileNickname:focus, #profileBio:focus, #profileSkillRating:focus, #profileStatus:focus { 
-    border-color: magenta; box-shadow: 0 0 8px magenta; 
-}
-#profileBio { resize: vertical; }
-#profileSkillRating, #profileStatus { width: 100%; max-width: 200px; }
-
-/* ---------- CARDS ---------- */
-.flex, .card-container { display:flex; flex-wrap:wrap; gap:15px; }
+#messageInput:focus, #profileNickname:focus, #profileBio:focus, #profileSkillRating:focus, #profileStatus:focus { border-color: magenta; box-shadow: 0 0 8px magenta; }
+.flex { display:flex; gap:15px; flex-wrap:wrap; }
+.card-container { display:flex; flex-wrap:wrap; gap:15px; }
 .card { width:250px; padding:15px; border:2px solid cyan; border-radius:12px; background:#111; box-shadow:0 0 10px cyan; display:flex; flex-direction:column; align-items:center; margin-bottom:15px; }
 .card-content { display:flex; flex-direction:column; align-items:center; width:100%; margin-bottom:10px; }
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
@@ -45,111 +35,183 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .status-ingame { background-color:#ffaa00; color:#0b0b0b; box-shadow:0 0 5px #ffaa00; }
 .status-lfd { background-color:#00aaff; color:#0b0b0b; box-shadow:0 0 5px #00aaff; }
 .unread-badge { background-color:magenta; color:white; border-radius:50%; padding:2px 7px; margin-left:5px; font-size:0.7em; font-weight:bold; box-shadow:0 0 5px magenta; }
-
-/* ---------- CHAT ---------- */
 .chat-item-btn { display:block; width:100%; text-align:left; margin-bottom:8px; }
-.message-bubble { display:inline-block; padding:8px 12px; border-radius:15px; max-width:70%; word-wrap:break-word; font-size:0.9em; }
+.message-bubble { display:inline-block; padding:8px 12px; border-radius:15px; max-width:70%; font-family:Arial, sans-serif; word-wrap:break-word; font-size:0.9em; }
 .message-mine { text-align:right; }
 .message-mine .message-bubble { background: magenta; color:white; }
 .message-other { text-align:left; }
 .message-other .message-bubble { background: cyan; color:#0b0b0b; }
-
-/* ---------- PROFILE EDITOR ---------- */
-.profile-editor { padding:20px; border:2px solid magenta; border-radius:10px; background:#1a1a1a; }
-.profile-editor label { color: cyan; display:block; margin-bottom:5px; }
-.profile-editor input, .profile-editor textarea, .profile-editor select { width:100%; margin-bottom:15px; }
-.profile-editor .avatar { width:80px; height:80px; margin-right:20px; border-color: magenta; }
-.profile-editor .flex-row { display:flex; align-items:center; margin-bottom:20px; gap:10px; }
 </style>
 </head>
 <body>
 
 <div class="header"><div class="icon-container">⚡</div><h1>DUO UP</h1></div>
 
-<!-- LOGIN -->
+<!-- LOGIN PAGE -->
 <div id="loginPage" class="container">
-    <p style="text-align:center;">Find your perfect partner and dominate the cyber-arena.</p>
-    <div style="text-align:center;">
-        <button class="neon-btn" onclick="login()">Login with Google</button>
-    </div>
+<p style="text-align:center;">Find your perfect partner and dominate the cyber-arena.</p>
+<div style="text-align:center;">
+<button class="neon-btn" onclick="login()">Login with Google</button>
+</div>
 </div>
 
 <!-- DASHBOARD -->
 <div id="dashboard" class="container hidden">
-    <h2 id="welcome"></h2>
-    <div style="margin-bottom:20px;">
-        <button class="neon-btn" onclick="showTab('suggested')">Suggested</button>
-        <button class="neon-btn" onclick="showTab('requests')">Requests</button>
-        <button class="neon-btn" onclick="showTab('friends')">Friends <span id="unreadBadge" class="unread-badge hidden">0</span></button>
-        <button class="neon-btn" onclick="showTab('messaging')">Messaging</button>
-        <button class="neon-btn" onclick="showTab('profile')">Profile</button>
-        <button class="neon-btn" onclick="logout()">Logout</button>
-    </div>
-
-    <div id="suggestedTab" class="card-container"></div>
-    <div id="requestsTab" class="flex hidden"></div>
-    <div id="friendsTab" class="flex hidden"></div>
-
-    <!-- Messaging -->
-    <div id="messagingTab" class="hidden" style="display:flex; height:600px; border:2px solid magenta; border-radius:12px; background:#111;">
-        <div id="chatList" style="width:30%; padding:10px; border-right:1px solid #333; overflow-y:auto;">
-            <h3>Active Duos</h3>
-            <div id="activeDuoList">No friends to chat with.</div>
-        </div>
-        <div id="chatWindow" style="width:70%; display:flex; flex-direction:column; padding:10px;">
-            <h3 id="chatHeader" style="border-bottom:1px solid cyan; padding-bottom:5px;">Select a Duo</h3>
-            <div id="messageDisplay" style="flex-grow:1; overflow-y:auto; padding:10px; background:#0b0b0b; border-radius:6px; margin-bottom:10px;"></div>
-            <div id="messageInputArea" class="hidden" style="display:flex; gap:10px;">
-                <input type="text" id="messageInput" placeholder="Type your message...">
-                <button class="neon-btn" id="sendMessageBtn">Send</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Profile -->
-    <div id="profileTab" class="hidden">
-        <h2>Cyber-Profile Editor</h2>
-        <div class="profile-editor">
-            <div class="flex-row">
-                <img id="profileAvatar" class="avatar" src="">
-                <div>
-                    <label>Nickname:</label>
-                    <input type="text" id="profileNickname">
-                </div>
-            </div>
-
-            <label>Bio/Tagline:</label>
-            <textarea id="profileBio" rows="3"></textarea>
-
-            <div class="flex-row" style="gap:30px;">
-                <div>
-                    <label>Skill Rating (1-5):</label>
-                    <select id="profileSkillRating">
-                        <option value="1">⭐</option>
-                        <option value="2">⭐⭐</option>
-                        <option value="3">⭐⭐⭐</option>
-                        <option value="4">⭐⭐⭐⭐</option>
-                        <option value="5">⭐⭐⭐⭐⭐</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Current Status:</label>
-                    <select id="profileStatus">
-                        <option value="Online">Online</option>
-                        <option value="In Game">In Game</option>
-                        <option value="LFD">Looking For Duo (LFD)</option>
-                    </select>
-                </div>
-            </div>
-
-            <button class="neon-btn" style="border-color: #00ff00; box-shadow: 0 0 10px #00ff00;" onclick="saveProfile()">Save Profile</button>
-            <p id="saveMessage" style="color: #00ff00; margin-top: 10px;"></p>
-        </div>
-    </div>
+<h2 id="welcome"></h2>
+<div style="margin-bottom:20px;">
+<button class="neon-btn" onclick="showTab('suggested')">Suggested</button>
+<button class="neon-btn" onclick="showTab('requests')">Requests</button>
+<button id="friendsBtn" class="neon-btn" onclick="showTab('friends')">Friends <span id="unreadBadge" class="unread-badge hidden">0</span></button>
+<button class="neon-btn" onclick="showTab('messaging')">Messaging</button>
+<button class="neon-btn" onclick="showTab('profile')">Profile</button>
+<button class="neon-btn" onclick="logout()">Logout</button>
 </div>
 
-<!-- Include the JS we refactored previously -->
-<script src="duoup.js"></script>
+<div id="suggestedTab" class="card-container"></div>
+<div id="requestsTab" class="flex hidden"></div>
+<div id="friendsTab" class="flex hidden"></div>
+
+<div id="messagingTab" class="hidden" style="display:flex; height:600px; border:2px solid magenta; background:#111; border-radius:12px;">
+<div id="chatList" style="width:30%; padding:10px; border-right:1px solid #333; overflow-y:auto;">
+<h3>Active Duos</h3>
+<div id="activeDuoList">No friends to chat with.</div>
+</div>
+
+<div id="chatWindow" style="width:70%; display:flex; flex-direction:column; padding:10px;">
+<h3 id="chatHeader" style="border-bottom:1px solid cyan; padding-bottom:5px;">Select a Duo</h3>
+<div id="messageDisplay" style="flex-grow:1; overflow-y:auto; padding:10px; background:#0b0b0b; border-radius:6px; margin-bottom:10px;"></div>
+<div id="messageInputArea" class="hidden" style="display:flex; gap:10px;">
+<input type="text" id="messageInput" placeholder="Type your message...">
+<button class="neon-btn" id="sendMessageBtn">Send</button>
+</div>
+</div>
+</div>
+
+<!-- PROFILE TAB -->
+<div id="profileTab" class="hidden">
+<h2>Cyber-Profile Editor</h2>
+<div style="padding: 20px; border: 2px solid magenta; border-radius: 10px; background: #1a1a1a;">
+<div style="display: flex; align-items: center; margin-bottom: 20px;">
+<img id="profileAvatar" class="avatar" style="width: 80px; height: 80px; margin-right: 20px; border-color: magenta;" src="">
+<div>
+<label style="color: cyan; display: block; margin-bottom: 5px;">Nickname:</label>
+<input type="text" id="profileNickname" style="width: 300px;">
+</div>
+</div>
+
+<div style="margin-bottom: 15px;">
+<label style="color: cyan; display: block; margin-bottom: 5px;">Bio/Tagline:</label>
+<textarea id="profileBio" rows="3" style="width: 100%;"></textarea>
+</div>
+
+<div style="display: flex; gap: 30px; margin-bottom: 20px;">
+<div>
+<label style="color: cyan; display: block; margin-bottom: 5px;">Skill Rating (1-5):</label>
+<select id="profileSkillRating">
+<option value="1">⭐</option>
+<option value="2">⭐⭐</option>
+<option value="3">⭐⭐⭐</option>
+<option value="4">⭐⭐⭐⭐</option>
+<option value="5">⭐⭐⭐⭐⭐</option>
+</select>
+</div>
+
+<div>
+<label style="color: cyan; display: block; margin-bottom: 5px;">Current Status:</label>
+<select id="profileStatus">
+<option value="Online">Online</option>
+<option value="In Game">In Game</option>
+<option value="LFD">Looking For Duo (LFD)</option>
+</select>
+</div>
+</div>
+
+<button class="neon-btn" style="border-color: #00ff00; box-shadow: 0 0 10px #00ff00;" onclick="saveProfile()">Save Profile</button>
+<p id="saveMessage" style="color: #00ff00; margin-top: 10px;"></p>
+</div>
+</div>
+
+<script>
+// ---------- FIREBASE INIT ----------
+const firebaseConfig = {
+  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+  authDomain: "duoup-cfae6.firebaseapp.com",
+  projectId: "duoup-cfae6",
+  storageBucket: "duoup-cfae6.firebasestorage.app",
+  messagingSenderId: "812263060524",
+  appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
+  measurementId: "G-46B67F90FK"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; 
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+let currentUser=null, currentChatUid=null, unsubscribeMessages=null;
+function getChatId(a,b){ return [a,b].sort().join('_'); }
+
+// ---------- LOGIN / LOGOUT ----------
+function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message)); }
+function logout() { if(unsubscribeMessages) unsubscribeMessages(); auth.signOut(); }
+
+// ---------- AUTH STATE ----------
+auth.onAuthStateChanged(async user=>{
+if(!user){ loginPage.classList.remove("hidden"); dashboard.classList.add("hidden"); return; }
+loginPage.classList.add("hidden"); dashboard.classList.remove("hidden");
+currentUser=user;
+const userRef=db.collection("users").doc(user.uid);
+if(!(await userRef.get()).exists){
+await userRef.set({uid:user.uid,nickname:user.displayName||"Player",bio:"",games:[],gameDetails:{},friends:[],profileImageUrl:user.photoURL||DEFAULT_AVATAR,skillRating:3,status:"Online"});
+}
+const data=(await userRef.get()).data();
+document.getElementById("welcome").innerHTML=`Welcome, ${data.nickname}${user.uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''}`;
+loadSuggested(); loadRequests(); loadFriends();
+});
+
+// ---------- TABS ----------
+function hideAllTabs(){ ["suggestedTab","requestsTab","friendsTab","profileTab","messagingTab"].forEach(t=>document.getElementById(t).classList.add('hidden')); }
+function showTab(tab){ 
+    hideAllTabs(); 
+    const el=document.getElementById(tab+'Tab'); 
+    if(el) el.classList.remove('hidden'); 
+    if(tab==='suggested') loadSuggested(); 
+    else if(tab==='requests') loadRequests(); 
+    else if(tab==='friends') loadFriends(); 
+    else if(tab==='profile') loadProfile(); 
+    else if(tab!=='messaging'&&unsubscribeMessages){ unsubscribeMessages(); unsubscribeMessages=null; }
+}
+
+// ---------- PROFILE ----------
+async function loadProfile() {
+    const userDoc = await db.collection('users').doc(currentUser.uid).get();
+    if(!userDoc.exists) return;
+    const data = userDoc.data();
+    document.getElementById('profileAvatar').src = data.profileImageUrl || DEFAULT_AVATAR;
+    document.getElementById('profileNickname').value = data.nickname || '';
+    document.getElementById('profileBio').value = data.bio || '';
+    document.getElementById('profileSkillRating').value = data.skillRating || 3;
+    document.getElementById('profileStatus').value = data.status || 'Online';
+    document.getElementById('saveMessage').textContent = '';
+}
+
+async function saveProfile() {
+    const nickname = document.getElementById('profileNickname').value.trim();
+    const bio = document.getElementById('profileBio').value.trim();
+    const skillRating = parseInt(document.getElementById('profileSkillRating').value);
+    const status = document.getElementById('profileStatus').value;
+    const saveMessageEl = document.getElementById('saveMessage');
+
+    if (!nickname) { saveMessageEl.textContent='Nickname cannot be empty!'; saveMessageEl.style.color='red'; return; }
+
+    try {
+        await db.collection('users').doc(currentUser.uid).update({nickname,bio,skillRating,status});
+        document.getElementById("welcome").innerHTML = `Welcome, ${nickname}${currentUser.uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''}`;
+        saveMessageEl.textContent='Profile successfully updated!'; saveMessageEl.style.color='#00ff00';
+        loadFriends(); loadSuggested();
+    } catch(error){ console.error(error); saveMessageEl.textContent='Error saving profile!'; saveMessageEl.style.color='red'; }
+}
+</script>
 
 </body>
 </html>
