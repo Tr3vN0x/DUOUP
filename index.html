@@ -15,16 +15,17 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .neon-btn { border:2px solid cyan; background:transparent; color:white; padding:8px 14px; margin:5px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px cyan; }
 .neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
 .flex { display:flex; gap:15px; flex-wrap:wrap; }
-.card { width:260px; padding:15px; border:2px solid cyan; border-radius:14px; background:#111; box-shadow:0 0 10px cyan; }
+.card { width:260px; padding:15px; border:2px solid cyan; border-radius:12px; background:#111; box-shadow:0 0 10px cyan; }
 .avatar { width:40px; height:40px; border-radius:50%; border:2px solid cyan; object-fit:cover; }
 .input { width:100%; padding:8px; margin:5px 0; background:#000; border:2px solid cyan; color:white; border-radius:6px; }
 
-/* Chat */
-#chatWindow { display:flex; flex-direction:column; max-height:400px; overflow-y:auto; padding:10px; border:2px solid cyan; border-radius:6px; background:#111; }
-.message-bubble { padding:10px; border-radius:6px; max-width:70%; margin:5px; display:flex; flex-direction:column; word-wrap:break-word; }
-.message-outgoing { background:#00ffff; color:black; align-self:flex-end; box-shadow:0 0 5px #00ffff; }
-.message-incoming { background:#555; color:white; align-self:flex-start; box-shadow:0 0 3px #333; }
-.message-header { font-size:0.7em; color:gray; margin-bottom:3px; display:flex; justify-content:space-between; }
+/* Chat Styles */
+#chatWindow { display:flex; flex-direction:column; max-height:500px; overflow-y:auto; padding:10px; border:2px solid cyan; border-radius:12px; background:#111; }
+.message-bubble { padding:10px; border-radius:12px; max-width:70%; margin:5px; word-wrap:break-word; }
+.message-outgoing { background:#00ffff; color:black; align-self:flex-end; }
+.message-incoming { background:#555; color:white; align-self:flex-start; }
+.message-header { font-size:0.75em; color:gray; margin-bottom:2px; display:flex; justify-content:space-between; }
+.message-seen { font-size:0.7em; color:#aaa; text-align:right; margin-top:2px; }
 </style>
 </head>
 <body>
@@ -71,16 +72,16 @@ const chatPage = document.getElementById("chatPage");
 const userList = document.getElementById("userList");
 const chatWindow = document.getElementById("chatWindow");
 const chatInput = document.getElementById("chatInput");
-
 let currentChatUser = null;
 let currentChatUserData = null;
+let unsubscribeMessages = null;
 
-// ------------- LOGIN -------------
+// ---------------- LOGIN ----------------
 function loginWithGoogle(){
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err=>alert(err.message));
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert(err.message));
 }
 
-// ------------- AUTH STATE -------------
+// ---------------- AUTH STATE ----------------
 auth.onAuthStateChanged(async user => {
   if(!user){
     loginPage.classList.remove("hidden");
@@ -90,50 +91,44 @@ auth.onAuthStateChanged(async user => {
   }
   loginPage.classList.add("hidden");
   dashboard.classList.remove("hidden");
-  await ensureUserProfile(user);
   loadUsers();
-});
 
-async function ensureUserProfile(user){
-  const userRef = db.collection("users").doc(user.uid);
-  const snap = await userRef.get();
-  if(!snap.exists){
-    await userRef.set({
+  const userSnap = await db.collection("users").doc(user.uid).get();
+  if(!userSnap.exists){
+    await db.collection("users").doc(user.uid).set({
       uid: user.uid,
       nickname: user.displayName || "Player",
       email: user.email,
       profileImageUrl: user.photoURL || DEFAULT_AVATAR
     });
   }
-  const profile = (await userRef.get()).data();
-  document.getElementById("welcome").innerText = "Welcome, "+profile.nickname;
-}
+  welcome.innerText = "Welcome, " + (userSnap.data()?.nickname || user.displayName);
+});
 
-// ------------- LOGOUT -------------
+// ---------------- LOGOUT ----------------
 function logout(){ auth.signOut(); }
 
-// ------------- LOAD USERS -------------
+// ---------------- LOAD USERS ----------------
 function loadUsers(){
-  const currentUid = auth.currentUser.uid;
+  const currentUserId = auth.currentUser.uid;
   userList.innerHTML="";
-  db.collection("users").get().then(snap=>{
-    snap.forEach(doc=>{
-      if(doc.id===currentUid) return;
+  db.collection("users").get().then(snap => {
+    snap.forEach(doc => {
+      if(doc.id === currentUserId) return;
       const u = doc.data();
       const card = document.createElement("div");
       card.className = "card";
-      card.innerHTML = `
-        <div class="user">
-          <img class="avatar" src="${u.profileImageUrl || DEFAULT_AVATAR}">
-          <strong>${u.nickname}</strong>
-        </div>
-        <button class="neon-btn" onclick="openChat('${doc.id}')">Message</button>`;
+      card.innerHTML = `<div class="user">
+        <img class="avatar" src="${u.profileImageUrl || DEFAULT_AVATAR}">
+        <strong>${u.nickname}</strong>
+      </div>
+      <button class="neon-btn" onclick="openChat('${doc.id}')">Message</button>`;
       userList.appendChild(card);
     });
   });
 }
 
-// ------------- CHAT -------------
+// ---------------- CHAT ----------------
 function openChat(friendId){
   currentChatUser = friendId;
   dashboard.classList.add("hidden");
@@ -141,48 +136,46 @@ function openChat(friendId){
 
   db.collection("users").doc(friendId).get().then(doc=>{
     currentChatUserData = doc.data();
-    document.getElementById("chatWith").innerText = "Chat with "+currentChatUserData.nickname;
+    chatWith.innerText = "Chat with " + currentChatUserData.nickname;
   });
 
+  if(unsubscribeMessages) unsubscribeMessages(); // detach previous listener
   loadMessages();
-  chatInput.focus();
 }
 
-// Listen for Enter key
-chatInput.addEventListener("keydown", e=>{
-  if(e.key==="Enter") sendMessage();
-});
-
-// Load messages
+// ---------------- LOAD MESSAGES ----------------
 function loadMessages(){
   if(!currentChatUser) return;
+  chatWindow.innerHTML = "";
   const currentUid = auth.currentUser.uid;
 
-  db.collection("messages")
-    .where("participants", "array-contains", currentUid)
+  unsubscribeMessages = db.collection("messages")
+    .where("participants","array-contains",currentUid)
     .orderBy("timestamp")
     .onSnapshot(snapshot=>{
-      chatWindow.innerHTML="";
+      chatWindow.innerHTML = "";
       snapshot.forEach(doc=>{
         const m = doc.data();
         if(!m.participants.includes(currentChatUser)) return;
 
         const isOutgoing = m.senderId === currentUid;
         const bubble = document.createElement("div");
-        bubble.className = "message-bubble " + (isOutgoing ? "message-outgoing" : "message-incoming");
+        bubble.className = "message-bubble "+(isOutgoing?"message-outgoing":"message-incoming");
 
-        const timeStr = m.timestamp ? m.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "";
+        const timeStr = m.timestamp ? m.timestamp.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
+        const seenText = (!isOutgoing && m.seen) ? "Seen" : "";
+
         bubble.innerHTML = `
           <div class="message-header">
             <span>${isOutgoing ? "You" : currentChatUserData.nickname}</span>
             <span>${timeStr}</span>
           </div>
           <div>${m.content}</div>
+          <div class="message-seen">${seenText}</div>
         `;
         chatWindow.appendChild(bubble);
         chatWindow.scrollTop = chatWindow.scrollHeight;
 
-        // Mark as seen if incoming
         if(!isOutgoing && !m.seen){
           doc.ref.update({seen:true});
         }
@@ -190,32 +183,33 @@ function loadMessages(){
     });
 }
 
-// Send message
+// ---------------- SEND MESSAGE ----------------
 function sendMessage(){
   const text = chatInput.value.trim();
   if(!text || !currentChatUser) return;
-
   const currentUid = auth.currentUser.uid;
-  const senderAvatar = auth.currentUser.photoURL || DEFAULT_AVATAR;
 
   db.collection("messages").add({
     senderId: currentUid,
     receiverId: currentChatUser,
-    participants: [currentUid, currentChatUser],
+    participants: [currentUid,currentChatUser],
     content: text,
     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    seen: false,
-    senderAvatar
+    seen: false
   });
-
-  chatInput.value="";
+  chatInput.value = "";
   chatInput.focus();
 }
 
-// Close chat
+// Send on Enter key
+chatInput.addEventListener("keypress", e=>{
+  if(e.key === "Enter") sendMessage();
+});
+
 function closeChat(){
   currentChatUser = null;
   currentChatUserData = null;
+  if(unsubscribeMessages) unsubscribeMessages();
   chatPage.classList.add("hidden");
   dashboard.classList.remove("hidden");
 }
