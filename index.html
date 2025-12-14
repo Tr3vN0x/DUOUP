@@ -1,216 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DuoUp - Social Gaming</title>
-<link rel="icon" type="image/png" href="https://i.imgur.com/3UQx9gR.png">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Orbitron:wght@400;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<style>
-/* --- Core Variables and Global Reset --- */
-:root { 
-    --duoup-primary:#00FFFF; 
-    --duoup-secondary:#FF5733; 
-    --duoup-accent:#8A2BE2; 
-    --duoup-dark:#050510; 
-    --duoup-light:#F0F8FF; 
-    --duoup-muted:#80809C; 
-    --font-main:'Rajdhani',sans-serif; 
-    --font-header:'Orbitron',sans-serif; 
-}
-html,body{
-    margin:0;
-    height:100%;
-    font-family:var(--font-main);
-    background-color:var(--duoup-dark);
-    color:var(--duoup-light);
-}
-h1,h2,h3{margin:0;font-family:var(--font-header);}
-h2{
-    display:flex;
-    align-items:baseline;
-    border-bottom:2px solid var(--duoup-secondary);
-    padding-bottom:5px;
-    margin-bottom:20px;
-    font-size:1.8em;
-    background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
-}
-#userCount{color:var(--duoup-secondary);font-size:0.55em;font-weight:600;margin-left:10px;}
-a{color:var(--duoup-primary);text-decoration:none;}
-button{cursor:pointer;border:none;border-radius:5px;transition:0.2s;}
-
-/* --- Header & Navigation --- */
-header{
-    position:fixed;
-    top:0;
-    width:100%;
-    height:60px;
-    background:rgba(20,20,38,0.98);
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:0 15px;
-    z-index:1000;
-    border-bottom:3px solid var(--duoup-secondary);
-}
-header .logo{display:flex;align-items:center;gap:10px;}
-header h1{font-size:2em;font-weight:700;color:var(--duoup-primary);text-shadow:0 0 10px var(--duoup-primary);}
-header h1 span{color:var(--duoup-secondary);}
-header nav{display:flex;align-items:center;gap:15px;flex-wrap:wrap;}
-#logoutBtnHeader{background:var(--duoup-secondary);color:var(--duoup-dark);padding:6px 12px;font-weight:bold;display:flex;align-items:center;gap:5px;}
-
-/* --- Auth/Form Styles --- */
-#auth-section{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding-top:60px;}
-form{display:flex;flex-direction:column;background:#141426;padding:25px;border-radius:12px;margin:10px;width:90%;max-width:360px;}
-input,textarea{margin:8px 0;padding:12px;border-radius:6px;border:1px solid var(--duoup-primary);background:#2D2D44;color:var(--duoup-light);}
-button:not(.like-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;font-weight:bold;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);}
-#app-section{width:100%;padding-top:60px;display:none;}
-.container{max-width:1200px;margin:20px auto;padding:0 15px;}
-
-/* --- Duo Search Grid/Cards --- */
-.results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
-.duo-card{
-    background:linear-gradient(145deg,#1A1A2E,#2D2D44);
-    color:var(--duoup-light);
-    border-radius:12px;
-    overflow:hidden;
-    border:1px solid #3A3A52;
-    transition:.3s;
-    box-shadow:0 4px 8px rgba(0,0,0,0.4);
-    margin-bottom:15px;
-}
-.card-header{display:flex;align-items:center;padding:10px 15px;border-bottom:1px solid #3A3A52;}
-.avatar{
-    width:50px;
-    height:50px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-weight:bold;
-    margin-right:15px;
-    background:var(--duoup-secondary);
-    color:var(--duoup-dark);
-    flex-shrink: 0;
-    overflow: hidden; /* Important for image avatars */
-}
-.avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-.bio{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);white-space: pre-wrap;}
-.action-button{width:100%;padding:12px;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);font-weight:bold;border-radius:0 0 12px 12px;}
-.nickname-display{display:flex;align-items:center;font-size:1.1em;}
-.verified-badge{color:#1DA1F2;margin-left:5px;}
-
-/* --- Profile Section Specific Styles --- */
-#profile-container {
-    display: flex;
-    gap: 30px;
-    flex-wrap: wrap;
-    align-items: flex-start;
-}
-#profile-editor {
-    flex: 1 1 350px;
-    max-width: 450px;
-    background:#141426;
-    padding: 25px;
-    border-radius: 12px;
-}
-#profile-preview {
-    flex: 1 1 280px;
-    max-width: 320px;
-}
-#profile-editor textarea {
-    min-height: 100px;
-    max-height: 200px;
-}
-#saveProfileBtn {
-    background: var(--duoup-secondary);
-    color: var(--duoup-dark);
-}
-
-@media(max-width:768px){
-    #profile-container {
-        flex-direction: column;
-        align-items: center;
-    }
-    #profile-editor, #profile-preview {
-        max-width: 100%;
-        width: 100%;
-    }
-    .results-grid{grid-template-columns:1fr;}
-}
-</style>
-</head>
-<body>
-
-<header style="display:none;" id="mainHeader">
-    <div class="logo">
-        <img src="https://i.imgur.com/3UQx9gR.png" alt="DuoUp" width="40"/>
-        <h1>DUO<span>UP</span></h1>
-    </div>
-    <nav>
-        <a href="#" onclick="showSection('home')">Duo Search</a>
-        <a href="#" onclick="showSection('profile')">Profile</a>
-        <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </nav>
-</header>
-
-<div id="auth-section">
-    <h2>Welcome to DuoUp</h2>
-    <form id="signin">
-        <h3>Sign In</h3>
-        <input id="signin-email" type="text" placeholder="Nickname or Email" required>
-        <input id="signin-password" type="password" placeholder="Password" required>
-        <button type="submit">Sign In</button>
-    </form>
-    <form id="signup">
-        <h3>New Player? Sign Up</h3>
-        <input id="signup-nickname" type="text" placeholder="Nickname (Permanent)" required>
-        <input id="signup-email" type="email" placeholder="Email" required>
-        <input id="signup-password" type="password" placeholder="Password" required>
-        <button type="submit">Create Account</button>
-    </form>
-</div>
-
-<div id="app-section">
-    
-    <div id="home-section" class="container">
-        <h2>Duo Search <span id="userCount"></span></h2>
-        <div class="results-grid" id="usersGrid"></div>
-    </div>
-
-    <div id="profile-section" class="container" style="display:none;">
-        <h2>Profile Customizer</h2>
-        <div id="profile-container">
-
-            <div id="profile-editor">
-                <h3>Edit Your Duo Card</h3>
-                <label for="profileBio">Bio (What you're looking for!)</label>
-                <textarea id="profileBio" maxlength="200" placeholder="I'm looking for a chill Diamond 2 player for ranked 2v2. Voice chat is a must!"></textarea>
-                
-                <label for="profileImageUrl">Profile Image URL</label>
-                <input id="profileImageUrl" type="url" placeholder="Paste a direct image link (e.g., Imgur)">
-                
-                <button id="saveProfileBtn">Save Profile</button>
-            </div>
-
-            <div id="profile-preview">
-                <h3>Duo Card Preview (Your Teammate Sees This)</h3>
-                <div class="duo-card" id="previewCard">
-                    </div>
-            </div>
-            
-        </div>
-    </div>
-    
-</div>
-
 <script type="module">
 'use strict';
 
@@ -234,12 +21,6 @@ import {
     getDocs, 
     query, 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-import { 
-    getStorage, 
-    ref, 
-    uploadBytes, 
-    getDownloadURL 
-} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js"; // Keeping storage available for future use, though we only use URLs now.
 
 // --- Firebase Config & Initialization ---
 const firebaseConfig = {
@@ -253,7 +34,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-// const storage = getStorage(app); // Storage is initialized but not actively used for uploads in this version
 
 // --- DOM Elements ---
 const signinForm = document.getElementById("signin");
@@ -309,7 +89,7 @@ async function loadUserData(user) {
             email: user.email,
             nickname: defaultNickname, 
             bio: "",
-            profileImageUrl: "", // Initialize new field
+            profileImageUrl: "", 
             friends: [],
             lastActive: Date.now(),
             authType: authType 
@@ -318,7 +98,13 @@ async function loadUserData(user) {
     }
     
     currentNickname = userData.nickname || ''; 
-    currentUserData = userData; // Store the full data globally
+    currentUserData = userData; 
+
+    // Initialize the profile form fields ONLY when loading data after login/signup
+    // This prevents overwriting unsaved user edits when switching tabs later.
+    profileBioInput.value = userData.bio || '';
+    profileImageUrlInput.value = userData.profileImageUrl || '';
+    
     return userData;
 }
 
@@ -351,7 +137,7 @@ async function handleSignUp(e) {
             email: email,
             nickname: nickname, 
             bio: "",
-            profileImageUrl: "", // Initialize new field
+            profileImageUrl: "", 
             friends: [], 
             lastActive: Date.now(),
             authType: 'email' 
@@ -365,6 +151,9 @@ async function handleLogout() {
     clearInterval(activityInterval); 
     activityInterval = null;
     await signOut(auth); 
+    // Clear the form fields completely on logout
+    profileBioInput.value = '';
+    profileImageUrlInput.value = '';
 }
 
 // Attach Auth Listeners
@@ -377,7 +166,7 @@ function renderDuoCard(data) {
     const nickname = data.nickname; 
     const verifiedBadgeHtml = getVerifiedBadge(nickname);
     const avatarContent = data.profileImageUrl 
-        ? `<img src="${data.profileImageUrl}" alt="${nickname[0]}">` 
+        ? `<img src="${data.profileImageUrl}" onerror="this.onerror=null;this.src='data:image/svg+xml;charset=utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 50 50\'><rect width=\'50\' height=\'50\' fill=\'#FF5733\'/><text x=\'50%\' y=\'50%\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-size=\'30\' fill=\'#050510\'>${nickname[0]}</text></svg>\';" alt="${nickname[0]}">` 
         : nickname[0];
 
     return `
@@ -424,25 +213,27 @@ async function loadUsers(){
 // --- Profile Customizer Functions ---
 
 function updatePreview() {
+    // This function ALWAYS uses the current values in the form inputs
     const data = {
         nickname: currentNickname,
         bio: profileBioInput.value,
         profileImageUrl: profileImageUrlInput.value
     };
-    // Ensure the card itself is clean before rendering
     previewCard.innerHTML = renderDuoCard(data); 
 }
 
 async function loadProfileEditor() {
-    // Populate form fields with current data
-    profileBioInput.value = currentUserData.bio || '';
-    profileImageUrlInput.value = currentUserData.profileImageUrl || '';
+    // Only set up event listeners and run the initial preview render.
+    // The form fields (profileBioInput, profileImageUrlInput) retain their state 
+    // because they are native HTML elements not being reset here.
     
-    // Set up event listeners for live preview
+    // Set up event listeners (remove and re-add for safety, though only adding once is best practice)
+    profileBioInput.removeEventListener('input', updatePreview);
+    profileImageUrlInput.removeEventListener('input', updatePreview);
     profileBioInput.addEventListener('input', updatePreview);
     profileImageUrlInput.addEventListener('input', updatePreview);
 
-    // Initial render of the preview card
+    // Render the preview based on the current form contents
     updatePreview();
 }
 
@@ -453,22 +244,42 @@ async function handleSaveProfile() {
     const newBio = profileBioInput.value.trim();
     const newImageUrl = profileImageUrlInput.value.trim();
 
+    // Check if anything has changed before saving
+    if (newBio === currentUserData.bio && newImageUrl === currentUserData.profileImageUrl) {
+        alert("No changes detected.");
+        return;
+    }
+
+    // Disable button to prevent double-clicks
+    saveProfileBtn.disabled = true;
+    saveProfileBtn.textContent = 'Saving...';
+
     try {
         await updateDoc(doc(db, "users", user.uid), {
             bio: newBio,
             profileImageUrl: newImageUrl,
-            lastActive: Date.now() // Update activity on change
+            lastActive: Date.now()
         });
 
-        // Update the globally stored data and the preview immediately
+        // Update the globally stored data (the source of truth)
         currentUserData.bio = newBio;
         currentUserData.profileImageUrl = newImageUrl;
-        updatePreview();
         
-        alert("Profile saved successfully!");
+        saveProfileBtn.textContent = 'Saved!';
+        // Flash a success message
+        setTimeout(() => {
+            saveProfileBtn.textContent = 'Save Profile';
+            saveProfileBtn.disabled = false;
+        }, 1500);
+
 
     } catch (err) {
         console.error("Error saving profile:", err);
+        saveProfileBtn.textContent = 'Error Saving';
+        setTimeout(() => {
+            saveProfileBtn.textContent = 'Save Profile';
+            saveProfileBtn.disabled = false;
+        }, 3000);
         alert("Failed to save profile. Check your network connection or the image URL.");
     }
 }
@@ -498,7 +309,7 @@ onAuthStateChanged(auth, async user => {
         appSection.style.display = "block";
         mainHeader.style.display = "flex";
         
-        // Load user data to set nickname and other global state
+        // Load user data, which also initializes the form inputs for the first time
         await loadUserData(user); 
         
         await updateLastActiveStatus(user.uid); 
