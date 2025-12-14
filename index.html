@@ -3,341 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Firebase App Demo</title>
-    
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-        .container {
-            width: 90%;
-            max-width: 600px; /* Increased size for dashboard content */
-            text-align: center;
-        }
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background-color: #5cb85c;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 5px;
-            transition: background-color 0.3s;
-        }
-        button:hover { background-color: #4cae4c; }
-        .button-group { margin: 15px 0; text-align: center; }
-        .settings-group {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        .hidden { display: none; }
-        .error { color: red; font-weight: bold; }
-        .status { color: blue; }
-        .query-results {
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            font-size: 0.8em;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-    </style>
-    
-    <script type="module">
-        // --- 1. FIREBASE CONFIGURATION (YOUR DETAILS) ---
-        const firebaseConfig = {
-          apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-          authDomain: "duoup-cfae6.firebaseapp.com",
-          projectId: "duoup-cfae6",
-          storageBucket: "duoup-cfae6.firebasestorage.app",
-          messagingSenderId: "812263060524",
-          appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
-          measurementId: "G-46B67F90FK"
-        };
-
-        // --- 2. IMPORT FIREBASE LIBRARIES ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js";
-        import { 
-            getAuth, 
-            createUserWithEmailAndPassword, 
-            signInWithEmailAndPassword, 
-            signOut,
-            onAuthStateChanged,
-            updatePassword,
-            sendPasswordResetEmail
-        } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js";
-        import { 
-            getFirestore, 
-            collection, 
-            query, 
-            where, 
-            orderBy, 
-            limit, 
-            getDocs
-        } from "https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js";
-
-
-        // --- 3. INITIALIZE FIREBASE SERVICES ---
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app); // Initialize Firestore
-
-
-        // --- 4. DOM ELEMENTS & UTILITIES ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const authSection = document.getElementById('auth-section');
-            const dashboardSection = document.getElementById('dashboard-section');
-            const authStatus = document.getElementById('auth-status');
-            const authError = document.getElementById('auth-error');
-            const userEmailDisplay = document.getElementById('user-email-display');
-            const passwordStatus = document.getElementById('password-status');
-            const queryResults = document.getElementById('query-results');
-
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
-            const newPasswordInput = document.getElementById('new-password');
-
-            const updateUI = (user) => {
-                if (user) {
-                    authSection.classList.add('hidden');
-                    dashboardSection.classList.remove('hidden');
-                    authStatus.textContent = 'Status: Logged In';
-                    userEmailDisplay.textContent = user.email;
-                    authError.textContent = '';
-                    emailInput.value = '';
-                    passwordInput.value = '';
-                } else {
-                    authSection.classList.remove('hidden');
-                    dashboardSection.classList.add('hidden');
-                    authStatus.textContent = 'Status: Logged Out';
-                    newPasswordInput.value = '';
-                    passwordStatus.textContent = '';
-                    authError.style.color = 'red';
-                    queryResults.textContent = '';
-                }
-            }
-
-
-            // --- 5. FIRESTORE QUERY FUNCTIONS (Matching your Indexes) ---
-            
-            // 5A. Fetching Pending Friend Requests (Uses: friendRequests: receiverId, status, __name__)
-            async function fetchPendingFriendRequests() {
-                const user = auth.currentUser;
-                if (!user) return [];
-                const receiverId = user.uid; 
-                const friendRequestsRef = collection(db, "friendRequests");
-
-                const q = query(
-                    friendRequestsRef,
-                    where("receiverId", "==", receiverId),
-                    where("status", "==", "pending")
-                );
-
-                try {
-                    const querySnapshot = await getDocs(q);
-                    const requests = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    queryResults.textContent = `Pending Friend Requests (${requests.length}):\n${JSON.stringify(requests, null, 2)}`;
-                } catch (error) {
-                    queryResults.textContent = `Error fetching requests: ${error.message}`;
-                }
-            }
-
-            // 5B. Loading the Last 50 Messages (Uses: messages: chatId, timestamp, __name__)
-            async function loadChatMessages(chatId) {
-                if (!chatId) return;
-                const messagesRef = collection(db, "messages");
-                
-                const q = query(
-                    messagesRef,
-                    where("chatId", "==", chatId),
-                    orderBy("timestamp", "desc"), 
-                    limit(50)
-                );
-
-                try {
-                    const querySnapshot = await getDocs(q);
-                    let messages = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    messages.reverse(); // Display oldest first
-                    queryResults.textContent = `Messages for Chat ${chatId} (${messages.length}):\n${JSON.stringify(messages, null, 2)}`;
-                } catch (error) {
-                    queryResults.textContent = `Error loading messages: ${error.message}`;
-                }
-            }
-            
-            // 5C. Querying Active Gamer Cards (Uses: gamerCards: gameSlug, isActive, __name__)
-            async function queryActiveGamerCards(gameSlug) {
-                if (!gameSlug) return;
-                const gamerCardsRef = collection(db, "gamerCards");
-
-                const q = query(
-                    gamerCardsRef,
-                    where("gameSlug", "==", gameSlug),
-                    where("isActive", "==", true)
-                );
-
-                try {
-                    const querySnapshot = await getDocs(q);
-                    const activeCards = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                    queryResults.textContent = `Active Gamer Cards for ${gameSlug} (${activeCards.length}):\n${JSON.stringify(activeCards, null, 2)}`;
-                } catch (error) {
-                    queryResults.textContent = `Error querying gamer cards: ${error.message}`;
-                }
-            }
-
-
-            // --- 6. AUTHENTICATION HANDLERS ---
-
-            // 6A. STATE LISTENER (Runs on load, login, and logout)
-            onAuthStateChanged(auth, (user) => {
-                updateUI(user);
-                // Immediately run a sample query after login
-                if (user) {
-                    fetchPendingFriendRequests(); 
-                }
-            });
-
-            // 6B. SIGN UP
-            document.getElementById('signup-btn').addEventListener('click', () => {
-                const email = emailInput.value;
-                const password = passwordInput.value;
-                authError.textContent = '';
-                createUserWithEmailAndPassword(auth, email, password)
-                    .catch((error) => { authError.textContent = `Sign Up Failed: ${error.message}`; });
-            });
-
-            // 6C. LOGIN
-            document.getElementById('login-btn').addEventListener('click', () => {
-                const email = emailInput.value;
-                const password = passwordInput.value;
-                authError.textContent = '';
-                signInWithEmailAndPassword(auth, email, password)
-                    .catch((error) => { authError.textContent = `Login Failed: ${error.message}`; });
-            });
-
-            // 6D. LOGOUT
-            document.getElementById('logout-btn').addEventListener('click', () => {
-                signOut(auth).catch((error) => { console.error("Logout Error:", error.message); });
-            });
-
-            // 6E. CHANGE PASSWORD
-            document.getElementById('change-password-btn').addEventListener('click', async () => {
-                const user = auth.currentUser;
-                const newPassword = newPasswordInput.value;
-                passwordStatus.textContent = '';
-                if (!user || newPassword.length < 6) { passwordStatus.textContent = "Enter new password (min 6 chars)."; return; }
-                try {
-                    await updatePassword(user, newPassword);
-                    passwordStatus.textContent = "Password updated successfully!";
-                    newPasswordInput.value = '';
-                } catch (error) {
-                    passwordStatus.textContent = `Update Failed: ${error.message}`;
-                }
-            });
-
-            // 6F. PASSWORD RESET
-            document.getElementById('reset-password-link').addEventListener('click', (e) => {
-                e.preventDefault();
-                const email = emailInput.value;
-                authError.textContent = '';
-                if (!email) { authError.textContent = "Enter email to reset password."; return; }
-                sendPasswordResetEmail(auth, email)
-                    .then(() => { authError.textContent = `Reset email sent to ${email}!`; authError.style.color = 'green'; })
-                    .catch((error) => { authError.textContent = `Password Reset Error: ${error.message}`; });
-            });
-            
-            // --- 7. QUERY BUTTON HANDLERS ---
-            document.getElementById('fetch-requests-btn').addEventListener('click', fetchPendingFriendRequests);
-            document.getElementById('load-messages-btn').addEventListener('click', () => {
-                const chatId = document.getElementById('chat-id-input').value || "sampleChatId"; // Use a default for testing
-                loadChatMessages(chatId);
-            });
-            document.getElementById('query-cards-btn').addEventListener('click', () => {
-                const gameSlug = document.getElementById('game-slug-input').value || "sample-game-slug"; // Use a default for testing
-                queryActiveGamerCards(gameSlug);
-            });
-        });
-
-    </script>
+    <title>Duoup: TEAM UP, BUILD TOGETHER.</title>
+    <link rel="stylesheet" href="styles.css"> 
 </head>
-<body>
-    <div class="container">
-        <h1>Complete Firebase App Demo</h1>
-        <p id="auth-status"></p>
+<body class="bg-dark text-light">
+
+    <header class="navbar bg-dark-alt border-magenta-glow">
+        <div class="logo">Duoup</div>
+        <nav>
+            <a href="#" class="nav-link text-cyan hover-glow">Find Gamers</a>
+            <a href="#" class="nav-link text-cyan hover-glow">My Squads</a>
+            <a href="#" class="nav-link text-cyan hover-glow">Messages</a>
+            <a href="#" class="nav-link btn-action-small">Profile</a>
+        </nav>
+    </header>
+
+    <section class="hero-section center-content">
+        <h1 class="text-cyan text-shadow-glow">TEAM UP, BUILD TOGETHER.</h1>
+        <p class="text-light-alt">The Gamer Network. Reloaded. Find your squad, sync up, and dominate the leaderboards.</p>
+        <button class="btn-action btn-cyan-glow">Start Finding Teammates</button>
+    </section>
+
+    <section class="discovery-section">
+        <h2 class="section-title text-magenta text-shadow-glow">Gamers Looking for Squads</h2>
         
-        <div id="auth-section" class="card">
-            <h2>Access Account</h2>
-            <p id="auth-error" class="error"></p>
-
-            <input type="email" id="email" placeholder="Email">
-            <input type="password" id="password" placeholder="Password">
+        <div class="gamer-grid">
             
-            <div class="button-group">
-                <button id="login-btn">Login</button>
-                <button id="signup-btn">Sign Up</button>
-            </div>
-            <a href="#" id="reset-password-link">Forgot Password?</a>
-        </div>
-
-        <div id="dashboard-section" class="card hidden">
-            <h2>Welcome!</h2>
-            <p>Logged in as: <strong id="user-email-display"></strong></p>
-            
-            <button id="logout-btn">Logout</button>
-            
-            <div class="settings-group">
-                <h3>Account Settings</h3>
-                <input type="password" id="new-password" placeholder="New Password (min 6 chars)">
-                <button id="change-password-btn">Update Password</button>
-                <p id="password-status" class="status"></p>
+            <div class="gamer-card border-cyan-glow">
+                <img src="profile-placeholder-1.jpg" alt="Gamer Profile Picture" class="profile-pic">
+                <h3 class="username">SwiftBlade</h3>
+                <p class="game-tag text-cyan">Playing: Apex Legends</p>
+                <p class="role text-magenta">Role: Assault / Aggressive</p>
+                <button class="btn-action-small btn-magenta-glow">Send Invite</button>
             </div>
 
-            <div class="settings-group">
-                <h3>Test Firestore Queries</h3>
-                <p>Results will appear below.</p>
-                
-                <div class="button-group">
-                    <button id="fetch-requests-btn">1. Fetch Pending Requests</button>
-                </div>
-                
-                <p>Chat Messages (Use "sampleChatId" or a real ID):</p>
-                <input type="text" id="chat-id-input" placeholder="Enter Chat ID (e.g., sampleChatId)">
-                <button id="load-messages-btn">2. Load Last 50 Messages</button>
-                
-                <p>Gamer Cards (Use "sample-game-slug" or a real slug):</p>
-                <input type="text" id="game-slug-input" placeholder="Enter Game Slug (e.g., sample-game-slug)">
-                <button id="query-cards-btn">3. Query Active Gamer Cards</button>
-                
-                <h4>Query Output:</h4>
-                <div id="query-results" class="query-results">
-                    Awaiting query execution...
-                </div>
+            <div class="gamer-card border-cyan-glow">
+                <img src="profile-placeholder-2.jpg" alt="Gamer Profile Picture" class="profile-pic">
+                <h3 class="username">ZeroLatency</h3>
+                <p class="game-tag text-cyan">Playing: Valorant</p>
+                <p class="role text-magenta">Role: Controller / Main</p>
+                <button class="btn-action-small btn-magenta-glow">Send Invite</button>
             </div>
-        </div>
-    </div>
+
+            </div>
+    </section>
+    
+    <footer class="footer bg-dark-alt text-light-alt">
+        <p>&copy; 2025 Duoup. All rights reserved.</p>
+    </footer>
+
 </body>
 </html>
