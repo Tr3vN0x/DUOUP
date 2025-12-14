@@ -37,12 +37,12 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
 .nickname-display{display:flex;align-items:center;font-size:1.1em;}
 .verified-badge{color:#1DA1F2;margin-left:5px;}
 /* Highlight disabled input */
-#profile-nickname { 
-    background: #1a1a2e; 
-    color: var(--duoup-muted); 
-    cursor: not-allowed; 
-    border-color: #3A3A52; 
-    font-weight: 700;
+#profile-nickname { 
+    background: #1a1a2e; 
+    color: var(--duoup-muted); 
+    cursor: not-allowed; 
+    border-color: #3A3A52; 
+    font-weight: 700;
 }
 .input-help{font-size:0.8em;color:var(--duoup-muted);margin-top:-5px;margin-bottom:10px;}
 
@@ -54,14 +54,14 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
 .post-list{max-width:700px;margin:0 auto;}
 
 .post-footer { display: flex; align-items: center; justify-content: space-between; padding: 0 15px 10px; }
-.like-btn { 
-    background: transparent; 
-    color: var(--duoup-muted); 
-    padding: 5px 10px; 
-    font-size: 1em;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+.like-btn { 
+    background: transparent; 
+    color: var(--duoup-muted); 
+    padding: 5px 10px; 
+    font-size: 1em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 .like-btn:hover { color: var(--duoup-primary); }
 .like-btn.liked { color: var(--duoup-secondary); }
@@ -73,89 +73,89 @@ button:not(.google-btn):not(#duoSearchForm button):not(.like-btn){margin-top:10p
 <body>
 
 <header style="display:none;" id="mainHeader">
-    <div class="logo">
-        <img src="https://i.imgur.com/3UQx9gR.png" alt="DuoUp" width="40"/>
-        <h1>DUO<span>UP</span></h1>
-    </div>
-    <nav>
-        <a href="#" onclick="showSection('feed')">Feed</a>
-        <a href="#" onclick="showSection('home')">Duo Search</a>
-        <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </nav>
+    <div class="logo">
+        <img src="https://i.imgur.com/3UQx9gR.png" alt="DuoUp" width="40"/>
+        <h1>DUO<span>UP</span></h1>
+    </div>
+    <nav>
+        <a href="#" onclick="showSection('feed')">Feed</a>
+        <a href="#" onclick="showSection('home')">Duo Search</a>
+        <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </nav>
 </header>
 
 <div id="auth-section">
-    <h2>Welcome to DuoUp</h2>
-    <form id="signin">
-        <h3>Sign In</h3>
-        <input id="signin-email" type="text" placeholder="Nickname or Email" required>
-        <input id="signin-password" type="password" placeholder="Password" required>
-        <button type="submit">Sign In</button>
-    </form>
-    <form id="signup">
-        <h3>New Player? Sign Up</h3>
-        <input id="signup-nickname" type="text" placeholder="Nickname (Permanent)" required>
-        <input id="signup-email" type="email" placeholder="Email" required>
-        <input id="signup-password" type="password" placeholder="Password" required>
-        <button type="submit">Create Account</button>
-    </form>
+    <h2>Welcome to DuoUp</h2>
+    <form id="signin">
+        <h3>Sign In</h3>
+        <input id="signin-email" type="text" placeholder="Nickname or Email" required>
+        <input id="signin-password" type="password" placeholder="Password" required>
+        <button type="submit">Sign In</button>
+    </form>
+    <form id="signup">
+        <h3>New Player? Sign Up</h3>
+        <input id="signup-nickname" type="text" placeholder="Nickname (Permanent)" required>
+        <input id="signup-email" type="email" placeholder="Email" required>
+        <input id="signup-password" type="password" placeholder="Password" required>
+        <button type="submit">Create Account</button>
+    </form>
 </div>
 
 <div id="app-section">
-    
-    <div id="feed-section" class="container" style="display:none;">
-        <h2>Global Feed</h2>
-        <form id="postForm">
-            <textarea id="postContent" placeholder="What's your duo thought?" required></textarea>
-            <button type="submit" id="postBtn">Post to Feed</button>
-        </form>
-        <div id="postsList" class="post-list">
-            </div>
-    </div>
-    
-    <div id="home-section" class="container" style="display:none;">
-        <h2>Duo Search <span id="userCount"></span></h2>
-        <div class="results-grid" id="usersGrid"></div>
-    </div>
-    
+    
+    <div id="feed-section" class="container" style="display:none;">
+        <h2>Global Feed</h2>
+        <form id="postForm">
+            <textarea id="postContent" placeholder="What's your duo thought?" required></textarea>
+            <button type="submit" id="postBtn">Post to Feed</button>
+        </form>
+        <div id="postsList" class="post-list">
+            </div>
+    </div>
+    
+    <div id="home-section" class="container" style="display:none;">
+        <h2>Duo Search <span id="userCount"></span></h2>
+        <div class="results-grid" id="usersGrid"></div>
+    </div>
+    
 </div>
 
 <script type="module">
 'use strict';
 
-import { 
-    initializeApp 
+import { 
+    initializeApp 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-import { 
-    getAuth, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
-    signOut, 
-    onAuthStateChanged 
+import { 
+    getAuth, 
+    createUserWithEmailAndPassword, 
+    signInWithEmailAndPassword, 
+    signOut, 
+    onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-import { 
-    getFirestore, 
-    doc, 
-    setDoc, 
-    getDoc, 
-    updateDoc, 
-    collection, 
-    getDocs, 
-    query, 
-    orderBy, 
-    addDoc, 
-    arrayUnion, 
-    arrayRemove 
+import { 
+    getFirestore, 
+    doc, 
+    setDoc, 
+    getDoc, 
+    updateDoc, 
+    collection, 
+    getDocs, 
+    query, 
+    orderBy, 
+    addDoc, 
+    arrayUnion, 
+    arrayRemove 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 // --- Firebase Config & Initialization ---
 const firebaseConfig = {
-    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-    authDomain: "duoup-cfae6.firebaseapp.com",
-    projectId: "duoup-cfae6",
-    storageBucket: "duoup-cfae6.appspot.com",
-    messagingSenderId: "812263060524",
-    appId: "1:812263060524:web:ac09c3ae610db1cd110d89"
+    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+    authDomain: "duoup-cfae6.firebaseapp.com",
+    projectId: "duoup-cfae6",
+    storageBucket: "duoup-cfae6.appspot.com",
+    messagingSenderId: "812263060524",
+    appId: "1:812263060524:web:ac09c3ae610db1cd110d89"
 };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -169,114 +169,118 @@ const appSection = document.getElementById("app-section");
 const mainHeader = document.getElementById("mainHeader");
 const usersGrid = document.getElementById("usersGrid");
 const userCountElement = document.getElementById("userCount");
-const postForm = document.getElementById("postForm"); 
-const postsList = document.getElementById("postsList"); 
+const postForm = document.getElementById("postForm"); 
+const postsList = document.getElementById("postsList"); 
 
 // --- Constants & Local State ---
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
-let activityInterval; 
-let currentNickname = ""; 
-let currentBio = ""; 
+let activityInterval; 
+let currentNickname = ""; 
+let currentBio = ""; 
 
 // --- Utility Functions ---
 function getVerifiedBadge(nickname) {
-    return nickname === 'Tr3vN0x' ? '<i class="fas fa-badge-check verified-badge" title="Verified Player"></i>' : '';
+    return nickname === 'Tr3vN0x' ? '<i class="fas fa-badge-check verified-badge" title="Verified Player"></i>' : '';
 }
 
 function timeSince(timestamp) {
-    const seconds = Math.floor((Date.now() - timestamp) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " years";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " months";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + " days";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " hours";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + " minutes";
-    return Math.floor(seconds) + " seconds";
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " years";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " months";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " days";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " hours";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " minutes";
+    return Math.floor(seconds) + " seconds";
 }
 
 async function updateLastActiveStatus(uid) {
-    if (!uid) return;
-    try {
-        await updateDoc(doc(db, "users", uid), {
-            lastActive: Date.now()
-        });
-    } catch (err) {
-        console.warn("Could not update lastActive status:", err.message);
-    }
+    if (!uid) return;
+    try {
+        await updateDoc(doc(db, "users", uid), {
+            lastActive: Date.now()
+        });
+    } catch (err) {
+        console.warn("Could not update lastActive status:", err.message);
+    }
 }
 
 /**
- * Ensures a user's profile document exists and loads the core data.
- */
+ * Ensures a user's profile document exists and loads the core data.
+ */
 async function loadUserData(user) {
-    const userDocRef = doc(db, "users", user.uid);
-    const docSnap = await getDoc(userDocRef);
-    let userData = docSnap.exists() ? docSnap.data() : {};
+    const userDocRef = doc(db, "users", user.uid);
+    const docSnap = await getDoc(userDocRef);
+    let userData = docSnap.exists() ? docSnap.data() : {};
 
-    if (!docSnap.exists() || !userData.nickname) { 
-        const authType = 'email'; 
-        const defaultNickname = user.email.split('@')[0] || "New Player";
+    if (!docSnap.exists() || !userData.nickname) { 
+        const authType = 'email'; 
+        // Fallback to email prefix if nickname is somehow missing
+        const defaultNickname = user.email.split('@')[0] || "New Player";
 
-        userData = {
-            uid: user.uid,
-            email: user.email,
-            nickname: defaultNickname, 
-            bio: "",
-            profileImageUrl: user.photoURL || "",
-            friends: "",
-            lastActive: Date.now(),
-            authType: authType 
-        };
-        await setDoc(userDocRef, userData);
-    }
-    return userData;
+        userData = {
+            uid: user.uid,
+            email: user.email,
+            nickname: defaultNickname, 
+            bio: "",
+            profileImageUrl: user.photoURL || "",
+            friends: "",
+            lastActive: Date.now(),
+            authType: authType 
+        };
+        await setDoc(userDocRef, userData);
+    }
+    return userData;
 }
 
 // --- Auth Functions ---
 async function handleSignIn(e) {
-    e.preventDefault();
-    const email = document.getElementById("signin-email").value;
-    const password = document.getElementById("signin-password").value;
-    try{
-        await signInWithEmailAndPassword(auth, email, password);
-    } catch(err){ 
-        alert(err.message); 
-    }
+    e.preventDefault();
+    const email = document.getElementById("signin-email").value;
+    const password = document.getElementById("signin-password").value;
+    try{
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch(err){ 
+        alert(err.message); 
+    }
 }
 
 async function handleSignUp(e) {
-    e.preventDefault();
-    const email = document.getElementById("signup-email").value;
-    const password = document.getElementById("signup-password").value;
-    const nickname = document.getElementById("signup-nickname").value; 
+    e.preventDefault();
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    const nickname = document.getElementById("signup-nickname").value; 
 
-    try{
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const { user } = userCredential;
+    try{
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const { user } = userCredential;
 
-        await setDoc(doc(db,"users", user.uid), {
-            uid: user.uid,
-            email: email,
-            nickname: nickname, 
-            bio: "",
-            profileImageUrl: "",
-            friends: [], // Initialize as an array for future friend features
-            lastActive: Date.now(),
-            authType: 'email' 
-        });
-    } catch(err){ 
-        alert(err.message); 
-    }
+        // FIX: Immediately set the global nickname state after successful sign-up
+        currentNickname = nickname; 
+
+        await setDoc(doc(db,"users", user.uid), {
+            uid: user.uid,
+            email: email,
+            nickname: nickname, 
+            bio: "",
+            profileImageUrl: "",
+            friends: [], // Initialize as an array for future friend features
+            lastActive: Date.now(),
+            authType: 'email' 
+        });
+    } catch(err){ 
+        alert(err.message); 
+    }
 }
 
 async function handleLogout() {
-    clearInterval(activityInterval); 
-    activityInterval = null;
-    await signOut(auth); 
+    clearInterval(activityInterval); 
+    activityInterval = null;
+    await signOut(auth); 
 }
 
 // Attach Auth Listeners
@@ -286,188 +290,188 @@ document.getElementById("logoutBtnHeader").addEventListener("click", handleLogou
 
 // --- User Search (Duo Search) ---
 async function loadUsers(){
-    const currentUser = auth.currentUser;
-    if(!currentUser) return;
+    const currentUser = auth.currentUser;
+    if(!currentUser) return;
 
-    const SEVEN_DAYS_AGO = Date.now() - SEVEN_DAYS_IN_MS;
+    const SEVEN_DAYS_AGO = Date.now() - SEVEN_DAYS_IN_MS;
 
-    const qSnap = await getDocs(collection(db,"users"));
-    usersGrid.innerHTML='';
-    let count=0;
+    const qSnap = await getDocs(collection(db,"users"));
+    usersGrid.innerHTML='';
+    let count=0;
 
-    qSnap.forEach(doc=>{
-        const data = doc.data();
-        
-        if(!data.uid || data.uid === currentUser.uid) return;
+    qSnap.forEach(doc=>{
+        const data = doc.data();
+        
+        if(!data.uid || data.uid === currentUser.uid) return;
 
-        // Filter out users who haven't been active in 7 days
-        if (!data.lastActive || data.lastActive < SEVEN_DAYS_AGO) {
-            return; 
-        }
-        
-        const nickname = data.nickname; 
-        const verifiedBadgeHtml = getVerifiedBadge(nickname);
+        // Filter out users who haven't been active in 7 days
+        if (!data.lastActive || data.lastActive < SEVEN_DAYS_AGO) {
+            return; 
+        }
+        
+        const nickname = data.nickname; 
+        const verifiedBadgeHtml = getVerifiedBadge(nickname);
 
-        count++;
-        usersGrid.innerHTML+=`
-        <div class="duo-card">
-            <div class="card-header">
-                <div class="avatar">${nickname[0]}</div>
-                <div class="nickname-display">
-                    <strong>${nickname}</strong>
-                    ${verifiedBadgeHtml}
-                </div>
-            </div>
-            <div class="bio">${data.bio || 'No bio set.'}</div>
-            <button class="action-button" onclick="alert('Duo request sent to ${nickname}!')">Send Duo Request</button>
-        </div>
-        `;
-    });
-    userCountElement.innerText = count+" players online (active 7d)";
+        count++;
+        usersGrid.innerHTML+=`
+        <div class="duo-card">
+            <div class="card-header">
+                <div class="avatar">${nickname[0]}</div>
+                <div class="nickname-display">
+                    <strong>${nickname}</strong>
+                    ${verifiedBadgeHtml}
+                </div>
+            </div>
+            <div class="bio">${data.bio || 'No bio set.'}</div>
+            <button class="action-button" onclick="alert('Duo request sent to ${nickname}!')">Send Duo Request</button>
+        </div>
+        `;
+    });
+    userCountElement.innerText = count+" players online (active 7d)";
 }
 
 // --- Feed/Posts ---
 async function handlePostSubmit(e) {
-    e.preventDefault();
-    const postContent = document.getElementById("postContent");
-    const content = postContent.value.trim();
-    if (!content) return;
+    e.preventDefault();
+    const postContent = document.getElementById("postContent");
+    const content = postContent.value.trim();
+    if (!content) return;
 
-    const user = auth.currentUser;
-    if (!user) return;
-    
-    try {
-        await addDoc(collection(db, "posts"), {
-            authorUid: user.uid,
-            authorNickname: currentNickname, 
-            content: content,
-            timestamp: Date.now(),
-            likes: [], 
-        });
-        postContent.value = ""; 
-        await loadPosts(); 
-    } catch (err) {
-        console.error("Error creating post:", err);
-        alert("Failed to create post.");
-    }
+    const user = auth.currentUser;
+    if (!user) return;
+    
+    try {
+        await addDoc(collection(db, "posts"), {
+            authorUid: user.uid,
+            authorNickname: currentNickname, 
+            content: content,
+            timestamp: Date.now(),
+            likes: [], 
+        });
+        postContent.value = ""; 
+        await loadPosts(); 
+    } catch (err) {
+        console.error("Error creating post:", err);
+        alert("Failed to create post.");
+    }
 }
 
 postForm.addEventListener("submit", handlePostSubmit);
 
 
 /**
- * Toggles the like status of a post.
- */
+ * Toggles the like status of a post.
+ */
 window.toggleLikePost = async function(postId, isLiked) {
-    const user = auth.currentUser;
-    if (!user) return alert("You must be logged in to like posts.");
+    const user = auth.currentUser;
+    if (!user) return alert("You must be logged in to like posts.");
 
-    const postRef = doc(db, "posts", postId);
-    try {
-        const updateOperation = isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid);
-        
-        await updateDoc(postRef, {
-            likes: updateOperation
-        });
-        
-        await loadPosts(); 
+    const postRef = doc(db, "posts", postId);
+    try {
+        const updateOperation = isLiked ? arrayRemove(user.uid) : arrayUnion(user.uid);
+        
+        await updateDoc(postRef, {
+            likes: updateOperation
+        });
+        
+        await loadPosts(); 
 
-    } catch (err) {
-        console.error("Error toggling like:", err);
-        alert("Failed to update like status.");
-    }
+    } catch (err) {
+        console.error("Error toggling like:", err);
+        alert("Failed to update like status.");
+    }
 }
 
 
 async function loadPosts() {
-    postsList.innerHTML = '';
-    const user = auth.currentUser;
+    postsList.innerHTML = '';
+    const user = auth.currentUser;
 
-    const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"));
-    const postSnap = await getDocs(postsQuery);
+    const postsQuery = query(collection(db, "posts"), orderBy("timestamp", "desc"));
+    const postSnap = await getDocs(postsQuery);
 
-    postSnap.forEach(postDoc => {
-        const post = postDoc.data();
-        const postId = postDoc.id;
-        
-        const nickname = post.authorNickname || 'Unknown User'; 
-        const avatarChar = nickname ? nickname[0] : 'U';
-        const verifiedBadgeHtml = getVerifiedBadge(nickname);
-        
-        const likesArray = post.likes || [];
-        const likeCount = likesArray.length;
-        const isLiked = user && likesArray.includes(user.uid);
-        
-        const likeIcon = isLiked ? 'fas fa-heart' : 'far fa-heart';
-        const likeClass = isLiked ? 'liked' : '';
-        
-        postsList.innerHTML += `
-        <div class="duo-card">
-            <div class="card-header">
-                <div class="avatar">${avatarChar}</div>
-                <div>
-                    <div class="nickname-display">
-                        <strong>${nickname}</strong>
-                        ${verifiedBadgeHtml}
-                    </div>
-                    <div class="post-meta">Posted ${timeSince(post.timestamp)} ago</div>
-                </div>
-            </div>
-            <div class="post-content">${post.content}</div>
-            <div class="post-footer">
-                <button class="like-btn ${likeClass}" onclick="toggleLikePost('${postId}', ${isLiked})">
-                    <i class="${likeIcon}"></i> ${likeCount}
-                </button>
-            </div>
-        </div>
-        `;
-    });
+    postSnap.forEach(postDoc => {
+        const post = postDoc.data();
+        const postId = postDoc.id;
+        
+        const nickname = post.authorNickname || 'Unknown User'; 
+        const avatarChar = nickname ? nickname[0] : 'U';
+        const verifiedBadgeHtml = getVerifiedBadge(nickname);
+        
+        const likesArray = post.likes || [];
+        const likeCount = likesArray.length;
+        const isLiked = user && likesArray.includes(user.uid);
+        
+        const likeIcon = isLiked ? 'fas fa-heart' : 'far fa-heart';
+        const likeClass = isLiked ? 'liked' : '';
+        
+        postsList.innerHTML += `
+        <div class="duo-card">
+            <div class="card-header">
+                <div class="avatar">${avatarChar}</div>
+                <div>
+                    <div class="nickname-display">
+                        <strong>${nickname}</strong>
+                        ${verifiedBadgeHtml}
+                    </div>
+                    <div class="post-meta">Posted ${timeSince(post.timestamp)} ago</div>
+                </div>
+            </div>
+            <div class="post-content">${post.content}</div>
+            <div class="post-footer">
+                <button class="like-btn ${likeClass}" onclick="toggleLikePost('${postId}', ${isLiked})">
+                    <i class="${likeIcon}"></i> ${likeCount}
+                </button>
+            </div>
+        </div>
+        `;
+    });
 
-    if (postSnap.empty) {
-        postsList.innerHTML = `<p style="text-align:center; color:var(--duoup-muted);">No posts yet. Be the first to share your thoughts!</p>`;
-    }
+    if (postSnap.empty) {
+        postsList.innerHTML = `<p style="text-align:center; color:var(--duoup-muted);">No posts yet. Be the first to share your thoughts!</p>`;
+    }
 }
 
 
 // --- Sections ---
 function showSection(section){
-    const sections = ["feed", "home"];
-    sections.forEach(s => document.getElementById(s + "-section").style.display = "none");
-    
-    const targetSection = document.getElementById(section + "-section");
-    if (targetSection) {
-        targetSection.style.display = "block";
-    }
-    
-    if(section === "home") loadUsers();
-    if(section === "feed") loadPosts();
+    const sections = ["feed", "home"];
+    sections.forEach(s => document.getElementById(s + "-section").style.display = "none");
+    
+    const targetSection = document.getElementById(section + "-section");
+    if (targetSection) {
+        targetSection.style.display = "block";
+    }
+    
+    if(section === "home") loadUsers();
+    if(section === "feed") loadPosts();
 }
 
 // --- Auth State Handler ---
 onAuthStateChanged(auth, async user => {
-    if(user){
-        authSection.style.display = "none";
-        appSection.style.display = "block";
-        mainHeader.style.display = "flex";
-        
-        const userData = await loadUserData(user); 
-        currentNickname = userData.nickname || ''; 
-        currentBio = userData.bio || '';
-        
-        await updateLastActiveStatus(user.uid); 
-        
-        if (!activityInterval) {
-            activityInterval = setInterval(() => updateLastActiveStatus(user.uid), 60000); // 1 minute
-        }
+    if(user){
+        authSection.style.display = "none";
+        appSection.style.display = "block";
+        mainHeader.style.display = "flex";
+        
+        const userData = await loadUserData(user); 
+        currentNickname = userData.nickname || ''; 
+        currentBio = userData.bio || '';
+        
+        await updateLastActiveStatus(user.uid); 
+        
+        if (!activityInterval) {
+            activityInterval = setInterval(() => updateLastActiveStatus(user.uid), 60000); // 1 minute
+        }
 
-        showSection('feed'); 
-    } else {
-        authSection.style.display = "flex";
-        appSection.style.display = "none";
-        mainHeader.style.display = "none";
-        clearInterval(activityInterval); 
-        activityInterval = null;
-    }
+        showSection('feed'); 
+    } else {
+        authSection.style.display = "flex";
+        appSection.style.display = "none";
+        mainHeader.style.display = "none";
+        clearInterval(activityInterval); 
+        activityInterval = null;
+    }
 });
 
 // Expose functions
