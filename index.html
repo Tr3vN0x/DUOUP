@@ -18,261 +18,53 @@ body {
 }
 .container { width:90%; max-width: 1000px; margin:auto; padding:20px; }
 .hidden { display:none; }
-
-/* --- HEADER & ICON STYLES --- */
-.header {
-    background: #111;
-    border-bottom: 3px solid cyan;
-    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-    padding: 10px 0;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.header h1 {
-    font-size: 2.5em;
-    color: #fff;
-    text-shadow: 0 0 5px cyan, 0 0 10px cyan, 0 0 15px magenta;
-    margin: 0;
-}
-.icon-container {
-    margin-right: 15px;
-    font-size: 2.5em;
-    color: cyan;
-    text-shadow: 0 0 5px cyan, 0 0 10px magenta;
-}
-
-/* --- BUTTON STYLES --- */
-.neon-btn { 
-    border:2px solid cyan; 
-    background:transparent; 
-    color:white; 
-    padding:8px 14px; 
-    margin:5px; 
-    border-radius:6px; 
-    cursor:pointer; 
-    box-shadow:0 0 10px cyan; 
-    transition: all 0.2s ease-in-out;
-    text-transform: uppercase;
-    font-family: 'Orbitron', sans-serif; 
-}
+/* --- HEADER & BUTTONS --- */
+.header { background: #111; border-bottom: 3px solid cyan; box-shadow: 0 0 20px rgba(0,255,255,0.5); padding: 10px 0; display:flex; align-items:center; justify-content:center; }
+.header h1 { font-size:2.5em; color:#fff; text-shadow:0 0 5px cyan,0 0 10px cyan,0 0 15px magenta; margin:0; }
+.icon-container { margin-right:15px; font-size:2.5em; color:cyan; text-shadow:0 0 5px cyan,0 0 10px magenta; }
+.neon-btn { border:2px solid cyan; background:transparent; color:white; padding:8px 14px; margin:5px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px cyan; transition:all 0.2s; text-transform:uppercase; font-family: 'Orbitron', sans-serif; }
 .neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
-.neon-btn.remove { border-color: red; box-shadow: 0 0 10px red; }
-.neon-btn.remove:hover { border-color: orange; box-shadow: 0 0 15px orange; }
-
-/* --- FILTER STYLES --- */
-.filter-box {
-    margin-bottom: 20px;
-    padding: 15px;
-    border: 1px solid magenta;
-    border-radius: 8px;
-    background: #181818;
-    display: grid;
-    grid-template-columns: auto 1fr 1fr auto auto; 
-    gap: 10px;
-    align-items: center;
-}
-.filter-box label {
-    font-weight: bold;
-    color: cyan;
-    white-space: nowrap;
-}
-.filter-box select {
-    padding: 8px;
-    border: 1px solid #444;
-    background: #222;
-    color: white;
-    border-radius: 4px;
-    font-family: inherit;
-    outline: none;
-    min-height: 40px;
-}
-#gameCategoryFilterContainer {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-#gameCategoryFilterContainer label {
-    color: magenta;
-}
-.filter-box .neon-btn {
-    margin: 0;
-    padding: 8px 12px;
-}
-
-/* --- CARD/LAYOUT STYLES --- */
+.neon-btn.remove { border-color:red; box-shadow:0 0 10px red; }
+.neon-btn.remove:hover { border-color:orange; box-shadow:0 0 15px orange; }
+/* --- CARDS --- */
 .flex { display:flex; gap:15px; flex-wrap:wrap; }
-.card-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-.card { 
-    width:250px; 
-    padding:15px; 
-    border:2px solid cyan; 
-    border-radius:12px; 
-    background:#111; 
-    box-shadow:0 0 10px cyan; 
-    display:flex; 
-    flex-direction:column; 
-    align-items:center; 
-    margin-bottom: 15px;
-    cursor: pointer; 
-}
-.card-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 10px; 
-}
+.card-container, .flex { display:flex; flex-wrap:wrap; gap:15px; }
+.card { width:250px; padding:15px; border:2px solid cyan; border-radius:12px; background:#111; box-shadow:0 0 10px cyan; display:flex; flex-direction:column; align-items:center; margin-bottom:15px; cursor:pointer; }
+.card-content { display:flex; flex-direction:column; align-items:center; width:100%; margin-bottom:10px; }
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
-
-/* --- LED OWNER BADGE STYLES --- */
-.owner-badge-box {
-    display: inline-block;
-    padding: 2px 6px;
-    margin-left: 8px;
-    font-size: 0.7em; 
-    font-weight: bold;
-    letter-spacing: 1px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    
-    background: #3a005c; 
-    color: #ffccff; 
-    border: 1px solid #ff00ff; 
-    box-shadow: 
-        0 0 5px #ff00ff,   
-        0 0 10px #cc33ff,  
-        inset 0 0 5px #ff00ff; 
-    vertical-align: middle;
-}
-
-/* --- RATING AND STATUS STYLES --- */
-.skill-rating {
-    color: gold; 
-    font-size: 1.2em;
-    margin-bottom: 5px;
-}
-.status-indicator {
-    font-size: 0.8em;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-.status-online { background-color: #00cc00; color: #0b0b0b; box-shadow: 0 0 5px #00ff00; }
-.status-ingame { background-color: #ffaa00; color: #0b0b0b; box-shadow: 0 0 5px #ffaa00; }
-.status-lfd { background-color: #00aaff; color: #0b0b0b; box-shadow: 0 0 5px #00aaff; }
-
-/* --- PROFILE VIEWER STYLES --- */
-.profile-section h3 {
-    border-bottom: 1px solid magenta;
-    padding-bottom: 5px;
-}
-.profile-header {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-    border: 1px solid #333;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    background: #181818;
-}
-.profile-header img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    border: 3px solid cyan;
-    object-fit: cover;
-}
-
-/* --- UNREAD COUNT BADGE --- */
-.unread-badge {
-    background-color: magenta;
-    color: white;
-    border-radius: 50%;
-    padding: 2px 7px;
-    margin-left: 5px;
-    font-size: 0.7em;
-    font-weight: bold;
-    box-shadow: 0 0 5px magenta;
-}
-
-/* --- PROFILE EDITOR STYLES --- */
-#profileEditor {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding: 20px;
-    border: 2px solid magenta;
-    border-radius: 12px;
-    background: #111;
-    box-shadow: 0 0 15px magenta;
-    max-width: 500px;
-    margin: 20px auto;
-}
-#profileEditor label {
-    font-weight: bold;
-    color: cyan;
-}
-#profileEditor input, #profileEditor textarea, #profileEditor select {
-    padding: 10px;
-    border: 1px solid #333;
-    background: #222;
-    color: white;
-    border-radius: 6px;
-    font-family: inherit;
-    outline: none;
-    min-height: 40px; 
-}
-#currentAvatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    border: 3px solid cyan;
-    align-self: center;
-    object-fit: cover;
-    margin-bottom: 15px;
-}
-#gamesInput {
-    height: 100px; 
-}
-.game-tag {
-    display: inline-block;
-    background: #222;
-    border: 1px solid #444;
-    padding: 5px 10px;
-    margin-right: 8px;
-    margin-bottom: 8px;
-    border-radius: 4px;
-    font-size: 0.9em;
-}
+/* --- BADGES --- */
+.owner-badge-box { display:inline-block; padding:2px 6px; margin-left:8px; font-size:0.7em; font-weight:bold; border-radius:4px; text-transform:uppercase; background:#3a005c; color:#ffccff; border:1px solid #ff00ff; box-shadow:0 0 5px #ff00ff,0 0 10px #cc33ff, inset 0 0 5px #ff00ff; vertical-align:middle; }
+/* --- STATUS/RATING --- */
+.skill-rating { color:gold; font-size:1.2em; margin-bottom:5px; }
+.status-indicator { font-size:0.8em; padding:3px 8px; border-radius:4px; font-weight:bold; margin-bottom:10px; }
+.status-online { background-color:#00cc00; color:#0b0b0b; box-shadow:0 0 5px #00ff00; }
+.status-ingame { background-color:#ffaa00; color:#0b0b0b; box-shadow:0 0 5px #ffaa00; }
+.status-lfd { background-color:#00aaff; color:#0b0b0b; box-shadow:0 0 5px #00aaff; }
+/* --- PROFILE VIEWER --- */
+.profile-section h3 { border-bottom:1px solid magenta; padding-bottom:5px; }
+.profile-header { display:flex; gap:20px; align-items:center; border:1px solid #333; padding:20px; border-radius:8px; margin-bottom:20px; background:#181818; }
+.profile-header img { width:100px; height:100px; border-radius:50%; border:3px solid cyan; object-fit:cover; }
+/* --- BADGE --- */
+.unread-badge { background-color: magenta; color:white; border-radius:50%; padding:2px 7px; margin-left:5px; font-size:0.7em; font-weight:bold; box-shadow:0 0 5px magenta; }
 </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="icon-container">
-        ⚡
-    </div>
+    <div class="icon-container">⚡</div>
     <h1>DUO UP</h1>
 </div>
 
 <div id="loginPage" class="container">
-  <p style="text-align: center;">Find your perfect partner and dominate the cyber-arena.</p>
-  <div style="text-align: center;">
+  <p style="text-align:center;">Find your perfect partner and dominate the cyber-arena.</p>
+  <div style="text-align:center;">
     <button class="neon-btn" onclick="login()">Login with Google</button>
   </div>
 </div>
 
 <div id="dashboard" class="container hidden">
   <h2 id="welcome"></h2>
-  <div style="margin-bottom: 20px;">
+  <div style="margin-bottom:20px;">
     <button class="neon-btn" onclick="showTab('suggested')">Suggested</button>
     <button class="neon-btn" onclick="showTab('requests')">Requests</button>
     <button id="friendsBtn" class="neon-btn" onclick="showTab('friends')">
@@ -283,896 +75,103 @@ body {
   </div>
 
   <div id="suggestedTab">
-    <div class="filter-box">
-        <label for="gameFilterInput">Game:</label>
-        <select id="gameFilterInput" onchange="updateCategoryFilter()">
-            </select>
-
-        <div id="gameCategoryFilterContainer">
-            <label for="categoryFilterInput" id="categoryLabel">Category:</label>
-            <select id="categoryFilterInput" disabled>
-                <option value="">-- Select Game First --</option>
-            </select>
-        </div>
-        
-        <button class="neon-btn" onclick="loadSuggested()">Filter</button>
-        <button class="neon-btn remove" onclick="clearFilter()">Clear</button>
-    </div>
-    <div id="suggestedCards" class="card-container">
-        </div>
+    <div id="suggestedCards" class="card-container"></div>
   </div>
   <div id="requestsTab" class="flex hidden"></div>
   <div id="friendsTab" class="flex hidden"></div>
   <div id="profileTab" class="hidden">
     <div id="profileEditor">
         <img id="currentAvatar" src="" alt="Current Profile Picture">
-        
         <p><b>Nickname:</b> <span id="currentNicknameDisplay"></span></p>
-
         <label for="bioInput">Bio:</label>
-        <textarea id="bioInput" rows="3" maxlength="150" placeholder="Tell the community about yourself..."></textarea>
-        
-        <label for="gamesInput">Favorite Games (Hold CTRL/CMD to select multiple):</label>
-        <select id="gamesInput" multiple size="4">
-             </select>
-        
-        <div id="gameDetailsContainer" style="padding: 10px; border: 1px dashed magenta; border-radius: 6px;">
-            <p style="color: cyan; margin-top: 0;">Game Specific Details (Roles/Ranks)</p>
-            <div id="dynamicGameFields">
-                <p style="opacity: 0.7; font-size: 0.9em;">Select a single game above to set specific details (e.g., your rank/role).</p>
-            </div>
-        </div>
-        <label for="skillRatingInput">Skill Rating (1-5 Stars):</label>
-        <select id="skillRatingInput">
-            <option value="1">⭐ 1 Star (Casual)</option>
-            <option value="2">⭐⭐ 2 Stars (Intermediate)</option>
-            <option value="3">⭐⭐⭐ 3 Stars (Competent)</option>
-            <option value="4">⭐⭐⭐⭐ 4 Stars (Advanced)</option>
-            <option value="5">⭐⭐⭐⭐⭐ 5 Stars (Expert)</option>
-        </select>
-
-        <label for="statusInput">Current Status:</label>
-        <select id="statusInput">
-            <option value="Online">Online</option>
-            <option value="Looking for Duo">Looking for Duo</option>
-            <option value="In Game">In Game</option>
-            <option value="Away">Away</option>
-        </select>
-        
-        <label for="avatarUrlInput">Profile Picture URL:</label>
-        <input type="url" id="avatarUrlInput" placeholder="https://example.com/image.jpg" oninput="document.getElementById('currentAvatar').src = this.value || DEFAULT_AVATAR">
-
+        <textarea id="bioInput" rows="3" maxlength="150"></textarea>
         <button class="neon-btn" onclick="saveProfile()">Save Profile</button>
     </div>
   </div>
-
-  <div id="profileViewer" class="container hidden">
-    </div>
+  <div id="profileViewer" class="container hidden"></div>
 </div>
 
-
 <script>
-// -------------------- GAME CONFIGURATION DATA --------------------
-// The list of games and their potential categories for filtering.
-const GAME_CONFIG = {
-    // === EXAMPLE 1: FPS Game ===
-    "Valorant": {
-        categories: ["Role", "Rank"],
-        Role: ["Duelist", "Controller", "Sentinel", "Initiator"],
-        Rank: ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Ascendant", "Immortal", "Radiant"]
-    },
-    // === EXAMPLE 2: MOBA Game ===
-    "League of Legends": {
-        categories: ["Lane", "Rank"],
-        Lane: ["Top", "Jungle", "Mid", "Bot/ADC", "Support"],
-        Rank: ["Iron", "Bronze", "Silver", "Gold", "Platinum", "Emerald", "Diamond", "Master", "Grandmaster", "Challenger"]
-    },
-    // === EXAMPLE 3: Simple Game ===
-    "Minecraft": {
-        categories: ["Mode"],
-        Mode: ["Survival", "Creative", "Hardcore"]
-    },
-    // Add more games here
-    "Apex Legends": {},
-    "Rocket League": {},
-    "Overwatch 2": {},
-    "Fortnite": {},
-    "Genshin Impact": {},
-    "World of Warcraft": {},
-    "Dota 2": {}
-};
-
-// --- FIREBASE CONFIGURATION (YOUR ACTUAL CONFIGURATION) ---
-const firebaseConfig = {
-  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-  authDomain: "duoup-cfae6.firebaseapp.com",
-  projectId: "duoup-cfae6",
-  storageBucket: "duoup-cfae6.firebasestorage.app",
-  messagingSenderId: "812263060524",
-  appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
-  measurementId: "G-46B67F90FK"
-};
+// FIREBASE CONFIG
+const firebaseConfig = { /* Your config */ };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
-// --- OWNER UID CONSTANT (CRITICAL: YOUR OWNER ID) ---
-// 🚨🚨🚨 UPDATE THIS WITH YOUR ACTUAL UID 🚨🚨🚨
-const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; 
+const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2";
 
 let currentUser = null;
-let unreadMessageCount = 0; 
 
-// ---------------- LOGIN/AUTH ----------------
-function login(){
-  // Using GoogleAuthProvider is recommended for ease of use
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert(err.message));
-}
-
+// AUTH
+function login(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err=>alert(err.message)); }
 auth.onAuthStateChanged(async user=>{
-  if(!user){
-    loginPage.classList.remove("hidden");
-    dashboard.classList.add("hidden");
-    return;
+  if(!user){ loginPage.classList.remove("hidden"); dashboard.classList.add("hidden"); return; }
+  loginPage.classList.add("hidden"); dashboard.classList.remove("hidden"); currentUser=user;
+  const uRef=db.collection("users").doc(user.uid);
+  const uDoc=await uRef.get();
+  if(!uDoc.exists){
+    await uRef.set({ uid:user.uid, nickname:user.displayName||"Player", bio:"", profileImageUrl:user.photoURL||DEFAULT_AVATAR });
   }
-  loginPage.classList.add("hidden");
-  dashboard.classList.remove("hidden");
-  currentUser = user;
-
-  // Populate dropdowns immediately after auth
-  populateGamesDropdown();
-  populateGameFilterDropdown();
-  updateCategoryFilter(); // Initialize category filter
-
-  const userDocRef = db.collection("users").doc(user.uid);
-  const userDoc = await userDocRef.get();
-  
-  if(!userDoc.exists){
-    await userDocRef.set({
-      uid: user.uid,
-      nickname: user.displayName||"Player", 
-      bio: "", 
-      games: [], 
-      gameDetails: {}, // New field for game details
-      friends: [],
-      nicknames: {}, 
-      profileImageUrl: user.photoURL||DEFAULT_AVATAR,
-      skillRating: 3, 
-      status: "Online"
-    });
-  }
-
-  const data = (await userDocRef.get()).data();
-  // Attach gameDetails to currentUser object for use in renderDynamicGameFields
-  currentUser.gameDetails = data.gameDetails || {};
-  
-  document.getElementById("welcome").innerHTML = `Welcome, ${data.nickname}${getOwnerBadge(data.uid)}`;
-
-  loadUnreadCount(); 
-  loadSuggested();
-  loadRequests();
-  loadFriends();
-  loadProfileEditor(data); 
+  document.getElementById("welcome").innerHTML=`Welcome, ${(await uRef.get()).data().nickname}${getOwnerBadge(user.uid)}`;
+  loadSuggested(); loadRequests(); loadFriends();
 });
+function logout(){ auth.signOut(); }
 
-function logout(){ 
-    auth.signOut(); 
-}
+// UTILS
+function getOwnerBadge(uid){ return uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''; }
+function hideAllTabs(){ ['suggested','requests','friends','profile'].forEach(t=>document.getElementById(t+"Tab").classList.add("hidden")); profileViewer.classList.add("hidden"); }
+function showTab(tab){ hideAllTabs(); const el=document.getElementById(tab+"Tab"); if(el) el.classList.remove("hidden"); if(tab==='suggested') loadSuggested(); else if(tab==='requests') loadRequests(); else if(tab==='friends') loadFriends(); }
 
-function hideAllTabs() {
-    document.getElementById("suggestedTab").classList.add("hidden");
-    document.getElementById("requestsTab").classList.add("hidden");
-    document.getElementById("friendsTab").classList.add("hidden");
-    document.getElementById("profileTab").classList.add("hidden");
-    document.getElementById("profileViewer").classList.add("hidden");
-}
-
-function showTab(tab){
-  hideAllTabs();
-
-  const tabElement = document.getElementById(tab+"Tab");
-  if (tabElement) {
-    tabElement.classList.remove("hidden");
-  }
-
-  if (tab === 'profile') {
-      db.collection("users").doc(currentUser.uid).get().then(doc => {
-          loadProfileEditor(doc.data());
-      });
-  } else if (tab === 'suggested') {
-      loadSuggested();
-  } else if (tab === 'requests') {
-      loadRequests();
-  } else if (tab === 'friends') {
-      loadFriends();
-  }
-}
-
-// ---------------- HELPER FUNCTIONS ----------------
-
-function getOwnerBadge(uid) {
-    if (uid === OWNER_UID) {
-        return '<span class="owner-badge-box" title="App Owner">OWNER</span>';
-    }
-    return '';
-}
-
-function renderSkillRating(rating) {
-    rating = parseInt(rating) || 0;
-    const filledStars = '⭐'.repeat(rating);
-    const emptyStars = '☆'.repeat(5 - rating);
-    return `<div class="skill-rating" title="Skill Rating: ${rating}/5">${filledStars}${emptyStars}</div>`;
-}
-
-function renderStatus(status) {
-    let statusClass = '';
-    let displayStatus = status || 'Away';
-    
-    if (displayStatus === 'Online') {
-        statusClass = 'status-online';
-    } else if (displayStatus === 'In Game') {
-        statusClass = 'status-ingame';
-    } else if (displayStatus === 'Looking for Duo') {
-        statusClass = 'status-lfd';
-    } else {
-        statusClass = '';
-    }
-    return `<div class="status-indicator ${statusClass}">${displayStatus}</div>`;
-}
-
-// ---------------- DROPDOWN/FILTER FUNCTIONS ----------------
-
-function populateGamesDropdown(selectedGames = []) {
-    const select = document.getElementById('gamesInput');
-    select.innerHTML = '';
-    
-    Object.keys(GAME_CONFIG).sort().forEach(game => {
-        const option = document.createElement('option');
-        option.value = game;
-        option.textContent = game;
-        if (selectedGames.includes(game)) {
-            option.selected = true;
-        }
-        select.appendChild(option);
-    });
-
-    select.onchange = () => {
-        const selected = Array.from(select.selectedOptions).map(opt => opt.value);
-        renderDynamicGameFields(selected);
-    };
-}
-
-function populateGameFilterDropdown() {
-    const select = document.getElementById('gameFilterInput');
-    select.innerHTML = '';
-    
-    const allOption = document.createElement('option');
-    allOption.value = '';
-    allOption.textContent = '--- All Games ---';
-    select.appendChild(allOption);
-
-    Object.keys(GAME_CONFIG).sort().forEach(game => {
-        const option = document.createElement('option');
-        option.value = game;
-        option.textContent = game;
-        select.appendChild(option);
-    });
-}
-
-function updateCategoryFilter() {
-    const gameSelect = document.getElementById('gameFilterInput');
-    const categorySelect = document.getElementById('categoryFilterInput');
-    const categoryLabel = document.getElementById('categoryLabel');
-    const selectedGame = gameSelect.value;
-
-    categorySelect.innerHTML = ''; 
-    categorySelect.disabled = true;
-
-    if (!selectedGame) {
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = '-- Select Game First --';
-        categorySelect.appendChild(defaultOption);
-        categoryLabel.textContent = 'Category:';
-        return;
-    }
-
-    const config = GAME_CONFIG[selectedGame];
-    if (!config || !config.categories || config.categories.length === 0) {
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'No Categories for this Game';
-        categorySelect.appendChild(defaultOption);
-        categoryLabel.textContent = 'Category:';
-        return;
-    }
-    
-    const categoryName = config.categories[0]; 
-    categoryLabel.textContent = `${categoryName}:`;
-    categorySelect.disabled = false;
-
-    const allOption = document.createElement('option');
-    allOption.value = '';
-    allOption.textContent = `--- Any ${categoryName} ---`;
-    categorySelect.appendChild(allOption);
-
-    const categoryValues = config[categoryName];
-    if (categoryValues && Array.isArray(categoryValues)) {
-        categoryValues.forEach(value => {
-            const option = document.createElement('option');
-            const optionValue = `${categoryName}:${value}`; // Format: "Role:Controller"
-            option.value = optionValue; 
-            option.textContent = value;
-            categorySelect.appendChild(option);
-        });
-    }
-}
-
-function renderDynamicGameFields(selectedGames) {
-    const container = document.getElementById('dynamicGameFields');
-    container.innerHTML = '';
-    
-    if (selectedGames.length === 0) {
-        container.innerHTML = '<p style="opacity: 0.7; font-size: 0.9em;">Select a single game above to set specific details (e.g., your rank/role).</p>';
-        return;
-    }
-    
-    const gameToDetail = selectedGames[0];
-    const config = GAME_CONFIG[gameToDetail];
-    
-    if (!config || !config.categories || config.categories.length === 0) {
-        container.innerHTML = `<p style="opacity: 0.7; font-size: 0.9em;">No specific categories configured for **${gameToDetail}**.</p>`;
-        return;
-    }
-
-    const gameDetails = (currentUser && currentUser.gameDetails) || {};
-    const currentGameDetails = gameDetails[gameToDetail] || {};
-
-    let html = `<h4>${gameToDetail} Details</h4>`;
-
-    config.categories.forEach(category => {
-        const categoryKey = category.toLowerCase().replace(/\s/g, ''); 
-        const values = config[category]; 
-        
-        if (values && Array.isArray(values)) {
-            html += `
-                <label for="detail-${categoryKey}">${category}:</label>
-                <select id="detail-${categoryKey}" data-game="${gameToDetail}" data-category="${category}">
-                    <option value="">-- Select Your ${category} --</option>
-            `;
-            values.forEach(value => {
-                const isSelected = currentGameDetails[category] === value ? 'selected' : '';
-                html += `<option value="${value}" ${isSelected}>${value}</option>`;
-            });
-            html += `</select>`;
-        }
-    });
-
-    container.innerHTML = html;
-}
-
-function clearFilter() {
-    document.getElementById('gameFilterInput').value = '';
-    document.getElementById('categoryFilterInput').value = '';
-    updateCategoryFilter(); 
-    loadSuggested();
-}
-
-
-// ---------------- UNREAD COUNT FUNCTIONS (Counts pending requests) ----------------
-
-async function loadUnreadCount() {
-    if (!currentUser) return;
-
-    try {
-        // Count pending friend requests where the current user is the receiver
-        const snap = await db.collection("friendRequests")
-            .where("receiverId", "==", currentUser.uid)
-            .get();
-        
-        unreadMessageCount = snap.docs.length;
-        const badge = document.getElementById('unreadBadge');
-        
-        if (unreadMessageCount > 0) {
-            badge.textContent = unreadMessageCount;
-            badge.classList.remove('hidden');
-        } else {
-            badge.classList.add('hidden');
-        }
-    } catch (error) {
-        console.error("Error loading unread count:", error);
-    }
-}
-
-
-// ---------------- FRIEND ACTION FUNCTIONS ----------------
-
+// FRIEND FUNCTIONS
 async function sendRequest(receiverId){
-  if (!currentUser) return;
-  try {
-      // Check for existing request in either direction
-      const existingRequestSnap = await db.collection("friendRequests")
-        .where("senderId", "in", [currentUser.uid, receiverId])
-        .where("receiverId", "in", [currentUser.uid, receiverId])
-        .get();
-
-      if (!existingRequestSnap.empty) {
-        alert("A friend request is already pending with this user!");
-        return; 
-      }
-
-      // Create the new request document
-      await db.collection("friendRequests").add({
-        senderId: currentUser.uid,
-        receiverId: receiverId
-      });
-      
-      alert("Request sent!"); 
-      loadSuggested(); // Hides the requested user from suggested list
-  } catch(err) {
-      alert("Error sending request: " + err.message);
-      console.error("Send Request Error:", err);
-  }
+  if(!currentUser) return;
+  const existsSnap=await db.collection("friendRequests")
+      .where("senderId","in",[currentUser.uid,receiverId])
+      .where("receiverId","in",[currentUser.uid,receiverId])
+      .get();
+  if(!existsSnap.empty){ alert("Request already exists"); return; }
+  await db.collection("friendRequests").add({ senderId:currentUser.uid, receiverId });
+  alert("Request sent!"); loadSuggested();
+}
+async function acceptRequest(reqId,senderId){
+  if(!currentUser) return;
+  const friendsRef=db.collection("friends");
+  await friendsRef.add({ users:[currentUser.uid,senderId], createdAt:firebase.firestore.FieldValue.serverTimestamp() });
+  await db.collection("friendRequests").doc(reqId).delete();
+  alert("Friend added!"); loadRequests(); loadFriends(); loadSuggested();
+}
+async function rejectRequest(reqId){ await db.collection("friendRequests").doc(reqId).delete(); alert("Request rejected"); loadRequests(); loadSuggested(); }
+async function removeFriend(friendId){
+  if(!currentUser) return;
+  if(!confirm("Remove friend?")) return;
+  const snap=await db.collection("friends").where("users","array-contains",currentUser.uid).get();
+  const doc=snap.docs.find(d=>d.data().users.includes(friendId));
+  if(doc) await db.collection("friends").doc(doc.id).delete();
+  alert("Friend removed"); loadFriends(); loadSuggested();
 }
 
-function acceptRequest(requestId, senderId){
-  if (!currentUser) return;
-
-  const meRef = db.collection("users").doc(currentUser.uid);
-  const senderRef = db.collection("users").doc(senderId);
-  
-  // Use a transaction for atomic update of all three documents
-  db.runTransaction(async (transaction) => {
-    // 1. Add sender to my friends list
-    transaction.update(meRef, {friends: firebase.firestore.FieldValue.arrayUnion(senderId)});
-    // 2. Add me to the sender's friends list
-    transaction.update(senderRef, {friends: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)});
-    // 3. Delete the pending request document (requires delete rule in security rules)
-    transaction.delete(db.collection("friendRequests").doc(requestId));
-  }).then(() => {
-    alert("Request accepted! You are now friends.");
-    showTab('friends'); 
-    loadUnreadCount(); 
-    loadSuggested(); 
-  }).catch(err => {
-    alert("Transaction failed (Accept Request). Check console for error details. (Likely Security Rules)");
-    console.error("Accept Request Error:", err);
-  });
-}
-
-function rejectRequest(requestId){
-  if (!currentUser) return;
-  // Only needs to delete the request document.
-  db.collection("friendRequests").doc(requestId).delete().then(() => {
-    alert("Request rejected.");
-    loadRequests();
-    loadSuggested(); // Puts the user back on suggested list
-  }).catch(err => {
-    alert("Error rejecting request: " + err.message);
-    console.error("Reject Request Error:", err);
-  });
-}
-
-function removeFriend(friendId){
-  if(!confirm("Are you sure you want to remove this friend?")) return;
-
-  const meRef = db.collection("users").doc(currentUser.uid);
-  const friendRef = db.collection("users").doc(friendId);
-  
-  // Use a transaction for atomic update of both friends arrays
-  db.runTransaction(async (transaction) => {
-    transaction.update(meRef, {friends: firebase.firestore.FieldValue.arrayRemove(friendId)});
-    transaction.update(friendRef, {friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)});
-  }).then(() => {
-    alert("Friend removed successfully.");
-    loadFriends(); // Refresh friends list
-    loadSuggested(); // Ensure they appear back on suggested list
-  }).catch(err => {
-    alert("Removal failed (Remove Friend): " + err.message);
-    console.error("Remove Friend Error:", err);
-  });
-}
-
-// ---------------- LOAD FUNCTIONS (Suggested, Requests, Friends) ----------------
-
+// LOAD FUNCTIONS
 async function loadSuggested(){
-  const suggestedCards = document.getElementById("suggestedCards");
-  suggestedCards.innerHTML="<p>Loading suggested users...</p>";
-  
-  try {
-      const filterGame = document.getElementById('gameFilterInput').value.trim();
-      const filterCategoryValue = document.getElementById('categoryFilterInput').value.trim(); 
-
-      let usersQuery = db.collection("users");
-      let filterMessage = "Loading all suggested users...";
-
-      // --- FILTERING LOGIC ---
-      if (filterGame) {
-          usersQuery = usersQuery.where("games", "array-contains", filterGame);
-          filterMessage = `Filtering users who play: <b>${filterGame}</b>.`;
-
-          if(filterCategoryValue) {
-              const [categoryName, categoryValue] = filterCategoryValue.split(':');
-              const fieldPath = `gameDetails.${filterGame}.${categoryName}`;
-              usersQuery = usersQuery.where(fieldPath, "==", categoryValue);
-              filterMessage += ` (Filtered by ${categoryName}: <b>${categoryValue}</b>)`;
-          }
-      }
-      // --- END FILTERING LOGIC ---
-
-      suggestedCards.innerHTML = `<p>${filterMessage}</p>`;
-
-
-      const usersSnap = await usersQuery.get(); 
-      
-      const meDoc = await db.collection("users").doc(currentUser.uid).get();
-      if (!meDoc.exists) {
-          suggestedCards.innerHTML = `<p style="color:red;">Error: Current user profile not found.</p>`;
-          return;
-      }
-      const me = meDoc.data();
-      suggestedCards.innerHTML = ""; 
-
-      const myFriends = me.friends || [];
-      const mySentRequestsSnap = await db.collection("friendRequests").where("senderId", "==", currentUser.uid).get();
-      const myReceivedRequestsSnap = await db.collection("friendRequests").where("receiverId", "==", currentUser.uid).get();
-
-      const pendingUsers = new Set();
-      mySentRequestsSnap.forEach(doc => pendingUsers.add(doc.data().receiverId));
-      myReceivedRequestsSnap.forEach(doc => pendingUsers.add(doc.data().senderId));
-
-      let suggestedCount = 0;
-      usersSnap.forEach(doc=>{
-        if(doc.id === currentUser.uid) return; 
-        if(myFriends.includes(doc.id)) return; 
-        if(pendingUsers.has(doc.id)) return; 
-        
-        const u = doc.data();
-        const card = document.createElement("div");
-        card.className = "card";
-        card.setAttribute('onclick', `viewProfile('${doc.id}')`);
-        
-        const badgeHtml = getOwnerBadge(u.uid);
-        const gamesPreview = (u.games && u.games.length > 0) ? `<p style="font-size:0.8em; margin: 5px 0;">Games: ${u.games.slice(0, 2).join(', ')}...</p>` : '';
-        const ratingHtml = renderSkillRating(u.skillRating);
-        const statusHtml = renderStatus(u.status);
-
-
-        card.innerHTML = `
-            <div class="card-content">
-                <img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
-                <strong>${u.nickname}${badgeHtml}</strong>
-                ${ratingHtml}
-                ${statusHtml}
-                ${gamesPreview}
-            </div>
-            <button class="neon-btn" onclick="event.stopPropagation(); viewProfile('${doc.id}')">View & Send Request</button>
-        `;
-        suggestedCards.appendChild(card);
-        suggestedCount++;
-      });
-
-      if (suggestedCount === 0) {
-          suggestedCards.innerHTML=`<p>No suggested players available right now${filterGame ? ` who play <b>${filterGame}</b>` : ''}.</p>`;
-      }
-  } catch(error) {
-      suggestedCards.innerHTML = `<p style="color:red;">Failed to load suggested users. Check console and Security Rules.</p>`;
-      console.error("Load Suggested Error:", error);
-  }
+  const container=document.getElementById("suggestedCards"); container.innerHTML="<p>Loading...</p>";
+  const usersSnap=await db.collection("users").get();
+  container.innerHTML="";
+  const myFriendsSnap=await db.collection("friends").where("users","array-contains",currentUser.uid).get();
+  const friendsIds=new Set(); myFriendsSnap.forEach(d=>d.data().users.forEach(uid=>{ if(uid!==currentUser.uid) friendsIds.add(uid); }));
+  const requestsSnap=await db.collection("friendRequests").get();
+  const pendingIds=new Set(); requestsSnap.forEach(d=>{ const r=d.data(); if(r.senderId===currentUser.uid) pendingIds.add(r.receiverId); else if(r.receiverId===currentUser.uid) pendingIds.add(r.senderId); });
+  usersSnap.forEach(d=>{ if(d.id===currentUser.uid || friendsIds.has(d.id) || pendingIds.has(d.id)) return; const u=d.data(); const card=document.createElement("div"); card.className="card"; card.innerHTML=`<div class="card-content"><img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}"><strong>${u.nickname}${getOwnerBadge(u.uid)}</strong></div><button class="neon-btn" onclick="event.stopPropagation(); sendRequest('${d.id}')">Send Request</button>`; container.appendChild(card); });
 }
-
 async function loadRequests(){
-  requestsTab.innerHTML="<p>Loading requests...</p>";
-  
-  try {
-      const snap = await db.collection("friendRequests").where("receiverId","==",currentUser.uid).get();
-      requestsTab.innerHTML = "<h3>Friend Requests</h3>"; 
-      
-      const requestPromises = snap.docs.map(async doc => {
-        const r = doc.data();
-        const senderDoc = await db.collection("users").doc(r.senderId).get();
-        if (!senderDoc.exists) return null; 
-        return { 
-          requestId: doc.id,
-          senderId: r.senderId,
-          user: senderDoc.data()
-        };
-      });
-      
-      const requestsData = (await Promise.all(requestPromises)).filter(item => item !== null);
-
-      if(requestsData.length === 0){ 
-        requestsTab.innerHTML+="<p>No friend requests</p>"; 
-        return; 
-      }
-
-      requestsData.forEach(data => {
-        const u = data.user;
-        const card = document.createElement("div");
-        card.className = "card";
-        card.setAttribute('onclick', `viewProfile('${data.senderId}')`);
-
-        const badgeHtml = getOwnerBadge(u.uid);
-        const gamesPreview = (u.games && u.games.length > 0) ? `<p style="font-size:0.8em; margin: 5px 0;">Games: ${u.games.slice(0, 2).join(', ')}...</p>` : '';
-        const ratingHtml = renderSkillRating(u.skillRating);
-        const statusHtml = renderStatus(u.status);
-
-
-        card.innerHTML = `
-            <div class="card-content">
-                <img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
-                <strong>${u.nickname}${badgeHtml}</strong>
-                ${ratingHtml}
-                ${statusHtml}
-                ${gamesPreview}
-            </div>
-            <button class="neon-btn" onclick="event.stopPropagation(); acceptRequest('${data.requestId}','${data.senderId}')">Accept</button>
-            <button class="neon-btn remove" onclick="event.stopPropagation(); rejectRequest('${data.requestId}')">Reject</button>
-        `;
-        requestsTab.appendChild(card);
-      });
-      loadUnreadCount();
-  } catch (error) {
-      requestsTab.innerHTML = `<p style="color:red;">Error loading requests: ${error.message}</p>`;
-      console.error("Requests Load Error:", error);
-  }
+  const container=document.getElementById("requestsTab"); container.innerHTML="<p>Loading...</p>";
+  const snap=await db.collection("friendRequests").where("receiverId","==",currentUser.uid).get();
+  container.innerHTML=""; if(snap.empty){ container.innerHTML="<p>No requests</p>"; return; }
+  snap.docs.forEach(doc=>{ const r=doc.data(); const card=document.createElement("div"); card.className="card"; card.innerHTML=`<div class="card-content"><strong>${r.senderId}</strong></div><button class="neon-btn" onclick="event.stopPropagation(); acceptRequest('${doc.id}','${r.senderId}')">Accept</button><button class="neon-btn remove" onclick="event.stopPropagation(); rejectRequest('${doc.id}')">Reject</button>`; container.appendChild(card); });
 }
-
 async function loadFriends(){
-  friendsTab.innerHTML="<p>Loading friends...</p>";
-  
-  try {
-      const meDoc = await db.collection("users").doc(currentUser.uid).get();
-      const me = meDoc.data();
-      friendsTab.innerHTML = "<h3>My Friends</h3>"; 
-      
-      const myFriends = me.friends || [];
-      const myNicknames = me.nicknames || {}; 
-
-      if(myFriends.length===0){ 
-        friendsTab.innerHTML+="<p>No friends yet. Time to find a duo!</p>"; 
-        return; 
-      }
-      
-      const friendPromises = myFriends.map(fid => db.collection("users").doc(fid).get());
-      const friendDocs = await Promise.all(friendPromises);
-
-      friendDocs.forEach(doc => {
-        if (!doc.exists) return; 
-        const u = doc.data();
-        const card = document.createElement("div");
-        card.className = "card";
-        card.setAttribute('onclick', `viewProfile('${doc.id}')`);
-
-        const displayNickname = myNicknames[doc.id] || u.nickname;
-
-        const badgeHtml = getOwnerBadge(u.uid);
-        const gamesPreview = (u.games && u.games.length > 0) ? `<p style="font-size:0.8em; margin: 5px 0;">Games: ${u.games.slice(0, 2).join(', ')}...</p>` : '';
-        const ratingHtml = renderSkillRating(u.skillRating);
-        const statusHtml = renderStatus(u.status);
-
-
-        card.innerHTML = `
-            <div class="card-content">
-                <img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
-                <strong>${displayNickname}${badgeHtml}</strong>
-                ${ratingHtml}
-                ${statusHtml}
-                ${gamesPreview}
-            </div>
-            <button class="neon-btn" onclick="event.stopPropagation(); viewProfile('${doc.id}')">View Profile</button>
-            <button class="neon-btn remove" onclick="event.stopPropagation(); removeFriend('${doc.id}')">Remove</button>
-        `;
-        friendsTab.appendChild(card);
-      });
-  } catch (error) {
-      friendsTab.innerHTML = `<p style="color:red;">Error loading friends: ${error.message}</p>`;
-      console.error("Friends Load Error:", error);
-  }
-}
-
-// ---------------- PROFILE VIEWER & MESSAGE FUNCTIONS ----------------
-
-function loadOtherUsersFriendsStatic(friendCount, containerElement) {
-    containerElement.innerHTML = `<p style="opacity: 0.8;">This player has <b>${friendCount}</b> connections.</p>`;
-}
-
-async function viewProfile(targetUserId) {
-    if (!currentUser) {
-        alert("You must be logged in to view profiles.");
-        return;
-    }
-    
-    if (targetUserId === currentUser.uid) {
-        showTab('profile'); 
-        return;
-    }
-    
-    hideAllTabs();
-    profileViewer.classList.remove("hidden");
-    profileViewer.innerHTML = '<p style="text-align: center;">Loading profile data...</p>';
-
-    try {
-        const userDoc = await db.collection("users").doc(targetUserId).get();
-        const meDoc = await db.collection("users").doc(currentUser.uid).get();
-
-        if (!userDoc.exists) {
-            profileViewer.innerHTML = `<p style="color:red; text-align: center;">Error: Target User profile document not found.</p>`;
-            return;
-        }
-        
-        const u = userDoc.data();
-        const myData = meDoc.data();
-        
-        const isFriend = myData.friends && myData.friends.includes(targetUserId);
-        
-        const hasPendingRequestSnap = await db.collection("friendRequests")
-            .where("senderId", "in", [currentUser.uid, targetUserId])
-            .where("receiverId", "in", [currentUser.uid, targetUserId])
-            .get();
-        
-        const hasPendingRequest = !hasPendingRequestSnap.empty;
-
-        const gamesList = (u.games || []).map(g => `<span class="game-tag">${g}</span>`).join('');
-        const bioText = u.bio || "No biography provided.";
-        const friendIds = u.friends || [];
-
-        // Game Details Block
-        let gameDetailsHtml = '';
-        const gameDetails = u.gameDetails || {};
-        const gamesWithDetails = u.games ? u.games.filter(game => gameDetails[game]) : [];
-
-        if (gamesWithDetails.length > 0) {
-            gameDetailsHtml += '<div class="profile-section"><h3>Game-Specific Details</h3>';
-            gamesWithDetails.forEach(game => {
-                const details = gameDetails[game];
-                let detailList = '';
-                for (const category in details) {
-                    detailList += `<li><strong>${category}:</strong> ${details[category]}</li>`;
-                }
-                gameDetailsHtml += `
-                    <h4>${game}</h4>
-                    <ul style="list-style-type: none; padding-left: 0; margin-top: 5px;">${detailList}</ul>
-                `;
-            });
-            gameDetailsHtml += '</div>';
-        }
-
-        // --- Determine Action Buttons ---
-        let actionButtonHTML = '';
-        if (isFriend) {
-            actionButtonHTML = `<button class="neon-btn remove" onclick="removeFriend('${targetUserId}'); showTab('friends');">Remove Friend</button>`;
-        } else if (hasPendingRequest) {
-            const requestForMe = hasPendingRequestSnap.docs.find(doc => doc.data().receiverId === currentUser.uid);
-            if (requestForMe) {
-                 actionButtonHTML = `<button class="neon-btn" onclick="acceptRequest('${requestForMe.id}','${targetUserId}')">Accept Request</button>
-                                     <button class="neon-btn remove" onclick="rejectRequest('${requestForMe.id}')">Reject Request</button>`;
-            } else {
-                 actionButtonHTML = '<button class="neon-btn" style="border-color: yellow; box-shadow: 0 0 10px yellow; cursor: default;">Request Pending</button>';
-            }
-        } else {
-            actionButtonHTML = `<button class="neon-btn" onclick="sendRequest('${targetUserId}');">Send Request</button>`;
-        }
-
-        // --- Render Final HTML Structure ---
-        const badgeHtml = getOwnerBadge(u.uid);
-        const statusHtml = renderStatus(u.status);
-        const ratingHtml = renderSkillRating(u.skillRating);
-
-        profileViewer.innerHTML = `
-            <button class="neon-btn" style="margin-bottom: 20px;" onclick="showTab('suggested')">← Back</button>
-
-            <div class="profile-header">
-                <img src="${u.profileImageUrl || DEFAULT_AVATAR}" alt="${u.nickname}">
-                <div>
-                    <h2>${u.nickname}${badgeHtml}</h2>
-                    ${statusHtml}
-                    ${ratingHtml}
-                    <div style="margin-top: 10px;">${actionButtonHTML}</div>
-                </div>
-            </div>
-
-            <div class="profile-section">
-                <h3>Bio</h3>
-                <p>${bioText}</p>
-            </div>
-
-            <div class="profile-section">
-                <h3>Favorite Games</h3>
-                <div>${gamesList || '<p>No favorite games listed.</p>'}</div>
-            </div>
-            
-            ${gameDetailsHtml} 
-            
-            <div class="profile-section">
-                <h3>${u.nickname}'s Connections (${friendIds.length})</h3>
-                <div id="otherUsersFriendsList" style="padding: 10px; border: 1px dashed #555; border-radius: 8px;">
-                    </div>
-            </div>
-        `;
-        
-        loadOtherUsersFriendsStatic(friendIds.length, document.getElementById('otherUsersFriendsList'));
-
-    } catch(error) {
-        profileViewer.innerHTML = `<p style="color:red; text-align: center;">Failed to load profile due to a system error. Check console.</p>`;
-        console.error("View Profile Critical Error:", error);
-    }
-}
-
-
-// ---------------- PROFILE EDITOR FUNCTIONS ----------------
-function loadProfileEditor(data){
-    data = data || {};
-    
-    currentNicknameDisplay.innerHTML = `${data.nickname || "Player"}${getOwnerBadge(currentUser.uid)}`;
-    
-    bioInput.value = data.bio || "";
-    
-    const gamesSelect = document.getElementById('gamesInput');
-    const savedGames = data.games || [];
-
-    populateGamesDropdown(savedGames); 
-    renderDynamicGameFields(savedGames); 
-
-    avatarUrlInput.value = data.profileImageUrl || currentUser.photoURL || "";
-    currentAvatar.src = data.profileImageUrl || currentUser.photoURL || DEFAULT_AVATAR;
-
-    skillRatingInput.value = data.skillRating || "3";
-    statusInput.value = data.status || "Online";
-}
-
-async function saveProfile(){
-    if (!currentUser) return;
-    
-    const currentData = (await db.collection("users").doc(currentUser.uid).get()).data();
-    const currentNickname = currentData.nickname;
-
-    const gamesSelect = document.getElementById('gamesInput');
-    const selectedGames = Array.from(gamesSelect.selectedOptions).map(option => option.value).filter(game => game !== '');
-    
-    // --- Collect Game Details ---
-    const newGameDetails = {};
-    const dynamicFields = document.querySelectorAll('#dynamicGameFields select');
-    
-    dynamicFields.forEach(select => {
-        const game = select.getAttribute('data-game');
-        const category = select.getAttribute('data-category');
-        const value = select.value;
-        
-        if (value) {
-            if (!newGameDetails[game]) {
-                newGameDetails[game] = {};
-            }
-            newGameDetails[game][category] = value;
-        }
-    });
-    // --- END NEW COLLECTION ---
-
-    const profileUpdates = {
-        bio: bioInput.value.trim(),
-        games: selectedGames, 
-        profileImageUrl: avatarUrlInput.value.trim() || DEFAULT_AVATAR,
-        skillRating: parseInt(skillRatingInput.value),
-        status: statusInput.value,
-        gameDetails: newGameDetails
-    };
-
-    try {
-        await db.collection("users").doc(currentUser.uid).update(profileUpdates);
-        
-        currentUser.gameDetails = newGameDetails; 
-
-        alert("Profile updated successfully!");
-        
-        document.getElementById("welcome").innerHTML = `Welcome, ${currentNickname}${getOwnerBadge(currentUser.uid)}`;
-        
-        loadSuggested();
-        loadFriends();
-    } catch(error) {
-        alert("Error saving profile. Check console.");
-        console.error("Profile Save Error:", error);
-    }
+  const container=document.getElementById("friendsTab"); container.innerHTML="<p>Loading...</p>";
+  const snap=await db.collection("friends").where("users","array-contains",currentUser.uid).get();
+  container.innerHTML=""; if(snap.empty){ container.innerHTML="<p>No friends</p>"; return; }
+  snap.docs.forEach(doc=>{ const uids=doc.data().users.filter(uid=>uid!==currentUser.uid); uids.forEach(async fid=>{ const u=await db.collection("users").doc(fid).get(); if(!u.exists) return; const data=u.data(); const card=document.createElement("div"); card.className="card"; card.innerHTML=`<div class="card-content"><strong>${data.nickname}${getOwnerBadge(data.uid)}</strong></div><button class="neon-btn remove" onclick="event.stopPropagation(); removeFriend('${fid}')">Remove</button>`; container.appendChild(card); }); });
 }
 </script>
 </body>
