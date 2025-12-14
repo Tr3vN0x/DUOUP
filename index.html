@@ -25,7 +25,6 @@
     100% { background-position: 0% 50%; }
   }
 
-  /* Sidebar */
   .sidebar {
     width: 80px;
     background-color: #0D0D0D;
@@ -44,7 +43,6 @@
     margin-bottom: 40px;
   }
 
-  /* Main content */
   .main {
     flex: 1;
     padding: 40px;
@@ -57,7 +55,6 @@
     margin-bottom: 30px;
   }
 
-  /* Neon cards */
   .card-container { display: flex; flex-wrap: wrap; gap: 20px; }
   .card {
     background-color: #1A1A1A;
@@ -72,7 +69,6 @@
   .card h3 { font-family: 'Audiowide', sans-serif; font-size: 1.5em; margin-bottom: 10px; color: #00FFFF; }
   .card p { font-size: 1em; margin-bottom: 15px; }
 
-  /* Neon buttons */
   .neon-btn {
     padding: 10px 20px;
     font-family: 'Orbitron', sans-serif;
@@ -88,7 +84,6 @@
   }
   .neon-btn:hover { border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
 
-  /* Avatar & online status */
   .avatar-container { position: relative; display: inline-block; margin-bottom: 20px; }
   .avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #00FFFF; }
   .online-dot {
@@ -138,7 +133,20 @@
   // --- Mock login for demo ---
   auth.signInAnonymously().then(user => {
     const uid = user.user.uid;
-    document.getElementById('username').innerText = "Welcome, Gamer";
+
+    // Fetch current user info
+    db.collection("users").doc(uid).get().then(doc => {
+      if(doc.exists){
+        const data = doc.data();
+        document.getElementById("username").innerText = data.username;
+        document.getElementById("userAvatar").src = data.profileImageUrl;
+        if(data.status === "online"){
+          document.querySelector(".online-dot").style.backgroundColor = "#39FF14";
+        } else {
+          document.querySelector(".online-dot").style.backgroundColor = "#FF0000";
+        }
+      }
+    });
 
     // Listen for incoming friend requests
     db.collection("friendRequests")
@@ -148,22 +156,29 @@
         const container = document.getElementById("friendRequests");
         container.innerHTML = "";
         snapshot.docs.forEach(doc => {
-          const data = doc.data();
-          const card = document.createElement("div");
-          card.className = "card";
-          card.innerHTML = `
-            <h3>Friend Request</h3>
-            <p>${data.senderId} wants to duo with you in ${data.gameSlug}</p>
-            <button class="neon-btn" onclick="acceptRequest('${doc.id}','${data.senderId}','${data.gameSlug}')">Accept</button>
-            <button class="neon-btn" onclick="rejectRequest('${doc.id}')">Reject</button>
-          `;
-          container.appendChild(card);
+          const req = doc.data();
+          // Fetch sender user info
+          db.collection("users").doc(req.senderId).get().then(userDoc => {
+            const sender = userDoc.data();
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = `
+              <div class="avatar-container">
+                <img src="${sender.profileImageUrl}" class="avatar">
+              </div>
+              <h3>${sender.username}</h3>
+              <p>wants to duo with you in ${req.gameSlug}</p>
+              <button class="neon-btn" onclick="acceptRequest('${doc.id}','${req.senderId}','${req.gameSlug}')">Accept</button>
+              <button class="neon-btn" onclick="rejectRequest('${doc.id}')">Reject</button>
+            `;
+            container.appendChild(card);
+          });
         });
       });
   });
 
-  // --- Accept / Reject functions ---
-  function acceptRequest(requestId, senderId, gameSlug){
+  // --- Accept / Reject ---
+  function acceptRequest(requestId,senderId,gameSlug){
     db.collection("friendRequests").doc(requestId).update({status:"accepted"}).then(()=>{
       db.collection("friends").add({
         user1Id: auth.currentUser.uid,
