@@ -72,15 +72,79 @@ button:not(.like-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;fo
 
 /* --- Duo Search Grid/Cards --- */
 .results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;}
-.duo-card{background:linear-gradient(145deg,#1A1A2E,#2D2D44);color:var(--duoup-light);border-radius:12px;overflow:hidden;border:1px solid #3A3A52;transition:.3s;box-shadow:0 4px 8px rgba(0,0,0,0.4);margin-bottom:15px;}
+.duo-card{
+    background:linear-gradient(145deg,#1A1A2E,#2D2D44);
+    color:var(--duoup-light);
+    border-radius:12px;
+    overflow:hidden;
+    border:1px solid #3A3A52;
+    transition:.3s;
+    box-shadow:0 4px 8px rgba(0,0,0,0.4);
+    margin-bottom:15px;
+}
 .card-header{display:flex;align-items:center;padding:10px 15px;border-bottom:1px solid #3A3A52;}
-.avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-right:15px;background:var(--duoup-secondary);color:var(--duoup-dark);flex-shrink: 0;}
+.avatar{
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:bold;
+    margin-right:15px;
+    background:var(--duoup-secondary);
+    color:var(--duoup-dark);
+    flex-shrink: 0;
+    overflow: hidden; /* Important for image avatars */
+}
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 .bio{padding:10px 15px;font-size:0.9em;color:var(--duoup-muted);white-space: pre-wrap;}
 .action-button{width:100%;padding:12px;background:linear-gradient(90deg,var(--duoup-primary),var(--duoup-accent));color:var(--duoup-dark);font-weight:bold;border-radius:0 0 12px 12px;}
 .nickname-display{display:flex;align-items:center;font-size:1.1em;}
 .verified-badge{color:#1DA1F2;margin-left:5px;}
 
-@media(max-width:500px){.results-grid{grid-template-columns:1fr;}}
+/* --- Profile Section Specific Styles --- */
+#profile-container {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+#profile-editor {
+    flex: 1 1 350px;
+    max-width: 450px;
+    background:#141426;
+    padding: 25px;
+    border-radius: 12px;
+}
+#profile-preview {
+    flex: 1 1 280px;
+    max-width: 320px;
+}
+#profile-editor textarea {
+    min-height: 100px;
+    max-height: 200px;
+}
+#saveProfileBtn {
+    background: var(--duoup-secondary);
+    color: var(--duoup-dark);
+}
+
+@media(max-width:768px){
+    #profile-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    #profile-editor, #profile-preview {
+        max-width: 100%;
+        width: 100%;
+    }
+    .results-grid{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
@@ -92,6 +156,7 @@ button:not(.like-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;fo
     </div>
     <nav>
         <a href="#" onclick="showSection('home')">Duo Search</a>
+        <a href="#" onclick="showSection('profile')">Profile</a>
         <button id="logoutBtnHeader"><i class="fas fa-sign-out-alt"></i> Logout</button>
     </nav>
 </header>
@@ -114,10 +179,36 @@ button:not(.like-btn):not(#duoSearchForm button){margin-top:10px;padding:12px;fo
 </div>
 
 <div id="app-section">
+    
     <div id="home-section" class="container">
         <h2>Duo Search <span id="userCount"></span></h2>
         <div class="results-grid" id="usersGrid"></div>
     </div>
+
+    <div id="profile-section" class="container" style="display:none;">
+        <h2>Profile Customizer</h2>
+        <div id="profile-container">
+
+            <div id="profile-editor">
+                <h3>Edit Your Duo Card</h3>
+                <label for="profileBio">Bio (What you're looking for!)</label>
+                <textarea id="profileBio" maxlength="200" placeholder="I'm looking for a chill Diamond 2 player for ranked 2v2. Voice chat is a must!"></textarea>
+                
+                <label for="profileImageUrl">Profile Image URL</label>
+                <input id="profileImageUrl" type="url" placeholder="Paste a direct image link (e.g., Imgur)">
+                
+                <button id="saveProfileBtn">Save Profile</button>
+            </div>
+
+            <div id="profile-preview">
+                <h3>Duo Card Preview (Your Teammate Sees This)</h3>
+                <div class="duo-card" id="previewCard">
+                    </div>
+            </div>
+            
+        </div>
+    </div>
+    
 </div>
 
 <script type="module">
@@ -143,6 +234,12 @@ import {
     getDocs, 
     query, 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { 
+    getStorage, 
+    ref, 
+    uploadBytes, 
+    getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-storage.js"; // Keeping storage available for future use, though we only use URLs now.
 
 // --- Firebase Config & Initialization ---
 const firebaseConfig = {
@@ -156,6 +253,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+// const storage = getStorage(app); // Storage is initialized but not actively used for uploads in this version
 
 // --- DOM Elements ---
 const signinForm = document.getElementById("signin");
@@ -166,12 +264,19 @@ const mainHeader = document.getElementById("mainHeader");
 const usersGrid = document.getElementById("usersGrid");
 const userCountElement = document.getElementById("userCount");
 
+// Profile Editor Elements
+const profileBioInput = document.getElementById("profileBio");
+const profileImageUrlInput = document.getElementById("profileImageUrl");
+const saveProfileBtn = document.getElementById("saveProfileBtn");
+const previewCard = document.getElementById("previewCard");
+
 // --- Constants & Local State ---
 const SEVEN_DAYS_IN_MS = 7 * 24 * 60 * 60 * 1000;
 let activityInterval; 
 let currentNickname = ""; 
+let currentUserData = {}; // Store the full user object
 
-// --- Utility Functions (TimeSince removed as it's not used) ---
+// --- Utility Functions ---
 function getVerifiedBadge(nickname) {
     return nickname === 'Tr3vN0x' ? '<i class="fas fa-badge-check verified-badge" title="Verified Player"></i>' : '';
 }
@@ -204,7 +309,7 @@ async function loadUserData(user) {
             email: user.email,
             nickname: defaultNickname, 
             bio: "",
-            profileImageUrl: "",
+            profileImageUrl: "", // Initialize new field
             friends: [],
             lastActive: Date.now(),
             authType: authType 
@@ -212,8 +317,8 @@ async function loadUserData(user) {
         await setDoc(userDocRef, userData);
     }
     
-    // Update the global nickname variable after loading the data
     currentNickname = userData.nickname || ''; 
+    currentUserData = userData; // Store the full data globally
     return userData;
 }
 
@@ -239,7 +344,6 @@ async function handleSignUp(e) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const { user } = userCredential;
 
-        // Set the global nickname state before Firestore write, for immediate use
         currentNickname = nickname; 
 
         await setDoc(doc(db,"users", user.uid), {
@@ -247,7 +351,7 @@ async function handleSignUp(e) {
             email: email,
             nickname: nickname, 
             bio: "",
-            profileImageUrl: "",
+            profileImageUrl: "", // Initialize new field
             friends: [], 
             lastActive: Date.now(),
             authType: 'email' 
@@ -269,6 +373,26 @@ signupForm.addEventListener("submit", handleSignUp);
 document.getElementById("logoutBtnHeader").addEventListener("click", handleLogout);
 
 // --- User Search (Duo Search) ---
+function renderDuoCard(data) {
+    const nickname = data.nickname; 
+    const verifiedBadgeHtml = getVerifiedBadge(nickname);
+    const avatarContent = data.profileImageUrl 
+        ? `<img src="${data.profileImageUrl}" alt="${nickname[0]}">` 
+        : nickname[0];
+
+    return `
+    <div class="card-header">
+        <div class="avatar">${avatarContent}</div>
+        <div class="nickname-display">
+            <strong>${nickname}</strong>
+            ${verifiedBadgeHtml}
+        </div>
+    </div>
+    <div class="bio">${data.bio || 'No bio set yet. Looking for a teammate!'}</div>
+    <button class="action-button" onclick="alert('Duo request sent to ${nickname}!')">Send Duo Request</button>
+    `;
+}
+
 async function loadUsers(){
     const currentUser = auth.currentUser;
     if(!currentUser) return;
@@ -289,31 +413,82 @@ async function loadUsers(){
             return; 
         }
         
-        const nickname = data.nickname; 
-        const verifiedBadgeHtml = getVerifiedBadge(nickname);
-
         count++;
-        usersGrid.innerHTML+=`
-        <div class="duo-card">
-            <div class="card-header">
-                <div class="avatar">${nickname[0]}</div>
-                <div class="nickname-display">
-                    <strong>${nickname}</strong>
-                    ${verifiedBadgeHtml}
-                </div>
-            </div>
-            <div class="bio">${data.bio || 'No bio set.'}</div>
-            <button class="action-button" onclick="alert('Duo request sent to ${nickname}!')">Send Duo Request</button>
-        </div>
-        `;
+        // Render the Duo Card for each user
+        const cardHTML = renderDuoCard(data);
+        usersGrid.innerHTML+=`<div class="duo-card">${cardHTML}</div>`;
     });
     userCountElement.innerText = count+" players online (active 7d)";
 }
 
+// --- Profile Customizer Functions ---
+
+function updatePreview() {
+    const data = {
+        nickname: currentNickname,
+        bio: profileBioInput.value,
+        profileImageUrl: profileImageUrlInput.value
+    };
+    // Ensure the card itself is clean before rendering
+    previewCard.innerHTML = renderDuoCard(data); 
+}
+
+async function loadProfileEditor() {
+    // Populate form fields with current data
+    profileBioInput.value = currentUserData.bio || '';
+    profileImageUrlInput.value = currentUserData.profileImageUrl || '';
+    
+    // Set up event listeners for live preview
+    profileBioInput.addEventListener('input', updatePreview);
+    profileImageUrlInput.addEventListener('input', updatePreview);
+
+    // Initial render of the preview card
+    updatePreview();
+}
+
+async function handleSaveProfile() {
+    const user = auth.currentUser;
+    if (!user) return alert("Please sign in to save your profile.");
+
+    const newBio = profileBioInput.value.trim();
+    const newImageUrl = profileImageUrlInput.value.trim();
+
+    try {
+        await updateDoc(doc(db, "users", user.uid), {
+            bio: newBio,
+            profileImageUrl: newImageUrl,
+            lastActive: Date.now() // Update activity on change
+        });
+
+        // Update the globally stored data and the preview immediately
+        currentUserData.bio = newBio;
+        currentUserData.profileImageUrl = newImageUrl;
+        updatePreview();
+        
+        alert("Profile saved successfully!");
+
+    } catch (err) {
+        console.error("Error saving profile:", err);
+        alert("Failed to save profile. Check your network connection or the image URL.");
+    }
+}
+
+saveProfileBtn.addEventListener("click", handleSaveProfile);
+
+
 // --- Sections ---
 function showSection(section){
-    // Since there's only one section ('home'), we just load users.
+    // List all sections and hide them
+    const sections = ["home", "profile"];
+    sections.forEach(s => document.getElementById(s + "-section").style.display = "none");
+    
+    const targetSection = document.getElementById(section + "-section");
+    if (targetSection) {
+        targetSection.style.display = "block";
+    }
+    
     if(section === "home") loadUsers();
+    if(section === "profile") loadProfileEditor();
 }
 
 // --- Auth State Handler ---
@@ -323,7 +498,7 @@ onAuthStateChanged(auth, async user => {
         appSection.style.display = "block";
         mainHeader.style.display = "flex";
         
-        // Load user data to ensure currentNickname is set
+        // Load user data to set nickname and other global state
         await loadUserData(user); 
         
         await updateLastActiveStatus(user.uid); 
@@ -332,6 +507,7 @@ onAuthStateChanged(auth, async user => {
             activityInterval = setInterval(() => updateLastActiveStatus(user.uid), 60000); // 1 minute ping
         }
 
+        // Default view is the Duo Search
         showSection('home'); 
     } else {
         authSection.style.display = "flex";
@@ -339,7 +515,8 @@ onAuthStateChanged(auth, async user => {
         mainHeader.style.display = "none";
         clearInterval(activityInterval); 
         activityInterval = null;
-        currentNickname = ""; // Clear nickname on logout
+        currentNickname = ""; // Clear state on logout
+        currentUserData = {};
     }
 });
 
