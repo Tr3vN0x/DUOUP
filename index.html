@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP Friends</title>
+<title>DUO UP Friends & Chat</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -14,7 +14,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .container { width:90%; max-width: 1000px; margin:auto; padding:20px; }
 .hidden { display:none; }
 
-/* --- HEADER & ICON STYLES (NEW) --- */
+/* --- HEADER & ICON STYLES --- */
 .header {
     background: #111;
     border-bottom: 3px solid cyan;
@@ -68,8 +68,75 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     flex-direction:column; 
     align-items:center; 
     margin-bottom: 15px;
+    cursor: pointer; /* Friends cards are now clickable */
 }
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
+
+
+/* --- CHAT BOX STYLES (NEW) --- */
+#chatBox {
+    position: fixed;
+    bottom: 0;
+    right: 20px;
+    width: 300px;
+    height: 400px;
+    background: #1a1a1a;
+    border: 2px solid magenta;
+    border-radius: 10px 10px 0 0;
+    box-shadow: 0 0 15px magenta;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+}
+#chatHeader {
+    background: magenta;
+    padding: 10px;
+    color: white;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 8px 8px 0 0;
+}
+#chatMessages {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+#chatInput {
+    display: flex;
+    border-top: 1px solid #333;
+}
+#chatInput input {
+    flex-grow: 1;
+    padding: 10px;
+    border: none;
+    background: #222;
+    color: white;
+    font-family: inherit;
+    outline: none;
+}
+.message {
+    padding: 5px 10px;
+    margin: 5px 0;
+    border-radius: 12px;
+    max-width: 80%;
+}
+.message.me {
+    align-self: flex-end;
+    background: cyan;
+    color: #0b0b0b;
+    text-align: right;
+    box-shadow: 0 0 5px cyan;
+}
+.message.them {
+    align-self: flex-start;
+    background: #333;
+    color: white;
+    text-align: left;
+}
 </style>
 </head>
 <body>
@@ -100,6 +167,20 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
   <div id="friendsTab" class="flex hidden"></div>
 </div>
 
+<div id="chatBox" class="hidden">
+    <div id="chatHeader">
+        <span id="chatFriendNickname"></span>
+        <button class="neon-btn" style="border:none; box-shadow:none; padding: 0 5px; margin: 0; background: transparent; color: white;" onclick="closeChat()">X</button>
+    </div>
+    <div id="chatMessages">
+        </div>
+    <div id="chatInput">
+        <input type="text" id="messageInput" placeholder="Send Message..." onkeypress="if(event.key === 'Enter') sendMessage()">
+        <button class="neon-btn" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+
 <script>
 const firebaseConfig = {
   apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
@@ -119,7 +200,14 @@ const dashboard = document.getElementById("dashboard");
 const suggestedTab = document.getElementById("suggestedTab");
 const requestsTab = document.getElementById("requestsTab");
 const friendsTab = document.getElementById("friendsTab");
+const chatBox = document.getElementById("chatBox");
+const chatMessages = document.getElementById("chatMessages");
+const messageInput = document.getElementById("messageInput");
+
 let currentUser = null;
+let currentChatId = null;
+let currentFriendId = null;
+let unsubscribeChatListener = null; // Used to stop listening to old chats
 
 // ---------------- LOGIN ----------------
 function login(){
@@ -161,7 +249,9 @@ function logout(){ auth.signOut(); }
 
 // ---------------- TABS ----------------
 function showTab(tab){
-  // Reload data every time a tab is shown to keep it fresh
+  // Close chat when switching tabs
+  closeChat(); 
+  
   if (tab === 'suggested') loadSuggested();
   if (tab === 'requests') loadRequests();
   if (tab === 'friends') loadFriends();
@@ -172,7 +262,7 @@ function showTab(tab){
   document.getElementById(tab+"Tab").classList.remove("hidden");
 }
 
-// ---------------- LOAD SUGGESTED USERS ----------------
+// ---------------- LOAD SUGGESTED USERS (unchanged) ----------------
 async function loadSuggested(){
   suggestedTab.innerHTML="<p>Loading suggested users...</p>";
   
@@ -182,7 +272,6 @@ async function loadSuggested(){
       suggestedTab.innerHTML = ""; 
 
       const myFriends = me.friends || [];
-      
       const mySentRequestsSnap = await db.collection("friendRequests").where("senderId", "==", currentUser.uid).get();
       const myReceivedRequestsSnap = await db.collection("friendRequests").where("receiverId", "==", currentUser.uid).get();
 
@@ -216,7 +305,7 @@ async function loadSuggested(){
   }
 }
 
-// ---------------- LOAD REQUESTS ----------------
+// ---------------- LOAD REQUESTS (unchanged) ----------------
 async function loadRequests(){
   requestsTab.innerHTML="<p>Loading requests...</p>";
   
@@ -257,7 +346,7 @@ async function loadRequests(){
   }
 }
 
-// ---------------- LOAD FRIENDS ----------------
+// ---------------- LOAD FRIENDS (UPDATED: Added startChat call) ----------------
 async function loadFriends(){
   friendsTab.innerHTML="<p>Loading friends...</p>";
   
@@ -280,9 +369,11 @@ async function loadFriends(){
         const u = doc.data();
         const card = document.createElement("div");
         card.className = "card";
+        // CRITICAL CHANGE: Added onclick="startChat(doc.id)" to the card
+        card.setAttribute('onclick', `startChat('${doc.id}', '${u.nickname}')`);
         card.innerHTML = `<img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
           <strong>${u.nickname}</strong>
-          <button class="neon-btn remove" onclick="removeFriend('${doc.id}')">Remove</button>`;
+          <button class="neon-btn remove" onclick="event.stopPropagation(); removeFriend('${doc.id}')">Remove</button>`;
         friendsTab.appendChild(card);
       });
   } catch (error) {
@@ -291,7 +382,7 @@ async function loadFriends(){
   }
 }
 
-// ---------------- REQUEST ACTIONS ----------------
+// ---------------- REQUEST ACTIONS (unchanged) ----------------
 async function sendRequest(receiverId){
   try {
       const existingRequestSnap = await db.collection("friendRequests")
@@ -351,7 +442,7 @@ function rejectRequest(requestId){
   });
 }
 
-// ---------------- FRIEND REMOVAL ACTION ----------------
+// ---------------- FRIEND REMOVAL ACTION (unchanged) ----------------
 function removeFriend(friendId){
   if(!confirm("Are you sure you want to remove this friend?")) return;
 
@@ -369,6 +460,105 @@ function removeFriend(friendId){
     alert("Removal failed (Remove Friend): " + err.message);
     console.error("Remove Friend Error:", err);
   });
+}
+
+// ---------------- CHAT FUNCTIONS (NEW) ----------------
+
+/**
+ * Generates a canonical Chat ID from two user IDs.
+ * The ID is always sorted alphabetically (e.g., "ID_A-ID_B") to ensure both users get the same ID.
+ */
+function getChatId(id1, id2) {
+    return id1 < id2 ? `${id1}-${id2}` : `${id2}-${id1}`;
+}
+
+/**
+ * Initializes the chat interface and sets up the real-time listener.
+ */
+function startChat(friendId, friendNickname) {
+    if (unsubscribeChatListener) {
+        unsubscribeChatListener(); // Stop listening to the previous chat
+    }
+
+    currentFriendId = friendId;
+    currentChatId = getChatId(currentUser.uid, friendId);
+
+    document.getElementById("chatFriendNickname").innerText = friendNickname;
+    chatBox.classList.remove("hidden");
+    
+    listenForMessages(currentChatId);
+    messageInput.focus();
+}
+
+/**
+ * Closes the chat box and stops the real-time listener.
+ */
+function closeChat() {
+    if (unsubscribeChatListener) {
+        unsubscribeChatListener();
+        unsubscribeChatListener = null;
+    }
+    chatBox.classList.add("hidden");
+    chatMessages.innerHTML = '';
+    currentChatId = null;
+    currentFriendId = null;
+}
+
+/**
+ * Sets up the real-time Firestore listener for messages in the current chat.
+ */
+function listenForMessages(chatId) {
+    const chatRef = db.collection('chats').doc(chatId).collection('messages');
+    
+    // Set up real-time listener, ordered by timestamp
+    unsubscribeChatListener = chatRef
+        .orderBy('timestamp', 'asc')
+        .onSnapshot(snapshot => {
+            chatMessages.innerHTML = ''; // Clear existing messages
+            snapshot.forEach(doc => {
+                const message = doc.data();
+                const isMe = message.senderId === currentUser.uid;
+                
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${isMe ? 'me' : 'them'}`;
+                
+                let time = '';
+                if (message.timestamp) {
+                    // Check if timestamp is a Firestore Timestamp object
+                    const date = message.timestamp.toDate ? message.timestamp.toDate() : new Date();
+                    time = ` <small>${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>`;
+                }
+
+                msgDiv.innerHTML = `${message.text}${time}`;
+                chatMessages.appendChild(msgDiv);
+            });
+            // Scroll to the bottom of the chat window
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, error => {
+            console.error("Error listening to chat:", error);
+            chatMessages.innerHTML = '<p style="color:red;">Error loading messages.</p>';
+        });
+}
+
+/**
+ * Sends the message currently in the input field.
+ */
+async function sendMessage() {
+    const text = messageInput.value.trim();
+    if (text === '' || !currentChatId) return;
+
+    try {
+        await db.collection('chats').doc(currentChatId).collection('messages').add({
+            senderId: currentUser.uid,
+            receiverId: currentFriendId,
+            text: text,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        messageInput.value = ''; // Clear the input field
+    } catch (error) {
+        alert("Failed to send message: " + error.message);
+        console.error("Send message error:", error);
+    }
 }
 </script>
 </body>
