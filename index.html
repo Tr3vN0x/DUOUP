@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP - Friends</title>
+<title>DUO UP - Friends & Chat</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -21,6 +21,15 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .user { display:flex; gap:10px; align-items:center; }
 .status-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-left:5px; }
 .input { width:100%; padding:8px; margin:5px 0; background:#000; border:2px solid cyan; color:white; border-radius:6px; }
+
+/* Chat Styles */
+#chatWindow { display:flex; flex-direction:column; max-height:400px; overflow-y:auto; padding:10px; border:2px solid cyan; border-radius:12px; background:#111; }
+.message-bubble { padding:10px; border-radius:12px; max-width:70%; margin:5px; word-wrap:break-word; display:flex; gap:10px; align-items:flex-end; }
+.message-outgoing { background:#00ffff; color:black; align-self:flex-end; box-shadow:0 0 5px #00ffff; }
+.message-incoming { background:#555; color:white; align-self:flex-start; box-shadow:0 0 3px #333; }
+.message-header { font-size:0.75em; color:gray; margin-bottom:2px; }
+.message-avatar { width:30px; height:30px; border-radius:50%; object-fit:cover; }
+.message-content { display:flex; flex-direction:column; }
 </style>
 </head>
 <body>
@@ -44,6 +53,15 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
   <div id="friendsTab" class="flex hidden"></div>
 </div>
 
+<!-- CHAT -->
+<div id="chatPage" class="container hidden">
+  <h2 id="chatWith"></h2>
+  <div id="chatWindow"></div>
+  <input id="chatInput" class="input" placeholder="Type a message">
+  <button class="neon-btn" onclick="sendMessage()">Send</button>
+  <button class="neon-btn" onclick="closeChat()">Back</button>
+</div>
+
 <script>
 const firebaseConfig = {
   apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
@@ -64,6 +82,13 @@ const suggestedTab = document.getElementById("suggestedTab");
 const requestsTab = document.getElementById("requestsTab");
 const friendsTab = document.getElementById("friendsTab");
 
+const chatPage = document.getElementById("chatPage");
+const chatWindow = document.getElementById("chatWindow");
+const chatInput = document.getElementById("chatInput");
+
+let currentChatUser = null;
+let currentChatUserData = null;
+
 // ---------------- LOGIN ----------------
 function loginWithGoogle(){
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert(err.message));
@@ -74,27 +99,28 @@ auth.onAuthStateChanged(async user => {
   if(!user){
     loginPage.classList.remove("hidden");
     dashboard.classList.add("hidden");
+    chatPage.classList.add("hidden");
     return;
   }
   loginPage.classList.add("hidden");
   dashboard.classList.remove("hidden");
 
-  // Create profile if not exists
+  // create profile if not exists
   const userSnap = await db.collection("users").doc(user.uid).get();
   if(!userSnap.exists){
     await db.collection("users").doc(user.uid).set({
-      uid: user.uid,
-      nickname: user.displayName || "Player",
-      email: user.email,
-      friends: [],
-      profileImageUrl: user.photoURL || DEFAULT_AVATAR
+      uid:user.uid,
+      nickname:user.displayName||"Player",
+      email:user.email,
+      friends:[],
+      profileImageUrl:user.photoURL||DEFAULT_AVATAR
     });
   }
   welcome.innerText = "Welcome, " + (userSnap.data()?.nickname || user.displayName);
 
   loadSuggested();
   loadRequests();
-  loadFriends();
+  listenFriends();
 });
 
 // ---------------- LOGOUT ----------------
@@ -108,16 +134,16 @@ function showTab(tab){
   document.getElementById(tab+"Tab").classList.remove("hidden");
 }
 
-// ---------------- SUGGESTED USERS ----------------
+// ---------------- SUGGESTED ----------------
 function loadSuggested(){
   suggestedTab.innerHTML="";
   const currentUserId = auth.currentUser.uid;
-  db.collection("users").get().then(snap => {
-    snap.forEach(doc => {
-      if(doc.id === currentUserId) return;
-      db.collection("users").doc(currentUserId).get().then(me => {
+  db.collection("users").get().then(snap=>{
+    snap.forEach(doc=>{
+      if(doc.id===currentUserId) return;
+      db.collection("users").doc(currentUserId).get().then(me=>{
         const friends = me.data().friends || [];
-        if(friends.includes(doc.id)) return; // Skip if already friends
+        if(friends.includes(doc.id)) return;
         const u = doc.data();
         const card = document.createElement("div");
         card.className="card";
@@ -138,10 +164,10 @@ function loadRequests(){
   db.collection("friendRequests")
     .where("receiverId","==",auth.currentUser.uid)
     .where("status","==","pending")
-    .onSnapshot(snap => {
+    .onSnapshot(snap=>{
       if(snap.empty){ requestsTab.innerHTML="<p>No requests</p>"; }
-      snap.forEach(r => {
-        db.collection("users").doc(r.data().senderId).get().then(u => {
+      snap.forEach(r=>{
+        db.collection("users").doc(r.data().senderId).get().then(u=>{
           const d = u.data();
           const card = document.createElement("div");
           card.className="card";
@@ -157,49 +183,111 @@ function loadRequests(){
     });
 }
 
-function sendRequest(id){
-  db.collection("friendRequests").add({
-    senderId: auth.currentUser.uid,
-    receiverId: id,
-    status: "pending",
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(()=>alert("Request sent!"));
-}
-
-function acceptRequest(rid, sender){
-  db.collection("friendRequests").doc(rid).update({status:"accepted"});
-  db.collection("users").doc(auth.currentUser.uid)
-    .update({friends:firebase.firestore.FieldValue.arrayUnion(sender)});
-  db.collection("users").doc(sender)
-    .update({friends:firebase.firestore.FieldValue.arrayUnion(auth.currentUser.uid)});
-  loadFriends();
-}
-
-function rejectRequest(id){
-  db.collection("friendRequests").doc(id).update({status:"rejected"});
-}
-
 // ---------------- FRIENDS ----------------
-function loadFriends(){
+function listenFriends(){
   const userRef = db.collection("users").doc(auth.currentUser.uid);
-  userRef.onSnapshot(doc => {
-    friendsTab.innerHTML = "";
-    const friends = doc.data().friends || [];
-    if(friends.length === 0){ friendsTab.innerHTML="<p>No friends yet</p>"; return; }
-    friends.forEach(fid => {
-      db.collection("users").doc(fid).get().then(u => {
+  userRef.onSnapshot(doc=>{
+    friendsTab.innerHTML="";
+    const friends = doc.data().friends||[];
+    if(friends.length===0){ friendsTab.innerHTML="<p>No friends yet</p>"; return; }
+    friends.forEach(fid=>{
+      db.collection("users").doc(fid).get().then(u=>{
         const d = u.data();
-        const avatar = d.profileImageUrl||DEFAULT_AVATAR;
         const card = document.createElement("div");
         card.className="card";
         card.innerHTML=`<div class="user">
-          <img class="avatar" src="${avatar}">
+          <img class="avatar" src="${d.profileImageUrl||DEFAULT_AVATAR}">
           <strong>${d.nickname}</strong>
-        </div>`;
+        </div>
+        <button class="neon-btn" onclick="openChat('${fid}')">Chat</button>`;
         friendsTab.appendChild(card);
       });
     });
   });
+}
+
+// ---------------- FRIEND REQUEST ACTIONS ----------------
+function sendRequest(receiverId){
+  db.collection("friendRequests").add({
+    senderId:auth.currentUser.uid,
+    receiverId:receiverId,
+    status:"pending",
+    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>alert("Friend request sent!"));
+}
+
+function acceptRequest(requestId, senderId){
+  db.collection("friendRequests").doc(requestId).update({status:"accepted"});
+  const batch = db.batch();
+  const meRef = db.collection("users").doc(auth.currentUser.uid);
+  const senderRef = db.collection("users").doc(senderId);
+  batch.update(meRef, {friends:firebase.firestore.FieldValue.arrayUnion(senderId)});
+  batch.update(senderRef, {friends:firebase.firestore.FieldValue.arrayUnion(auth.currentUser.uid)});
+  batch.commit();
+}
+
+function rejectRequest(requestId){
+  db.collection("friendRequests").doc(requestId).update({status:"rejected"});
+}
+
+// ---------------- CHAT ----------------
+function openChat(friendId){
+  currentChatUser = friendId;
+  dashboard.classList.add("hidden");
+  chatPage.classList.remove("hidden");
+  db.collection("users").doc(friendId).get().then(doc=>{
+    currentChatUserData = doc.data();
+    chatWith.innerText = "Chat with "+currentChatUserData.nickname;
+    loadMessages();
+  });
+}
+
+function loadMessages(){
+  if(!currentChatUser) return;
+  chatWindow.innerHTML="";
+  const currentUid = auth.currentUser.uid;
+  db.collection("messages")
+    .where("participants","array-contains",currentUid)
+    .orderBy("timestamp")
+    .onSnapshot(snapshot=>{
+      chatWindow.innerHTML="";
+      snapshot.forEach(doc=>{
+        const m = doc.data();
+        if(!m.participants.includes(currentChatUser)) return;
+        const isOutgoing = m.senderId===currentUid;
+        const bubble = document.createElement("div");
+        bubble.className="message-bubble "+(isOutgoing?"message-outgoing":"message-incoming");
+        const avatarUrl = isOutgoing?auth.currentUser.photoURL||DEFAULT_AVATAR:currentChatUserData.profileImageUrl||DEFAULT_AVATAR;
+        bubble.innerHTML=`<img class="message-avatar" src="${avatarUrl}">
+          <div class="message-content">
+            <div class="message-header">${isOutgoing?"You":currentChatUserData.nickname} - ${m.timestamp?.toDate().toLocaleTimeString()||""}</div>
+            <div>${m.content}</div>
+          </div>`;
+        chatWindow.appendChild(bubble);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      });
+    });
+}
+
+function sendMessage(){
+  const text = chatInput.value.trim();
+  if(!text || !currentChatUser) return;
+  const currentUid = auth.currentUser.uid;
+  db.collection("messages").add({
+    senderId:currentUid,
+    receiverId:currentChatUser,
+    participants:[currentUid,currentChatUser],
+    content:text,
+    timestamp:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  chatInput.value="";
+}
+
+function closeChat(){
+  currentChatUser=null;
+  currentChatUserData=null;
+  chatPage.classList.add("hidden");
+  dashboard.classList.remove("hidden");
 }
 </script>
 </body>
