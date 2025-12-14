@@ -3,33 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP - Chat</title>
+<title>DUO UP Chat</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <style>
-body{margin:0;font-family:'Orbitron',sans-serif;background:#0b0b0b;color:white;}
-.hidden{display:none;}
-.container{width:90%;margin:auto;padding:20px;}
-.neon-btn{border:2px solid cyan;background:transparent;color:white;padding:8px 14px;margin:5px;border-radius:6px;cursor:pointer;box-shadow:0 0 10px cyan;}
-.neon-btn:hover{border-color:magenta;box-shadow:0 0 15px magenta;}
-.flex{display:flex;gap:15px;flex-wrap:wrap;}
-.card{width:260px;padding:15px;border:2px solid cyan;border-radius:14px;background:#111;box-shadow:0 0 10px cyan;}
-.avatar{width:40px;height:40px;border-radius:50%;border:2px solid cyan;object-fit:cover;}
-.user{display:flex;gap:10px;align-items:center;}
-.input{width:100%;padding:8px;margin:5px 0;background:#000;border:2px solid cyan;color:white;border-radius:6px;}
-.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:5px;}
+body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
+.container { width:90%; margin:auto; padding:20px; }
+.hidden { display:none; }
+.neon-btn { border:2px solid cyan; background:transparent; color:white; padding:8px 14px; margin:5px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px cyan; }
+.neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
+.flex { display:flex; gap:15px; flex-wrap:wrap; }
+.card { width:260px; padding:15px; border:2px solid cyan; border-radius:14px; background:#111; box-shadow:0 0 10px cyan; }
+.avatar { width:40px; height:40px; border-radius:50%; border:2px solid cyan; object-fit:cover; }
+.input { width:100%; padding:8px; margin:5px 0; background:#000; border:2px solid cyan; color:white; border-radius:6px; }
 
 /* Chat Styles */
-#chatWindow{display:flex;flex-direction:column;max-height:500px;overflow-y:auto;padding:10px;border:2px solid cyan;border-radius:12px;background:#111;}
-.message-bubble{padding:10px 14px;border-radius:16px;max-width:70%;margin:5px;display:flex;gap:10px;align-items:flex-start;word-wrap:break-word;}
-.message-outgoing{background:#00ffff;color:black;align-self:flex-end;box-shadow:0 0 5px #00ffff;}
-.message-incoming{background:#555;color:white;align-self:flex-start;box-shadow:0 0 3px #333;}
-.message-header{font-size:0.75em;color:gray;margin-bottom:2px;}
-.message-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;}
-.message-content{display:flex;flex-direction:column;}
+#chatWindow { display:flex; flex-direction:column; max-height:400px; overflow-y:auto; padding:10px; border:2px solid cyan; border-radius:12px; background:#111; }
+.message-bubble { padding:10px 14px; border-radius:16px; max-width:70%; margin:5px; display:flex; gap:10px; align-items:flex-end; word-wrap:break-word; }
+.message-outgoing { background:#00ffff; color:black; align-self:flex-end; box-shadow:0 0 5px #00ffff; }
+.message-incoming { background:#555; color:white; align-self:flex-start; box-shadow:0 0 3px #333; }
+.message-header { font-size:0.75em; color:gray; margin-bottom:2px; }
+.message-avatar { width:30px; height:30px; border-radius:50%; object-fit:cover; }
+.message-content { display:flex; flex-direction:column; }
 </style>
 </head>
 <body>
@@ -57,7 +55,7 @@ body{margin:0;font-family:'Orbitron',sans-serif;background:#0b0b0b;color:white;}
 </div>
 
 <script>
-const firebaseConfig={
+const firebaseConfig = {
   apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
   authDomain:"duoup-cfae6.firebaseapp.com",
   projectId:"duoup-cfae6",
@@ -66,23 +64,25 @@ const firebaseConfig={
   appId:"1:812263060524:web:ac09c3ae610db1cd110d89"
 };
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-const db=firebase.firestore();
-const storage=firebase.storage();
-const DEFAULT_AVATAR="https://cdn-icons-png.flaticon.com/512/149/149071.png";
+const auth = firebase.auth();
+const db = firebase.firestore();
+const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-const userList=document.getElementById("userList");
-const chatWindow=document.getElementById("chatWindow");
-const chatInput=document.getElementById("chatInput");
+const loginPage = document.getElementById("loginPage");
+const dashboard = document.getElementById("dashboard");
+const chatPage = document.getElementById("chatPage");
+const userList = document.getElementById("userList");
+const chatWindow = document.getElementById("chatWindow");
 let currentChatUser = null;
+let currentChatUserData = null;
 
 // ---------------- LOGIN ----------------
 function loginWithGoogle(){
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err=>alert(err.message));
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert(err.message));
 }
 
 // ---------------- AUTH STATE ----------------
-auth.onAuthStateChanged(async user=>{
+auth.onAuthStateChanged(async user => {
   if(!user){
     loginPage.classList.remove("hidden");
     dashboard.classList.add("hidden");
@@ -92,7 +92,16 @@ auth.onAuthStateChanged(async user=>{
   loginPage.classList.add("hidden");
   dashboard.classList.remove("hidden");
   loadUsers();
-  welcome.innerText="Welcome, "+(user.displayName||"Gamer");
+  const userSnap = await db.collection("users").doc(user.uid).get();
+  if(!userSnap.exists){
+    await db.collection("users").doc(user.uid).set({
+      uid: user.uid,
+      nickname: user.displayName || "Player",
+      email: user.email,
+      profileImageUrl: user.photoURL || DEFAULT_AVATAR
+    });
+  }
+  welcome.innerText = "Welcome, " + (userSnap.data()?.nickname || user.displayName);
 });
 
 // ---------------- LOGOUT ----------------
@@ -102,49 +111,60 @@ function logout(){ auth.signOut(); }
 function loadUsers(){
   const currentUserId = auth.currentUser.uid;
   userList.innerHTML="";
-  db.collection("users").get().then(snap=>{
-    snap.forEach(doc=>{
-      if(doc.id===currentUserId) return;
-      const u=doc.data();
-      const card=document.createElement("div");
-      card.className="card";
-      card.innerHTML=`<div class="user">
-        <img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
-        <strong>${u.nickname}</strong></div>
-        <button class="neon-btn" onclick="openChat('${doc.id}','${u.nickname}','${u.profileImageUrl||DEFAULT_AVATAR}')">Message</button>`;
+  db.collection("users").get().then(snap => {
+    snap.forEach(doc => {
+      if(doc.id === currentUserId) return;
+      const u = doc.data();
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `<div class="user">
+        <img class="avatar" src="${u.profileImageUrl || DEFAULT_AVATAR}">
+        <strong>${u.nickname}</strong>
+      </div>
+      <button class="neon-btn" onclick="openChat('${doc.id}')">Message</button>`;
       userList.appendChild(card);
     });
   });
 }
 
 // ---------------- CHAT ----------------
-function openChat(friendId, friendName, friendAvatar){
+function openChat(friendId){
   currentChatUser = friendId;
   dashboard.classList.add("hidden");
   chatPage.classList.remove("hidden");
-  chatWith.innerText = "Chat with " + friendName;
-  loadMessages(friendAvatar);
+  db.collection("users").doc(friendId).get().then(doc => {
+    currentChatUserData = doc.data();
+    chatWith.innerText = "Chat with " + currentChatUserData.nickname;
+  });
+  loadMessages();
 }
 
-function loadMessages(friendAvatar){
+function loadMessages(){
   if(!currentChatUser) return;
-  chatWindow.innerHTML="";
+  chatWindow.innerHTML = "";
+  const currentUid = auth.currentUser.uid;
+
   db.collection("messages")
-    .where("participants","array-contains",auth.currentUser.uid)
+    .where("participants", "array-contains", currentUid)
     .orderBy("timestamp")
-    .onSnapshot(snap=>{
-      chatWindow.innerHTML="";
-      snap.forEach(doc=>{
-        const m=doc.data();
+    .onSnapshot(snapshot => {
+      chatWindow.innerHTML = "";
+      snapshot.forEach(doc => {
+        const m = doc.data();
+        // Only show messages with this chat friend
         if(!m.participants.includes(currentChatUser)) return;
-        const bubble=document.createElement("div");
-        bubble.className="message-bubble "+(m.senderId===auth.currentUser.uid?"message-outgoing":"message-incoming");
-        const avatarUrl=(m.senderId===auth.currentUser.uid)?auth.currentUser.photoURL||DEFAULT_AVATAR:friendAvatar;
-        bubble.innerHTML=`<img class="message-avatar" src="${avatarUrl}">
+
+        const isOutgoing = m.senderId === currentUid;
+        const bubble = document.createElement("div");
+        bubble.className = "message-bubble " + (isOutgoing ? "message-outgoing" : "message-incoming");
+        const avatarUrl = isOutgoing ? auth.currentUser.photoURL || DEFAULT_AVATAR : currentChatUserData.profileImageUrl || DEFAULT_AVATAR;
+        bubble.innerHTML = `
+          <img class="message-avatar" src="${avatarUrl}">
           <div class="message-content">
-            <div class="message-header">${m.senderId===auth.currentUser.uid?"You":"Friend"} - ${m.timestamp?.toDate().toLocaleTimeString()||""}</div>
+            <div class="message-header">${isOutgoing ? "You" : currentChatUserData.nickname} - ${m.timestamp?.toDate().toLocaleTimeString() || ""}</div>
             <div>${m.content}</div>
-          </div>`;
+          </div>
+        `;
         chatWindow.appendChild(bubble);
         chatWindow.scrollTop = chatWindow.scrollHeight;
       });
@@ -154,21 +174,21 @@ function loadMessages(friendAvatar){
 function sendMessage(){
   const text = chatInput.value.trim();
   if(!text || !currentChatUser) return;
-  db.collection("users").doc(auth.currentUser.uid).get().then(u=>{
-    db.collection("messages").add({
-      senderId: auth.currentUser.uid,
-      senderAvatar: u.data().profileImageUrl||DEFAULT_AVATAR,
-      receiverId: currentChatUser,
-      participants:[auth.currentUser.uid,currentChatUser],
-      content: text,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    chatInput.value="";
+  const currentUid = auth.currentUser.uid;
+
+  db.collection("messages").add({
+    senderId: currentUid,
+    receiverId: currentChatUser,
+    participants: [currentUid, currentChatUser],
+    content: text,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
   });
+  chatInput.value = "";
 }
 
 function closeChat(){
-  currentChatUser=null;
+  currentChatUser = null;
+  currentChatUserData = null;
   chatPage.classList.add("hidden");
   dashboard.classList.remove("hidden");
 }
