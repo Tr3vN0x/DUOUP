@@ -3,91 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO Up - Dashboard</title>
+<title>DUO Up</title>
 <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
-  body { margin:0; font-family:'Orbitron',sans-serif; background:linear-gradient(270deg,#0D0D0D,#1A1A1A,#0D0D0D); background-size:600% 600%; animation:gradientAnimation 15s ease infinite; color:white; display:flex; height:100vh; overflow:hidden; }
+  body { margin:0; font-family:'Orbitron',sans-serif; background:linear-gradient(270deg,#0D0D0D,#1A1A1A,#0D0D0D); background-size:600% 600%; animation:gradientAnimation 15s ease infinite; color:white; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; }
   @keyframes gradientAnimation { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-
-  .sidebar{ width:80px; background-color:#0D0D0D; border-right:2px solid #00FFFF; display:flex; flex-direction:column; align-items:center; padding:20px 0;}
-  .sidebar h1{ writing-mode: vertical-rl; transform: rotate(180deg); font-family:'Orbitron',sans-serif; color:#00FFFF; text-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; margin-bottom:40px; }
-
-  .main{ flex:1; padding:20px; display:flex; flex-direction:column; overflow-y:auto; gap:20px; }
-
-  .user-info{ display:flex; align-items:center; gap:15px; margin-bottom:20px; }
-  .user-info img{ width:60px; height:60px; border-radius:50%; border:2px solid #00FFFF; }
-  .online-dot{ position:relative; width:12px; height:12px; border-radius:50%; border:2px solid #0D0D0D; box-shadow:0 0 5px #39FF14,0 0 10px #39FF14; }
-  .username{ font-size:1.8em; color:#00FFFF; text-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; }
-
-  h2{ font-family:'Audiowide',sans-serif; color:#FF00FF; text-shadow:0 0 5px #FF00FF,0 0 10px #FF00FF,0 0 20px #FF00FF; }
-
-  .card-container{ display:flex; flex-wrap:wrap; gap:15px; }
-  .card{ background:#1A1A1A; border:2px solid #00FFFF; border-radius:16px; padding:15px; width:280px; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; transition:0.3s; }
-  .card:hover{ border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
-  .card h3{ font-family:'Audiowide',sans-serif; font-size:1.2em; margin-bottom:10px; color:#00FFFF; }
-  .card p{ font-size:1em; margin-bottom:10px; }
-
-  .neon-btn{ padding:7px 15px; font-family:'Orbitron',sans-serif; font-weight:bold; color:white; background:transparent; border:2px solid #00FFFF; border-radius:6px; cursor:pointer; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; transition:0.3s; margin-right:5px; }
+  .hidden{ display:none; }
+  .neon-btn{ padding:10px 20px; font-family:'Orbitron',sans-serif; font-weight:bold; color:white; background:transparent; border:2px solid #00FFFF; border-radius:6px; cursor:pointer; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; transition:0.3s; margin:5px; }
   .neon-btn:hover{ border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
-
-  .chat-panel{ background:#0D0D0D; border:2px solid #FF00FF; border-radius:16px; padding:15px; width:400px; max-height:400px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
-  .message{ display:flex; align-items:flex-end; gap:10px; }
-  .message.outgoing{ flex-direction:row-reverse; }
-  .message-bubble{ padding:10px 15px; border-radius:12px; max-width:70%; font-family:'Orbitron',sans-serif; word-wrap: break-word; position: relative; }
-  .neon-incoming{ background:#1A1A1A; border:2px solid #00FFFF; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; }
-  .neon-outgoing{ background:#1A1A1A; border:2px solid #FF00FF; box-shadow:0 0 5px #FF00FF,0 0 10px #FF00FF,0 0 20px #FF00FF; }
-  .avatar-small{ width:30px; height:30px; border-radius:50%; border:2px solid #00FFFF; }
-  .avatar-small-container{ position: relative; }
-  .premium-badge{ position: absolute; top:-5px; right:-5px; background:#FFD700; color:#0D0D0D; border-radius:50%; font-size:0.8em; font-weight:bold; width:16px; height:16px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 5px #FFD700,0 0 10px #FFD700; }
-  .timestamp{ font-size:0.7em; color:#AAA; margin-top:4px; text-align:right; }
-
-  .chat-input{ display:flex; gap:10px; }
-  .chat-input input{ flex:1; padding:8px; border-radius:8px; border:2px solid #00FFFF; background:transparent; color:white; }
-
-  .search-username{ display:flex; gap:10px; margin-bottom:20px; }
-  .search-username input{ flex:1; padding:8px; border-radius:8px; border:2px solid #00FFFF; background:transparent; color:white; }
+  input{ padding:10px; border-radius:6px; border:2px solid #00FFFF; background:transparent; color:white; width:250px; margin:10px 0; }
 </style>
 </head>
 <body>
 
-<div class="sidebar"><h1>DUO UP</h1></div>
+<!-- Login Page -->
+<div id="loginPage">
+  <h1>DUO Up</h1>
+  <button class="neon-btn" onclick="loginWithGoogle()">Login with Google</button>
+</div>
 
-<div class="main">
-  <!-- User Info -->
-  <div class="user-info">
-    <img id="userAvatar" src="https://i.pravatar.cc/60">
-    <span class="online-dot" id="onlineDot"></span>
-    <div class="username" id="username">Welcome, Gamer</div>
+<!-- Pick Username Page -->
+<div id="pickUsernamePage" class="hidden">
+  <h2>Pick Your Username</h2>
+  <input type="text" id="usernameInput" placeholder="Enter username">
+  <button class="neon-btn" onclick="saveUsername()">Submit</button>
+  <button class="neon-btn" onclick="logout()">Logout</button>
+</div>
+
+<!-- Dashboard Page -->
+<div id="dashboardPage" class="hidden">
+  <div style="display:flex; align-items:center; gap:15px;">
+    <span id="welcomeUsername">Welcome, Gamer</span>
+    <button class="neon-btn" onclick="logout()">Logout</button>
   </div>
-
-  <!-- Username Search -->
-  <div class="search-username">
-    <input type="text" id="usernameSearchInput" placeholder="Search username...">
-    <button class="neon-btn" onclick="searchUserByUsername(document.getElementById('usernameSearchInput').value)">Search</button>
-  </div>
-
-  <!-- Friend Requests -->
-  <h2>Friend Requests</h2>
-  <div class="card-container" id="friendRequests"></div>
-
-  <!-- Suggested Duos -->
-  <h2>Suggested Duos</h2>
-  <div class="card-container" id="suggestedDuos"></div>
-
-  <!-- Active Friends -->
-  <h2>Active Duos</h2>
-  <div class="card-container" id="activeDuos"></div>
-
-  <!-- Chat Panel -->
-  <h2>Chat</h2>
-  <div class="chat-panel" id="chatPanel"></div>
-  <div class="chat-input">
-    <input type="text" id="messageInput" placeholder="Type a message...">
-    <button class="neon-btn" onclick="sendMessage()">Send</button>
-  </div>
+  <h2>Dashboard Content Goes Here</h2>
 </div>
 
 <script>
@@ -104,167 +56,70 @@
   const auth=firebase.auth();
   const db=firebase.firestore();
 
-  auth.signInAnonymously().then(user=>{
-    const uid=user.user.uid;
-    const userRef=db.collection("users").doc(uid);
+  const loginPage=document.getElementById("loginPage");
+  const pickUsernamePage=document.getElementById("pickUsernamePage");
+  const dashboardPage=document.getElementById("dashboardPage");
 
-    // Check for username
+  function loginWithGoogle(){
+    const provider=new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(result=>{
+      checkUsername(result.user);
+    });
+  }
+
+  function checkUsername(user){
+    const userRef=db.collection("users").doc(user.uid);
     userRef.get().then(doc=>{
       if(doc.exists && doc.data().username){
-        const data=doc.data();
-        document.getElementById("username").innerText="Welcome, "+data.username;
-        document.getElementById("userAvatar").src=data.profileImageUrl;
-        document.getElementById("onlineDot").style.backgroundColor=data.status==='online'?'#39FF14':'#FF0000';
+        // User has username → dashboard
+        loginPage.classList.add("hidden");
+        pickUsernamePage.classList.add("hidden");
+        dashboardPage.classList.remove("hidden");
+        document.getElementById("welcomeUsername").innerText="Welcome, "+doc.data().username;
       } else {
-        let username=prompt("Enter your username:");
-        if(username){
-          userRef.set({
-            username:username,
-            status:"online",
-            profileImageUrl:"https://i.pravatar.cc/60",
-            isPremium:false,
-            createdAt:firebase.firestore.FieldValue.serverTimestamp()
-          },{merge:true}).then(()=>{document.getElementById("username").innerText="Welcome, "+username;});
-        }
+        // No username → pick username page
+        loginPage.classList.add("hidden");
+        pickUsernamePage.classList.remove("hidden");
       }
     });
+  }
 
-    // Friend Requests
-    db.collection("friendRequests").where("receiverId","==",uid).where("status","==","pending").onSnapshot(snapshot=>{
-      const container=document.getElementById("friendRequests");
-      container.innerHTML="";
-      snapshot.docs.forEach(doc=>{
-        const req=doc.data();
-        db.collection("users").doc(req.senderId).get().then(senderDoc=>{
-          const sender=senderDoc.data();
-          const card=document.createElement("div");
-          card.className="card";
-          card.innerHTML=`
-            <div class="avatar-small-container">
-              <img src="${sender.profileImageUrl}" class="avatar-small">
-              ${sender.isPremium?'<span class="premium-badge">★</span>':''}
-            </div>
-            <h3>${sender.username}</h3>
-            <p>wants to duo in ${req.gameSlug}</p>
-            <button class="neon-btn" onclick="acceptRequest('${doc.id}','${req.senderId}','${req.gameSlug}')">Accept</button>
-            <button class="neon-btn" onclick="rejectRequest('${doc.id}')">Reject</button>
-          `;
-          container.appendChild(card);
-        });
-      });
+  function saveUsername(){
+    const username=document.getElementById("usernameInput").value;
+    if(!username) return alert("Enter a username");
+    const user=auth.currentUser;
+    db.collection("users").doc(user.uid).set({
+      username:username,
+      email:user.email,
+      profileImageUrl:user.photoURL,
+      isPremium:false,
+      status:"online",
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true}).then(()=>{
+      pickUsernamePage.classList.add("hidden");
+      dashboardPage.classList.remove("hidden");
+      document.getElementById("welcomeUsername").innerText="Welcome, "+username;
     });
+  }
 
-    // Suggested Duos
-    db.collection("users").where("status","==","online").limit(5).get().then(snapshot=>{
-      const container=document.getElementById("suggestedDuos");
-      snapshot.docs.forEach(doc=>{
-        if(doc.id!==uid){
-          const u=doc.data();
-          const card=document.createElement("div");
-          card.className="card";
-          card.innerHTML=`
-            <div class="avatar-small-container">
-              <img src="${u.profileImageUrl}" class="avatar-small">
-              ${u.isPremium?'<span class="premium-badge">★</span>':''}
-            </div>
-            <h3>${u.username}</h3>
-            <p>Suggested Duo</p>
-            <button class="neon-btn" onclick="sendFriendRequest('${doc.id}')">Send Request</button>
-          `;
-          container.appendChild(card);
-        }
-      });
+  function logout(){
+    auth.signOut().then(()=>{
+      loginPage.classList.remove("hidden");
+      pickUsernamePage.classList.add("hidden");
+      dashboardPage.classList.add("hidden");
     });
+  }
 
-    // Active Duos
-    db.collection("users").where("status","==","online").limit(5).get().then(snapshot=>{
-      const container=document.getElementById("activeDuos");
-      snapshot.docs.forEach(doc=>{
-        if(doc.id!==uid){
-          const u=doc.data();
-          const card=document.createElement("div");
-          card.className="card";
-          card.innerHTML=`
-            <div class="avatar-small-container">
-              <img src="${u.profileImageUrl}" class="avatar-small">
-              ${u.isPremium?'<span class="premium-badge">★</span>':''}
-            </div>
-            <h3>${u.username}</h3>
-            <p>Online Now</p>
-            <button class="neon-btn" onclick="openChat('${doc.id}')">Chat Now</button>
-          `;
-          container.appendChild(card);
-        }
-      });
-    });
-
-    window.currentChatId=null;
-    window.currentChatUid=null;
+  // Auto check if user already logged in
+  auth.onAuthStateChanged(user=>{
+    if(user){
+      checkUsername(user);
+    } else {
+      loginPage.classList.remove("hidden");
+      pickUsernamePage.classList.add("hidden");
+      dashboardPage.classList.add("hidden");
+    }
   });
-
-  function acceptRequest(requestId,senderId,gameSlug){
-    db.collection("friendRequests").doc(requestId).update({status:"accepted"}).then(()=>{
-      db.collection("friends").add({user1Id:auth.currentUser.uid,user2Id:senderId,sharedGames:[gameSlug],timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-    });
-  }
-  function rejectRequest(requestId){ db.collection("friendRequests").doc(requestId).update({status:"rejected"}); }
-  function sendFriendRequest(receiverId){
-    db.collection("friendRequests").add({senderId:auth.currentUser.uid,receiverId:receiverId,gameSlug:"valorant",status:"pending",timestamp:firebase.firestore.FieldValue.serverTimestamp()});
-  }
-
-  function openChat(otherUid){
-    window.currentChatUid=otherUid;
-    const chatPanel=document.getElementById("chatPanel");
-    chatPanel.innerHTML="";
-    const chatId=[auth.currentUser.uid,otherUid].sort().join("_");
-
-    let usersMap={};
-    db.collection("users").where(firebase.firestore.FieldPath.documentId(),"in",[auth.currentUser.uid,otherUid]).get()
-    .then(snapshot=>{
-      snapshot.docs.forEach(doc=>{ usersMap[doc.id]=doc.data(); });
-
-      db.collection("messages").where("conversationId","==",chatId).orderBy("timestamp")
-      .onSnapshot(snapshot=>{
-        chatPanel.innerHTML="";
-        snapshot.docs.forEach(doc=>{
-          const msg=doc.data();
-          const sender=usersMap[msg.senderId];
-          const time=msg.timestamp?new Date(msg.timestamp.seconds*1000).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'';
-          const bubble=document.createElement("div");
-          bubble.className="message";
-          if(msg.senderId===auth.currentUser.uid) bubble.classList.add("outgoing");
-          bubble.innerHTML=`
-            <div class="avatar-small-container">
-              <img src="${sender.profileImageUrl}" class="avatar-small">
-              ${sender.isPremium?'<span class="premium-badge">★</span>':''}
-            </div>
-            <div class="message-bubble ${msg.senderId===auth.currentUser.uid?'neon-outgoing':'neon-incoming'}">
-              ${msg.content}<div class="timestamp">${time}</div>
-            </div>
-          `;
-          chatPanel.appendChild(bubble);
-        });
-        chatPanel.scrollTop=chatPanel.scrollHeight;
-      });
-    });
-    window.currentChatId=chatId;
-  }
-
-  function sendMessage(){
-    if(!window.currentChatId) return alert("Open a chat first!");
-    const input=document.getElementById("messageInput");
-    const content=input.value;
-    if(!content) return;
-    db.collection("messages").add({conversationId:window.currentChatId,content:content,senderId:auth.currentUser.uid,timestamp:firebase.firestore.FieldValue.serverTimestamp(),isRead:"false",type:"text"});
-    input.value="";
-  }
-
-  function searchUserByUsername(username){
-    db.collection("users").where("username","==",username).get().then(snapshot=>{
-      if(snapshot.empty){ alert("User not found"); return; }
-      snapshot.docs.forEach(doc=>{ openChat(doc.id); });
-    });
-  }
 </script>
 
 </body>
