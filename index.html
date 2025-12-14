@@ -47,6 +47,7 @@ input,textarea,button{padding:10px;margin:5px;border-radius:5px;border:none;}
 
     <section id="profile" class="hidden">
         <h2>Your Profile</h2>
+        <input id="profileImageUrl" placeholder="Profile Image URL">
         <textarea id="bio" placeholder="Your bio here"></textarea>
         <button onclick="saveProfile()">Save</button>
         <p id="profileMsg"></p>
@@ -57,7 +58,7 @@ input,textarea,button{padding:10px;margin:5px;border-radius:5px;border:none;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
@@ -70,48 +71,63 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser;
-const authUI=document.getElementById("auth");
-const appUI=document.getElementById("app");
-const header=document.getElementById("header");
-const msg=document.getElementById("msg");
-const profileMsg=document.getElementById("profileMsg");
-const email=document.getElementById("email");
-const password=document.getElementById("password");
 
-document.getElementById("signin").onclick=async()=>{
-  try{await signInWithEmailAndPassword(auth,email.value,password.value); msg.textContent="";}
-  catch(e){msg.textContent=e.message;}
+const authUI = document.getElementById("auth");
+const appUI = document.getElementById("app");
+const header = document.getElementById("header");
+const msg = document.getElementById("msg");
+const profileMsg = document.getElementById("profileMsg");
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+
+document.getElementById("signin").onclick = async () => {
+  try {
+    await signInWithEmailAndPassword(auth, email.value, password.value);
+    msg.textContent = "";
+  } catch(e) { msg.textContent = e.message; }
 };
 
-document.getElementById("signup").onclick=async()=>{
-  try{
-    const cred = await createUserWithEmailAndPassword(auth,email.value,password.value);
-    await setDoc(doc(db,"users",cred.user.uid),{
-      uid:cred.user.uid,
-      nickname:email.value.split("@")[0],
-      bio:""
+document.getElementById("signup").onclick = async () => {
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email.value, password.value);
+
+    const userDocRef = doc(db, "users", cred.user.uid);
+    await setDoc(userDocRef, {
+      uid: cred.user.uid,
+      username: email.value.split("@")[0],
+      bio: "",
+      profileImageUrl: "",
+      friends: "",
+      fcmToken: "",
+      createdAt: serverTimestamp()
     });
-    msg.textContent="User created!";
-  }catch(e){msg.textContent=e.message;}
+
+    msg.textContent = "User created!";
+  } catch(e) { msg.textContent = e.message; }
 };
 
-window.logout = ()=>signOut(auth);
+window.logout = () => signOut(auth);
 
-window.showTab = tab=>{
+window.showTab = (tab) => {
   ["home","profile"].forEach(t=>document.getElementById(t).classList.add("hidden"));
   document.getElementById(tab).classList.remove("hidden");
-  if(tab==="home") loadUsers();
+  if(tab === "home") loadUsers();
 };
 
-onAuthStateChanged(auth, async u=>{
-  if(u){
-    currentUser=u;
+onAuthStateChanged(auth, async user => {
+  if(user){
+    currentUser = user;
     authUI.classList.add("hidden");
     appUI.classList.remove("hidden");
     header.classList.remove("hidden");
     showTab("home");
-    const docSnap=await getDoc(doc(db,"users",currentUser.uid));
-    if(docSnap.exists()) document.getElementById("bio").value = docSnap.data().bio||"";
+    try {
+      const docSnap = await getDoc(doc(db, "users", currentUser.uid));
+      if(docSnap.exists()){
+        document.getElementById("bio").value = docSnap.data().bio || "";
+        document.getElementById("profileImageUrl").value = docSnap.data().profileImageUrl || "";
+      }
+    } catch(e) { console.error("Failed to load profile:", e); }
   } else {
     authUI.classList.remove("hidden");
     appUI.classList.add("hidden");
@@ -120,30 +136,34 @@ onAuthStateChanged(auth, async u=>{
 });
 
 async function loadUsers(){
-  const grid=document.getElementById("grid");
-  grid.innerHTML="";
-  const snap=await getDocs(collection(db,"users"));
-  snap.forEach(d=>{
-    const u=d.data();
-    if(u.uid===currentUser.uid) return;
-    grid.innerHTML+=`
-    <div class="card">
-      <div class="card-header">
-        <div class="avatar">${u.nickname[0]}</div>
-        <strong>${u.nickname}</strong>
-      </div>
-      <div class="bio">${u.bio||"No bio set"}</div>
-    </div>`;
-  });
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+  try {
+    const snap = await getDocs(collection(db, "users"));
+    snap.forEach(d=>{
+      const u = d.data();
+      if(u.uid === currentUser.uid) return;
+      const avatar = u.username ? u.username[0].toUpperCase() : "?";
+      grid.innerHTML += `
+      <div class="card">
+        <div class="card-header">
+          <div class="avatar">${avatar}</div>
+          <strong>${u.username}</strong>
+        </div>
+        <div class="bio">${u.bio || "No bio set"}</div>
+      </div>`;
+    });
+  } catch(e){ console.error("Failed to load users:", e); }
 }
 
-window.saveProfile=async()=>{
-  try{
-    await updateDoc(doc(db,"users",currentUser.uid),{
-      bio:document.getElementById("bio").value
+window.saveProfile = async () => {
+  try {
+    await updateDoc(doc(db, "users", currentUser.uid), {
+      bio: document.getElementById("bio").value,
+      profileImageUrl: document.getElementById("profileImageUrl").value
     });
-    profileMsg.textContent="Profile saved!";
-  }catch(e){profileMsg.textContent="Error saving profile";}
+    profileMsg.textContent = "Profile saved!";
+  } catch(e) { profileMsg.textContent = "Error saving profile"; console.error(e); }
 };
 </script>
 
