@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duoup - Final MVP (Index Fixes Applied)</title>
+    <title>Duoup - Final MVP</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -22,6 +23,7 @@
         }
         
         /* --- Shared Styles --- */
+        .loading { text-align: center; padding: 20px; color: #ffaa00; }
 
         /* --- Auth View --- */
         #auth-view { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; padding: 20px; }
@@ -54,6 +56,10 @@
             padding: 25px; display: flex; flex-direction: column; cursor: grab; transition: transform 0.5s ease-out, opacity 0.5s ease-out;
         }
         .profile-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 3px solid #ff4560; }
+        .card-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .card-header .username { margin: 0; font-size: 1.8em; }
+        .card-bio { flex-grow: 1; margin-bottom: 10px; }
+        .game-info h3 { margin: 5px 0 10px; color: #ffaa00; }
         .tag { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; font-weight: bold; margin-right: 8px; margin-top: 8px; color: #fff; }
         .role { background: #ff4560; } .rank { background: #5c6fff; } .platform { background: #ffaa00; } .vibe { background: #7c7c7c; }
         #action-buttons { display: flex; justify-content: space-around; width: 100%; max-width: 400px; padding: 10px; }
@@ -68,17 +74,23 @@
         /* --- Profile/Edit View --- */
         #profile-view { padding: 20px; display: flex; flex-direction: column; gap: 20px;}
         .edit-section h3 { color: #5c6fff; border-bottom: 2px solid #5c6fff; padding-bottom: 5px; margin-top: 0;}
+        .edit-form-group { margin-bottom: 15px; }
+        .edit-form-group label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; color: #a0a0b0; }
         .edit-form-group input, .edit-form-group select {
             width: calc(100% - 20px); padding: 10px; border-radius: 5px; border: 1px solid #3c3c5c;
             background: #2a2a44; color: white;
         }
-        #update-profile-btn, #update-card-btn { background: #3dd022; color: white; }
+        #update-profile-btn, #update-card-btn { background: #3dd022; color: white; margin-top: 10px; }
         #logout-btn { background: #ff4560; color: white; }
 
         /* --- Single Chat View --- */
         #single-chat-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e1e2f; display: none; flex-direction: column; z-index: 20; }
         #message-form { display: flex; padding: 15px; background: #2a2a44; border-top: 1px solid #3c3c5c; }
+        #message-input { flex-grow: 1; margin-right: 10px; }
+        #send-btn { width: 80px; }
         #messages-list { overflow-y: auto; padding: 10px; flex-grow: 1; display: flex; flex-direction: column; }
+        .chat-header { display: flex; align-items: center; padding: 10px 15px; background: #2a2a44; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5); }
+        .chat-header h2 { flex-grow: 1; text-align: center; margin: 0; font-size: 1.2em; }
         .message { padding: 10px 15px; margin: 5px 0; max-width: 80%; border-radius: 15px; font-size: 0.9em; position: relative; }
         .message.sent { align-self: flex-end; background: #3dd022; color: #1e1e2f; border-bottom-right-radius: 4px; }
         .message.received { align-self: flex-start; background: #5c6fff; color: white; border-bottom-left-radius: 4px; }
@@ -118,7 +130,7 @@
 
             /* --- Desktop Side Navigation --- */
             #desktop-nav {
-                display: flex;
+                display: flex !important;
                 flex-direction: column;
                 width: 80px; 
                 background: #2a2a44;
@@ -148,6 +160,8 @@
                 width: 100%;
                 height: 100%;
                 padding-bottom: 0; 
+                display: none;
+                flex-shrink: 0;
             }
 
             #matching-view { 
@@ -165,9 +179,10 @@
 
             /* --- Desktop Chat Layout (Multi-Panel) --- */
             #inbox-view { 
-                display: flex;
+                display: flex !important;
                 flex-direction: row;
                 padding: 0;
+                flex-grow: 1;
             }
 
             #chat-list-panel {
@@ -176,6 +191,7 @@
                 border-right: 1px solid #3c3c5c;
                 overflow-y: auto;
                 padding: 10px 0;
+                flex-shrink: 0;
             }
 
             #message-panel {
@@ -368,9 +384,11 @@
         let isSigningUp = true; 
         let cards = [];
         let currentIndex = 0;
-        let currentChatId = null;
+        let currentChatPartnerId = null;
+        let currentChatPartnerUsername = '';
         let unsubscribeMessages = null;
         let unsubscribeChats = null;
+        let chatPartnersData = {}; // Cache partner data
 
         // --- 3. CORE DOM ELEMENTS ---
         const bottomNavEl = document.getElementById('bottom-nav');
@@ -393,11 +411,14 @@
         const skipBtn = document.getElementById('skip-btn');
 
         // Chat elements
+        const inboxViewEl = document.getElementById('inbox-view');
         const singleChatViewEl = document.getElementById('single-chat-view');
         const messagesListEl = document.getElementById('messages-list');
         const messageFormEl = document.getElementById('message-form');
+        const messageInputEl = document.getElementById('message-input');
         const chatListEl = document.getElementById('chat-list');
         const chatBackBtn = document.getElementById('chat-back-btn');
+        const chatPartnerNameEl = document.getElementById('chat-partner-name');
 
         // Edit form elements
         const editUsernameInput = document.getElementById('edit-username');
@@ -434,8 +455,19 @@
                 }
             });
 
-            if (viewId === 'matching-view' && cards.length === 0) fetchGamerCards();
-            if (viewId === 'inbox-view') fetchChatList();
+            if (viewId === 'matching-view') {
+                if (cards.length === 0 || currentIndex >= cards.length) fetchGamerCards();
+            }
+            if (viewId === 'inbox-view') {
+                fetchChatList();
+                if (!isDesktop()) { // Mobile: Show list, hide chat
+                    singleChatViewEl.style.display = 'none';
+                    document.getElementById('message-panel').style.display = 'block';
+                    chatPromptEl.style.display = 'block';
+                } else { // Desktop: Show list panel
+                    document.getElementById('message-panel').style.display = 'flex';
+                }
+            }
             if (viewId === 'profile-view') loadProfileEditData();
             
             if (!isDesktop() && viewId !== 'inbox-view') {
@@ -485,7 +517,10 @@
             }
         });
 
-        logoutBtn.addEventListener('click', () => auth.signOut());
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+            window.location.reload(); // Hard refresh to clear all listeners and state
+        });
 
         // Initial setup for new user using your schema
         async function createInitialUserDocument(uid, email) {
@@ -495,6 +530,7 @@
             await userRef.set({
                 email: email, 
                 username: defaultUsername, 
+                bio: '',
                 profileImageUrl: 'https://via.placeholder.com/150', 
                 isPremium: false,
                 status: 'online', 
@@ -531,7 +567,8 @@
                 }
                 
                 authViewEl.style.display = 'none';
-                switchView('matching-view');
+                // Redirects to matching view on sign in/up
+                switchView('matching-view'); 
 
             } else {
                 currentUserId = null;
@@ -544,6 +581,7 @@
                     if (view.id !== 'auth-view') view.style.display = 'none';
                 });
                 if (unsubscribeMessages) unsubscribeMessages();
+                if (unsubscribeChats) unsubscribeChats();
                 updateAuthUI();
             }
         });
@@ -598,7 +636,13 @@
                     profileImageUrl: editImgUrlInput.value
                 });
                 profileMessageEl.textContent = 'Profile updated successfully!';
-                fetchGamerCards();
+                
+                // Also update the description in the gamerCard based on the new bio
+                if (currentGamerCardId) {
+                    await db.collection('gamerCards').doc(currentGamerCardId).update({
+                        description: editBioInput.value
+                    });
+                }
             } catch (error) {
                 profileMessageEl.textContent = 'Update failed: ' + error.message;
             }
@@ -613,11 +657,11 @@
                     skillLevel: editSkillInput.value, 
                     platform: editPlatformInput.value,
                     vibe: editVibeInput.value,
-                    description: editBioInput.value, // We use the main bio for the card description
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 cardMessageEl.textContent = 'Gamer Card updated successfully!';
-                fetchGamerCards();
+                // Fetch new cards if settings change
+                fetchGamerCards(); 
             } catch (error) {
                 cardMessageEl.textContent = 'Update failed: ' + error.message;
             }
@@ -625,32 +669,67 @@
 
 
         // --- 7. MATCH FEED LOGIC ---
+        
+        // Fetches user data for a given card's userId and merges it into the card object
+        async function hydrateCardData(card) {
+            if (!card.userId) return card;
+            try {
+                const userDoc = await db.collection('users').doc(card.userId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    return {
+                        ...card,
+                        username: userData.username,
+                        profileImageUrl: userData.profileImageUrl,
+                        bio: userData.bio || card.description,
+                    };
+                }
+            } catch (e) {
+                console.error("Error hydrating card data:", e);
+            }
+            return card;
+        }
+
         async function fetchGamerCards() {
             if (!currentUserId) return;
-            skipBtn.disabled = false;
-            requestBtn.disabled = false;
+            skipBtn.disabled = true;
+            requestBtn.disabled = true;
+            cardStackEl.innerHTML = '<div class="loading">Finding Duos...</div>';
             
+            // Get user's own card settings (defaulting to Valorant)
+            const userCardQuery = await db.collection('gamerCards').where('userId', '==', currentUserId).limit(1).get();
+            const userGameSlug = userCardQuery.empty ? 'valorant' : userCardQuery.docs[0].data().gameSlug;
+
             const cardsRef = db.collection('gamerCards');
-            // This query requires Index 1: gamerCards, gameSlug, isActive
+            
+            // Query for cards based on the current user's active game
+            // (Assumes a composite index on: gamerCards collection, fields: gameSlug, isActive)
             const q = cardsRef
-                .where('gameSlug', '==', 'valorant') 
+                .where('gameSlug', '==', userGameSlug) 
                 .where('isActive', '==', true)     
                 .limit(10); 
 
             try {
                 const querySnapshot = await q.get();
-                cards = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const rawCards = querySnapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }))
+                    .filter(card => card.userId !== currentUserId); // Filter out own card
+
+                // Hydrate cards with user profile data
+                const hydrationPromises = rawCards.map(hydrateCardData);
+                cards = await Promise.all(hydrationPromises);
+                
                 currentIndex = 0;
                 renderCurrentCard();
             } catch (error) {
-                // If this is still throwing an error, the gamerCards index (with __name__) is still BUILDING
-                cardStackEl.innerHTML = `<p style="color: #ff4560;">Error: Failed to load cards. The required index is likely still building or incorrect. Check console.</p>`;
+                cardStackEl.innerHTML = `<p style="color: #ff4560;">Error: Failed to load cards. Check console and Firebase indexes.</p>`;
+                console.error("Fetch Cards Error:", error);
             }
         }
 
         function renderCurrentCard() {
             if (cards.length === 0 || currentIndex >= cards.length) {
-                cardStackEl.innerHTML = '<h2>No more Duos found!</h2>';
+                cardStackEl.innerHTML = '<h2>No more Duos found!</h2><p>Try refreshing or updating your Gamer Card settings.</p>';
                 skipBtn.disabled = true;
                 requestBtn.disabled = true;
                 return;
@@ -661,10 +740,9 @@
             newCardEl.className = 'gamer-card';
             newCardEl.dataset.targetUserId = cardData.userId;
             
-            // Placeholder data fallback if user document hasn't been fetched/updated
             const username = cardData.username || 'Gamer';
             const profileImg = cardData.profileImageUrl || 'https://via.placeholder.com/150';
-            const description = cardData.description || 'No description provided.'; 
+            const description = cardData.bio || cardData.description || 'No description provided.'; 
             
             newCardEl.innerHTML = `
                 <div class="card-header">
@@ -686,239 +764,231 @@
             `;
             cardStackEl.innerHTML = '';
             cardStackEl.appendChild(newCardEl);
+            skipBtn.disabled = false;
+            requestBtn.disabled = false;
         }
 
-        function swipeCard(action) {
+        // --- FIX: Complete swipeCard function ---
+        async function swipeCard(action) {
             const currentCardEl = document.querySelector('.gamer-card');
             if (!currentCardEl) return;
+            
+            const targetUserId = currentCardEl.dataset.targetUserId;
             let translateX = (action === 'request') ? '500px' : '-500px';
+
             currentCardEl.style.transform = `translateX(${translateX}) rotate(${action === 'request' ? '10deg' : '-10deg'})`;
             currentCardEl.style.opacity = '0';
+
+            // Log the swipe action
+            await db.collection('swipes').add({
+                swiperId: currentUserId,
+                targetId: targetUserId,
+                action: action, // 'request' or 'skip'
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            if (action === 'request') {
+                await sendDuoRequest(targetUserId);
+            }
+
+            // Move to the next card after the animation
             setTimeout(() => {
                 currentIndex++;
                 renderCurrentCard();
             }, 500);
         }
 
-        skipBtn.addEventListener('click', () => { if (currentIndex < cards.length) swipeCard('skip'); });
-        requestBtn.addEventListener('click', async () => {
-            if (currentIndex >= cards.length || !currentUserId) return;
-            const cardData = cards[currentIndex];
-            
-            // Create friendRequest document
-            const friendRequest = {
-                senderId: currentUserId, 
-                receiverId: cardData.userId, 
-                gameSlug: cardData.gameSlug, 
-                status: 'pending', 
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            };
-            try {
-                await db.collection('friendRequests').add(friendRequest);
-                swipeCard('request');
-            } catch (error) {
-                alert(`Failed to send request. Error: ${error.message}`);
+        async function sendDuoRequest(targetId) {
+            // Check if the target user has already requested a duo with the current user
+            const reverseSwipe = await db.collection('swipes')
+                .where('swiperId', '==', targetId)
+                .where('targetId', '==', currentUserId)
+                .where('action', '==', 'request')
+                .limit(1).get();
+
+            if (!reverseSwipe.empty) {
+                // IT'S A MATCH! Create a chat room and a match notification
+                const chatRoomRef = db.collection('chats').add({
+                    users: [currentUserId, targetId].sort(),
+                    lastMessage: `You matched with ${cards[currentIndex].username}! Say hello.`,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                    matchTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert(`It's a Duo! You matched with ${cards[currentIndex].username}. Check your Duos tab.`);
+            } else {
+                alert(`Duo Request sent to ${cards[currentIndex].username}!`);
             }
-        });
-
-
-        // --- 8. CLIENT-SIDE MATCH ACCEPT LOGIC (Simplified since no dedicated 'chats' collection) ---
-        async function acceptFriendRequestAndCreateChat(requestId, senderId, receiverId, gameSlug, senderName) {
-            await db.collection('friendRequests').doc(requestId).update({ status: 'accepted' });
-            
-            const chatId = generateChatId(senderId, receiverId);
-
-            // Send a system welcome message
-            await db.collection('messages').add({
-                chatId: chatId,
-                senderId: 'system', 
-                content: `You and ${senderName} are now Duos! Say hello!`,
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                type: 'system',
-                isRead: false
-            });
-        }
-
-
-        // --- 9. INBOX / CHAT LOGIC (REDEFINED for your schema) ---
-        
-        function generateChatId(uid1, uid2) { 
-            const sortedUids = [uid1, uid2].sort(); 
-            return sortedUids.join('_'); 
         }
         
-        async function fetchChatList() {
-            if (!currentUserId) {
-                chatListEl.innerHTML = '<p style="text-align: center;">Please log in to see your matches!</p>';
-                return;
-            }
-            chatListEl.innerHTML = '<div class="loading" style="text-align: center;">Loading Duos...</div>';
+        skipBtn.addEventListener('click', () => swipeCard('skip'));
+        requestBtn.addEventListener('click', () => swipeCard('request'));
 
-            const friendRequestsRef = db.collection('friendRequests');
-            
-            // Queries require Index 2 (senderId/status) and Index 3 (receiverId/status)
-            let duos = new Map();
 
-            try {
-                // Query 1: Where I am the Sender and they Accepted
-                const q1 = friendRequestsRef
-                    .where('senderId', '==', currentUserId)
-                    .where('status', '==', 'accepted');
-                
-                const q1Snapshot = await q1.get();
-                q1Snapshot.docs.forEach(doc => {
-                    duos.set(doc.data().receiverId, { partnerId: doc.data().receiverId });
-                });
+        // --- 8. INBOX / CHAT LOGIC ---
 
-                // Query 2: Where I am the Receiver and they Accepted
-                const q2 = friendRequestsRef
-                    .where('receiverId', '==', currentUserId)
-                    .where('status', '==', 'accepted');
-                
-                const q2Snapshot = await q2.get();
-                q2Snapshot.docs.forEach(doc => {
-                    duos.set(doc.data().senderId, { partnerId: doc.data().senderId });
-                });
+        // Fetches list of active chats/duos
+        function fetchChatList() {
+            if (unsubscribeChats) unsubscribeChats();
 
-                chatListEl.innerHTML = '';
-                if (duos.size === 0) {
-                    chatListEl.innerHTML = '<p style="text-align:center;">No duos yet! Start swiping!</p>';
-                    return;
-                }
-
-                for (const [partnerId, duoData] of duos.entries()) {
-                    const partnerDoc = await db.collection('users').doc(partnerId).get();
-                    const partnerData = partnerDoc.data();
-                    const partnerName = partnerData?.username || 'Duo';
-                    const partnerImg = partnerData?.profileImageUrl;
+            // Listen for changes in chats where the current user is involved
+            unsubscribeChats = db.collection('chats')
+                .where('users', 'array-contains', currentUserId)
+                .orderBy('lastUpdated', 'desc')
+                .onSnapshot(async snapshot => {
+                    chatListEl.innerHTML = '';
                     
-                    // Get Last Message (Requires Index 4: chatId/timestamp)
-                    const chatId = generateChatId(currentUserId, partnerId);
-                    const lastMessageQuery = db.collection('messages')
-                        .where('chatId', '==', chatId)
-                        .orderBy('timestamp', 'desc')
-                        .limit(1);
+                    if (snapshot.empty) {
+                        chatListEl.innerHTML = '<p style="text-align: center; color: #a0a0b0;">You have no active Duos. Go find a match!</p>';
+                        return;
+                    }
+
+                    const chatDocs = snapshot.docs;
+                    const partnerIds = chatDocs.map(doc => doc.data().users.find(uid => uid !== currentUserId));
                     
-                    const lastMessageSnap = await lastMessageQuery.get();
-                    const lastMessage = lastMessageSnap.empty 
-                        ? 'Say hello!' 
-                        : lastMessageSnap.docs[0].data().content;
-                    
-                    renderChatListItem({
-                        partnerId,
-                        partnerName,
-                        partnerImg,
-                        lastMessage,
-                        lastUpdated: lastMessageSnap.empty ? null : lastMessageSnap.docs[0].data().timestamp
+                    // Batch fetch partner profile data
+                    await fetchChatPartnerProfiles(partnerIds);
+
+                    chatDocs.forEach(doc => {
+                        const chat = doc.data();
+                        const partnerId = chat.users.find(uid => uid !== currentUserId);
+                        const partner = chatPartnersData[partnerId] || { username: 'Unknown Duo', profileImageUrl: 'https://via.placeholder.com/50' };
+
+                        const item = document.createElement('div');
+                        item.className = 'chat-list-item';
+                        item.dataset.chatId = doc.id;
+                        item.dataset.partnerId = partnerId;
+                        item.innerHTML = `
+                            <img src="${partner.profileImageUrl}" alt="Profile" class="profile-img" style="width: 40px; height: 40px; margin-right: 10px; border: none;">
+                            <div>
+                                <strong>${partner.username}</strong>
+                                <p style="margin: 0; font-size: 0.85em; color: #a0a0b0;">${chat.lastMessage || 'Start the conversation!'}</p>
+                            </div>
+                        `;
+                        item.onclick = () => openChat(doc.id, partnerId, partner.username);
+                        chatListEl.appendChild(item);
                     });
-                }
+                }, error => {
+                    console.error("Error listening to chats:", error);
+                    chatListEl.innerHTML = '<p style="text-align: center; color: #ff4560;">Error loading chats.</p>';
+                });
+        }
+        
+        // Caches partner data to avoid repeated reads
+        async function fetchChatPartnerProfiles(partnerIds) {
+            const uniquePartnerIds = [...new Set(partnerIds)];
+            const missingIds = uniquePartnerIds.filter(id => !chatPartnersData[id]);
+            
+            if (missingIds.length === 0) return;
 
-            } catch (error) {
-                chatListEl.innerHTML = `<p style="color: #ff4560; text-align: center;">Error: Failed to load Duos. Check friendRequests/messages indexes.</p>`;
-            }
+            // Firestore does not allow `where('id', 'in', ...)` with more than 10 items. 
+            // We'll iterate for simplicity in this small app.
+            const userPromises = missingIds.map(id => db.collection('users').doc(id).get());
+            const userDocs = await Promise.all(userPromises);
+
+            userDocs.forEach(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    chatPartnersData[doc.id] = {
+                        username: data.username,
+                        profileImageUrl: data.profileImageUrl
+                    };
+                }
+            });
         }
 
-        function renderChatListItem(chat) {
-            const partnerId = chat.partnerId;
-            
-            const item = document.createElement('div');
-            item.className = 'chat-list-item';
-            item.dataset.partnerUid = partnerId;
-            item.dataset.partnerName = chat.partnerName;
-            
-            const lastTime = chat.lastUpdated ? new Date(chat.lastUpdated.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-            item.innerHTML = `
-                <div class="chat-avatar-container">
-                    <img src="${chat.partnerImg || 'https://via.placeholder.com/100'}" alt="Avatar" class="chat-avatar">
-                    <span class="online-dot"></span> 
-                </div>
-                <div class="chat-details">
-                    <h3>${chat.partnerName}</h3>
-                    <p>${chat.lastMessage}</p>
-                </div>
-                <span class="chat-time">${lastTime}</span>
-            `;
-
-            item.addEventListener('click', () => {
-                if (isDesktop()) {
-                    chatPromptEl.style.display = 'none';
-                    singleChatViewEl.style.display = 'flex';
-                } else {
-                    singleChatViewEl.style.display = 'flex';
-                }
-
-                document.getElementById('chat-partner-name').textContent = item.dataset.partnerName;
-                const chatId = generateChatId(currentUserId, item.dataset.partnerUid);
-                currentChatId = chatId;
-                startChatListener(chatId);
-            });
+        function openChat(chatId, partnerId, partnerUsername) {
+            currentChatPartnerId = partnerId;
+            currentChatPartnerUsername = partnerUsername;
             
-            chatListEl.appendChild(item);
+            // Mobile: Hide chat list, show single chat view
+            if (!isDesktop()) {
+                document.getElementById('chat-list-panel').style.display = 'none';
+                singleChatViewEl.style.display = 'flex';
+                document.querySelector('.chat-header').style.display = 'flex';
+            } else {
+                // Desktop: Show single chat view in the message panel
+                singleChatViewEl.style.display = 'flex';
+                chatPromptEl.style.display = 'none';
+            }
+            
+            chatPartnerNameEl.textContent = `Chat with ${partnerUsername}`;
+
+            // Remove any previous listener
+            if (unsubscribeMessages) unsubscribeMessages();
+
+            // Set up new real-time listener for messages
+            unsubscribeMessages = db.collection('chats').doc(chatId).collection('messages')
+                .orderBy('timestamp', 'asc')
+                .onSnapshot(snapshot => {
+                    messagesListEl.innerHTML = '';
+                    snapshot.docs.forEach(doc => {
+                        renderMessage(doc.data());
+                    });
+                    messagesListEl.scrollTop = messagesListEl.scrollHeight; // Auto-scroll to bottom
+                }, error => {
+                    console.error("Error listening to messages:", error);
+                });
         }
         
         chatBackBtn.addEventListener('click', () => {
             if (unsubscribeMessages) unsubscribeMessages();
+            currentChatPartnerId = null;
             singleChatViewEl.style.display = 'none';
+            document.getElementById('chat-list-panel').style.display = 'block';
         });
-
-        function renderMessage(messageData) { 
-            const isSent = messageData.senderId === currentUserId;
-            const messageEl = document.createElement('div');
-            messageEl.className = `message ${isSent ? 'sent' : 'received'}`;
-            const time = messageData.timestamp ? new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sending...';
-            messageEl.innerHTML = `<p>${messageData.content}</p><span class="message-time">${time}</span>`;
-            messagesListEl.appendChild(messageEl);
-            messagesListEl.scrollTop = messagesListEl.scrollHeight;
-        }
-
-        function startChatListener(chatId) {
-            if (unsubscribeMessages) unsubscribeMessages();
-            messagesListEl.innerHTML = '<div class="system-message">Connecting to Duo Chat...</div>';
-
-            // Uses Index 4 (chatId/timestamp)
-            const messagesRef = db.collection('messages');
-            const q = messagesRef.where('chatId', '==', chatId).orderBy('timestamp', 'asc');
-
-            unsubscribeMessages = q.onSnapshot(snapshot => {
-                // Clear the 'Connecting...' message only on first successful load
-                if (messagesListEl.querySelector('.system-message')) {
-                    messagesListEl.innerHTML = '';
-                }
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === "added") renderMessage(change.doc.data());
-                });
-            }, error => {
-                messagesListEl.innerHTML = `<div class="system-message error">Error loading chat.</div>`;
-            });
-        }
 
         messageFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const content = document.getElementById('message-input').value.trim();
+            const text = messageInputEl.value.trim();
+            if (!text || !currentChatPartnerId) return;
+
+            // Find the chat ID again (safer than relying on a global var)
+            const chatQuery = await db.collection('chats')
+                .where('users', 'array-contains', currentUserId).get();
             
-            if (!content || !currentChatId || !currentUserId) return;
+            const chatDoc = chatQuery.docs.find(doc => doc.data().users.includes(currentChatPartnerId));
+            
+            if (!chatDoc) {
+                alert("Error: Chat room not found.");
+                return;
+            }
+
+            const chatId = chatDoc.id;
 
             try {
-                // Saves message to the top-level 'messages' collection
-                await db.collection('messages').add({
-                    chatId: currentChatId, 
-                    senderId: currentUserId, 
-                    content: content,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), 
-                    type: 'text',
-                    isRead: false
+                // 1. Add message to subcollection
+                await db.collection('chats').doc(chatId).collection('messages').add({
+                    senderId: currentUserId,
+                    text: text,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // 2. Update parent chat document for last message/sorting
+                await db.collection('chats').doc(chatId).update({
+                    lastMessage: text,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                document.getElementById('message-input').value = ''; 
-
+                messageInputEl.value = '';
             } catch (error) {
-                alert(`Error sending message: ${error.message}`);
+                console.error("Error sending message:", error);
+                alert("Failed to send message.");
             }
         });
 
-        // Final UI initialization
-        updateAuthUI();
+
+        function renderMessage(message) {
+            const time = message.timestamp ? new Date(message.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sending...';
+            const isSent = message.senderId === currentUserId;
+            
+            const msgEl = document.createElement('div');
+            msgEl.className = `message ${isSent ? 'sent' : 'received'}`;
+            msgEl.innerHTML = `${message.text}<span class="message-time">${time}</span>`;
+            messagesListEl.appendChild(msgEl);
+        }
+
     </script>
+
 </body>
 </html>
