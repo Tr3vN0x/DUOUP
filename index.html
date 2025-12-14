@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duoup - Complete Responsive MVP</title>
+    <title>Duoup - Complete Responsive & Schema Fixed MVP</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -21,7 +21,7 @@
             display: flex; flex-direction: column; background: #1e1e2f; 
         }
         
-        /* --- Shared Styles (omitted for brevity, copied from previous step) --- */
+        /* --- Shared Styles --- */
 
         /* --- Auth View --- */
         #auth-view { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; padding: 20px; }
@@ -78,8 +78,12 @@
         /* --- Single Chat View --- */
         #single-chat-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1e1e2f; display: none; flex-direction: column; z-index: 20; }
         #message-form { display: flex; padding: 15px; background: #2a2a44; border-top: 1px solid #3c3c5c; }
+        #messages-list { overflow-y: auto; padding: 10px; flex-grow: 1; display: flex; flex-direction: column; }
+        .message { padding: 10px 15px; margin: 5px 0; max-width: 80%; border-radius: 15px; font-size: 0.9em; position: relative; }
         .message.sent { align-self: flex-end; background: #3dd022; color: #1e1e2f; border-bottom-right-radius: 4px; }
         .message.received { align-self: flex-start; background: #5c6fff; color: white; border-bottom-left-radius: 4px; }
+        .message-time { font-size: 0.65em; opacity: 0.6; margin-top: 5px; display: block; text-align: right;}
+        .system-message { text-align: center; color: #a0a0b0; padding: 10px; font-style: italic; }
 
 
         /* ======================================================================
@@ -112,7 +116,7 @@
                 flex-direction: row; 
             }
 
-            /* --- Desktop Side Navigation (Simulated Bottom Nav) --- */
+            /* --- Desktop Side Navigation --- */
             #desktop-nav {
                 display: flex;
                 flex-direction: column;
@@ -159,7 +163,7 @@
                 max-width: none;
             }
 
-            /* --- Desktop Chat Layout (Simulated Multi-Panel) --- */
+            /* --- Desktop Chat Layout (Multi-Panel) --- */
             #inbox-view { 
                 display: flex;
                 flex-direction: row;
@@ -178,6 +182,8 @@
                 flex-grow: 1;
                 display: flex;
                 flex-direction: column;
+                justify-content: center;
+                align-items: center;
             }
             #single-chat-view {
                 position: relative; 
@@ -249,7 +255,7 @@
                         <p style="text-align: center;">Loading your matches...</p>
                     </div>
                 </div>
-                <div id="message-panel" style="display: flex; flex-direction: column; justify-content: center; align-items: center; flex-grow: 1;">
+                <div id="message-panel">
                     <div id="single-chat-view"> 
                         <header class="chat-header">
                             <button id="chat-back-btn">← Back</button>
@@ -366,11 +372,11 @@
         let unsubscribeMessages = null;
         let unsubscribeChats = null;
 
-        // --- 3. CORE DOM ELEMENTS (Updated for Vibe) ---
+        // --- 3. CORE DOM ELEMENTS ---
         const bottomNavEl = document.getElementById('bottom-nav');
         const topBarEl = document.getElementById('top-bar');
-        const desktopNavEl = document.getElementById('desktop-nav');
-        const chatPromptEl = document.getElementById('chat-prompt');
+        const desktopNavEl = document.getElementById('desktop-nav'); 
+        const chatPromptEl = document.getElementById('chat-prompt'); 
 
         // Auth elements
         const authViewEl = document.getElementById('auth-view');
@@ -403,7 +409,7 @@
         const editRoleInput = document.getElementById('edit-role');
         const editSkillInput = document.getElementById('edit-skill');
         const editPlatformInput = document.getElementById('edit-platform');
-        const editVibeInput = document.getElementById('edit-vibe'); // NEW VIBE INPUT
+        const editVibeInput = document.getElementById('edit-vibe'); 
         const updateCardBtn = document.getElementById('update-card-btn');
         const cardMessageEl = document.getElementById('card-message');
 
@@ -421,7 +427,6 @@
             const activeView = document.getElementById(viewId);
             activeView.style.display = isDesktop() && viewId !== 'inbox-view' ? 'block' : 'flex';
             
-            // Handle nav bar active state (both mobile and desktop)
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
                 if (item.dataset.view === viewId) {
@@ -430,7 +435,7 @@
             });
 
             if (viewId === 'matching-view' && cards.length === 0) fetchGamerCards();
-            if (viewId === 'inbox-view') fetchChatList(); else if (unsubscribeChats) unsubscribeChats();
+            if (viewId === 'inbox-view') fetchChatList();
             if (viewId === 'profile-view') loadProfileEditData();
             
             if (!isDesktop() && viewId !== 'inbox-view') {
@@ -482,24 +487,35 @@
 
         logoutBtn.addEventListener('click', () => auth.signOut());
 
+        // FIX: Updated to use your specified user/gamerCard fields (status, fcmToken, description)
         async function createInitialUserDocument(uid, email) {
             const userRef = db.collection('users').doc(uid);
             const defaultUsername = email.split('@')[0];
+            
             await userRef.set({
-                email: email, username: defaultUsername, bio: 'Hey, I just joined Duoup!',
-                profileImageUrl: 'https://via.placeholder.com/150', isPremium: false,
+                email: email, 
+                username: defaultUsername, 
+                profileImageUrl: 'https://via.placeholder.com/150', 
+                isPremium: false,
+                status: 'online', 
+                fcmToken: '',     
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
-            // Create a default Gamer Card for the user
+            
             await db.collection('gamerCards').add({
-                userId: uid, username: defaultUsername, gameSlug: 'valorant',
-                inGameRole: 'Flex', skillLevel: 'Silver', platform: 'PC', vibe: 'Casual',
-                description: 'Just looking for new teammates!', isActive: true,
+                userId: uid, 
+                description: 'Just looking for new teammates!', 
+                gameSlug: 'valorant',
+                inGameRole: 'Flex', 
+                skillLevel: 'Silver', 
+                platform: 'PC', 
+                vibe: 'Casual',
+                isActive: true,
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
             });
         }
         
-        // --- AUTH STATE HANDLER (Controls View Visibility) ---
+        // --- AUTH STATE HANDLER ---
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUserId = user.uid;
@@ -528,12 +544,11 @@
                     if (view.id !== 'auth-view') view.style.display = 'none';
                 });
                 if (unsubscribeMessages) unsubscribeMessages();
-                if (unsubscribeChats) unsubscribeChats();
                 updateAuthUI();
             }
         });
 
-        // --- 6. PROFILE EDITING LOGIC (UPDATED) ---
+        // --- 6. PROFILE EDITING LOGIC ---
         let currentGamerCardId = null;
 
         async function loadProfileEditData() {
@@ -547,7 +562,7 @@
                 if (userDoc.exists) {
                     const data = userDoc.data();
                     editUsernameInput.value = data.username || '';
-                    editBioInput.value = data.bio || '';
+                    editBioInput.value = data.bio || ''; 
                     editImgUrlInput.value = data.profileImageUrl || '';
                 }
 
@@ -566,7 +581,7 @@
                     editRoleInput.value = data.inGameRole || '';
                     editSkillInput.value = data.skillLevel || '';
                     editPlatformInput.value = data.platform || '';
-                    editVibeInput.value = data.vibe || ''; // NEW: Load vibe
+                    editVibeInput.value = data.vibe || '';
                 }
                 profileMessageEl.textContent = 'Data loaded.';
             } catch (error) {
@@ -597,7 +612,8 @@
                     inGameRole: editRoleInput.value,
                     skillLevel: editSkillInput.value, 
                     platform: editPlatformInput.value,
-                    vibe: editVibeInput.value, // NEW: Save vibe
+                    vibe: editVibeInput.value,
+                    description: editBioInput.value, // We use the main bio for the card description
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 cardMessageEl.textContent = 'Gamer Card updated successfully!';
@@ -608,7 +624,7 @@
         });
 
 
-        // --- 7. MATCH FEED LOGIC (Card Renderer updated to include Vibe) ---
+        // --- 7. MATCH FEED LOGIC ---
         async function fetchGamerCards() {
             if (!currentUserId) return;
             skipBtn.disabled = false;
@@ -626,7 +642,8 @@
                 currentIndex = 0;
                 renderCurrentCard();
             } catch (error) {
-                cardStackEl.innerHTML = `<p>Error: Missing Index. Please check console for details.</p>`;
+                 // The actual error will be in the console, but we give a generic message.
+                cardStackEl.innerHTML = `<p style="color: #ff4560;">Error: Missing Index. You MUST create the required index in your Firestore Console.</p>`;
             }
         }
 
@@ -645,9 +662,7 @@
             
             const username = cardData.username || 'Gamer';
             const profileImg = cardData.profileImageUrl || 'https://via.placeholder.com/150';
-            // Use the 'bio' field from 'users' as the main description, 
-            // but the original 'description' field in gamerCards is also often just a bio.
-            const description = cardData.description || cardData.bio || 'No description provided.'; 
+            const description = cardData.description || 'No description provided.'; 
             
             newCardEl.innerHTML = `
                 <div class="card-header">
@@ -687,8 +702,12 @@
         requestBtn.addEventListener('click', async () => {
             if (currentIndex >= cards.length || !currentUserId) return;
             const cardData = cards[currentIndex];
+            
             const friendRequest = {
-                senderId: currentUserId, receiverId: cardData.userId, gameSlug: cardData.gameSlug, status: 'pending', 
+                senderId: currentUserId, 
+                receiverId: cardData.userId, 
+                gameSlug: cardData.gameSlug, 
+                status: 'pending', 
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             };
             try {
@@ -700,13 +719,30 @@
         });
 
 
-        // --- 8. CLIENT-SIDE MATCH ACCEPT LOGIC ---
+        // --- 8. CLIENT-SIDE MATCH ACCEPT LOGIC (Simplified since no dedicated 'chats' collection) ---
         async function acceptFriendRequestAndCreateChat(requestId, senderId, receiverId, gameSlug, senderName) {
-            // ... (Logic remains the same) ...
+            await db.collection('friendRequests').doc(requestId).update({ status: 'accepted' });
+            
+            const chatId = generateChatId(senderId, receiverId);
+
+            // Send a system welcome message
+            await db.collection('messages').add({
+                chatId: chatId,
+                senderId: 'system', 
+                content: `You and ${senderName} are now Duos! Say hello!`,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                type: 'system',
+                isRead: false
+            });
         }
 
 
-        // --- 9. INBOX / CHAT LOGIC ---
+        // --- 9. INBOX / CHAT LOGIC (REDEFINED for your schema) ---
+        
+        function generateChatId(uid1, uid2) { 
+            const sortedUids = [uid1, uid2].sort(); 
+            return sortedUids.join('_'); 
+        }
         
         async function fetchChatList() {
             if (!currentUserId) {
@@ -715,43 +751,80 @@
             }
             chatListEl.innerHTML = '<div class="loading" style="text-align: center;">Loading Duos...</div>';
 
-            const chatsRef = db.collection('chats');
-            const q = chatsRef.where('members', 'array-contains', currentUserId).orderBy('lastUpdated', 'desc');
+            const friendRequestsRef = db.collection('friendRequests');
+            
+            // NOTE: This logic requires Indexes 2 & 3 (senderId/status AND receiverId/status)
+            let duos = new Map();
 
-            if (unsubscribeChats) unsubscribeChats();
+            try {
+                // Query 1: Where I am the Sender and they Accepted
+                const q1 = friendRequestsRef
+                    .where('senderId', '==', currentUserId)
+                    .where('status', '==', 'accepted');
+                
+                const q1Snapshot = await q1.get();
+                q1Snapshot.docs.forEach(doc => {
+                    duos.set(doc.data().receiverId, { partnerId: doc.data().receiverId });
+                });
 
-            unsubscribeChats = q.onSnapshot(async (snapshot) => {
+                // Query 2: Where I am the Receiver and they Accepted
+                const q2 = friendRequestsRef
+                    .where('receiverId', '==', currentUserId)
+                    .where('status', '==', 'accepted');
+                
+                const q2Snapshot = await q2.get();
+                q2Snapshot.docs.forEach(doc => {
+                    duos.set(doc.data().senderId, { partnerId: doc.data().senderId });
+                });
+
                 chatListEl.innerHTML = '';
-                if (snapshot.empty) {
+                if (duos.size === 0) {
                     chatListEl.innerHTML = '<p style="text-align:center;">No duos yet! Start swiping!</p>';
                     return;
                 }
-                
-                for (const doc of snapshot.docs) {
-                    const chat = doc.data();
-                    const partnerId = chat.members.find(uid => uid !== currentUserId);
-                    
+
+                for (const [partnerId, duoData] of duos.entries()) {
                     const partnerDoc = await db.collection('users').doc(partnerId).get();
                     const partnerData = partnerDoc.data();
-                    chat.partnerName = partnerData?.username || 'Duo';
-                    chat.partnerImg = partnerData?.profileImageUrl;
-
-                    renderChatListItem(chat);
+                    const partnerName = partnerData?.username || 'Duo';
+                    const partnerImg = partnerData?.profileImageUrl;
+                    
+                    // Get Last Message (Requires Index 4: chatId/timestamp)
+                    const chatId = generateChatId(currentUserId, partnerId);
+                    const lastMessageQuery = db.collection('messages')
+                        .where('chatId', '==', chatId)
+                        .orderBy('timestamp', 'desc')
+                        .limit(1);
+                    
+                    const lastMessageSnap = await lastMessageQuery.get();
+                    const lastMessage = lastMessageSnap.empty 
+                        ? 'Say hello!' 
+                        : lastMessageSnap.docs[0].data().content;
+                    
+                    renderChatListItem({
+                        partnerId,
+                        partnerName,
+                        partnerImg,
+                        lastMessage,
+                        lastUpdated: lastMessageSnap.empty ? null : lastMessageSnap.docs[0].data().timestamp
+                    });
                 }
-            }, error => {
-                chatListEl.innerHTML = '<p>Failed to load duos.</p>';
-            });
+
+            } catch (error) {
+                 // Informative error message based on the high probability of a missing index
+                chatListEl.innerHTML = `<p style="color: #ff4560; text-align: center;">Error: Failed to load Duos. Check the console and ensure you have created all four required Firestore Indexes!</p>`;
+            }
         }
 
         function renderChatListItem(chat) {
-            const partnerId = chat.members.find(uid => uid !== currentUserId);
+            const partnerId = chat.partnerId;
             
             const item = document.createElement('div');
             item.className = 'chat-list-item';
             item.dataset.partnerUid = partnerId;
             item.dataset.partnerName = chat.partnerName;
             
-            const lastTime = chat.lastUpdated ? new Date(chat.lastUpdated.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Now';
+            const lastTime = chat.lastUpdated ? new Date(chat.lastUpdated.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
             item.innerHTML = `
                 <div class="chat-avatar-container">
@@ -766,7 +839,6 @@
             `;
 
             item.addEventListener('click', () => {
-                // Handle different view transitions for mobile vs desktop
                 if (isDesktop()) {
                     chatPromptEl.style.display = 'none';
                     singleChatViewEl.style.display = 'flex';
@@ -783,29 +855,28 @@
             chatListEl.appendChild(item);
         }
         
-        // Mobile only: Back button hides the single chat view
         chatBackBtn.addEventListener('click', () => {
             if (unsubscribeMessages) unsubscribeMessages();
             singleChatViewEl.style.display = 'none';
         });
 
-        // --- (Remaining Chat Functions: generateChatId, renderMessage, startChatListener, messageFormEl listener) ---
-        function generateChatId(uid1, uid2) { const sortedUids = [uid1, uid2].sort(); return sortedUids.join('_'); }
         function renderMessage(messageData) { 
             const isSent = messageData.senderId === currentUserId;
             const messageEl = document.createElement('div');
             messageEl.className = `message ${isSent ? 'sent' : 'received'}`;
             const time = messageData.timestamp ? new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sending...';
             messageEl.innerHTML = `<p>${messageData.content}</p><span class="message-time">${time}</span>`;
-            document.getElementById('messages-list').appendChild(messageEl);
-            document.getElementById('messages-list').scrollTop = document.getElementById('messages-list').scrollHeight;
+            messagesListEl.appendChild(messageEl);
+            messagesListEl.scrollTop = messagesListEl.scrollHeight;
         }
+
         function startChatListener(chatId) {
             if (unsubscribeMessages) unsubscribeMessages();
             messagesListEl.innerHTML = '<div class="system-message">Connecting to Duo Chat...</div>';
 
-            const messagesRef = db.collection('chats').doc(chatId).collection('messages');
-            const q = messagesRef.orderBy('timestamp', 'asc');
+            // Uses Index 4 (chatId/timestamp)
+            const messagesRef = db.collection('messages');
+            const q = messagesRef.where('chatId', '==', chatId).orderBy('timestamp', 'asc');
 
             unsubscribeMessages = q.onSnapshot(snapshot => {
                 snapshot.docChanges().forEach(change => {
@@ -815,6 +886,7 @@
                 messagesListEl.innerHTML = `<div class="system-message error">Error loading chat.</div>`;
             });
         }
+
         messageFormEl.addEventListener('submit', async (e) => {
             e.preventDefault();
             const content = document.getElementById('message-input').value.trim();
@@ -822,16 +894,16 @@
             if (!content || !currentChatId || !currentUserId) return;
 
             try {
-                await db.collection('chats').doc(currentChatId).collection('messages').add({
-                    senderId: currentUserId, content: content,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), type: 'text'
+                // Saves message to the top-level 'messages' collection
+                await db.collection('messages').add({
+                    chatId: currentChatId, 
+                    senderId: currentUserId, 
+                    content: content,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), 
+                    type: 'text',
+                    isRead: false
                 });
                 
-                await db.collection('chats').doc(currentChatId).update({
-                    lastMessage: content,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
                 document.getElementById('message-input').value = ''; 
 
             } catch (error) {
