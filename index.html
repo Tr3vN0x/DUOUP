@@ -88,7 +88,6 @@
         */
         @media (min-width: 768px) {
             body { 
-                /* Remove unnecessary centering for larger screens */
                 align-items: flex-start;
                 justify-content: center;
                 padding-top: 20px;
@@ -96,29 +95,28 @@
             }
 
             #app-container {
-                /* Make the app wider and use percentage height for desktop window */
                 max-width: 1200px;
                 height: 90vh; 
                 border-radius: 12px;
                 box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
-                flex-direction: row; /* Change primary flow to horizontal */
+                flex-direction: row; 
                 overflow: hidden;
             }
 
-            #top-bar { display: none !important; } /* Hide mobile top bar */
-            #bottom-nav { display: none !important; } /* Hide mobile bottom navigation */
+            #top-bar { display: none !important; } 
+            #bottom-nav { display: none !important; } 
             
             #content-area {
                 width: 100%;
                 display: flex;
-                flex-direction: row; /* Ensure content area uses horizontal flow */
+                flex-direction: row; 
             }
 
             /* --- Desktop Side Navigation (Simulated Bottom Nav) --- */
             #desktop-nav {
                 display: flex;
                 flex-direction: column;
-                width: 80px; /* Narrow vertical nav bar */
+                width: 80px; 
                 background: #2a2a44;
                 padding-top: 20px;
                 box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
@@ -142,13 +140,12 @@
 
             /* --- Views Adjustment --- */
             .app-view {
-                position: relative; /* No longer absolute positioning */
+                position: relative; 
                 width: 100%;
                 height: 100%;
-                padding-bottom: 0; /* Remove padding since bottom nav is gone */
+                padding-bottom: 0; 
             }
 
-            /* Match Feed gets the center stage */
             #matching-view { 
                 padding: 20px;
                 flex-grow: 1; 
@@ -156,7 +153,6 @@
                 border-right: 1px solid #3c3c5c; 
             }
             
-            /* Profile View uses full width */
             #profile-view {
                 padding: 20px;
                 flex-grow: 1;
@@ -184,15 +180,13 @@
                 flex-direction: column;
             }
             #single-chat-view {
-                /* In desktop mode, the chat view becomes a panel inside the content area */
                 position: relative; 
-                display: none; /* Controlled by JS */
+                display: none; 
                 width: 100%;
                 height: 100%;
-                z-index: 1; /* Not floating over everything */
+                z-index: 1; 
             }
             #single-chat-view > .chat-header {
-                /* Hide the back button in desktop chat view */
                 display: none; 
             }
             
@@ -283,7 +277,7 @@
                         <input type="text" id="edit-username" placeholder="Username">
                     </div>
                     <div class="edit-form-group">
-                        <label for="edit-bio">Bio / Description</label>
+                        <label for="edit-bio">Bio / Description (for your profile)</label>
                         <input type="text" id="edit-bio" placeholder="Looking for competitive duo...">
                     </div>
                     <div class="edit-form-group">
@@ -314,6 +308,10 @@
                     <div class="edit-form-group">
                         <label for="edit-platform">Platform</label>
                         <input type="text" id="edit-platform" placeholder="PC, PS5">
+                    </div>
+                    <div class="edit-form-group">
+                        <label for="edit-vibe">Vibe / Playstyle</label>
+                        <input type="text" id="edit-vibe" placeholder="Competitive, Casual, Chill">
                     </div>
                     <button id="update-card-btn">Update Gamer Card</button>
                     <p id="card-message" style="color: #3dd022;"></p>
@@ -368,13 +366,11 @@
         let unsubscribeMessages = null;
         let unsubscribeChats = null;
 
-        // --- 3. CORE DOM ELEMENTS (Updated for Desktop) ---
+        // --- 3. CORE DOM ELEMENTS (Updated for Vibe) ---
         const bottomNavEl = document.getElementById('bottom-nav');
         const topBarEl = document.getElementById('top-bar');
-        const desktopNavEl = document.getElementById('desktop-nav'); // NEW
-        const chatListPanelEl = document.getElementById('chat-list-panel'); // NEW
-        const messagePanelEl = document.getElementById('message-panel'); // NEW
-        const chatPromptEl = document.getElementById('chat-prompt'); // NEW
+        const desktopNavEl = document.getElementById('desktop-nav');
+        const chatPromptEl = document.getElementById('chat-prompt');
 
         // Auth elements
         const authViewEl = document.getElementById('auth-view');
@@ -407,10 +403,11 @@
         const editRoleInput = document.getElementById('edit-role');
         const editSkillInput = document.getElementById('edit-skill');
         const editPlatformInput = document.getElementById('edit-platform');
+        const editVibeInput = document.getElementById('edit-vibe'); // NEW VIBE INPUT
         const updateCardBtn = document.getElementById('update-card-btn');
         const cardMessageEl = document.getElementById('card-message');
 
-        // --- 4. NAVIGATION / UI HELPERS (Updated) ---
+        // --- 4. NAVIGATION / UI HELPERS ---
         
         function isDesktop() {
             return window.matchMedia("(min-width: 768px)").matches;
@@ -436,13 +433,11 @@
             if (viewId === 'inbox-view') fetchChatList(); else if (unsubscribeChats) unsubscribeChats();
             if (viewId === 'profile-view') loadProfileEditData();
             
-            // Always hide single chat when switching major views (in mobile)
             if (!isDesktop() && viewId !== 'inbox-view') {
                 singleChatViewEl.style.display = 'none';
             }
         }
 
-        // Attach listeners to both navigation bars
         function attachNavListeners() {
             [bottomNavEl, desktopNavEl].forEach(nav => {
                 nav.addEventListener('click', (e) => {
@@ -453,7 +448,7 @@
         }
         attachNavListeners();
 
-        // --- 5. AUTHENTICATION LOGIC (Flow control updated) ---
+        // --- 5. AUTHENTICATION LOGIC ---
 
         function updateAuthUI() {
             authMainBtn.textContent = isSigningUp ? 'Sign Up' : 'Log In';
@@ -509,7 +504,6 @@
             if (user) {
                 currentUserId = user.uid;
                 
-                // Show/Hide Nav Bars based on device size
                 if (isDesktop()) {
                     desktopNavEl.style.display = 'flex';
                     topBarEl.style.display = 'none';
@@ -539,7 +533,7 @@
             }
         });
 
-        // --- 6. PROFILE EDITING LOGIC ---
+        // --- 6. PROFILE EDITING LOGIC (UPDATED) ---
         let currentGamerCardId = null;
 
         async function loadProfileEditData() {
@@ -572,6 +566,7 @@
                     editRoleInput.value = data.inGameRole || '';
                     editSkillInput.value = data.skillLevel || '';
                     editPlatformInput.value = data.platform || '';
+                    editVibeInput.value = data.vibe || ''; // NEW: Load vibe
                 }
                 profileMessageEl.textContent = 'Data loaded.';
             } catch (error) {
@@ -583,7 +578,9 @@
             if (!currentUserId) return;
             try {
                 await db.collection('users').doc(currentUserId).update({
-                    username: editUsernameInput.value, bio: editBioInput.value, profileImageUrl: editImgUrlInput.value
+                    username: editUsernameInput.value, 
+                    bio: editBioInput.value, 
+                    profileImageUrl: editImgUrlInput.value
                 });
                 profileMessageEl.textContent = 'Profile updated successfully!';
                 fetchGamerCards();
@@ -596,8 +593,11 @@
             if (!currentUserId || !currentGamerCardId) return;
             try {
                 await db.collection('gamerCards').doc(currentGamerCardId).update({
-                    gameSlug: editGameSelect.value, inGameRole: editRoleInput.value,
-                    skillLevel: editSkillInput.value, platform: editPlatformInput.value,
+                    gameSlug: editGameSelect.value, 
+                    inGameRole: editRoleInput.value,
+                    skillLevel: editSkillInput.value, 
+                    platform: editPlatformInput.value,
+                    vibe: editVibeInput.value, // NEW: Save vibe
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 cardMessageEl.textContent = 'Gamer Card updated successfully!';
@@ -608,7 +608,7 @@
         });
 
 
-        // --- 7. MATCH FEED LOGIC ---
+        // --- 7. MATCH FEED LOGIC (Card Renderer updated to include Vibe) ---
         async function fetchGamerCards() {
             if (!currentUserId) return;
             skipBtn.disabled = false;
@@ -645,7 +645,9 @@
             
             const username = cardData.username || 'Gamer';
             const profileImg = cardData.profileImageUrl || 'https://via.placeholder.com/150';
-            const description = cardData.description || 'No description provided.';
+            // Use the 'bio' field from 'users' as the main description, 
+            // but the original 'description' field in gamerCards is also often just a bio.
+            const description = cardData.description || cardData.bio || 'No description provided.'; 
             
             newCardEl.innerHTML = `
                 <div class="card-header">
@@ -704,17 +706,13 @@
         }
 
 
-        // --- 9. INBOX / CHAT LOGIC (FIXED) ---
+        // --- 9. INBOX / CHAT LOGIC ---
         
         async function fetchChatList() {
             if (!currentUserId) {
-                // This condition should ideally not be met if the Auth state is handled correctly, 
-                // but we keep the check for safety.
                 chatListEl.innerHTML = '<p style="text-align: center;">Please log in to see your matches!</p>';
                 return;
             }
-            // FIX: This ensures the message is replaced with a loading state, 
-            // removing the static 'Log in' message seen after login.
             chatListEl.innerHTML = '<div class="loading" style="text-align: center;">Loading Duos...</div>';
 
             const chatsRef = db.collection('chats');
@@ -770,7 +768,6 @@
             item.addEventListener('click', () => {
                 // Handle different view transitions for mobile vs desktop
                 if (isDesktop()) {
-                    messagePanelEl.style.display = 'flex';
                     chatPromptEl.style.display = 'none';
                     singleChatViewEl.style.display = 'flex';
                 } else {
@@ -793,7 +790,6 @@
         });
 
         // --- (Remaining Chat Functions: generateChatId, renderMessage, startChatListener, messageFormEl listener) ---
-        // (Omitted for brevity, assumed functional from previous step)
         function generateChatId(uid1, uid2) { const sortedUids = [uid1, uid2].sort(); return sortedUids.join('_'); }
         function renderMessage(messageData) { 
             const isSent = messageData.senderId === currentUserId;
@@ -804,6 +800,44 @@
             document.getElementById('messages-list').appendChild(messageEl);
             document.getElementById('messages-list').scrollTop = document.getElementById('messages-list').scrollHeight;
         }
+        function startChatListener(chatId) {
+            if (unsubscribeMessages) unsubscribeMessages();
+            messagesListEl.innerHTML = '<div class="system-message">Connecting to Duo Chat...</div>';
+
+            const messagesRef = db.collection('chats').doc(chatId).collection('messages');
+            const q = messagesRef.orderBy('timestamp', 'asc');
+
+            unsubscribeMessages = q.onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === "added") renderMessage(change.doc.data());
+                });
+            }, error => {
+                messagesListEl.innerHTML = `<div class="system-message error">Error loading chat.</div>`;
+            });
+        }
+        messageFormEl.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = document.getElementById('message-input').value.trim();
+            
+            if (!content || !currentChatId || !currentUserId) return;
+
+            try {
+                await db.collection('chats').doc(currentChatId).collection('messages').add({
+                    senderId: currentUserId, content: content,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(), type: 'text'
+                });
+                
+                await db.collection('chats').doc(currentChatId).update({
+                    lastMessage: content,
+                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                document.getElementById('message-input').value = ''; 
+
+            } catch (error) {
+                alert(`Error sending message: ${error.message}`);
+            }
+        });
 
         // Final UI initialization
         updateAuthUI();
