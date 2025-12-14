@@ -304,7 +304,7 @@ async function loadUserData(user) {
             nickname: defaultNickname, 
             bio: "",
             profileImageUrl: "", 
-            friends: [],
+            friends: [], // Initialize friends array
             lastActive: Date.now(),
             authType: authType 
         };
@@ -352,7 +352,7 @@ async function handleSignUp(e) {
             nickname: nickname, 
             bio: "",
             profileImageUrl: "", 
-            friends: [], 
+            friends: [], // Initialize friends array
             lastActive: Date.now(),
             authType: 'email' 
         });
@@ -453,7 +453,6 @@ async function handleSaveProfile() {
     if (!user) return alert("Please sign in to save your profile.");
 
     // STEP 1: Reload user data immediately before saving for synchronization and accurate change check.
-    // This is crucial for matching the Firestore Security Rules.
     await loadUserData(user); 
 
     const newBio = profileBioInput.value.trim();
@@ -469,19 +468,32 @@ async function handleSaveProfile() {
     saveProfileBtn.disabled = true;
     saveProfileBtn.textContent = 'Saving...';
 
+    // *** CRITICAL FIX: Build update object to guarantee security rule compliance ***
+    const updatePayload = {
+        bio: newBio,
+        profileImageUrl: newImageUrl,
+        lastActive: Date.now()
+    };
+    
+    // Explicitly include the 'friends' array (if it exists) to satisfy the Firestore Security Rule's 'hasOnly' check.
+    if (currentUserData.friends) {
+        // Send the existing friends list unchanged.
+        updatePayload.friends = currentUserData.friends;
+    } else {
+        // If it somehow doesn't exist, send an empty list to satisfy the security rule for future updates.
+        updatePayload.friends = [];
+    }
+    // **********************************************************************************
+
     try {
-        await updateDoc(doc(db, "users", user.uid), {
-            bio: newBio,
-            profileImageUrl: newImageUrl,
-            lastActive: Date.now() 
-        });
+        await updateDoc(doc(db, "users", user.uid), updatePayload);
 
         // STEP 2: Update the globally stored data (the client's source of truth)
         currentUserData.bio = newBio;
         currentUserData.profileImageUrl = newImageUrl;
         
         // STEP 3: Re-render the editor to ensure all internal state and form values 
-        // are explicitly set to the new, SAVED values. This is the ultimate persistence fix.
+        // are explicitly set to the new, SAVED values for persistence.
         loadProfileEditor();
         
         saveProfileBtn.textContent = 'Saved!';
@@ -499,7 +511,7 @@ async function handleSaveProfile() {
             saveProfileBtn.textContent = 'Save Profile';
             saveProfileBtn.disabled = false;
         }, 3000);
-        alert("Failed to save profile. Ensure your Firestore Security Rules match the required fields.");
+        alert("CRITICAL ERROR: Failed to save. Please confirm your Firestore Security Rules and check the browser console for specific rejection details.");
     }
 }
 
