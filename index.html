@@ -2,149 +2,77 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>DuoUp</title>
+<title>DuoUp Minimal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-body{margin:0;font-family:'Rajdhani',sans-serif;background:#050510;color:#eaf6ff;}
+body{font-family:sans-serif;background:#050510;color:white;display:flex;justify-content:center;align-items:center;height:100vh;}
+input,button{padding:10px;margin:5px;border-radius:5px;border:none;}
+button{cursor:pointer;}
 .hidden{display:none;}
-header{position:fixed;top:0;width:100%;height:60px;background:#0f1224;display:flex;justify-content:space-between;align-items:center;padding:0 16px;border-bottom:1px solid #1c2148;}
-nav button{margin-left:6px;padding:6px 12px;border:none;border-radius:6px;background:#00f6ff;color:#050510;font-weight:600;cursor:pointer;}
-#auth,#app{min-height:100vh;display:flex;justify-content:center;align-items:center;}
-.auth-card{background:#0f1224;padding:28px;border-radius:14px;width:100%;max-width:380px;}
-input,textarea{width:100%;padding:12px;margin:8px 0;background:#0a0d22;border:1px solid #1c2148;color:#eaf6ff;border-radius:6px;}
-button{cursor:pointer;border:none;border-radius:6px;padding:10px;font-weight:600;}
-#app{padding-top:70px;max-width:1200px;margin:auto;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;padding:16px;}
-.card{background:#141426;padding:16px;border-radius:14px;border:1px solid #1c2148;}
-.card-header{display:flex;align-items:center;gap:12px;}
-.avatar{width:46px;height:46px;border-radius:50%;background:#8a5cff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#050510;}
-.bio{margin:10px 0;color:#8b94b4;}
 </style>
 </head>
 <body>
 
-<header id="header" class="hidden">
-    <h2>DuoUp</h2>
-    <nav>
-        <button onclick="showTab('home')">Home</button>
-        <button onclick="showTab('profile')">Profile</button>
-        <button onclick="logout()">Logout</button>
-    </nav>
-</header>
-
 <div id="auth">
-    <div class="auth-card">
-        <h2>Welcome</h2>
-        <input id="email" placeholder="Email">
-        <input id="password" type="password" placeholder="Password">
-        <button onclick="signin()">Sign In</button>
-        <button onclick="signup()" style="background:#8a5cff">Sign Up</button>
-    </div>
+  <h2>DuoUp Auth</h2>
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button id="signin">Sign In</button>
+  <button id="signup">Sign Up</button>
+  <p id="msg"></p>
 </div>
 
 <div id="app" class="hidden">
-
-    <section id="home">
-        <h2 style="padding-left:16px">All Users</h2>
-        <div class="grid" id="grid"></div>
-    </section>
-
-    <section id="profile" class="hidden" style="padding:16px">
-        <h2>Your Profile</h2>
-        <textarea id="bio" placeholder="Your bio here"></textarea>
-        <button onclick="saveProfile()">Save</button>
-    </section>
-
+  <h2>Welcome, <span id="user"></span></h2>
+  <button id="logout">Logout</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-    authDomain:"duoup-cfae6.firebaseapp.com",
-    projectId:"duoup-cfae6"
+  apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+  authDomain:"duoup-cfae6.firebaseapp.com",
+  projectId:"duoup-cfae6"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app);
 
-let currentUser;
-const authUI=document.getElementById("auth");
-const appUI=document.getElementById("app");
-const header=document.getElementById("header");
+const email = document.getElementById("email");
+const password = document.getElementById("password");
+const msg = document.getElementById("msg");
+const authDiv = document.getElementById("auth");
+const appDiv = document.getElementById("app");
+const userSpan = document.getElementById("user");
 
-window.signin = async ()=> {
-    try { await signInWithEmailAndPassword(auth,email.value,password.value); }
-    catch(e){ alert(e.message); }
+document.getElementById("signin").onclick = async () => {
+  try {
+    await signInWithEmailAndPassword(auth, email.value, password.value);
+    msg.textContent = "";
+  } catch(e) { msg.textContent = e.message; }
 };
 
-window.signup = async ()=> {
-    try {
-        const cred = await createUserWithEmailAndPassword(auth,email.value,password.value);
-        await setDoc(doc(db,"users",cred.user.uid),{
-            uid:cred.user.uid,
-            nickname:email.value.split("@")[0],
-            bio:""
-        });
-    } catch(e){ alert(e.message); }
+document.getElementById("signup").onclick = async () => {
+  try {
+    await createUserWithEmailAndPassword(auth, email.value, password.value);
+    msg.textContent = "User created!";
+  } catch(e) { msg.textContent = e.message; }
 };
 
-window.logout = ()=>signOut(auth);
+document.getElementById("logout").onclick = () => signOut(auth);
 
-window.showTab = tab=>{
-    ["home","profile"].forEach(t=>document.getElementById(t).classList.add("hidden"));
-    document.getElementById(tab).classList.remove("hidden");
-    if(tab==="home") loadUsers();
-};
-
-/* AUTH STATE */
-onAuthStateChanged(auth, async u=>{
-    if(u){
-        currentUser=u;
-        authUI.classList.add("hidden");
-        appUI.classList.remove("hidden");
-        header.classList.remove("hidden");
-        showTab("home");
-        const docSnap=await getDoc(doc(db,"users",currentUser.uid));
-        if(docSnap.exists()) document.getElementById("bio").value = docSnap.data().bio||"";
-    } else {
-        authUI.classList.remove("hidden");
-        appUI.classList.add("hidden");
-        header.classList.add("hidden");
-    }
+onAuthStateChanged(auth, user => {
+  if(user){
+    authDiv.classList.add("hidden");
+    appDiv.classList.remove("hidden");
+    userSpan.textContent = user.email;
+  } else {
+    authDiv.classList.remove("hidden");
+    appDiv.classList.add("hidden");
+  }
 });
-
-/* HOME */
-async function loadUsers(){
-    const grid=document.getElementById("grid");
-    grid.innerHTML="";
-    const snap=await getDocs(collection(db,"users"));
-    snap.forEach(d=>{
-        const u=d.data();
-        if(u.uid===currentUser.uid) return; // skip self
-        grid.innerHTML+=`
-        <div class="card">
-            <div class="card-header">
-                <div class="avatar">${u.nickname[0]}</div>
-                <strong>${u.nickname}</strong>
-            </div>
-            <div class="bio">${u.bio||"No bio set"}</div>
-        </div>`;
-    });
-}
-
-/* PROFILE */
-window.saveProfile = async ()=>{
-    await updateDoc(doc(db,"users",currentUser.uid),{
-        bio:document.getElementById("bio").value
-    });
-    alert("Profile saved");
-};
 </script>
 
 </body>
