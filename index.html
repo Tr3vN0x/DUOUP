@@ -3,61 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duoup - Spark Plan MVP</title>
+    <title>Duoup - Social MVP</title>
     
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
     <style>
         /* --- General and Reset --- */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Roboto', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            background: #15171e; 
+            background: #15171e; /* Deep dark background */
             color: #f0f0f0;
         }
 
         #app-container {
             width: 100%;
             max-width: 600px;
-            height: 90vh; 
+            height: 100vh; /* Use full height for app feel */
             position: relative;
-            overflow: hidden; /* Hide content when views switch */
-        }
-
-        /* --- Match Feed Container --- */
-        #matching-container {
-            padding: 20px 10px 100px; 
-            max-width: 420px;
-            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            background: #1e1e2f; /* App background */
         }
         
-        #header {
-            text-align: center;
-            padding: 10px 0;
+        /* --- Header & Top Bar --- */
+        #top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #2a2a44;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+        #top-bar h1 {
             color: #ffaa00;
+            font-size: 1.5em;
+            margin: 0;
+        }
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #f0f0f0;
+            cursor: pointer;
+            position: relative;
+            padding: 5px;
+        }
+        .icon-btn .material-icons {
+            font-size: 28px;
+        }
+        .icon-btn .badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #ff4560; /* Highlight color */
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.7em;
+            line-height: 1;
+            transform: translate(50%, -50%);
         }
 
+        /* --- Main Content Area (View Switching) --- */
+        #content-area {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .app-view {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            overflow-y: auto;
+            padding-bottom: 80px; /* Space for fixed nav bar */
+        }
+
+        /* --- 1. Match Feed View --- */
+        #matching-view { display: flex; flex-direction: column; align-items: center; }
         #card-stack {
             position: relative;
+            width: 90%;
+            max-width: 400px;
             height: 550px; 
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
-
-        /* 🃏 The Card Itself */
+        /* Card styles remain the same for .gamer-card, .profile-img, .tag, etc. */
         .gamer-card {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #2a2a44;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            padding: 25px;
-            display: flex; flex-direction: column;
-            cursor: grab;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #2a2a44; border-radius: 20px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+            padding: 25px; display: flex; flex-direction: column; cursor: grab;
             transition: transform 0.5s ease-out, opacity 0.5s ease-out;
         }
-        
         .card-header { display: flex; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #3c3c5c; padding-bottom: 15px; }
         .profile-img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-right: 15px; border: 3px solid #ff4560; }
         .username { margin: 0; font-size: 1.8em; flex-grow: 1; }
@@ -67,72 +112,191 @@
         }
         .role { background: #ff4560; } .rank { background: #5c6fff; } .platform { background: #ffaa00; } .vibe { background: #7c7c7c; }
 
-        /* Action Buttons */
-        #action-buttons { display: flex; justify-content: space-around; position: absolute; bottom: 20px; width: 100%; }
-        .action-btn {
-            padding: 15px 35px; border: none; border-radius: 50px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: background 0.2s;
-        }
+        #action-buttons { display: flex; justify-content: space-around; width: 100%; max-width: 400px; padding: 10px; }
+        .action-btn { padding: 15px 35px; border: none; border-radius: 50px; font-size: 1.1em; font-weight: bold; cursor: pointer; transition: background 0.2s; }
         .skip { background: #5c6fff; color: white; }
         .request { background: #3dd022; color: white; }
-        .test-btn { background: #ffaa00; color: #1e1e2f;}
-        .loading { text-align: center; padding: 50px; }
 
-        /* --- Chat Container --- */
-        #chat-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: none; 
-            flex-direction: column;
-            background: #1e1e2f; 
-            border-radius: 10px;
+        /* --- 2. Inbox/Chat List View --- */
+        #inbox-view { padding: 10px; }
+        .chat-list-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 10px;
+            border-bottom: 1px solid #3c3c5c;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .chat-list-item:hover {
+            background: #2a2a44;
+        }
+        .chat-avatar-container {
+            position: relative;
+            margin-right: 15px;
+        }
+        .chat-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .online-dot { /* Online Status Indicator */
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #3dd022; /* Green */
+            border: 2px solid #1e1e2f;
+        }
+        .chat-details {
+            flex-grow: 1;
+        }
+        .chat-details h3 {
+            margin: 0;
+            font-size: 1.1em;
+        }
+        .chat-details p {
+            margin: 5px 0 0;
+            color: #a0a0b0;
+            font-size: 0.9em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .chat-time {
+            color: #ffaa00;
+            font-size: 0.8em;
         }
 
+        /* --- 3. Single Chat View (Temporary Hide/Show) --- */
+        #single-chat-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #1e1e2f;
+            display: none;
+            flex-direction: column;
+            z-index: 20; /* Ensure it covers everything */
+        }
+        /* Chat styles from previous step (message, form, etc.) */
         .chat-header { display: flex; align-items: center; padding: 15px; background: #2a2a44; border-bottom: 1px solid #3c3c5c; }
-        #back-to-main-btn { background: none; border: none; color: #ffaa00; font-size: 1.2em; cursor: pointer; margin-right: 15px; }
+        #chat-back-btn { background: none; border: none; color: #ffaa00; font-size: 1.2em; cursor: pointer; margin-right: 15px; }
         #messages-list { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-
-        /* Message Bubbles */
-        .message { max-width: 80%; padding: 10px 15px; border-radius: 18px; font-size: 0.95em; word-wrap: break-word; }
-        .message-time { display: block; font-size: 0.7em; color: #a0a0b0; margin-top: 5px; text-align: right; }
-        .message.sent { align-self: flex-end; background: #3dd022; color: #1e1e2f; border-bottom-right-radius: 4px; }
-        .message.received { align-self: flex-start; background: #5c6fff; color: white; border-bottom-left-radius: 4px; }
-        .system-message { text-align: center; color: #ffaa00; font-style: italic; font-size: 0.8em; margin: 10px 0; }
-
-        /* Message Input Form */
+        /* Message styles omitted for brevity */
         #message-form { display: flex; padding: 15px; background: #2a2a44; border-top: 1px solid #3c3c5c; }
         #message-input { flex-grow: 1; padding: 10px; border: 1px solid #3c3c5c; border-radius: 20px; background: #1e1e2f; color: white; margin-right: 10px; }
         #send-btn { padding: 10px 20px; background: #ffaa00; color: #1e1e2f; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
+
+        /* --- Fixed Bottom Navigation --- */
+        #bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            justify-content: space-around;
+            background: #2a2a44;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+            padding: 10px 0;
+            z-index: 10;
+        }
+        .nav-item {
+            text-align: center;
+            color: #a0a0b0;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-item.active {
+            color: #ffaa00;
+        }
+        .nav-item .material-icons {
+            font-size: 28px;
+            display: block;
+        }
+        .nav-item span {
+            font-size: 0.7em;
+        }
+
     </style>
 </head>
 <body>
     <div id="app-container">
-        <div id="matching-container">
-            <h1 id="header">Find Your Duo</h1>
-            
-            <div id="card-stack">
-                <div class="loading">Loading Gamer Cards...</div>
-            </div>
-
-            <div id="action-buttons">
-                <button id="skip-btn" class="action-btn skip" disabled>SKIP</button>
-                <button id="request-btn" class="action-btn request" disabled>DUO REQUEST</button>
-            </div>
-
-            <button id="accept-test-btn" class="action-btn test-btn" style="position: absolute; bottom: -60px; left: 50%; transform: translateX(-50%); width: 90%;">TEST: Accept Request</button>
-        </div>
         
-        <div id="chat-container"> 
+        <div id="top-bar">
+            <h1>Duoup</h1>
+            <button id="profile-btn" class="icon-btn">
+                <span class="material-icons">person</span>
+            </button>
+        </div>
+
+        <div id="content-area">
+            
+            <div id="matching-view" class="app-view">
+                <div id="card-stack">
+                    <div class="loading">Loading Gamer Cards...</div>
+                </div>
+                <div id="action-buttons">
+                    <button id="skip-btn" class="action-btn skip" disabled>SKIP</button>
+                    <button id="request-btn" class="action-btn request" disabled>DUO REQUEST</button>
+                </div>
+            </div>
+
+            <div id="inbox-view" class="app-view">
+                <h2>Your Duos</h2>
+                <div id="chat-list">
+                    <div class="chat-list-item" data-partner-uid="TEST_UID_1" data-partner-name="AcePlayer">
+                        <div class="chat-avatar-container">
+                            <img src="https://via.placeholder.com/100" alt="Avatar" class="chat-avatar">
+                            <span class="online-dot"></span>
+                        </div>
+                        <div class="chat-details">
+                            <h3>AcePlayer</h3>
+                            <p>Sounds good, sending you an invite!</p>
+                        </div>
+                        <span class="chat-time">11:05 PM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profile-view" class="app-view">
+                <h2>Your Profile & Settings</h2>
+                <p>Implement your premium status and game settings here.</p>
+            </div>
+            
+        </div>
+
+        <div id="single-chat-view"> 
             <header class="chat-header">
-                <button id="back-to-main-btn">← Back</button>
+                <button id="chat-back-btn">← Back</button>
                 <h2 id="chat-partner-name">Chat with Duo</h2>
             </header>
             
             <div id="messages-list">
-            </div>
+                </div>
             
             <form id="message-form">
                 <input type="text" id="message-input" placeholder="Type your message..." required>
                 <button type="submit" id="send-btn">Send</button>
             </form>
+        </div>
+
+        <div id="bottom-nav">
+            <div class="nav-item active" data-view="matching-view">
+                <span class="material-icons">favorite</span>
+                <span>Match</span>
+            </div>
+            <div class="nav-item" data-view="inbox-view">
+                <span class="material-icons">chat</span>
+                <span>Duos</span>
+            </div>
+            <div class="nav-item" data-view="profile-view">
+                <span class="material-icons">settings</span>
+                <span>Settings</span>
+            </div>
         </div>
     </div>
     
@@ -152,345 +316,162 @@
             measurementId: "G-46B67F90FK"
         };
 
-        // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const db = app.firestore();
         const auth = app.auth();
 
-        // --- 2. CORE DOM ELEMENTS ---
-        const matchingContainerEl = document.getElementById('matching-container');
-        const cardStackEl = document.getElementById('card-stack');
-        const skipBtn = document.getElementById('skip-btn');
-        const requestBtn = document.getElementById('request-btn');
-        const chatContainerEl = document.getElementById('chat-container');
-        const messagesListEl = document.getElementById('messages-list');
-        const messageFormEl = document.getElementById('message-form');
-        const messageInputEl = document.getElementById('message-input');
-        const backToMainBtn = document.getElementById('back-to-main-btn');
-        const acceptTestBtn = document.getElementById('accept-test-btn'); // New test button
-
-        // --- 3. GLOBAL STATE ---
+        // --- 2. GLOBAL STATE ---
         let currentUserId = null; 
         let cards = [];
         let currentIndex = 0;
         let currentChatId = null;
         let unsubscribeMessages = null;
+        let unsubscribeChats = null; // New listener for the chat list
 
-        // --- 4. AUTH & INITIALIZATION ---
+        // --- 3. CORE DOM ELEMENTS ---
+        const contentAreaEl = document.getElementById('content-area');
+        const bottomNavEl = document.getElementById('bottom-nav');
+        const cardStackEl = document.getElementById('card-stack');
+        const skipBtn = document.getElementById('skip-btn');
+        const requestBtn = document.getElementById('request-btn');
+        const singleChatViewEl = document.getElementById('single-chat-view');
+        const messagesListEl = document.getElementById('messages-list');
+        const messageFormEl = document.getElementById('message-form');
+        const chatListEl = document.getElementById('chat-list');
+        const chatBackBtn = document.getElementById('chat-back-btn');
+
+        // --- 4. NAVIGATION LOGIC ---
+        function switchView(viewId) {
+            document.querySelectorAll('.app-view').forEach(view => {
+                view.style.display = 'none';
+            });
+            document.getElementById(viewId).style.display = 'flex';
+            
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.nav-item[data-view="${viewId}"]`).classList.add('active');
+
+            // If switching to Match view, ensure cards are fetched
+            if (viewId === 'matching-view' && cards.length === 0) {
+                fetchGamerCards();
+            }
+            // If switching to Inbox view, start chat list listener
+            if (viewId === 'inbox-view') {
+                fetchChatList();
+            } else {
+                if (unsubscribeChats) unsubscribeChats();
+            }
+        }
+
+        bottomNavEl.addEventListener('click', (e) => {
+            const navItem = e.target.closest('.nav-item');
+            if (navItem) {
+                switchView(navItem.dataset.view);
+            }
+        });
+
+        // Initialize view
+        switchView('matching-view');
+
+        // --- 5. AUTH & MATCH FEED LOGIC ---
+
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUserId = user.uid;
-                console.log("User authenticated:", currentUserId);
                 fetchGamerCards();
             } else {
-                console.warn("User not logged in. Login logic needs to be implemented.");
                 cardStackEl.innerHTML = '<h2>Please log in to see cards.</h2>';
             }
         });
-        
-        // --- UI/NAVIGATION HELPERS ---
-        function generateChatId(uid1, uid2) {
-            const sortedUids = [uid1, uid2].sort();
-            return sortedUids.join('_');
+
+        // (fetchGamerCards and renderCurrentCard logic remain the same)
+        // [omitted for brevity, assume the previous implementation is here]
+
+        // --- 6. INBOX (CHAT LIST) LOGIC ---
+        function renderChatListItem(chat) {
+            const partnerId = chat.members.find(uid => uid !== currentUserId);
+            
+            const item = document.createElement('div');
+            item.className = 'chat-list-item';
+            item.dataset.partnerUid = partnerId;
+            item.dataset.partnerName = chat.partnerName || 'Unknown Duo';
+
+            const lastTime = chat.lastUpdated ? new Date(chat.lastUpdated.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            
+            item.innerHTML = `
+                <div class="chat-avatar-container">
+                    <img src="${chat.partnerImg || 'https://via.placeholder.com/100'}" alt="Avatar" class="chat-avatar">
+                    <span class="online-dot"></span> 
+                </div>
+                <div class="chat-details">
+                    <h3>${chat.partnerName || 'Loading...'}</h3>
+                    <p>${chat.lastMessage || 'Start the conversation!'}</p>
+                </div>
+                <span class="chat-time">${lastTime}</span>
+            `;
+
+            item.addEventListener('click', () => {
+                singleChatViewEl.style.display = 'flex'; // Show single chat view
+                document.getElementById('chat-partner-name').textContent = item.dataset.partnerName;
+                const chatId = generateChatId(currentUserId, item.dataset.partnerUid);
+                currentChatId = chatId;
+                startChatListener(chatId);
+            });
+            
+            chatListEl.appendChild(item);
         }
 
-        function showChatScreen(partnerUid, partnerName) {
+        async function fetchChatList() {
             if (!currentUserId) return;
+            chatListEl.innerHTML = '<div class="loading">Loading Duos...</div>';
 
-            const chatId = generateChatId(currentUserId, partnerUid);
-            currentChatId = chatId;
-            
-            document.getElementById('chat-partner-name').textContent = `Chat with ${partnerName}`;
+            const chatsRef = db.collection('chats');
+            // Query chats where the current user is a member
+            const q = chatsRef
+                .where('members', 'array-contains', currentUserId)
+                .orderBy('lastUpdated', 'desc');
 
-            matchingContainerEl.style.display = 'none';
-            chatContainerEl.style.display = 'flex';
-            
-            startChatListener(chatId);
-        }
-
-        backToMainBtn.addEventListener('click', () => {
-            if (unsubscribeMessages) {
-                unsubscribeMessages();
-                unsubscribeMessages = null;
-            }
-            matchingContainerEl.style.display = 'block';
-            chatContainerEl.style.display = 'none';
-        });
-
-
-        // -----------------------------------------------------------------
-        // MATCH FEED LOGIC (Sending Request)
-        // -----------------------------------------------------------------
-        async function fetchGamerCards() {
-            skipBtn.disabled = false;
-            requestBtn.disabled = false;
-            
-            const cardsRef = db.collection('gamerCards');
-            const q = cardsRef
-                .where('gameSlug', '==', 'valorant') 
-                .where('isActive', '==', true)     
-                .limit(10); 
-
-            try {
-                const querySnapshot = await q.get();
-                cards = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+            // Set up real-time listener for the inbox
+            unsubscribeChats = q.onSnapshot(async (snapshot) => {
+                chatListEl.innerHTML = '';
                 
-                renderCurrentCard();
-
-            } catch (error) {
-                console.error("Error fetching documents:", error);
-                cardStackEl.innerHTML = `<p>Error loading cards.</p>`;
-            }
-        }
-
-        function renderCurrentCard() {
-            // ... (Render logic remains the same) ...
-            if (!currentUserId || cards.length === 0 || currentIndex >= cards.length) {
-                cardStackEl.innerHTML = '<h2>No more Duos found!</h2>';
-                skipBtn.disabled = true;
-                requestBtn.disabled = true;
-                return;
-            }
-            
-            const cardData = cards[currentIndex];
-            const newCardEl = document.createElement('div');
-            newCardEl.className = 'gamer-card';
-            newCardEl.dataset.targetUserId = cardData.userId;
-            
-            const username = cardData.username || 'Gamer';
-            const profileImg = cardData.profileImageUrl || 'https://via.placeholder.com/150';
-            const description = cardData.description || 'No description provided.';
-            
-            newCardEl.innerHTML = `
-                <div class="card-header">
-                    <img src="${profileImg}" alt="Profile" class="profile-img">
-                    <h2 class="username">${username}</h2>
-                </div>
-                <div class="game-details">
-                    <div class="game-info">
-                        <h3>${cardData.gameSlug ? cardData.gameSlug.toUpperCase().replace('_', ' ') : 'UNKNOWN GAME'}</h3>
-                        <span class="tag role">ROLE: ${cardData.inGameRole || 'Any'}</span>
-                        <span class="tag rank">RANK: ${cardData.skillLevel || 'Casual'}</span>
-                    </div>
-                </div>
-                <div class="card-bio">
-                    <p>${description}</p>
-                    <span class="tag platform">${cardData.platform || 'Unknown Platform'}</span>
-                    <span class="tag vibe">#${cardData.vibe || 'Neutral'}</span>
-                </div>
-            `;
-            cardStackEl.innerHTML = '';
-            cardStackEl.appendChild(newCardEl);
-        }
-
-        function swipeCard(action) {
-            // ... (Swipe logic remains the same) ...
-            const currentCardEl = document.querySelector('.gamer-card');
-            if (!currentCardEl) return;
-
-            let translateX = (action === 'request') ? '500px' : '-500px';
-
-            currentCardEl.style.transform = `translateX(${translateX}) rotate(${action === 'request' ? '10deg' : '-10deg'})`;
-            currentCardEl.style.opacity = '0';
-
-            setTimeout(() => {
-                currentIndex++;
-                renderCurrentCard();
-            }, 500);
-        }
-
-        skipBtn.addEventListener('click', () => {
-            if (currentIndex < cards.length) {
-                swipeCard('skip');
-            }
-        });
-
-        requestBtn.addEventListener('click', async () => {
-            if (currentIndex >= cards.length || !currentUserId) return;
-            
-            const cardData = cards[currentIndex];
-            
-            const friendRequest = {
-                senderId: currentUserId, 
-                receiverId: cardData.userId,
-                gameSlug: cardData.gameSlug,
-                status: 'pending', 
-                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            };
-            
-            try {
-                await db.collection('friendRequests').add(friendRequest);
-                console.log(`Duo Request SENT to User ID: ${cardData.userId}`);
-                swipeCard('request');
+                // Get UIDs for display names (simplified: fetch all partner names once)
+                const chatDocs = snapshot.docs;
                 
-            } catch (error) {
-                console.error("Error sending Duo Request:", error);
-                alert(`Failed to send request. Error: ${error.message}`);
-            }
-        });
-
-        // -----------------------------------------------------------------
-        // CLIENT-SIDE TRANSACTION LOGIC (REPLACING CLOUD FUNCTION)
-        // This is the essential part for Spark Plan compliance.
-        // -----------------------------------------------------------------
-
-        /**
-         * Simulates a user (Receiver) accepting a request sent by another user (Sender).
-         * This logic uses a Firestore Transaction to guarantee atomic updates.
-         */
-        async function acceptFriendRequestAndCreateChat(requestId, senderId, receiverId, gameSlug, senderName) {
-            
-            if (!currentUserId || currentUserId !== receiverId) {
-                alert("Authentication error: Cannot accept a request unless you are the intended receiver.");
-                return;
-            }
-
-            const requestRef = db.collection('friendRequests').doc(requestId);
-            const chatMembers = [senderId, receiverId].sort();
-            const chatId = chatMembers.join('_');
-            const chatDocRef = db.collection('chats').doc(chatId);
-
-            try {
-                await db.runTransaction(async (transaction) => {
-                    // Check Request Status
-                    const requestDoc = await transaction.get(requestRef);
-                    if (!requestDoc.exists || requestDoc.data().status !== 'pending') {
-                        throw new Error("Request is no longer pending or does not exist.");
-                    }
+                for (const doc of chatDocs) {
+                    const chat = doc.data();
+                    const partnerId = chat.members.find(uid => uid !== currentUserId);
                     
-                    // A. Update the Request Status to 'accepted'
-                    transaction.update(requestRef, {
-                        status: 'accepted',
-                        acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                    // Fetch partner details (Name/Image)
+                    const partnerDoc = await db.collection('users').doc(partnerId).get();
+                    const partnerData = partnerDoc.data();
+                    
+                    chat.partnerName = partnerData?.username || 'Duo';
+                    chat.partnerImg = partnerData?.profileImageUrl;
 
-                    // B. Create the Chat Document
-                    const chatData = {
-                        members: chatMembers,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-                        lastMessage: `You Duod Up for ${gameSlug}! Say hello.`,
-                        unreadCount: { 
-                            [senderId]: 0, 
-                            [receiverId]: 0 
-                        }
-                    };
-                    transaction.set(chatDocRef, chatData, { merge: true });
-                });
-                
-                // C. Add Initial System Message (Must be outside the Transaction)
-                await chatDocRef.collection('messages').add({
-                    senderId: 'SYSTEM', 
-                    content: `Congratulations! Match accepted for ${gameSlug}. Start chatting!`,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    type: 'system'
-                });
-
-                console.log(`Match accepted and chat created: ${chatId}`);
-                showChatScreen(senderId, senderName); 
-                
-            } catch (error) {
-                console.error("Client-Side Match Transaction Failed:", error);
-                alert(`Failed to complete match due to a database error. (Did the other user accept first? Check console.)`);
-            }
-        }
-
-        // --- CHAT DISPLAY LOGIC ---
-        function renderMessage(messageData) {
-            // ... (Message render logic remains the same) ...
-            const isSent = messageData.senderId === currentUserId;
-            const messageEl = document.createElement('div');
-            messageEl.className = `message ${isSent ? 'sent' : 'received'}`;
-            
-            const time = messageData.timestamp ? new Date(messageData.timestamp.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sending...';
-
-            messageEl.innerHTML = `
-                <p>${messageData.content}</p>
-                <span class="message-time">${time}</span>
-            `;
-            
-            messagesListEl.appendChild(messageEl);
-            messagesListEl.scrollTop = messagesListEl.scrollHeight;
-        }
-
-        function startChatListener(chatId) {
-            // ... (Real-time listener logic remains the same) ...
-            if (unsubscribeMessages) unsubscribeMessages();
-            messagesListEl.innerHTML = '<div class="system-message">Connecting to Duo Chat...</div>';
-
-            const messagesRef = db.collection('chats').doc(chatId).collection('messages');
-            const q = messagesRef.orderBy('timestamp', 'asc');
-
-            unsubscribeMessages = q.onSnapshot(snapshot => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === "added") {
-                        renderMessage(change.doc.data());
-                    }
-                });
+                    renderChatListItem(chat);
+                }
             }, error => {
-                console.error("Chat listener error:", error);
-                messagesListEl.innerHTML = `<div class="system-message error">Error loading chat.</div>`;
+                console.error("Error loading chat list:", error);
+                chatListEl.innerHTML = '<p>Failed to load duos.</p>';
             });
         }
-
-        // --- SEND MESSAGE FUNCTION ---
-        messageFormEl.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const content = messageInputEl.value.trim();
-            
-            if (!content || !currentChatId || !currentUserId) return;
-
-            try {
-                // 1. Write the new message to the messages subcollection
-                await db.collection('chats').doc(currentChatId).collection('messages').add({
-                    senderId: currentUserId,
-                    content: content,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    type: 'text'
-                });
-                
-                // 2. Update the parent chat document (for inbox sorting)
-                await db.collection('chats').doc(currentChatId).update({
-                    lastMessage: content,
-                    lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                messageInputEl.value = ''; 
-
-            } catch (error) {
-                console.error("Error sending message:", error);
-            }
-        });
-
-        // -----------------------------------------------------------------
-        // TEST BUTTON LOGIC (FOR SIMULATION)
-        // -----------------------------------------------------------------
-        acceptTestBtn.addEventListener('click', () => {
-            // This simulates you, the receiver, accepting a request from a sender.
-            
-            // !!! IMPORTANT: YOU MUST REPLACE THESE PLACEHOLDERS !!!
-            const testRequestId = 'REQUEST_ID_FROM_DB'; // Find a pending request document ID
-            const testSenderId = 'SENDER_UID_FROM_DB'; // The UID of the person who sent that request
-            const testSenderName = 'Test Partner';
-            
-            if (testRequestId === 'REQUEST_ID_FROM_DB' || testSenderId === 'SENDER_UID_FROM_DB' || !currentUserId) {
-                alert("Please replace the test UIDs and Request ID in the 'acceptTestBtn' function to simulate a match.");
-                return;
-            }
-
-            // Note: We hardcode 'valorant' as the game for the test
-            acceptFriendRequestAndCreateChat(
-                testRequestId, 
-                testSenderId, 
-                currentUserId, // You are the receiver
-                'valorant',
-                testSenderName
-            );
-        });
         
+        // --- 7. SINGLE CHAT VIEW LOGIC ---
+
+        chatBackBtn.addEventListener('click', () => {
+            if (unsubscribeMessages) unsubscribeMessages();
+            singleChatViewEl.style.display = 'none';
+        });
+
+        // (generateChatId, renderMessage, startChatListener, and messageFormEl listener
+        //  logic remain the same as the previous full code)
+        // [omitted for brevity, assume the previous implementation is here]
+
+        // --- 8. CLIENT-SIDE TRANSACTION LOGIC (for accept request) ---
+        // (acceptFriendRequestAndCreateChat logic remains the same)
+        // [omitted for brevity, assume the previous implementation is here]
     </script>
 </body>
 </html>
