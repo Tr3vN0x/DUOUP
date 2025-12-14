@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP Friends Management</title>
+<title>DUO UP Profiles</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -69,9 +69,43 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     flex-direction:column; 
     align-items:center; 
     margin-bottom: 15px;
-    /* Removed cursor: pointer */
 }
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
+
+/* --- PROFILE EDITOR STYLES --- */
+#profileEditor {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    border: 2px solid magenta;
+    border-radius: 12px;
+    background: #111;
+    box-shadow: 0 0 15px magenta;
+    max-width: 500px;
+    margin: 20px auto;
+}
+#profileEditor label {
+    font-weight: bold;
+    color: cyan;
+}
+#profileEditor input, #profileEditor textarea {
+    padding: 10px;
+    border: 1px solid #333;
+    background: #222;
+    color: white;
+    border-radius: 6px;
+    font-family: inherit;
+}
+#currentAvatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid cyan;
+    align-self: center;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
 </style>
 </head>
 <body>
@@ -94,13 +128,35 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     <button class="neon-btn" onclick="showTab('suggested')">Suggested</button>
     <button class="neon-btn" onclick="showTab('requests')">Requests</button>
     <button class="neon-btn" onclick="showTab('friends')">Friends</button>
+    <button class="neon-btn" onclick="showTab('profile')">Profile</button>
     <button class="neon-btn" onclick="logout()">Logout</button>
   </div>
 
   <div id="suggestedTab" class="flex"></div>
   <div id="requestsTab" class="flex hidden"></div>
   <div id="friendsTab" class="flex hidden"></div>
+  
+  <div id="profileTab" class="hidden">
+    <div id="profileEditor">
+        <img id="currentAvatar" src="" alt="Current Profile Picture">
+        
+        <label for="nicknameInput">Nickname:</label>
+        <input type="text" id="nicknameInput" maxlength="20">
+
+        <label for="bioInput">Bio:</label>
+        <textarea id="bioInput" rows="3" maxlength="150" placeholder="Tell the community about yourself..."></textarea>
+        
+        <label for="gamesInput">Favorite Games (Comma Separated):</label>
+        <input type="text" id="gamesInput" placeholder="Valorant, League of Legends, Apex">
+        
+        <label for="avatarUrlInput">Profile Picture URL:</label>
+        <input type="url" id="avatarUrlInput" placeholder="https://example.com/image.jpg" oninput="document.getElementById('currentAvatar').src = this.value || DEFAULT_AVATAR">
+
+        <button class="neon-btn" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
 </div>
+
 
 <script>
 // --- FIREBASE CONFIGURATION ---
@@ -122,6 +178,15 @@ const dashboard = document.getElementById("dashboard");
 const suggestedTab = document.getElementById("suggestedTab");
 const requestsTab = document.getElementById("requestsTab");
 const friendsTab = document.getElementById("friendsTab");
+const profileTab = document.getElementById("profileTab"); // New reference
+
+// Profile Input Elements
+const currentAvatar = document.getElementById("currentAvatar");
+const nicknameInput = document.getElementById("nicknameInput");
+const bioInput = document.getElementById("bioInput");
+const gamesInput = document.getElementById("gamesInput");
+const avatarUrlInput = document.getElementById("avatarUrlInput");
+
 
 let currentUser = null;
 
@@ -142,9 +207,12 @@ auth.onAuthStateChanged(async user=>{
 
   const userDoc = await db.collection("users").doc(user.uid).get();
   if(!userDoc.exists){
+    // Initial profile creation with new fields
     await db.collection("users").doc(user.uid).set({
       uid: user.uid,
       nickname: user.displayName||"Player",
+      bio: "", // New Field
+      games: [], // New Field
       friends: [],
       profileImageUrl: user.photoURL||DEFAULT_AVATAR
     });
@@ -157,6 +225,7 @@ auth.onAuthStateChanged(async user=>{
   loadSuggested();
   loadRequests();
   loadFriends();
+  loadProfileEditor(data); // Load data into the new profile tab
 });
 
 function logout(){ 
@@ -164,19 +233,71 @@ function logout(){
 }
 
 function showTab(tab){
-  // Removed closeChat() call
-
-  if (tab === 'suggested') loadSuggested();
-  if (tab === 'requests') loadRequests();
-  if (tab === 'friends') loadFriends();
-
+  // Reset visibility for all tabs
   suggestedTab.classList.add("hidden");
   requestsTab.classList.add("hidden");
   friendsTab.classList.add("hidden");
+  profileTab.classList.add("hidden"); // Include new tab
+
   document.getElementById(tab+"Tab").classList.remove("hidden");
+
+  // If showing profile, ensure data is loaded
+  if (tab === 'profile') {
+      db.collection("users").doc(currentUser.uid).get().then(doc => {
+          loadProfileEditor(doc.data());
+      });
+  }
 }
 
-// ---------------- LOAD FUNCTIONS ----------------
+// ---------------- NEW PROFILE EDITOR FUNCTIONS ----------------
+
+function loadProfileEditor(data){
+    data = data || {};
+    nicknameInput.value = data.nickname || currentUser.displayName || "Player";
+    bioInput.value = data.bio || "";
+    gamesInput.value = (data.games || []).join(', ');
+    avatarUrlInput.value = data.profileImageUrl || currentUser.photoURL || "";
+    currentAvatar.src = data.profileImageUrl || currentUser.photoURL || DEFAULT_AVATAR;
+}
+
+async function saveProfile(){
+    if (!currentUser) return;
+
+    // Basic validation
+    const newNickname = nicknameInput.value.trim();
+    if (newNickname.length < 2) {
+        alert("Nickname must be at least 2 characters long.");
+        return;
+    }
+
+    const gamesArray = gamesInput.value.split(',').map(game => game.trim()).filter(game => game !== '');
+
+    const profileUpdates = {
+        nickname: newNickname,
+        bio: bioInput.value.trim(),
+        games: gamesArray,
+        profileImageUrl: avatarUrlInput.value.trim() || DEFAULT_AVATAR
+    };
+
+    try {
+        await db.collection("users").doc(currentUser.uid).update(profileUpdates);
+        alert("Profile updated successfully!");
+        
+        // Update welcome message immediately
+        document.getElementById("welcome").innerText = "Welcome, "+newNickname;
+        
+        // Refresh friend/suggested lists as nickname/avatar might change
+        loadSuggested();
+        loadFriends();
+
+    } catch(error) {
+        alert("Error saving profile. Please check your security rules (allow update: if request.auth != null) and try again.");
+        console.error("Profile Save Error:", error);
+    }
+}
+
+
+// ---------------- LOAD FUNCTIONS ---------------- (Unchanged)
 async function loadSuggested(){
   suggestedTab.innerHTML="<p>Loading suggested users...</p>";
   
@@ -202,8 +323,10 @@ async function loadSuggested(){
         const u = doc.data();
         const card = document.createElement("div");
         card.className = "card";
+        // Display new profile data on suggested cards
         card.innerHTML = `<img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
           <strong>${u.nickname}</strong>
+          <p style="font-size:0.8em; margin: 5px 0;">${(u.games || []).slice(0, 1).join(', ')}...</p>
           <button class="neon-btn" onclick="sendRequest('${doc.id}')">Send Request</button>`;
         suggestedTab.appendChild(card);
         suggestedCount++;
@@ -248,6 +371,7 @@ async function loadRequests(){
         card.className = "card";
         card.innerHTML = `<img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
           <strong>${u.nickname}</strong>
+          <p style="font-size:0.8em; margin: 5px 0;">${(u.games || []).slice(0, 1).join(', ')}...</p>
           <button class="neon-btn" onclick="acceptRequest('${data.requestId}','${data.senderId}')">Accept</button>
           <button class="neon-btn" onclick="rejectRequest('${data.requestId}')">Reject</button>`;
         requestsTab.appendChild(card);
@@ -280,9 +404,9 @@ async function loadFriends(){
         const u = doc.data();
         const card = document.createElement("div");
         card.className = "card";
-        // REMOVED: card.setAttribute('onclick', `startChat(...)`);
         card.innerHTML = `<img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
           <strong>${u.nickname}</strong>
+          <p style="font-size:0.8em; margin: 5px 0;">${(u.games || []).slice(0, 1).join(', ')}...</p>
           <button class="neon-btn remove" onclick="removeFriend('${doc.id}')">Remove</button>`;
         friendsTab.appendChild(card);
       });
@@ -292,7 +416,7 @@ async function loadFriends(){
   }
 }
 
-// ---------------- FRIEND ACTIONS ----------------
+// ---------------- FRIEND ACTIONS ---------------- (Unchanged)
 async function sendRequest(receiverId){
   try {
       const existingRequestSnap = await db.collection("friendRequests")
