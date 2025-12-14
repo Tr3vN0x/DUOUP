@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Duoup - Complete Responsive & Schema Fixed MVP</title>
+    <title>Duoup - Final MVP (Index Fixes Applied)</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -487,7 +487,7 @@
 
         logoutBtn.addEventListener('click', () => auth.signOut());
 
-        // FIX: Updated to use your specified user/gamerCard fields (status, fcmToken, description)
+        // Initial setup for new user using your schema
         async function createInitialUserDocument(uid, email) {
             const userRef = db.collection('users').doc(uid);
             const defaultUsername = email.split('@')[0];
@@ -642,8 +642,7 @@
                 currentIndex = 0;
                 renderCurrentCard();
             } catch (error) {
-                 // The actual error will be in the console, but we give a generic message.
-                cardStackEl.innerHTML = `<p style="color: #ff4560;">Error: Missing Index. You MUST create the required index in your Firestore Console.</p>`;
+                cardStackEl.innerHTML = `<p style="color: #ff4560;">Error: Failed to load cards. Index issue is still present. Check console.</p>`;
             }
         }
 
@@ -719,7 +718,7 @@
         });
 
 
-        // --- 8. CLIENT-SIDE MATCH ACCEPT LOGIC (Simplified since no dedicated 'chats' collection) ---
+        // --- 8. CLIENT-SIDE MATCH ACCEPT LOGIC (For handling received requests in a real app, though not fully built here) ---
         async function acceptFriendRequestAndCreateChat(requestId, senderId, receiverId, gameSlug, senderName) {
             await db.collection('friendRequests').doc(requestId).update({ status: 'accepted' });
             
@@ -753,11 +752,10 @@
 
             const friendRequestsRef = db.collection('friendRequests');
             
-            // NOTE: This logic requires Indexes 2 & 3 (senderId/status AND receiverId/status)
             let duos = new Map();
 
             try {
-                // Query 1: Where I am the Sender and they Accepted
+                // Query 1: Where I am the Sender and they Accepted (Requires Index 2)
                 const q1 = friendRequestsRef
                     .where('senderId', '==', currentUserId)
                     .where('status', '==', 'accepted');
@@ -767,7 +765,7 @@
                     duos.set(doc.data().receiverId, { partnerId: doc.data().receiverId });
                 });
 
-                // Query 2: Where I am the Receiver and they Accepted
+                // Query 2: Where I am the Receiver and they Accepted (Requires Index 3)
                 const q2 = friendRequestsRef
                     .where('receiverId', '==', currentUserId)
                     .where('status', '==', 'accepted');
@@ -789,7 +787,7 @@
                     const partnerName = partnerData?.username || 'Duo';
                     const partnerImg = partnerData?.profileImageUrl;
                     
-                    // Get Last Message (Requires Index 4: chatId/timestamp)
+                    // Get Last Message (Requires Index 4)
                     const chatId = generateChatId(currentUserId, partnerId);
                     const lastMessageQuery = db.collection('messages')
                         .where('chatId', '==', chatId)
@@ -811,8 +809,7 @@
                 }
 
             } catch (error) {
-                 // Informative error message based on the high probability of a missing index
-                chatListEl.innerHTML = `<p style="color: #ff4560; text-align: center;">Error: Failed to load Duos. Check the console and ensure you have created all four required Firestore Indexes!</p>`;
+                chatListEl.innerHTML = `<p style="color: #ff4560; text-align: center;">Error: Failed to load Duos. Ensure your friendRequests and messages indexes are ENALBED.</p>`;
             }
         }
 
@@ -879,6 +876,10 @@
             const q = messagesRef.where('chatId', '==', chatId).orderBy('timestamp', 'asc');
 
             unsubscribeMessages = q.onSnapshot(snapshot => {
+                // Clear the 'Connecting...' message only on first successful load
+                if (messagesListEl.querySelector('.system-message')) {
+                    messagesListEl.innerHTML = '';
+                }
                 snapshot.docChanges().forEach(change => {
                     if (change.type === "added") renderMessage(change.doc.data());
                 });
