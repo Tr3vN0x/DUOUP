@@ -74,7 +74,7 @@ body {
     flex-direction:column; 
     align-items:center; 
     margin-bottom: 15px;
-    cursor: pointer; /* Added cursor for clickability */
+    cursor: pointer; 
 }
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
 
@@ -162,23 +162,6 @@ body {
     border-radius: 4px;
     font-size: 0.9em;
 }
-.friend-viewer-card { /* Small card style for other users' friends list */
-    width: 120px;
-    padding: 10px;
-    border: 1px solid #444;
-    border-radius: 8px;
-    background: #1a1a1a;
-    display: inline-block;
-    text-align: center;
-    margin-right: 10px;
-    margin-bottom: 10px;
-}
-.friend-viewer-card img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-bottom: 5px;
-}
 </style>
 </head>
 <body>
@@ -234,7 +217,7 @@ body {
 
 
 <script>
-// --- FIREBASE CONFIGURATION ---
+// --- FIREBASE CONFIGURATION (Update this block with your actual details) ---
 const firebaseConfig = {
   apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
   authDomain:"duoup-cfae6.firebaseapp.com",
@@ -255,7 +238,7 @@ const suggestedTab = document.getElementById("suggestedTab");
 const requestsTab = document.getElementById("requestsTab");
 const friendsTab = document.getElementById("friendsTab");
 const profileTab = document.getElementById("profileTab"); 
-const profileViewer = document.getElementById("profileViewer"); // New reference
+const profileViewer = document.getElementById("profileViewer");
 
 // Profile Editor Elements
 const currentAvatar = document.getElementById("currentAvatar");
@@ -336,32 +319,14 @@ function showTab(tab){
   }
 }
 
-// ---------------- NEW PROFILE VIEWER LOGIC ----------------
+// ---------------- PROFILE VIEWER LOGIC (Static Friend Count) ----------------
 
-async function loadOtherUsersFriends(friendIds, containerElement) {
-    containerElement.innerHTML = friendIds.length === 0 ? '<p>This player has no friends yet.</p>' : '';
-
-    const friendPromises = friendIds.map(fid => db.collection("users").doc(fid).get());
-    const friendDocs = await Promise.all(friendPromises);
-
-    friendDocs.forEach(doc => {
-        if (!doc.exists) return; 
-        const u = doc.data();
-        const card = document.createElement("div");
-        card.className = "friend-viewer-card";
-        
-        // Ensure clicking a friend's friend opens their profile
-        card.setAttribute('onclick', `viewProfile('${doc.id}')`);
-
-        card.innerHTML = `<img src="${u.profileImageUrl||DEFAULT_AVATAR}" alt="${u.nickname}">
-          <p style="margin: 0; font-size: 0.9em; font-weight: bold;">${u.nickname}</p>`;
-        containerElement.appendChild(card);
-    });
+function loadOtherUsersFriendsStatic(friendCount, containerElement) {
+    // Shows static text instead of trying to fetch and display every single friend profile
+    containerElement.innerHTML = `<p style="opacity: 0.8;">This player has **${friendCount}** connections. Connect with them to find your next duo!</p>`;
 }
 
-
 async function viewProfile(targetUserId) {
-    // If user clicks on their own card, switch to the editor
     if (targetUserId === currentUser.uid) {
         showTab('profile');
         return;
@@ -383,8 +348,10 @@ async function viewProfile(targetUserId) {
         const bioText = u.bio || "No biography provided.";
         const friendIds = u.friends || [];
 
-        // Determine if the user is already a friend or has a pending request
-        const isFriend = (await db.collection("users").doc(currentUser.uid).get()).data().friends.includes(targetUserId);
+        // Determine relationship status
+        const myData = (await db.collection("users").doc(currentUser.uid).get()).data();
+        const isFriend = myData.friends.includes(targetUserId);
+        
         const hasPendingRequestSnap = await db.collection("friendRequests")
             .where("senderId", "in", [currentUser.uid, targetUserId])
             .where("receiverId", "in", [currentUser.uid, targetUserId])
@@ -423,23 +390,21 @@ async function viewProfile(targetUserId) {
             </div>
 
             <div class="profile-section">
-                <h3>${u.nickname}'s Friends (${friendIds.length})</h3>
-                <div id="otherUsersFriendsList" class="flex" style="flex-wrap: wrap; gap: 10px;">
+                <h3>${u.nickname}'s Connections (${friendIds.length})</h3>
+                <div id="otherUsersFriendsList" style="padding: 10px; border: 1px dashed #555; border-radius: 8px;">
                     </div>
             </div>
         `;
         
-        // Load the friends list in the background
-        await loadOtherUsersFriends(friendIds, document.getElementById('otherUsersFriendsList'));
-
+        loadOtherUsersFriendsStatic(friendIds.length, document.getElementById('otherUsersFriendsList'));
 
     } catch(error) {
-        profileViewer.innerHTML = `<p style="color:red; text-align: center;">Failed to load profile: ${error.message}</p>`;
+        profileViewer.innerHTML = `<p style="color:red; text-align: center;">Failed to load profile. Please check your browser console and ensure your Firebase Rules permit reading the /users collection.</p>`;
         console.error("View Profile Error:", error);
     }
 }
 
-// ---------------- PROFILE EDITOR FUNCTIONS ---------------- (Unchanged)
+// ---------------- PROFILE EDITOR FUNCTIONS ----------------
 function loadProfileEditor(data){
     data = data || {};
     nicknameInput.value = data.nickname || currentUser.displayName || "Player";
@@ -471,7 +436,7 @@ async function saveProfile(){
         loadSuggested();
         loadFriends();
     } catch(error) {
-        alert("Error saving profile. Check browser console for security rule errors.");
+        alert("Error saving profile.");
         console.error("Profile Save Error:", error);
     }
 }
@@ -497,7 +462,7 @@ async function saveFriendNickname(friendId, currentNickname) {
         alert(`Nickname for ${currentNickname} saved as "${trimmedName}".`);
         loadFriends(); 
     } catch (error) {
-        alert("Failed to save friend nickname. Check browser console for security rule errors.");
+        alert("Failed to save friend nickname.");
         console.error("Save Nickname Error:", error);
     }
 }
@@ -529,7 +494,6 @@ async function loadSuggested(){
         const u = doc.data();
         const card = document.createElement("div");
         card.className = "card";
-        // ADDED CLICK HANDLER
         card.setAttribute('onclick', `viewProfile('${doc.id}')`);
         
         const gamesPreview = (u.games && u.games.length > 0) ? `<p style="font-size:0.8em; margin: 5px 0;">${u.games.slice(0, 1).join(', ')}...</p>` : '';
@@ -579,7 +543,6 @@ async function loadRequests(){
         const u = data.user;
         const card = document.createElement("div");
         card.className = "card";
-        // ADDED CLICK HANDLER
         card.setAttribute('onclick', `viewProfile('${data.senderId}')`);
 
 
@@ -622,7 +585,6 @@ async function loadFriends(){
         const u = doc.data();
         const card = document.createElement("div");
         card.className = "card";
-        // ADDED CLICK HANDLER
         card.setAttribute('onclick', `viewProfile('${doc.id}')`);
 
         const displayNickname = myNicknames[doc.id] || u.nickname;
@@ -684,7 +646,7 @@ function acceptRequest(requestId,senderId){
     transaction.delete(db.collection("friendRequests").doc(requestId));
   }).then(() => {
     alert("Request accepted! You are now friends.");
-    showTab('friends'); // Switch to friends tab after acceptance
+    showTab('friends'); 
   }).catch(err => {
     alert("Transaction failed (Accept Request): " + err.message);
     console.error("Accept Request Error:", err);
@@ -712,7 +674,7 @@ function removeFriend(friendId){
     transaction.update(friendRef, {friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)});
   }).then(() => {
     alert("Friend removed successfully.");
-    showTab('friends'); // Refresh the friends list
+    showTab('friends'); 
   }).catch(err => {
     alert("Removal failed (Remove Friend): " + err.message);
     console.error("Remove Friend Error:", err);
