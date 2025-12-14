@@ -77,7 +77,7 @@ body {
     color: cyan;
     white-space: nowrap;
 }
-.filter-box input {
+.filter-box select {
     flex-grow: 1;
     padding: 8px;
     border: 1px solid #444;
@@ -213,6 +213,7 @@ body {
     border-radius: 6px;
     font-family: inherit;
     outline: none;
+    min-height: 40px; /* Ensure selects are visible */
 }
 #currentAvatar {
     width: 100px;
@@ -223,43 +224,9 @@ body {
     object-fit: cover;
     margin-bottom: 15px;
 }
-
-/* --- PROFILE VIEWER STYLES --- */
-#profileViewer {
-    padding: 20px;
-    border: 2px solid cyan;
-    border-radius: 12px;
-    background: #111;
-    box-shadow: 0 0 15px cyan;
-    max-width: 700px;
-    margin: 20px auto;
-}
-.profile-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px dashed magenta;
-    padding-bottom: 15px;
-}
-.profile-header img {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    border: 4px solid magenta;
-    margin-right: 20px;
-    object-fit: cover;
-}
-.profile-header h2 {
-    margin: 0;
-    font-size: 2.2em;
-    color: magenta;
-    text-shadow: 0 0 5px magenta;
-}
-.profile-section h3 {
-    border-left: 5px solid cyan;
-    padding-left: 10px;
-    margin-top: 20px;
-    color: cyan;
+#gamesInput {
+    /* For the select multiple field */
+    height: 100px; 
 }
 .game-tag {
     display: inline-block;
@@ -302,7 +269,8 @@ body {
   <div id="suggestedTab">
     <div class="filter-box">
         <label for="gameFilterInput">Filter by Game:</label>
-        <input type="text" id="gameFilterInput" placeholder="e.g., Valorant" onkeydown="if(event.key === 'Enter') loadSuggested()">
+        <select id="gameFilterInput">
+            </select>
         <button class="neon-btn" onclick="loadSuggested()">Filter</button>
         <button class="neon-btn remove" onclick="clearFilter()">Clear</button>
     </div>
@@ -320,8 +288,9 @@ body {
         <label for="bioInput">Bio:</label>
         <textarea id="bioInput" rows="3" maxlength="150" placeholder="Tell the community about yourself..."></textarea>
         
-        <label for="gamesInput">Favorite Games (Comma Separated):</label>
-        <input type="text" id="gamesInput" placeholder="Valorant, League of Legends, Apex">
+        <label for="gamesInput">Favorite Games (Hold CTRL/CMD to select multiple):</label>
+        <select id="gamesInput" multiple size="4">
+             </select>
         
         <label for="skillRatingInput">Skill Rating (1-5 Stars):</label>
         <select id="skillRatingInput">
@@ -353,6 +322,37 @@ body {
 
 
 <script>
+// -------------------- GAME CONFIGURATION DATA --------------------
+// This is the structure you can expand up to 200 games.
+// The categories are for future implementation (e.g., filtering by Valorant Role: Sentinel)
+const GAME_CONFIG = {
+    // === EXAMPLE 1: FPS Game ===
+    "Valorant": {
+        categories: ["Role", "Rank"],
+        Role: ["Duelist", "Controller", "Sentinel", "Initiator"],
+        Rank: ["Bronze", "Silver", "Gold", "Platinum", "Diamond", "Ascendant", "Immortal", "Radiant"]
+    },
+    // === EXAMPLE 2: MOBA Game ===
+    "League of Legends": {
+        categories: ["Lane", "Rank"],
+        Lane: ["Top", "Jungle", "Mid", "Bot/ADC", "Support"],
+        Rank: ["Iron", "Bronze", "Silver", "Gold", "Platinum", "Emerald", "Diamond", "Master", "Grandmaster", "Challenger"]
+    },
+    // === EXAMPLE 3: Simple Game ===
+    "Minecraft": {
+        categories: ["Mode"],
+        Mode: ["Survival", "Creative", "Hardcore"]
+    },
+    // Add more games here (up to 200)
+    "Apex Legends": {},
+    "Rocket League": {},
+    "Overwatch 2": {},
+    "Fortnite": {},
+    "Genshin Impact": {},
+    "World of Warcraft": {},
+    "Dota 2": {}
+};
+
 // --- FIREBASE CONFIGURATION (UPDATE THIS BLOCK) ---
 const firebaseConfig = {
   apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
@@ -408,6 +408,43 @@ function renderStatus(status) {
 }
 
 
+// ---------------- DROPDOWN POPULATION FUNCTIONS ----------------
+function populateGamesDropdown() {
+    const select = document.getElementById('gamesInput');
+    select.innerHTML = '';
+    
+    // Add an empty option
+    const emptyOption = document.createElement('option');
+    emptyOption.value = '';
+    emptyOption.textContent = 'Select a Game...';
+    select.appendChild(emptyOption);
+    
+    Object.keys(GAME_CONFIG).sort().forEach(game => {
+        const option = document.createElement('option');
+        option.value = game;
+        option.textContent = game;
+        select.appendChild(option);
+    });
+}
+
+function populateGameFilterDropdown() {
+    const select = document.getElementById('gameFilterInput');
+    select.innerHTML = '';
+    
+    // Add an 'All Games' option for filtering
+    const allOption = document.createElement('option');
+    allOption.value = '';
+    allOption.textContent = '--- All Games ---';
+    select.appendChild(allOption);
+
+    Object.keys(GAME_CONFIG).sort().forEach(game => {
+        const option = document.createElement('option');
+        option.value = game;
+        option.textContent = game;
+        select.appendChild(option);
+    });
+}
+
 // ---------------- LOGIN/AUTH ----------------
 function login(){
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert(err.message));
@@ -423,6 +460,10 @@ auth.onAuthStateChanged(async user=>{
   dashboard.classList.remove("hidden");
   currentUser = user;
 
+  // Populate dropdowns immediately after auth
+  populateGamesDropdown();
+  populateGameFilterDropdown();
+
   const userDocRef = db.collection("users").doc(user.uid);
   const userDoc = await userDocRef.get();
   
@@ -431,7 +472,7 @@ auth.onAuthStateChanged(async user=>{
       uid: user.uid,
       nickname: user.displayName||"Player", 
       bio: "", 
-      games: [], 
+      games: [], // This will now store an array of selected game names
       friends: [],
       nicknames: {}, 
       profileImageUrl: user.photoURL||DEFAULT_AVATAR,
@@ -483,7 +524,7 @@ function showTab(tab){
   }
 }
 
-// ---------------- MESSAGE FUNCTIONS ----------------
+// ---------------- MESSAGE FUNCTIONS (UNCHANGED) ----------------
 
 async function loadUnreadCount() {
     if (!currentUser) return;
@@ -535,14 +576,12 @@ async function loadMessagesForProfile(targetUserId, targetNickname) {
     const messageContainer = document.getElementById('messageInbox');
     messageContainer.innerHTML = '<p>Loading messages...</p>';
 
-    // Load messages sent TO ME from this friend
     const incomingSnap = await db.collection("messages")
         .where("senderId", "==", targetUserId)
         .where("receiverId", "==", currentUser.uid)
         .orderBy("timestamp", "desc")
         .get();
 
-    // Load messages sent BY ME to this friend
     const outgoingSnap = await db.collection("messages")
         .where("senderId", "==", currentUser.uid)
         .where("receiverId", "==", targetUserId)
@@ -554,7 +593,6 @@ async function loadMessagesForProfile(targetUserId, targetNickname) {
         ...outgoingSnap.docs.map(doc => ({ ...doc.data(), id: doc.id, type: 'outgoing' }))
     ];
 
-    // Sort all messages by timestamp (newest first)
     allMessages.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
 
     if (allMessages.length === 0) {
@@ -587,7 +625,6 @@ async function loadMessagesForProfile(targetUserId, targetNickname) {
 
     messageContainer.innerHTML = messageHtml;
 
-    // Mark messages as read and reload the unread count
     if (unreadIds.length > 0) {
         const batch = db.batch();
         unreadIds.forEach(id => {
@@ -595,7 +632,7 @@ async function loadMessagesForProfile(targetUserId, targetNickname) {
             batch.update(msgRef, { read: true });
         });
         batch.commit().then(() => {
-            loadUnreadCount(); // Update the main dashboard badge
+            loadUnreadCount(); 
         }).catch(error => {
             console.error("Error marking messages as read:", error);
         });
@@ -603,7 +640,7 @@ async function loadMessagesForProfile(targetUserId, targetNickname) {
 }
 
 
-// ---------------- PROFILE VIEWER LOGIC ----------------
+// ---------------- PROFILE VIEWER LOGIC (UNCHANGED) ----------------
 
 function loadOtherUsersFriendsStatic(friendCount, containerElement) {
     containerElement.innerHTML = `<p style="opacity: 0.8;">This player has **${friendCount}** connections. Connect with them to find your next duo!</p>`;
@@ -631,7 +668,6 @@ async function viewProfile(targetUserId) {
         const bioText = u.bio || "No biography provided.";
         const friendIds = u.friends || [];
 
-        // Determine relationship status
         const myData = (await db.collection("users").doc(currentUser.uid).get()).data();
         const isFriend = myData.friends.includes(targetUserId);
         
@@ -696,7 +732,6 @@ async function viewProfile(targetUserId) {
         loadOtherUsersFriendsStatic(friendIds.length, document.getElementById('otherUsersFriendsList'));
 
         if (isFriend) {
-            // Only load messages if they are friends
             loadMessagesForProfile(targetUserId, u.nickname);
         }
 
@@ -706,18 +741,29 @@ async function viewProfile(targetUserId) {
     }
 }
 
-// ---------------- PROFILE EDITOR FUNCTIONS ----------------
+// ---------------- PROFILE EDITOR FUNCTIONS (UPDATED) ----------------
 function loadProfileEditor(data){
     data = data || {};
-    // Display current read-only nickname with badge
+    
     currentNicknameDisplay.innerHTML = `${data.nickname || "Player"}${getOwnerBadge(currentUser.uid)}`;
     
     bioInput.value = data.bio || "";
-    gamesInput.value = (data.games || []).join(', ');
+    
+    // 1. Select the games the user currently has saved
+    const gamesSelect = document.getElementById('gamesInput');
+    const savedGames = data.games || [];
+
+    // Clear and repopulate the dropdown (in case config changed)
+    populateGamesDropdown(); 
+    
+    // Select the options that match the saved games
+    Array.from(gamesSelect.options).forEach(option => {
+        option.selected = savedGames.includes(option.value);
+    });
+
     avatarUrlInput.value = data.profileImageUrl || currentUser.photoURL || "";
     currentAvatar.src = data.profileImageUrl || currentUser.photoURL || DEFAULT_AVATAR;
 
-    // Load status and rating fields
     skillRatingInput.value = data.skillRating || "3";
     statusInput.value = data.status || "Online";
 }
@@ -725,15 +771,16 @@ function loadProfileEditor(data){
 async function saveProfile(){
     if (!currentUser) return;
     
-    // Fetch current nickname (since it's read-only)
     const currentData = (await db.collection("users").doc(currentUser.uid).get()).data();
     const currentNickname = currentData.nickname;
 
-    const gamesArray = gamesInput.value.split(',').map(game => game.trim()).filter(game => game !== '');
+    // 1. Get selected games from the multi-select box
+    const gamesSelect = document.getElementById('gamesInput');
+    const selectedGames = Array.from(gamesSelect.selectedOptions).map(option => option.value).filter(game => game !== '');
     
     const profileUpdates = {
         bio: bioInput.value.trim(),
-        games: gamesArray,
+        games: selectedGames, // Now saving a clean array of selected games
         profileImageUrl: avatarUrlInput.value.trim() || DEFAULT_AVATAR,
         skillRating: parseInt(skillRatingInput.value),
         status: statusInput.value
@@ -743,7 +790,6 @@ async function saveProfile(){
         await db.collection("users").doc(currentUser.uid).update(profileUpdates);
         alert("Profile updated successfully!");
         
-        // Update welcome message 
         document.getElementById("welcome").innerHTML = `Welcome, ${currentNickname}${getOwnerBadge(currentUser.uid)}`;
         
         loadSuggested();
@@ -780,7 +826,7 @@ async function saveFriendNickname(friendId, currentNickname) {
     }
 }
 
-// ---------------- LOAD FUNCTIONS ----------------
+// ---------------- LOAD FUNCTIONS (UPDATED) ----------------
 
 function clearFilter() {
     document.getElementById('gameFilterInput').value = '';
@@ -793,12 +839,12 @@ async function loadSuggested(){
   suggestedCards.innerHTML="<p>Loading suggested users...</p>";
   
   try {
-      // 1. Get Filter Value
+      // 1. Get Filter Value from the select box
       const filterGame = document.getElementById('gameFilterInput').value.trim();
       let usersQuery = db.collection("users");
 
       if (filterGame) {
-          // NOTE: array-contains is case-sensitive and must match the item exactly.
+          // Use array-contains for filtering by game
           usersQuery = usersQuery.where("games", "array-contains", filterGame);
           suggestedCards.innerHTML = `<p>Filtering users who play: <b>${filterGame}</b>...</p>`;
       } else {
@@ -965,7 +1011,7 @@ async function loadFriends(){
   }
 }
 
-// ---------------- FRIEND ACTIONS ----------------
+// ---------------- FRIEND ACTIONS (UNCHANGED) ----------------
 
 async function sendRequest(receiverId){
   try {
