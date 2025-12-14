@@ -1,3 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUO UP Profiles & Friends</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+/* --- BASE STYLES (Includes the dark background fix) --- */
+body { 
+    margin:0; 
+    font-family:'Orbitron',sans-serif; 
+    background:#0b0b0b; /* THIS IS THE DARK BACKGROUND COLOR */
+    color:white; 
+}
+.container { width:90%; max-width: 1000px; margin:auto; padding:20px; }
+.hidden { display:none; }
+
+/* --- HEADER & ICON STYLES --- */
+.header {
+    background: #111;
+    border-bottom: 3px solid cyan;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    padding: 10px 0;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.header h1 {
+    font-size: 2.5em;
+    color: #fff;
+    text-shadow: 0 0 5px cyan, 0 0 10px cyan, 0 0 15px magenta;
+    margin: 0;
+}
+.icon-container {
+    margin-right: 15px;
+    font-size: 2.5em;
+    color: cyan;
+    text-shadow: 0 0 5px cyan, 0 0 10px magenta;
+}
+
+/* --- BUTTON STYLES --- */
+.neon-btn { 
+    border:2px solid cyan; 
+    background:transparent; 
+    color:white; 
+    padding:8px 14px; 
+    margin:5px; 
+    border-radius:6px; 
+    cursor:pointer; 
+    box-shadow:0 0 10px cyan; 
+    transition: all 0.2s ease-in-out;
+    text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif; 
+}
+.neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
+.neon-btn.remove { border-color: red; box-shadow: 0 0 10px red; }
+.neon-btn.remove:hover { border-color: orange; box-shadow: 0 0 15px orange; }
+
+/* --- CARD/LAYOUT STYLES --- */
+.flex { display:flex; gap:15px; flex-wrap:wrap; }
+.card { 
+    width:250px; 
+    padding:15px; 
+    border:2px solid cyan; 
+    border-radius:12px; 
+    background:#111; 
+    box-shadow:0 0 10px cyan; 
+    display:flex; 
+    flex-direction:column; 
+    align-items:center; 
+    margin-bottom: 15px;
+}
+.avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
+
+/* --- PROFILE EDITOR STYLES --- */
+#profileEditor {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    border: 2px solid magenta;
+    border-radius: 12px;
+    background: #111;
+    box-shadow: 0 0 15px magenta;
+    max-width: 500px;
+    margin: 20px auto;
+}
+#profileEditor label {
+    font-weight: bold;
+    color: cyan;
+}
+#profileEditor input, #profileEditor textarea {
+    padding: 10px;
+    border: 1px solid #333;
+    background: #222;
+    color: white;
+    border-radius: 6px;
+    font-family: inherit;
+    outline: none;
+}
+#currentAvatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid cyan;
+    align-self: center;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <div class="icon-container">
+        ⚡
+    </div>
+    <h1>DUO UP</h1>
+</div>
+
+<div id="loginPage" class="container">
+  <p>Find your perfect partner and dominate the cyber-arena.</p>
+  <button class="neon-btn" onclick="login()">Login with Google</button>
+</div>
+
+<div id="dashboard" class="container hidden">
+  <h2 id="welcome"></h2>
+  <div style="margin-bottom: 20px;">
+    <button class="neon-btn" onclick="showTab('suggested')">Suggested</button>
+    <button class="neon-btn" onclick="showTab('requests')">Requests</button>
+    <button class="neon-btn" onclick="showTab('friends')">Friends</button>
+    <button class="neon-btn" onclick="showTab('profile')">Profile</button>
+    <button class="neon-btn" onclick="logout()">Logout</button>
+  </div>
+
+  <div id="suggestedTab" class="flex"></div>
+  <div id="requestsTab" class="flex hidden"></div>
+  <div id="friendsTab" class="flex hidden"></div>
+  
+  <div id="profileTab" class="hidden">
+    <div id="profileEditor">
+        <img id="currentAvatar" src="" alt="Current Profile Picture">
+        
+        <label for="nicknameInput">Nickname:</label>
+        <input type="text" id="nicknameInput" maxlength="20">
+
+        <label for="bioInput">Bio:</label>
+        <textarea id="bioInput" rows="3" maxlength="150" placeholder="Tell the community about yourself..."></textarea>
+        
+        <label for="gamesInput">Favorite Games (Comma Separated):</label>
+        <input type="text" id="gamesInput" placeholder="Valorant, League of Legends, Apex">
+        
+        <label for="avatarUrlInput">Profile Picture URL:</label>
+        <input type="url" id="avatarUrlInput" placeholder="https://example.com/image.jpg" oninput="document.getElementById('currentAvatar').src = this.value || DEFAULT_AVATAR">
+
+        <button class="neon-btn" onclick="saveProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+
 <script>
 // --- FIREBASE CONFIGURATION ---
 const firebaseConfig = {
@@ -54,7 +220,7 @@ auth.onAuthStateChanged(async user=>{
       bio: "", 
       games: [], 
       friends: [],
-      nicknames: {}, // New Field for friend overrides
+      nicknames: {}, // Field for friend overrides
       profileImageUrl: user.photoURL||DEFAULT_AVATAR
     });
   }
@@ -121,31 +287,27 @@ async function saveProfile(){
     };
 
     try {
+        // Requires Security Rule: allow update: if request.auth.uid == userId
         await db.collection("users").doc(currentUser.uid).update(profileUpdates);
         alert("Profile updated successfully!");
         
-        // Update welcome message immediately
         document.getElementById("welcome").innerText = "Welcome, "+newNickname;
         
-        // Refresh friend/suggested lists as nickname/avatar might change
         loadSuggested();
         loadFriends();
 
     } catch(error) {
-        alert("Error saving profile. Please check your security rules (allow update: if request.auth != null) and try again.");
+        alert("Error saving profile. Check browser console for security rule errors.");
         console.error("Profile Save Error:", error);
     }
 }
 
-// ---------------- NEW NICKNAME OVERRIDE FUNCTION ----------------
+// ---------------- FRIEND NICKNAME OVERRIDE FUNCTION ----------------
 
 async function saveFriendNickname(friendId, currentNickname) {
     const customName = prompt(`Enter a nickname for ${currentNickname}:`, currentNickname);
     
-    if (customName === null) {
-        // User cancelled the prompt
-        return;
-    }
+    if (customName === null) return; // User cancelled
 
     const trimmedName = customName.trim();
     if (trimmedName === '') {
@@ -154,18 +316,19 @@ async function saveFriendNickname(friendId, currentNickname) {
     }
 
     const myRef = db.collection("users").doc(currentUser.uid);
+    // Use bracket notation to set a field within the 'nicknames' map
     const nicknameField = `nicknames.${friendId}`;
     
     try {
-        // Use an update operation to set the specific field within the 'nicknames' map
+        // Requires Security Rule: allow update: if request.auth.uid == userId
         await myRef.update({
             [nicknameField]: trimmedName
         });
         
         alert(`Nickname for ${currentNickname} saved as "${trimmedName}".`);
-        loadFriends(); // Refresh the list to show the new nickname
+        loadFriends(); // Refresh the list
     } catch (error) {
-        alert("Failed to save friend nickname. Check your security rules.");
+        alert("Failed to save friend nickname. Check browser console for security rule errors.");
         console.error("Save Nickname Error:", error);
     }
 }
@@ -178,7 +341,6 @@ async function loadSuggested(){
   
   try {
       const usersSnap = await db.collection("users").get(); 
-      // Fetch current user data to get friend and request lists
       const me = (await db.collection("users").doc(currentUser.uid).get()).data();
       suggestedTab.innerHTML = ""; 
 
@@ -267,13 +429,12 @@ async function loadFriends(){
   friendsTab.innerHTML="<p>Loading friends...</p>";
   
   try {
-      // Fetch current user data (including the new 'nicknames' map)
       const meDoc = await db.collection("users").doc(currentUser.uid).get();
       const me = meDoc.data();
       friendsTab.innerHTML = ""; 
       
       const myFriends = me.friends || [];
-      const myNicknames = me.nicknames || {}; // The new map for custom names
+      const myNicknames = me.nicknames || {}; // Custom names
 
       if(myFriends.length===0){ 
         friendsTab.innerHTML="<p>No friends yet. Time to find a duo!</p>"; 
@@ -289,7 +450,7 @@ async function loadFriends(){
         const card = document.createElement("div");
         card.className = "card";
         
-        // Determine the display nickname: use custom name if set, otherwise use global nickname
+        // Use custom nickname if available, otherwise use global nickname
         const displayNickname = myNicknames[doc.id] || u.nickname;
 
         const gamesPreview = (u.games && u.games.length > 0) ? `<p style="font-size:0.8em; margin: 5px 0;">${u.games.slice(0, 1).join(', ')}...</p>` : '';
@@ -307,7 +468,7 @@ async function loadFriends(){
   }
 }
 
-// ---------------- FRIEND ACTIONS ---------------- (Unchanged)
+// ---------------- FRIEND ACTIONS ----------------
 async function sendRequest(receiverId){
   try {
       const existingRequestSnap = await db.collection("friendRequests")
@@ -376,11 +537,6 @@ function removeFriend(friendId){
   db.runTransaction(async (transaction) => {
     transaction.update(meRef, {friends: firebase.firestore.FieldValue.arrayRemove(friendId)});
     transaction.update(friendRef, {friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)});
-    
-    // Optional: Remove custom nickname when removing the friend
-    // Note: This requires the Security Rule to allow the update on the user's document
-    // transaction.update(meRef, { [`nicknames.${friendId}`]: firebase.firestore.FieldValue.delete() });
-    
   }).then(() => {
     alert("Friend removed successfully.");
     loadFriends(); 
@@ -394,3 +550,5 @@ function removeFriend(friendId){
 // ---------------- CHAT FUNCTIONS (ALL REMOVED) ----------------
 
 </script>
+</body>
+</html>
