@@ -19,10 +19,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
 .neon-btn.remove { border-color:red; box-shadow:0 0 10px red; }
 .neon-btn.remove:hover { border-color:orange; box-shadow:0 0 15px orange; }
-#messageInput, #profileBio, #profileSkillRating, #profileStatus { 
-    flex-grow:1; padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px; font-family:inherit; outline:none; 
-}
-#profileNickname { flex-grow:1; padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px; font-family:inherit; outline:none; pointer-events:none; opacity:0.7; }
+#messageInput, #profileBio, #profileSkillRating, #profileStatus { flex-grow:1; padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px; font-family:inherit; outline:none; }
 #messageInput:focus, #profileBio:focus, #profileSkillRating:focus, #profileStatus:focus { border-color: magenta; box-shadow: 0 0 8px magenta; }
 #profileBio { resize: vertical; }
 #profileSkillRating, #profileStatus { width: 100%; max-width: 200px; }
@@ -77,6 +74,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <h3>Active Duos</h3>
 <div id="activeDuoList">No friends to chat with.</div>
 </div>
+
 <div id="chatWindow" style="width:70%; display:flex; flex-direction:column; padding:10px;">
 <h3 id="chatHeader" style="border-bottom:1px solid cyan; padding-bottom:5px;">Select a Duo</h3>
 <div id="messageDisplay" style="flex-grow:1; overflow-y:auto; padding:10px; background:#0b0b0b; border-radius:6px; margin-bottom:10px;"></div>
@@ -97,10 +95,12 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <input type="text" id="profileNickname" style="width: 300px;" disabled>
 </div>
 </div>
+
 <div style="margin-bottom: 15px;">
 <label style="color: cyan; display: block; margin-bottom: 5px;">Bio/Tagline:</label>
 <textarea id="profileBio" rows="3" style="width: 100%;"></textarea>
 </div>
+
 <div style="display: flex; gap: 30px; margin-bottom: 20px;">
 <div>
 <label style="color: cyan; display: block; margin-bottom: 5px;">Skill Rating (1-5):</label>
@@ -112,6 +112,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <option value="5">⭐⭐⭐⭐⭐</option>
 </select>
 </div>
+
 <div>
 <label style="color: cyan; display: block; margin-bottom: 5px;">Current Status:</label>
 <select id="profileStatus">
@@ -121,13 +122,14 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 </select>
 </div>
 </div>
+
 <button class="neon-btn" style="border-color: #00ff00; box-shadow: 0 0 10px #00ff00;" onclick="saveProfile()">Save Profile</button>
 <p id="saveMessage" style="color: #00ff00; margin-top: 10px;"></p>
 </div>
 </div>
 
 <script>
-// ---------- FIREBASE ----------
+// ---------- FIREBASE INIT ----------
 const firebaseConfig = {
   apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
   authDomain: "duoup-cfae6.firebaseapp.com",
@@ -143,7 +145,7 @@ const db = firebase.firestore();
 
 const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2";
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-let currentUser=null, currentChatUid=null, unsubscribeMessages=null;
+let currentUser=null, unsubscribeMessages=null;
 function getChatId(a,b){ return [a,b].sort().join('_'); }
 
 // ---------- AUTH ----------
@@ -156,18 +158,96 @@ loginPage.classList.add("hidden"); dashboard.classList.remove("hidden"); current
 
 const userRef=db.collection("users").doc(user.uid);
 if(!(await userRef.get()).exists){
-await userRef.set({uid:user.uid,nickname:user.displayName||"Player",bio:"",games:[],gameDetails:{},friends:[],profileImageUrl:user.photoURL||DEFAULT_AVATAR,skillRating:3,status:"Online"});
+await userRef.set({uid:user.uid,nickname:user.displayName||"Player",bio:"",friends:[],profileImageUrl:user.photoURL||DEFAULT_AVATAR,skillRating:3,status:"Online"});
 }
+
 const data = (await userRef.get()).data();
 document.getElementById("welcome").innerHTML = `Welcome, ${data.nickname}${user.uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''}`;
-loadSuggested(); loadRequests(); loadFriends();
+loadSuggested(); loadRequests(); loadFriends(); loadProfile();
 });
 
-// ---------- PROFILE ----------
+// ---------- CARD RENDERING ----------
+function getOwnerBadge(uid){ return uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''; }
+function renderSkillRating(r){r=parseInt(r)||0; return `<div class="skill-rating">${'⭐'.repeat(r)}${'☆'.repeat(5-r)}</div>`;}
+function renderStatus(s){ const c=s==='Online'?'status-online':s==='In Game'?'status-ingame':'status-lfd'; return `<div class="status-indicator ${c}">${s}</div>`; }
+function createCardContentHtml(d){ return `<div class="card-content"><img src="${d.profileImageUrl||DEFAULT_AVATAR}" class="avatar"><h3>${d.nickname}${getOwnerBadge(d.uid)}</h3>${renderSkillRating(d.skillRating)}${renderStatus(d.status)}</div>`; }
+function renderCard(d,type,reqId=null){
+const card=document.createElement('div'); card.className='card'; card.innerHTML=createCardContentHtml(d);
+let buttons=[];
+if(type==='suggest'){
+  const btn=document.createElement('button'); btn.className='neon-btn'; btn.textContent='Send Request';
+  btn.onclick=async()=>{
+    await sendFriendRequest(d.uid);
+    btn.disabled=true;
+    btn.textContent='Request Sent';
+  };
+  buttons.push(btn);
+}
+else if(type==='request'){ 
+  const accept=document.createElement('button'); accept.className='neon-btn'; accept.textContent='Accept'; accept.onclick=()=>acceptFriend(reqId,d.uid); 
+  const decline=document.createElement('button'); decline.className='neon-btn remove'; decline.textContent='Decline'; decline.onclick=()=>declineFriend(reqId); 
+  buttons.push(accept,decline);
+}
+else if(type==='friend'){ 
+  const chatBtn=document.createElement('button'); chatBtn.className='neon-btn'; chatBtn.textContent='Chat'; chatBtn.onclick=()=>startChat(d.uid,d.nickname); 
+  buttons.push(chatBtn);
+}
+buttons.forEach(b=>card.appendChild(b)); return card;
+}
+
+// ---------- FRIEND REQUESTS ----------
+async function sendFriendRequest(toUid){
+    if(toUid===currentUser.uid){ alert("Cannot send request to yourself!"); return; }
+    const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
+    if((myDoc.friends||[]).includes(toUid)){ alert("Already friends!"); return; }
+    const reqId=getChatId(currentUser.uid,toUid);
+    const reqRef=db.collection('friendRequests').doc(reqId);
+    if((await reqRef.get()).exists){ alert("Request already sent!"); return; }
+    await reqRef.set({senderId:currentUser.uid, receiverId:toUid, createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+    alert("Friend request sent!");
+    loadSuggested(); loadRequests();
+}
+async function loadRequests(){ 
+  const container=document.getElementById('requestsTab'); container.innerHTML=''; 
+  const snapshot=await db.collection('friendRequests').where('receiverId','==',currentUser.uid).get(); 
+  if(snapshot.empty){ container.innerHTML='<p>No friend requests.</p>'; return; }
+  const userDocs=await Promise.all(snapshot.docs.map(doc=>db.collection('users').doc(doc.data().senderId).get()));
+  snapshot.docs.forEach((doc,i)=>{ const fromUser=userDocs[i].data(); if(!fromUser)return; container.appendChild(renderCard(fromUser,'request',doc.id)); });
+}
+async function acceptFriend(reqId,friendUid){ await db.collection('friendRequests').doc(reqId).delete(); await db.collection('users').doc(currentUser.uid).update({friends:firebase.firestore.FieldValue.arrayUnion(friendUid)}); await db.collection('users').doc(friendUid).update({friends:firebase.firestore.FieldValue.arrayUnion(currentUser.uid)}); loadRequests(); loadFriends(); loadSuggested(); }
+async function declineFriend(reqId){ await db.collection('friendRequests').doc(reqId).delete(); loadRequests(); loadSuggested(); }
+
+// ---------- FRIENDS ----------
+async function loadFriends(){
+const container=document.getElementById('friendsTab'); container.innerHTML='';
+const userDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
+const friendUids=userDoc.friends||[];
+if(friendUids.length===0){ container.innerHTML='<p>No friends yet.</p>'; document.getElementById('activeDuoList').innerHTML='No friends to chat with.'; return; }
+const friendDocs=await Promise.all(friendUids.map(f=>db.collection('users').doc(f).get()));
+const chatList=document.getElementById('activeDuoList'); chatList.innerHTML='';
+friendDocs.forEach(fDoc=>{ const f=fDoc.data(); if(!f)return; container.appendChild(renderCard(f,'friend')); const chatBtn=document.createElement('button'); chatBtn.className='neon-btn chat-item-btn'; chatBtn.textContent=f.nickname; chatBtn.onclick=()=>startChat(f.uid,f.nickname); chatList.appendChild(chatBtn); });
+}
+
+// ---------- MESSAGING ----------
+async function startChat(friendUid,nickname){
+showTab('messaging'); if(unsubscribeMessages) unsubscribeMessages();
+const chatId=getChatId(currentUser.uid,friendUid); const chatRef=db.collection('chats').doc(chatId);
+if(!(await chatRef.get()).exists) await chatRef.set({participants:[currentUser.uid,friendUid].sort()});
+const header=document.getElementById('chatHeader'); const display=document.getElementById('messageDisplay'); const inputArea=document.getElementById('messageInputArea'); const msgInput=document.getElementById('messageInput'); const sendBtn=document.getElementById('sendMessageBtn');
+header.textContent=`Chat with ${nickname}`; display.innerHTML='<p style="text-align:center;color:#555;">Connecting...</p>'; inputArea.classList.remove('hidden');
+sendBtn.onclick=()=>sendMessage(chatId,msgInput.value); msgInput.onkeydown=(e)=>{ if(e.key==='Enter')sendMessage(chatId,msgInput.value); };
+unsubscribeMessages=chatRef.collection('messages').orderBy('createdAt','asc').onSnapshot(snap=>{ display.innerHTML=''; if(snap.empty){ display.innerHTML='<p style="text-align:center;color:#555;">No messages yet.</p>'; } snap.forEach(doc=>{ const data=doc.data(); const mine=data.senderId===currentUser.uid; const el=document.createElement('div'); el.className=mine?'message-mine':'message-other'; const bubble=document.createElement('span'); bubble.className='message-bubble'; bubble.textContent=data.content; el.appendChild(bubble); display.appendChild(el); }); display.scrollTop=display.scrollHeight; },err=>{ display.innerHTML='<p style="text-align:center;color:red;">Error loading chat.</p>'; });
+}
+async function sendMessage(chatId,content){
+content=content.trim(); if(!content)return; const msgInput=document.getElementById('messageInput');
+await db.collection('chats').doc(chatId).collection('messages').add({senderId:currentUser.uid,content:content,createdAt:firebase.firestore.FieldValue.serverTimestamp()}); msgInput.value=''; msgInput.focus();
+}
+
+// ---------- PROFILE EDITOR ----------
 async function loadProfile() {
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    if(!doc.exists) return;
-    const data = doc.data();
+    const userDoc = await db.collection('users').doc(currentUser.uid).get();
+    if (!userDoc.exists) return;
+    const data = userDoc.data();
     document.getElementById('profileAvatar').src = data.profileImageUrl || DEFAULT_AVATAR;
     document.getElementById('profileNickname').value = data.nickname || '';
     document.getElementById('profileBio').value = data.bio || '';
@@ -183,96 +263,17 @@ async function saveProfile() {
     const saveMessageEl = document.getElementById('saveMessage');
 
     try {
-        await db.collection('users').doc(currentUser.uid).update({bio, skillRating, status});
+        await db.collection('users').doc(currentUser.uid).update({ bio, skillRating, status });
         saveMessageEl.textContent = 'Profile successfully updated!';
         saveMessageEl.style.color = '#00ff00';
         loadFriends();
         loadSuggested();
-    } catch(e) {
-        console.error(e);
+    } catch (error) {
+        console.error("Error saving profile:", error);
         saveMessageEl.textContent = 'Error saving profile!';
-        saveMessageEl.style.color='red';
+        saveMessageEl.style.color = 'red';
     }
 }
-
-// ---------- FRIENDS & SUGGESTED ----------
-function getOwnerBadge(uid){ return uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''; }
-function renderCard(d, type, reqId=null){
-    const card=document.createElement('div'); card.className='card';
-    card.innerHTML=`<div class="card-content">
-        <img src="${d.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
-        <h3>${d.nickname}${getOwnerBadge(d.uid)}</h3>
-        <div class="skill-rating">${'⭐'.repeat(d.skillRating)}${'☆'.repeat(5-d.skillRating)}</div>
-        <div class="status-indicator ${d.status==='Online'?'status-online':d.status==='In Game'?'status-ingame':'status-lfd'}">${d.status}</div>
-    </div>`;
-    let buttons=[];
-    if(type==='suggest'){ const btn=document.createElement('button'); btn.className='neon-btn'; btn.textContent='Send Request'; btn.onclick=()=>sendFriendRequest(d.uid); buttons.push(btn);}
-    else if(type==='request'){ const accept=document.createElement('button'); accept.className='neon-btn'; accept.textContent='Accept'; accept.onclick=()=>acceptFriend(reqId,d.uid); const decline=document.createElement('button'); decline.className='neon-btn remove'; decline.textContent='Decline'; decline.onclick=()=>declineFriend(reqId); buttons.push(accept,decline);}
-    else if(type==='friend'){ const chatBtn=document.createElement('button'); chatBtn.className='neon-btn'; chatBtn.textContent='Chat'; chatBtn.onclick=()=>startChat(d.uid,d.nickname); buttons.push(chatBtn);}
-    buttons.forEach(b=>card.appendChild(b));
-    return card;
-}
-
-async function loadSuggested(){
-    const container=document.getElementById('suggestedTab'); container.innerHTML='';
-    const snapshot=await db.collection('users').get();
-    const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
-    const myFriends=new Set(myDoc.friends||[]);
-    const myRequestsSent=new Set((await db.collection('friendRequests').where('senderId','==',currentUser.uid).get()).docs.map(d=>d.data().receiverId));
-    snapshot.docs.forEach(doc=>{ const d=doc.data(); if(d.uid===currentUser.uid||myFriends.has(d.uid)||myRequestsSent.has(d.uid))return; container.appendChild(renderCard(d,'suggest')); });
-    if(container.childElementCount===0) container.innerHTML='<p>No new suggested partners found.</p>';
-}
-
-async function sendFriendRequest(toUid){
-    const reqId=getChatId(currentUser.uid,toUid);
-    const reqRef=db.collection('friendRequests').doc(reqId);
-    if((await reqRef.get()).exists){ alert("Request already sent!"); return; }
-    await reqRef.set({senderId:currentUser.uid, receiverId:toUid, createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-    alert("Friend request sent!"); loadSuggested();
-}
-
-async function loadRequests(){
-    const container=document.getElementById('requestsTab'); container.innerHTML='';
-    const snapshot=await db.collection('friendRequests').where('receiverId','==',currentUser.uid).get();
-    if(snapshot.empty){ container.innerHTML='<p>No friend requests.</p>'; return; }
-    const userDocs=await Promise.all(snapshot.docs.map(doc=>db.collection('users').doc(doc.data().senderId).get()));
-    snapshot.docs.forEach((doc,i)=>{ const fromUser=userDocs[i].data(); if(!fromUser)return; container.appendChild(renderCard(fromUser,'request',doc.id)); });
-}
-
-async function acceptFriend(reqId,friendUid){ 
-    await db.collection('friendRequests').doc(reqId).delete(); 
-    await db.collection('users').doc(currentUser.uid).update({friends:firebase.firestore.FieldValue.arrayUnion(friendUid)});
-    await db.collection('users').doc(friendUid).update({friends:firebase.firestore.FieldValue.arrayUnion(currentUser.uid)});
-    loadRequests(); loadFriends(); loadSuggested(); 
-}
-async function declineFriend(reqId){ await db.collection('friendRequests').doc(reqId).delete(); loadRequests(); loadSuggested(); }
-
-async function loadFriends(){
-    const container=document.getElementById('friendsTab'); container.innerHTML='';
-    const userDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
-    const friendUids=userDoc.friends||[];
-    if(friendUids.length===0){ container.innerHTML='<p>No friends yet.</p>'; document.getElementById('activeDuoList').innerHTML='No friends to chat with.'; return; }
-    const friendDocs=await Promise.all(friendUids.map(f=>db.collection('users').doc(f).get()));
-    const chatList=document.getElementById('activeDuoList'); chatList.innerHTML='';
-    friendDocs.forEach(fDoc=>{
-        const f=fDoc.data(); if(!f)return;
-        container.appendChild(renderCard(f,'friend'));
-        const chatBtn=document.createElement('button'); chatBtn.className='neon-btn chat-item-btn'; chatBtn.textContent=f.nickname; chatBtn.onclick=()=>startChat(f.uid,f.nickname);
-        chatList.appendChild(chatBtn);
-    });
-}
-
-// ---------- MESSAGING ----------
-async function startChat(friendUid,nickname){
-    showTab('messaging'); if(unsubscribeMessages) unsubscribeMessages();
-    currentChatUid=friendUid; const chatId=getChatId(currentUser.uid,friendUid); const chatRef=db.collection('chats').doc(chatId);
-    if(!(await chatRef.get()).exists) await chatRef.set({participants:[currentUser.uid,friendUid].sort()});
-    const header=document.getElementById('chatHeader'); const display=document.getElementById('messageDisplay'); const inputArea=document.getElementById('messageInputArea'); const msgInput=document.getElementById('messageInput'); const sendBtn=document.getElementById('sendMessageBtn');
-    header.textContent=`Chat with ${nickname}`; display.innerHTML='<p style="text-align:center;color:#555;">Connecting...</p>'; inputArea.classList.remove('hidden');
-    sendBtn.onclick=()=>sendMessage(chatId,msgInput.value); msgInput.onkeydown=(e)=>{ if(e.key==='Enter')sendMessage(chatId,msgInput.value); };
-    unsubscribeMessages=chatRef.collection('messages').orderBy('createdAt','asc').onSnapshot(snap=>{ display.innerHTML=''; if(snap.empty){ display.innerHTML='<p style="text-align:center;color:#555;">No messages yet.</p>'; } snap.forEach(doc=>{ const data=doc.data(); const mine=data.senderId===currentUser.uid; const el=document.createElement('div'); el.className=mine?'message-mine':'message-other'; const bubble=document.createElement('span'); bubble.className='message-bubble'; bubble.textContent=data.content; el.appendChild(bubble); display.appendChild(el); }); display.scrollTop=display.scrollHeight; },err=>{ display.innerHTML='<p style="text-align:center;color:red;">Error loading chat.</p>'; });
-}
-async function sendMessage(chatId,content){ content=content.trim(); if(!content)return; const msgInput=document.getElementById('messageInput'); await db.collection('chats').doc(chatId).collection('messages').add({senderId:currentUser.uid,content:content,createdAt:firebase.firestore.FieldValue.serverTimestamp()}); msgInput.value=''; msgInput.focus(); }
 
 // ---------- TABS ----------
 function hideAllTabs(){ ["suggestedTab","requestsTab","friendsTab","profileTab","messagingTab"].forEach(t=>document.getElementById(t).classList.add('hidden')); }
@@ -285,6 +286,17 @@ function showTab(tab){
     else if(tab==='friends') loadFriends(); 
     else if(tab==='profile') loadProfile();
     else if(tab!=='messaging'&&unsubscribeMessages){ unsubscribeMessages(); unsubscribeMessages=null; }
+}
+
+// ---------- SUGGESTED ----------
+async function loadSuggested(){
+const container=document.getElementById('suggestedTab'); container.innerHTML='';
+const snapshot=await db.collection('users').get();
+const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
+const myFriends=new Set(myDoc.friends||[]);
+const myRequestsSent=new Set((await db.collection('friendRequests').where('senderId','==',currentUser.uid).get()).docs.map(d=>d.data().receiverId));
+snapshot.docs.forEach(doc=>{ const d=doc.data(); if(d.uid===currentUser.uid||myFriends.has(d.uid)||myRequestsSent.has(d.uid))return; container.appendChild(renderCard(d,'suggest')); });
+if(container.childElementCount===0) container.innerHTML='<p>No new suggested partners found.</p>';
 }
 </script>
 </body>
