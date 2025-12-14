@@ -9,13 +9,12 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <style>
-/* --- STYLES (Kept identical for consistency) --- */
 /* --- BASE STYLES --- */
-body { 
-    margin:0; 
-    font-family:'Orbitron',sans-serif; 
-    background:#0b0b0b; 
-    color:white; 
+body { 
+    margin:0; 
+    font-family:'Orbitron',sans-serif; 
+    background:#0b0b0b; 
+    color:white; 
 }
 .container { width:90%; max-width: 1000px; margin:auto; padding:20px; }
 .hidden { display:none; }
@@ -45,18 +44,18 @@ body { 
 }
 
 /* --- BUTTON STYLES --- */
-.neon-btn { 
-    border:2px solid cyan; 
-    background:transparent; 
-    color:white; 
-    padding:8px 14px; 
-    margin:5px; 
-    border-radius:6px; 
-    cursor:pointer; 
-    box-shadow:0 0 10px cyan; 
+.neon-btn { 
+    border:2px solid cyan; 
+    background:transparent; 
+    color:white; 
+    padding:8px 14px; 
+    margin:5px; 
+    border-radius:6px; 
+    cursor:pointer; 
+    box-shadow:0 0 10px cyan; 
     transition: all 0.2s ease-in-out;
     text-transform: uppercase;
-    font-family: 'Orbitron', sans-serif; 
+    font-family: 'Orbitron', sans-serif; 
 }
 .neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
 .neon-btn.remove { border-color: red; box-shadow: 0 0 10px red; }
@@ -70,7 +69,7 @@ body { 
     border-radius: 8px;
     background: #181818;
     display: grid;
-    grid-template-columns: auto 1fr 1fr auto auto; 
+    grid-template-columns: auto 1fr 1fr auto auto; 
     gap: 10px;
     align-items: center;
 }
@@ -109,25 +108,25 @@ body { 
     flex-wrap: wrap;
     gap: 15px;
 }
-.card { 
-    width:250px; 
-    padding:15px; 
-    border:2px solid cyan; 
-    border-radius:12px; 
-    background:#111; 
-    box-shadow:0 0 10px cyan; 
-    display:flex; 
-    flex-direction:column; 
-    align-items:center; 
+.card { 
+    width:250px; 
+    padding:15px; 
+    border:2px solid cyan; 
+    border-radius:12px; 
+    background:#111; 
+    box-shadow:0 0 10px cyan; 
+    display:flex; 
+    flex-direction:column; 
+    align-items:center; 
     margin-bottom: 15px;
-    cursor: pointer; 
+    /* Removed cursor: pointer as cards are not clickable whole anymore */
 }
 .card-content {
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
-    margin-bottom: 10px; 
+    margin-bottom: 10px; 
 }
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
 
@@ -136,25 +135,25 @@ body { 
     display: inline-block;
     padding: 2px 6px;
     margin-left: 8px;
-    font-size: 0.7em; 
+    font-size: 0.7em; 
     font-weight: bold;
     letter-spacing: 1px;
     border-radius: 4px;
     text-transform: uppercase;
-    
-    background: #3a005c; 
-    color: #ffccff; 
-    border: 1px solid #ff00ff; 
-    box-shadow: 
-        0 0 5px #ff00ff,   
-        0 0 10px #cc33ff,  
-        inset 0 0 5px #ff00ff; 
+    
+    background: #3a005c; 
+    color: #ffccff; 
+    border: 1px solid #ff00ff; 
+    box-shadow: 
+        0 0 5px #ff00ff,   
+        0 0 10px #cc33ff,  
+        inset 0 0 5px #ff00ff; 
     vertical-align: middle;
 }
 
 /* --- RATING AND STATUS STYLES --- */
 .skill-rating {
-    color: gold; 
+    color: gold; 
     font-size: 1.2em;
     margin-bottom: 5px;
 }
@@ -229,7 +228,7 @@ body { 
     border-radius: 6px;
     font-family: inherit;
     outline: none;
-    min-height: 40px; 
+    min-height: 40px; 
 }
 #currentAvatar {
     width: 100px;
@@ -241,7 +240,7 @@ body { 
     margin-bottom: 15px;
 }
 #gamesInput {
-    height: 100px; 
+    height: 100px; 
 }
 .game-tag {
     display: inline-block;
@@ -294,7 +293,7 @@ body { 
                 <option value="">-- Select Game First --</option>
             </select>
         </div>
-        
+        
         <button class="neon-btn" onclick="loadSuggested()">Filter</button>
         <button class="neon-btn remove" onclick="clearFilter()">Clear</button>
     </div>
@@ -311,10 +310,10 @@ body { 
 
         <label for="bioInput">Bio:</label>
         <textarea id="bioInput" rows="3" maxlength="150" placeholder="Tell the community about yourself..."></textarea>
-        
+        
         <label for="gamesInput">Favorite Games (Hold CTRL/CMD to select multiple):</label>
         <select id="gamesInput" multiple size="4"></select>
-        
+        
         <div id="gameDetailsContainer" style="padding: 10px; border: 1px dashed magenta; border-radius: 6px;">
             <p style="color: cyan; margin-top: 0;">Game Specific Details (Roles/Ranks)</p>
             <div id="dynamicGameFields">
@@ -338,7 +337,7 @@ body { 
             <option value="In Game">In Game</option>
             <option value="Away">Away</option>
         </select>
-        
+        
         <label for="avatarUrlInput">Profile Picture URL:</label>
         <input type="url" id="avatarUrlInput" placeholder="https://example.com/image.jpg" oninput="document.getElementById('currentAvatar').src = this.value || DEFAULT_AVATAR">
 
@@ -374,7 +373,7 @@ const db = firebase.firestore();
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 // --- OWNER UID ---
-const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; 
+const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; 
 
 let currentUser = null;
 let unreadMessageCount = 0;
@@ -656,6 +655,9 @@ async function loadRequests(){
         `;
         container.appendChild(card);
     });
+
+    // Update unread count immediately after loading
+    loadUnreadCount();
 }
 
 async function acceptFriend(reqId, friendUid){
@@ -673,7 +675,10 @@ async function acceptFriend(reqId, friendUid){
         // 3. Delete the friend request
         await db.collection("friendRequests").doc(reqId).delete();
         
-        // 4. Update the UI
+        // 4. Update the UI and cache
+        // Update current user's friend list in cache
+        userCache[currentUser.uid].friends = [...(userCache[currentUser.uid].friends || []), friendUid];
+
         alert("Duo established!");
         loadRequests(); 
         loadFriends(); 
