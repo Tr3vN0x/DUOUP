@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP Chat</title>
+<title>DUO UP Messenger</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <style>
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
 .container { width:90%; margin:auto; padding:20px; }
@@ -21,12 +20,12 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .input { width:100%; padding:8px; margin:5px 0; background:#000; border:2px solid cyan; color:white; border-radius:6px; }
 
 /* Chat Styles */
-#chatWindow { display:flex; flex-direction:column; max-height:400px; overflow-y:auto; padding:10px; border:2px solid cyan; border-radius:12px; background:#111; }
-.message-bubble { padding:10px 14px; border-radius:16px; max-width:70%; margin:5px; display:flex; gap:10px; align-items:flex-end; word-wrap:break-word; }
+#chatWindow { display:flex; flex-direction:column; max-height:400px; overflow-y:auto; padding:10px; border:2px solid cyan; border-radius:4px; background:#111; }
+.message-bubble { padding:10px; border-radius:4px; max-width:70%; margin:5px; display:flex; gap:10px; align-items:flex-start; word-wrap:break-word; }
 .message-outgoing { background:#00ffff; color:black; align-self:flex-end; box-shadow:0 0 5px #00ffff; }
 .message-incoming { background:#555; color:white; align-self:flex-start; box-shadow:0 0 3px #333; }
-.message-header { font-size:0.75em; color:gray; margin-bottom:2px; }
-.message-avatar { width:30px; height:30px; border-radius:50%; object-fit:cover; }
+.message-header { font-size:0.75em; color:gray; margin-bottom:2px; display:flex; justify-content:space-between; }
+.message-avatar { width:30px; height:30px; border-radius:4px; object-fit:cover; }
 .message-content { display:flex; flex-direction:column; }
 </style>
 </head>
@@ -34,7 +33,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 
 <!-- LOGIN -->
 <div id="loginPage" class="container">
-  <h1>DUO UP</h1>
+  <h1>DUO UP Messenger</h1>
   <button class="neon-btn" onclick="loginWithGoogle()">Login with Google</button>
 </div>
 
@@ -73,6 +72,7 @@ const dashboard = document.getElementById("dashboard");
 const chatPage = document.getElementById("chatPage");
 const userList = document.getElementById("userList");
 const chatWindow = document.getElementById("chatWindow");
+const chatInput = document.getElementById("chatInput");
 let currentChatUser = null;
 let currentChatUserData = null;
 
@@ -139,6 +139,7 @@ function openChat(friendId){
   loadMessages();
 }
 
+// ---------------- LOAD MESSAGES ----------------
 function loadMessages(){
   if(!currentChatUser) return;
   chatWindow.innerHTML = "";
@@ -151,17 +152,20 @@ function loadMessages(){
       chatWindow.innerHTML = "";
       snapshot.forEach(doc => {
         const m = doc.data();
-        // Only show messages with this chat friend
         if(!m.participants.includes(currentChatUser)) return;
 
         const isOutgoing = m.senderId === currentUid;
         const bubble = document.createElement("div");
         bubble.className = "message-bubble " + (isOutgoing ? "message-outgoing" : "message-incoming");
         const avatarUrl = isOutgoing ? auth.currentUser.photoURL || DEFAULT_AVATAR : currentChatUserData.profileImageUrl || DEFAULT_AVATAR;
+        const time = m.timestamp ? m.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+        const seen = isOutgoing ? (m.seen ? "✓ Seen" : "✓ Sent") : '';
         bubble.innerHTML = `
           <img class="message-avatar" src="${avatarUrl}">
           <div class="message-content">
-            <div class="message-header">${isOutgoing ? "You" : currentChatUserData.nickname} - ${m.timestamp?.toDate().toLocaleTimeString() || ""}</div>
+            <div class="message-header">
+              ${isOutgoing ? "You" : currentChatUserData.nickname} <span>${time} ${seen}</span>
+            </div>
             <div>${m.content}</div>
           </div>
         `;
@@ -171,6 +175,7 @@ function loadMessages(){
     });
 }
 
+// ---------------- SEND MESSAGE ----------------
 function sendMessage(){
   const text = chatInput.value.trim();
   if(!text || !currentChatUser) return;
@@ -181,11 +186,16 @@ function sendMessage(){
     receiverId: currentChatUser,
     participants: [currentUid, currentChatUser],
     content: text,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    seen: false
   });
   chatInput.value = "";
 }
 
+// ---------------- SEND ON ENTER ----------------
+chatInput.addEventListener("keydown", e => { if(e.key === "Enter") sendMessage(); });
+
+// ---------------- CLOSE CHAT ----------------
 function closeChat(){
   currentChatUser = null;
   currentChatUserData = null;
