@@ -2,33 +2,158 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>DuoUp</title>
+<title>DuoUp - Enhanced</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-/* --- Basic Styling --- */
-body{font-family:sans-serif;background:#050510;color:white;margin:0;}
-.hidden{display:none;}
-input,textarea,button{padding:10px;margin:5px;border-radius:5px;border:none;}
-/* --- Header Styling --- */
-header{position:fixed;top:0;width:100%;height:60px;background:#0f1224;display:flex;justify-content:space-between;align-items:center;padding:0 16px;border-bottom:1px solid #1c2148;z-index:100;}
-header nav button{margin-left:6px;padding:6px 12px;border:none;border-radius:6px;background:#00f6ff;color:#050510;font-weight:600;cursor:pointer;}
-/* --- Page Layout --- */
-#auth,#app{min-height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;padding-top:70px;}
-/* --- Card Grid Styling --- */
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;width:90%;max-width:1200px;margin-top:20px;}
-.card{background:#141426;padding:16px;border-radius:10px;border:1px solid #1c2148;display:flex;flex-direction:column;justify-content:space-between;}
-.card-header{display:flex;align-items:center;gap:10px;}
-.avatar{width:40px;height:40px;border-radius:50%;background:#8a5cff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#050510;
-        /* Added for image overflow handling */
-        overflow: hidden;
+/* --- Global & Typography --- */
+body{
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:#050510;
+    color:white;
+    margin:0;
+    line-height:1.6;
 }
-.bio{margin-top:8px;margin-bottom:12px;color:#8b94b4;flex-grow:1;}
+.hidden{display:none;}
+/* --- Header --- */
+header{
+    position:fixed;
+    top:0;
+    width:100%;
+    height:60px;
+    background:#0f1224;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 16px;
+    border-bottom:1px solid #1c2148;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    z-index: 1000;
+}
+header h2 { margin: 0; color: #00f6ff; }
+header nav button{
+    margin-left:8px;
+    padding:8px 16px;
+    border:none;
+    border-radius:20px; /* Rounded buttons */
+    background:#00f6ff;
+    color:#050510;
+    font-weight:700;
+    cursor:pointer;
+    transition: background 0.3s;
+}
+header nav button:hover {
+    background: #00e0e8;
+}
+
+/* --- Layouts & Forms --- */
+#auth, #app, #profile {
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding-top:70px; /* Space for fixed header */
+    width: 100%;
+}
+#auth { 
+    justify-content:center; 
+    padding-top:0;
+}
+#auth > * { margin: 10px 0; max-width: 300px; width: 90%; }
+
+input, textarea, button{
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #1c2148;
+    background:#141426;
+    color:white;
+    font-size:16px;
+}
+button{
+    background:#5c5cff;
+    color:white;
+    font-weight:700;
+    cursor:pointer;
+    transition: background 0.3s;
+}
+button:hover{
+    background:#4a4ac9;
+}
+
+/* --- Grid & Cards --- */
+.grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:20px;
+    width:95%;
+    max-width:1200px;
+    margin:20px auto;
+}
+.card{
+    background:#141426;
+    padding:20px;
+    border-radius:12px;
+    border:1px solid #28284f;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    display:flex;
+    flex-direction:column;
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-3px);
+    border-color: #5c5cff;
+}
+.card-header{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom: 10px;
+}
+.avatar{
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    background:#8a5cff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    color:#050510;
+    font-size: 20px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.card-header strong {
+    font-size: 1.2em;
+}
+.bio{
+    margin-top:8px;
+    color:#b0b7d4;
+    flex-grow:1;
+    min-height: 40px; /* Ensure cards have similar height */
+}
 .card button {
-    background: #5c5cff;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    margin-top: 10px;
+    margin-top: 15px;
+    border-radius: 20px;
+}
+
+/* --- Loading State (Spinner) --- */
+#loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #5c5cff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 30px auto;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 </style>
 </head>
@@ -44,27 +169,28 @@ header nav button{margin-left:6px;padding:6px 12px;border:none;border-radius:6px
 </header>
 
 <div id="auth">
-    <h2>DuoUp Auth</h2>
+    <h2>Welcome to DuoUp</h2>
     <input id="email" placeholder="Email">
     <input id="password" type="password" placeholder="Password">
     <button id="signin">Sign In</button>
     <button id="signup">Sign Up</button>
-    <p id="msg"></p>
+    <p id="msg" style="color:#00f6ff;"></p>
 </div>
 
 <div id="app" class="hidden">
 
     <section id="home">
-        <h2>All Users (Active)</h2>
+        <h2>Active Duos</h2>
+        <div id="loading-spinner" class="hidden"></div>
         <div class="grid" id="grid"></div>
     </section>
 
     <section id="profile" class="hidden">
-        <h2>Your Profile</h2>
+        <h2>Your Profile Settings</h2>
         <input id="profileImageUrl" placeholder="Profile Image URL">
-        <textarea id="bio" placeholder="Your bio here"></textarea>
-        <button id="saveProfileBtn">Save</button>
-        <p id="profileMsg"></p>
+        <textarea id="bio" placeholder="Tell other users about yourself (e.g., favorite games, availability)"></textarea>
+        <button id="saveProfileBtn">Save Profile</button>
+        <p id="profileMsg" style="color:#00f6ff;"></p>
     </section>
 
 </div>
@@ -72,7 +198,6 @@ header nav button{margin-left:6px;padding:6px 12px;border:none;border-radius:6px
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-// Added query and where for server-side filtering
 import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -94,18 +219,21 @@ const msg = document.getElementById("msg");
 const profileMsg = document.getElementById("profileMsg");
 const email = document.getElementById("email");
 const password = document.getElementById("password");
+const loadingSpinner = document.getElementById("loading-spinner");
 
 const SEVEN_DAYS_MS = 7*24*60*60*1000;
 
 document.getElementById("signin").onclick = async () => {
   try {
+    msg.textContent = "Signing in...";
     await signInWithEmailAndPassword(auth,email.value,password.value);
     msg.textContent="";
-  } catch(e){ msg.textContent=e.message; }
+  } catch(e){ msg.textContent=`Sign In Failed: ${e.message.split('(')[0]}`; }
 };
 
 document.getElementById("signup").onclick = async () => {
   try {
+    msg.textContent = "Creating account...";
     const cred = await createUserWithEmailAndPassword(auth,email.value,password.value);
     const userDocRef = doc(db,"users",cred.user.uid);
     await setDoc(userDocRef,{
@@ -118,8 +246,8 @@ document.getElementById("signup").onclick = async () => {
       friends: [],
       profileImageUrl: ""
     });
-    msg.textContent="User created!";
-  } catch(e){ msg.textContent=e.message; }
+    msg.textContent="Account created successfully! You are now logged in.";
+  } catch(e){ msg.textContent=`Sign Up Failed: ${e.message.split('(')[0]}`; }
 };
 
 window.logout = () => signOut(auth);
@@ -149,7 +277,11 @@ onAuthStateChanged(auth, async user=>{
 
 async function updateLastActive(){
   if(currentUser){
-    await updateDoc(doc(db,"users",currentUser.uid), { lastActive: Date.now() });
+    try {
+      await updateDoc(doc(db,"users",currentUser.uid), { lastActive: Date.now() });
+    } catch(e) {
+      console.warn("Failed to update last active status. Check Firestore rules.", e);
+    }
   }
 }
 
@@ -161,42 +293,58 @@ async function loadProfile(){
       document.getElementById("bio").value = data.bio || "";
       document.getElementById("profileImageUrl").value = data.profileImageUrl || "";
     }
-  }catch(e){ console.error(e); }
+  }catch(e){ console.error("Error loading profile:", e); }
 }
 
 document.getElementById("saveProfileBtn").onclick = async ()=>{
   try{
+    document.getElementById("saveProfileBtn").textContent = "Saving...";
     await updateDoc(doc(db,"users",currentUser.uid),{
       bio: document.getElementById("bio").value,
       profileImageUrl: document.getElementById("profileImageUrl").value
     });
     profileMsg.textContent="Profile saved!";
-    setTimeout(()=>profileMsg.textContent="",2000);
-  }catch(e){ profileMsg.textContent="Error saving profile"; console.error(e); }
+    document.getElementById("saveProfileBtn").textContent = "Save Profile";
+    setTimeout(()=>profileMsg.textContent="",3000);
+  }catch(e){ 
+    profileMsg.textContent="Error saving profile"; 
+    document.getElementById("saveProfileBtn").textContent = "Save Profile";
+    console.error(e); 
+  }
 };
 
 async function loadUsers(){
   const grid = document.getElementById("grid");
   grid.innerHTML="";
+  loadingSpinner.classList.remove("hidden");
+
   try{
     const now = Date.now();
-    // Calculate the timestamp for 7 days ago
     const sevenDaysAgo = now - SEVEN_DAYS_MS;
 
-    // Use a Firestore Query to retrieve only users active since sevenDaysAgo
+    // Server-side query: Get users active in the last 7 days
     const usersRef = collection(db,"users");
     const q = query(usersRef, where("lastActive", ">", sevenDaysAgo));
     
     const snap = await getDocs(q);
+
+    if (snap.empty) {
+        grid.innerHTML = '<p style="text-align: center; margin-top: 50px;">No active users found. Be the first!</p>';
+        loadingSpinner.classList.add("hidden");
+        return;
+    }
 
     snap.forEach(d=>{
       const u = d.data();
       // Client-side filter to exclude the current user
       if(u.uid===currentUser.uid) return;
       
-      // Logic to display Profile Image or Nickname Initial
-      const avatarContent = u.profileImageUrl ? `<img src="${u.profileImageUrl}" onerror="this.onerror=null;this.parentElement.innerHTML='${u.nickname? u.nickname[0].toUpperCase() : '?'}'" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : (u.nickname? u.nickname[0].toUpperCase() : "?");
-      const avatarClass = u.profileImageUrl ? 'style="background:none; overflow:hidden;"' : '';
+      // Avatar Logic: Use image if available, otherwise use initial
+      const initial = u.nickname? u.nickname[0].toUpperCase() : "?";
+      const avatarContent = u.profileImageUrl 
+            ? `<img src="${u.profileImageUrl}" alt="${u.nickname}" onerror="this.onerror=null;this.parentElement.innerHTML='${initial}'">` 
+            : initial;
+      const avatarClass = u.profileImageUrl ? 'style="background:none;"' : '';
       
       grid.innerHTML+=`
         <div class="card">
@@ -204,11 +352,21 @@ async function loadUsers(){
             <div class="avatar" ${avatarClass}>${avatarContent}</div>
             <strong>${u.nickname}</strong>
           </div>
-          <div class="bio">${u.bio || "No bio set"}</div>
+          <div class="bio">${u.bio || "No bio set. Set your bio on the Profile tab!"}</div>
           <button onclick="alert('Duo request sent to ${u.nickname}!')">Send Duo Request</button>
         </div>`;
     });
-  }catch(e){ console.error(e); }
+
+    if (grid.innerHTML.trim() === '') {
+        grid.innerHTML = '<p style="text-align: center; margin-top: 50px;">You are the only active user!</p>';
+    }
+
+  }catch(e){ 
+    grid.innerHTML = `<p style="color:red; text-align:center;">Error loading users. Check console for details.</p>`;
+    console.error(e); 
+  } finally {
+    loadingSpinner.classList.add("hidden");
+  }
 }
 </script>
 
