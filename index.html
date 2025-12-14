@@ -23,8 +23,8 @@ body{margin:0;font-family:'Orbitron',sans-serif;background:#0b0b0b;color:white;}
 .status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-left:5px;}
 
 /* Chat Styles */
-#chatWindow{display:flex;flex-direction:column;max-height:400px;overflow-y:auto;padding:10px;border:2px solid cyan;border-radius:12px;background:#111;}
-.message-bubble{padding:10px 14px;border-radius:16px;max-width:70%;margin:5px;position:relative;display:flex;gap:10px;align-items:flex-end;word-wrap:break-word;}
+#chatWindow{display:flex;flex-direction:column;max-height:500px;overflow-y:auto;padding:10px;border:2px solid cyan;border-radius:12px;background:#111;}
+.message-bubble{padding:10px 14px;border-radius:16px;max-width:70%;margin:5px;display:flex;gap:10px;align-items:flex-start;word-wrap:break-word;}
 .message-outgoing{background:#00ffff;color:black;align-self:flex-end;box-shadow:0 0 5px #00ffff;}
 .message-incoming{background:#555;color:white;align-self:flex-start;box-shadow:0 0 3px #333;}
 .message-header{font-size:0.75em;color:gray;margin-bottom:2px;}
@@ -73,6 +73,7 @@ const DEFAULT_AVATAR="https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 const userList=document.getElementById("userList");
 const chatWindow=document.getElementById("chatWindow");
+const chatInput=document.getElementById("chatInput");
 let currentChatUser = null;
 
 // ---------------- LOGIN ----------------
@@ -91,6 +92,7 @@ auth.onAuthStateChanged(async user=>{
   loginPage.classList.add("hidden");
   dashboard.classList.remove("hidden");
   loadUsers();
+  welcome.innerText="Welcome, "+(user.displayName||"Gamer");
 });
 
 // ---------------- LOGOUT ----------------
@@ -109,24 +111,22 @@ function loadUsers(){
       card.innerHTML=`<div class="user">
         <img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
         <strong>${u.nickname}</strong></div>
-        <button class="neon-btn" onclick="openChat('${doc.id}')">Message</button>`;
+        <button class="neon-btn" onclick="openChat('${doc.id}','${u.nickname}','${u.profileImageUrl||DEFAULT_AVATAR}')">Message</button>`;
       userList.appendChild(card);
     });
   });
 }
 
 // ---------------- CHAT ----------------
-function openChat(friendId){
+function openChat(friendId, friendName, friendAvatar){
   currentChatUser = friendId;
   dashboard.classList.add("hidden");
   chatPage.classList.remove("hidden");
-  db.collection("users").doc(friendId).get().then(doc=>{
-    chatWith.innerText="Chat with "+doc.data().nickname;
-  });
-  loadMessages();
+  chatWith.innerText = "Chat with " + friendName;
+  loadMessages(friendAvatar);
 }
 
-function loadMessages(){
+function loadMessages(friendAvatar){
   if(!currentChatUser) return;
   chatWindow.innerHTML="";
   db.collection("messages")
@@ -139,7 +139,7 @@ function loadMessages(){
         if(!m.participants.includes(currentChatUser)) return;
         const bubble=document.createElement("div");
         bubble.className="message-bubble "+(m.senderId===auth.currentUser.uid?"message-outgoing":"message-incoming");
-        const avatarUrl=(m.senderId===auth.currentUser.uid)?auth.currentUser.photoURL||DEFAULT_AVATAR:m.senderAvatar||DEFAULT_AVATAR;
+        const avatarUrl=(m.senderId===auth.currentUser.uid)?auth.currentUser.photoURL||DEFAULT_AVATAR:friendAvatar;
         bubble.innerHTML=`<img class="message-avatar" src="${avatarUrl}">
           <div class="message-content">
             <div class="message-header">${m.senderId===auth.currentUser.uid?"You":"Friend"} - ${m.timestamp?.toDate().toLocaleTimeString()||""}</div>
