@@ -34,7 +34,7 @@ body {
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
 /* --- BADGES --- */
 .owner-badge-box { display:inline-block; padding:2px 6px; margin-left:8px; font-size:0.7em; font-weight:bold; border-radius:4px; text-transform:uppercase; background:#3a005c; color:#ffccff; border:1px solid #ff00ff; box-shadow:0 0 5px #ff00ff,0 0 10px #cc33ff, inset 0 0 5px #ff00ff; vertical-align:middle; }
-/* --- STATUS/RATING --- */
+/* --- STATUS/RATING (Not used in JS yet, but good to keep) --- */
 .skill-rating { color:gold; font-size:1.2em; margin-bottom:5px; }
 .status-indicator { font-size:0.8em; padding:3px 8px; border-radius:4px; font-weight:bold; margin-bottom:10px; }
 .status-online { background-color:#00cc00; color:#0b0b0b; box-shadow:0 0 5px #00ff00; }
@@ -44,6 +44,9 @@ body {
 .profile-section h3 { border-bottom:1px solid magenta; padding-bottom:5px; }
 .profile-header { display:flex; gap:20px; align-items:center; border:1px solid #333; padding:20px; border-radius:8px; margin-bottom:20px; background:#181818; }
 .profile-header img { width:100px; height:100px; border-radius:50%; border:3px solid cyan; object-fit:cover; }
+#profileEditor { background:#181818; padding:20px; border-radius:8px; border:1px solid #333;}
+#profileEditor img { width:100px; height:100px; border-radius:50%; border:3px solid cyan; object-fit:cover; margin-bottom:15px; }
+#profileEditor textarea { width: 95%; background: #0b0b0b; border: 1px solid magenta; color: white; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-family: monospace; }
 /* --- BADGE --- */
 .unread-badge { background-color: magenta; color:white; border-radius:50%; padding:2px 7px; margin-left:5px; font-size:0.7em; font-weight:bold; box-shadow:0 0 5px magenta; }
 </style>
@@ -56,122 +59,343 @@ body {
 </div>
 
 <div id="loginPage" class="container">
-  <p style="text-align:center;">Find your perfect partner and dominate the cyber-arena.</p>
-  <div style="text-align:center;">
-    <button class="neon-btn" onclick="login()">Login with Google</button>
-  </div>
+    <p style="text-align:center;">Find your perfect partner and dominate the cyber-arena.</p>
+    <div style="text-align:center;">
+        <button class="neon-btn" onclick="login()">Login with Google</button>
+    </div>
 </div>
 
 <div id="dashboard" class="container hidden">
-  <h2 id="welcome"></h2>
-  <div style="margin-bottom:20px;">
-    <button class="neon-btn" onclick="showTab('suggested')">Suggested</button>
-    <button class="neon-btn" onclick="showTab('requests')">Requests</button>
-    <button id="friendsBtn" class="neon-btn" onclick="showTab('friends')">
-        Friends <span id="unreadBadge" class="unread-badge hidden">0</span>
-    </button>
-    <button class="neon-btn" onclick="showTab('profile')">Profile</button>
-    <button class="neon-btn" onclick="logout()">Logout</button>
-  </div>
-
-  <div id="suggestedTab">
-    <div id="suggestedCards" class="card-container"></div>
-  </div>
-  <div id="requestsTab" class="flex hidden"></div>
-  <div id="friendsTab" class="flex hidden"></div>
-  <div id="profileTab" class="hidden">
-    <div id="profileEditor">
-        <img id="currentAvatar" src="" alt="Current Profile Picture">
-        <p><b>Nickname:</b> <span id="currentNicknameDisplay"></span></p>
-        <label for="bioInput">Bio:</label>
-        <textarea id="bioInput" rows="3" maxlength="150"></textarea>
-        <button class="neon-btn" onclick="saveProfile()">Save Profile</button>
+    <h2 id="welcome"></h2>
+    <div style="margin-bottom:20px;">
+        <button class="neon-btn" onclick="showTab('suggested')">Suggested</button>
+        <button class="neon-btn" onclick="showTab('requests')">Requests</button>
+        <button id="friendsBtn" class="neon-btn" onclick="showTab('friends')">
+            Friends <span id="unreadBadge" class="unread-badge hidden">0</span>
+        </button>
+        <button class="neon-btn" onclick="showTab('profile')">Profile</button>
+        <button class="neon-btn" onclick="logout()">Logout</button>
     </div>
-  </div>
-  <div id="profileViewer" class="container hidden"></div>
+
+    <div id="suggestedTab">
+        <h3>Suggested Partners</h3>
+        <div id="suggestedCards" class="card-container"></div>
+    </div>
+    <div id="requestsTab" class="flex hidden">
+        <h3>Incoming Requests</h3>
+    </div>
+    <div id="friendsTab" class="flex hidden">
+        <h3>Your Duo List</h3>
+    </div>
+    <div id="profileTab" class="hidden">
+        <h3>Your Profile Settings</h3>
+        <div id="profileEditor">
+            <img id="currentAvatar" src="" alt="Current Profile Picture">
+            <p><b>Nickname:</b> <span id="currentNicknameDisplay"></span></p>
+            <label for="bioInput">Bio (Max 150 chars):</label>
+            <textarea id="bioInput" rows="3" maxlength="150"></textarea>
+            <button class="neon-btn" onclick="saveProfile()">Save Profile</button>
+        </div>
+    </div>
+    <div id="profileViewer" class="container hidden"></div>
 </div>
 
 <script>
-// FIREBASE CONFIG
-const firebaseConfig = { /* Your config */ };
+// IMPORTANT: REPLACE THE PLACEHOLDER CONFIG WITH YOUR ACTUAL FIREBASE CONFIG
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2";
+const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; // Replace with the actual owner UID if desired
 
 let currentUser = null;
-
-// AUTH
-function login(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err=>alert(err.message)); }
-auth.onAuthStateChanged(async user=>{
-  if(!user){ loginPage.classList.remove("hidden"); dashboard.classList.add("hidden"); return; }
-  loginPage.classList.add("hidden"); dashboard.classList.remove("hidden"); currentUser=user;
-  const uRef=db.collection("users").doc(user.uid);
-  const uDoc=await uRef.get();
-  if(!uDoc.exists){
-    await uRef.set({ uid:user.uid, nickname:user.displayName||"Player", bio:"", profileImageUrl:user.photoURL||DEFAULT_AVATAR });
-  }
-  document.getElementById("welcome").innerHTML=`Welcome, ${(await uRef.get()).data().nickname}${getOwnerBadge(user.uid)}`;
-  loadSuggested(); loadRequests(); loadFriends();
-});
-function logout(){ auth.signOut(); }
+const userCache = {}; // Cache for user data (uid -> {nickname, profileImageUrl, bio})
 
 // UTILS
 function getOwnerBadge(uid){ return uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''; }
 function hideAllTabs(){ ['suggested','requests','friends','profile'].forEach(t=>document.getElementById(t+"Tab").classList.add("hidden")); profileViewer.classList.add("hidden"); }
-function showTab(tab){ hideAllTabs(); const el=document.getElementById(tab+"Tab"); if(el) el.classList.remove("hidden"); if(tab==='suggested') loadSuggested(); else if(tab==='requests') loadRequests(); else if(tab==='friends') loadFriends(); }
+
+// CACHING FUNCTION
+async function getCachedUser(uid) {
+    if (userCache[uid]) {
+        return userCache[uid];
+    }
+    const doc = await db.collection("users").doc(uid).get();
+    if (doc.exists) {
+        userCache[uid] = doc.data();
+        return userCache[uid];
+    }
+    // Fallback for a deleted user
+    return { nickname: "Unknown User", profileImageUrl: DEFAULT_AVATAR, uid: uid };
+}
+
+// PROFILE FUNCTIONS
+async function loadProfile() {
+    if (!currentUser) return;
+    const u = await getCachedUser(currentUser.uid);
+    document.getElementById("currentNicknameDisplay").textContent = u.nickname;
+    document.getElementById("currentAvatar").src = u.profileImageUrl || DEFAULT_AVATAR;
+    document.getElementById("bioInput").value = u.bio;
+}
+
+async function saveProfile() {
+    if (!currentUser) return;
+    const bio = document.getElementById("bioInput").value.trim();
+    
+    // Simple validation
+    if (bio.length > 150) {
+        alert("Bio is too long (Max 150 characters).");
+        return;
+    }
+
+    try {
+        await db.collection("users").doc(currentUser.uid).update({
+            bio: bio
+        });
+        alert("Profile saved!");
+        // Update cache
+        userCache[currentUser.uid].bio = bio; 
+        loadProfile(); 
+    } catch (error) {
+        alert("Error saving profile: " + error.message);
+    }
+}
+
+
+// AUTH
+function login(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err=>alert(err.message)); }
+auth.onAuthStateChanged(async user=>{
+    if(!user){ loginPage.classList.remove("hidden"); dashboard.classList.add("hidden"); return; }
+    loginPage.classList.add("hidden"); dashboard.classList.remove("hidden"); currentUser=user;
+    
+    const uRef=db.collection("users").doc(user.uid);
+    const uDoc=await uRef.get();
+    
+    if(!uDoc.exists){
+        // Initialize user with a better default nickname if none exists
+        const defaultNickname = user.displayName || user.email.split('@')[0] || "Player";
+        await uRef.set({ 
+            uid:user.uid, 
+            nickname:defaultNickname, 
+            bio:"", 
+            profileImageUrl:user.photoURL||DEFAULT_AVATAR 
+        });
+    }
+
+    // Load data and set cache
+    const userData = await getCachedUser(user.uid);
+    document.getElementById("welcome").innerHTML=`Welcome, ${userData.nickname}${getOwnerBadge(user.uid)}`;
+    
+    loadSuggested(); 
+    loadRequests(); 
+    loadFriends();
+    loadProfile(); // Load user profile data on login
+});
+function logout(){ auth.signOut(); }
+
+// TAB CONTROL
+function showTab(tab){ 
+    hideAllTabs(); 
+    const el=document.getElementById(tab+"Tab"); 
+    if(el) el.classList.remove("hidden"); 
+
+    if(tab==='suggested') loadSuggested(); 
+    else if(tab==='requests') loadRequests(); 
+    else if(tab==='friends') loadFriends(); 
+    else if(tab==='profile') loadProfile(); // Load profile editor content
+}
 
 // FRIEND FUNCTIONS
 async function sendRequest(receiverId){
-  if(!currentUser) return;
-  const existsSnap=await db.collection("friendRequests")
-      .where("senderId","in",[currentUser.uid,receiverId])
-      .where("receiverId","in",[currentUser.uid,receiverId])
-      .get();
-  if(!existsSnap.empty){ alert("Request already exists"); return; }
-  await db.collection("friendRequests").add({ senderId:currentUser.uid, receiverId });
-  alert("Request sent!"); loadSuggested();
+    if(!currentUser) return;
+    
+    // Check for existing relationship (request or friend)
+    const existsSnap = await db.collection("friendRequests")
+        .where("senderId", "in", [currentUser.uid, receiverId])
+        .where("receiverId", "in", [currentUser.uid, receiverId])
+        .get();
+
+    const friendsSnap = await db.collection("friends")
+        .where("users", "array-contains", currentUser.uid)
+        .get();
+    
+    if (existsSnap.empty === false || friendsSnap.docs.some(d => d.data().users.includes(receiverId))) {
+        alert("A request or friendship already exists with this user.");
+        return;
+    }
+
+    await db.collection("friendRequests").add({ senderId:currentUser.uid, receiverId, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+    alert("Request sent!"); loadSuggested();
 }
+
 async function acceptRequest(reqId,senderId){
-  if(!currentUser) return;
-  const friendsRef=db.collection("friends");
-  await friendsRef.add({ users:[currentUser.uid,senderId], createdAt:firebase.firestore.FieldValue.serverTimestamp() });
-  await db.collection("friendRequests").doc(reqId).delete();
-  alert("Friend added!"); loadRequests(); loadFriends(); loadSuggested();
+    if(!currentUser) return;
+    const friendsRef=db.collection("friends");
+    try {
+        await friendsRef.add({ users:[currentUser.uid,senderId], createdAt:firebase.firestore.FieldValue.serverTimestamp() });
+        await db.collection("friendRequests").doc(reqId).delete();
+        alert("Friend added!"); 
+        loadRequests(); 
+        loadFriends(); 
+        loadSuggested();
+    } catch(err) {
+        alert("Error accepting request: " + err.message);
+    }
 }
-async function rejectRequest(reqId){ await db.collection("friendRequests").doc(reqId).delete(); alert("Request rejected"); loadRequests(); loadSuggested(); }
+
+async function rejectRequest(reqId){ 
+    try {
+        await db.collection("friendRequests").doc(reqId).delete(); 
+        alert("Request rejected"); 
+        loadRequests(); 
+        loadSuggested(); 
+    } catch(err) {
+         alert("Error rejecting request: " + err.message);
+    }
+}
+
 async function removeFriend(friendId){
-  if(!currentUser) return;
-  if(!confirm("Remove friend?")) return;
-  const snap=await db.collection("friends").where("users","array-contains",currentUser.uid).get();
-  const doc=snap.docs.find(d=>d.data().users.includes(friendId));
-  if(doc) await db.collection("friends").doc(doc.id).delete();
-  alert("Friend removed"); loadFriends(); loadSuggested();
+    if(!currentUser) return;
+    if(!confirm("Are you sure you want to remove this player from your duo list?")) return;
+    
+    const snap=await db.collection("friends").where("users","array-contains",currentUser.uid).get();
+    const doc=snap.docs.find(d=>d.data().users.includes(friendId));
+    
+    if(doc) {
+        await db.collection("friends").doc(doc.id).delete();
+        alert("Friend removed"); 
+        // Remove from cache to force a refresh on next load
+        delete userCache[friendId]; 
+        loadFriends(); 
+        loadSuggested();
+    } else {
+        alert("Friend relationship not found.");
+    }
 }
 
 // LOAD FUNCTIONS
 async function loadSuggested(){
-  const container=document.getElementById("suggestedCards"); container.innerHTML="<p>Loading...</p>";
-  const usersSnap=await db.collection("users").get();
-  container.innerHTML="";
-  const myFriendsSnap=await db.collection("friends").where("users","array-contains",currentUser.uid).get();
-  const friendsIds=new Set(); myFriendsSnap.forEach(d=>d.data().users.forEach(uid=>{ if(uid!==currentUser.uid) friendsIds.add(uid); }));
-  const requestsSnap=await db.collection("friendRequests").get();
-  const pendingIds=new Set(); requestsSnap.forEach(d=>{ const r=d.data(); if(r.senderId===currentUser.uid) pendingIds.add(r.receiverId); else if(r.receiverId===currentUser.uid) pendingIds.add(r.senderId); });
-  usersSnap.forEach(d=>{ if(d.id===currentUser.uid || friendsIds.has(d.id) || pendingIds.has(d.id)) return; const u=d.data(); const card=document.createElement("div"); card.className="card"; card.innerHTML=`<div class="card-content"><img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}"><strong>${u.nickname}${getOwnerBadge(u.uid)}</strong></div><button class="neon-btn" onclick="event.stopPropagation(); sendRequest('${d.id}')">Send Request</button>`; container.appendChild(card); });
+    const container=document.getElementById("suggestedCards"); container.innerHTML="<p>Scanning the network for partners...</p>";
+    
+    const [usersSnap, myFriendsSnap, requestsSnap] = await Promise.all([
+        db.collection("users").get(),
+        db.collection("friends").where("users","array-contains",currentUser.uid).get(),
+        db.collection("friendRequests").get()
+    ]);
+    
+    container.innerHTML="";
+    
+    // Build sets of UIDs already connected or pending
+    const friendsIds=new Set(); 
+    myFriendsSnap.forEach(d=>d.data().users.forEach(uid=>{ if(uid!==currentUser.uid) friendsIds.add(uid); }));
+    
+    const pendingIds=new Set(); 
+    requestsSnap.forEach(d=>{ 
+        const r=d.data(); 
+        // If I sent the request, pending is the receiver. If I received it, pending is the sender.
+        if(r.senderId===currentUser.uid) pendingIds.add(r.receiverId); 
+        else if(r.receiverId===currentUser.uid) pendingIds.add(r.senderId); 
+    });
+
+    // Filter users and render cards
+    usersSnap.docs.forEach(doc=>{ 
+        const uid = doc.id;
+        if(uid===currentUser.uid || friendsIds.has(uid) || pendingIds.has(uid)) return; 
+        
+        const u=doc.data(); 
+        const card=document.createElement("div"); 
+        card.className="card"; 
+        
+        // Cache this user's data
+        userCache[uid] = u; 
+
+        card.innerHTML=`
+            <div class="card-content">
+                <img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
+                <strong>${u.nickname}${getOwnerBadge(u.uid)}</strong>
+            </div>
+            <button class="neon-btn" onclick="event.stopPropagation(); sendRequest('${uid}')">Send Request</button>
+        `; 
+        container.appendChild(card); 
+    });
+
+    if (container.childElementCount === 0) {
+         container.innerHTML = "<p>No new suggested partners found.</p>";
+    }
 }
+
 async function loadRequests(){
-  const container=document.getElementById("requestsTab"); container.innerHTML="<p>Loading...</p>";
-  const snap=await db.collection("friendRequests").where("receiverId","==",currentUser.uid).get();
-  container.innerHTML=""; if(snap.empty){ container.innerHTML="<p>No requests</p>"; return; }
-  snap.docs.forEach(doc=>{ const r=doc.data(); const card=document.createElement("div"); card.className="card"; card.innerHTML=`<div class="card-content"><strong>${r.senderId}</strong></div><button class="neon-btn" onclick="event.stopPropagation(); acceptRequest('${doc.id}','${r.senderId}')">Accept</button><button class="neon-btn remove" onclick="event.stopPropagation(); rejectRequest('${doc.id}')">Reject</button>`; container.appendChild(card); });
+    const container=document.getElementById("requestsTab"); container.innerHTML="<p>Loading incoming requests...</p>";
+    const snap=await db.collection("friendRequests").where("receiverId","==",currentUser.uid).get();
+    container.innerHTML=""; 
+    
+    if(snap.empty){ container.innerHTML="<p>No incoming friend requests.</p>"; return; }
+
+    // Fetch all sender data concurrently
+    const requestPromises = snap.docs.map(doc => {
+        const r = doc.data();
+        return getCachedUser(r.senderId).then(sender => ({ doc, r, sender }));
+    });
+
+    const requestsData = await Promise.all(requestPromises);
+
+    requestsData.forEach(({ doc, r, sender }) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        // Use sender.nickname and sender.profileImageUrl
+        card.innerHTML = `
+            <div class="card-content">
+                <img class="avatar" src="${sender.profileImageUrl}">
+                <strong>${sender.nickname}${getOwnerBadge(sender.uid)}</strong>
+            </div>
+            <button class="neon-btn" onclick="event.stopPropagation(); acceptRequest('${doc.id}','${r.senderId}')">Accept</button>
+            <button class="neon-btn remove" onclick="event.stopPropagation(); rejectRequest('${doc.id}')">Reject</button>
+        `;
+        container.appendChild(card);
+    });
 }
+
 async function loadFriends(){
-  const container=document.getElementById("friendsTab"); container.innerHTML="<p>Loading...</p>";
-  const snap=await db.collection("friends").where("users","array-contains",currentUser.uid).get();
-  container.innerHTML=""; if(snap.empty){ container.innerHTML="<p>No friends</p>"; return; }
-  snap.docs.forEach(doc=>{ const uids=doc.data().users.filter(uid=>uid!==currentUser.uid); uids.forEach(async fid=>{ const u=await db.collection("users").doc(fid).get(); if(!u.exists) return; const data=u.data(); const card=document.createElement("div"); card.className="card"; card.innerHTML=`<div class="card-content"><strong>${data.nickname}${getOwnerBadge(data.uid)}</strong></div><button class="neon-btn remove" onclick="event.stopPropagation(); removeFriend('${fid}')">Remove</button>`; container.appendChild(card); }); });
+    const container=document.getElementById("friendsTab"); container.innerHTML="<p>Loading duo list...</p>";
+    const snap=await db.collection("friends").where("users","array-contains",currentUser.uid).get();
+    container.innerHTML=""; 
+    
+    if(snap.empty){ container.innerHTML="<p>No friends yet. Send a request from Suggested!</p>"; return; }
+    
+    const friendPromises = [];
+    snap.docs.forEach(doc => {
+        const uids = doc.data().users.filter(uid => uid !== currentUser.uid);
+        uids.forEach(fid => {
+            // Push a promise for each friend's data
+            friendPromises.push(getCachedUser(fid).then(user => ({ user, fid })));
+        });
+    });
+    
+    const friendsData = await Promise.all(friendPromises);
+
+    friendsData.forEach(({ user, fid }) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        // Use user.nickname and user.profileImageUrl
+        card.innerHTML = `
+            <div class="card-content">
+                <img class="avatar" src="${user.profileImageUrl}">
+                <strong>${user.nickname}${getOwnerBadge(user.uid)}</strong>
+                <p style="font-size:0.8em; margin:0; margin-top:5px; opacity:0.7;">${user.bio.substring(0, 50)}...</p>
+            </div>
+            <button class="neon-btn remove" onclick="event.stopPropagation(); removeFriend('${fid}')">Remove</button>
+        `;
+        container.appendChild(card);
+    });
 }
 </script>
 </body>
