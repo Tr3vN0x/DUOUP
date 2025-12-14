@@ -141,7 +141,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 </div>
 
 <script>
-// ---------- FIREBASE INIT ----------
+// ---------- FIREBASE INIT (Update with your specific config if needed) ----------
 const firebaseConfig = {
   apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
   authDomain: "duoup-cfae6.firebaseapp.com",
@@ -155,7 +155,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
-const functions = firebase.functions(); // Initialize functions SDK
+const functions = firebase.functions(); // CRITICAL: Needed for Cloud Function call
 
 const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2";
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -203,7 +203,7 @@ auth.onAuthStateChanged(async user=>{
   loadProfile();
 });
 
-// ---------- PROFILE EDIT (No change here) ----------
+// ---------- PROFILE EDIT (Unchanged) ----------
 async function loadProfile() {
   const userDoc = await db.collection('users').doc(currentUser.uid).get();
   if(!userDoc.exists) return;
@@ -249,7 +249,7 @@ async function saveProfile() {
 }
 
 
-// ---------- FRIEND REQUESTS & FRIENDS (with logging fix for sendRequest) ----------
+// ---------- FRIEND REQUESTS & FRIENDS ----------
 function getOwnerBadge(uid){ return uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''; }
 function renderSkillRating(r){r=parseInt(r)||0; return `<div class="skill-rating">${'⭐'.repeat(r)}${'☆'.repeat(5-r)}</div>`;}
 function renderStatus(s){ const c=s==='Online'?'status-online':s==='In Game'?'status-ingame':'status-lfd'; return `<div class="status-indicator ${c}">${s}</div>`; }
@@ -262,7 +262,7 @@ function renderCard(d,type,reqId=null){
     btn.onclick=()=>sendFriendRequest(d.uid); buttons.push(btn);
   }
   else if(type==='request'){
-    // NOTE: acceptFriend now calls a Cloud Function
+    // Calls the Cloud Function (acceptFriendRequest)
     const accept=document.createElement('button'); accept.className='neon-btn'; accept.textContent='Accept'; accept.onclick=()=>acceptFriend(reqId,d.uid); 
     const decline=document.createElement('button'); decline.className='neon-btn remove'; decline.textContent='Decline'; decline.onclick=()=>declineFriend(reqId); buttons.push(accept,decline);
   }
@@ -282,7 +282,7 @@ async function loadSuggested(){
   if(container.childElementCount===0) container.innerHTML='<p>No new suggested partners found.</p>';
 }
 
-// IMPROVED: Added error handling and logging for better debugging.
+// FINALIZED: Includes robust error handling
 async function sendFriendRequest(toUid){
   if(toUid===currentUser.uid) return;
   const reqId=[currentUser.uid,toUid].sort().join('_');
@@ -304,7 +304,7 @@ async function sendFriendRequest(toUid){
     loadRequests();
   } catch (e) {
     console.error("Failed to send friend request:", e);
-    alert("ERROR: Failed to send request. Check console for permission details. Ensure Firestore rules allow writing to 'friendRequests'.");
+    alert("ERROR: Failed to send request. Check console for permission details. Ensure Firestore rules are correctly published.");
   }
 }
 
@@ -316,10 +316,9 @@ async function loadRequests(){
   snapshot.docs.forEach((doc,i)=>{ const fromUser=userDocs[i].data(); if(!fromUser)return; container.appendChild(renderCard(fromUser,'request',doc.id)); });
 }
 
-// CRITICAL FIX: Calls a Cloud Function to securely accept friendship
+// FINALIZED: Uses Cloud Function for acceptance
 async function acceptFriend(reqId, friendUid){
   try {
-    // Call the cloud function that handles all the atomic database updates (cross-user write)
     const acceptFunction = functions.httpsCallable('acceptFriendRequest');
     await acceptFunction({ reqId: reqId, friendUid: friendUid });
 
@@ -329,7 +328,7 @@ async function acceptFriend(reqId, friendUid){
     loadSuggested();
   } catch (e) {
     console.error("Failed to accept friend request via Cloud Function:", e);
-    alert("ERROR: Failed to accept Duo. Ensure your Cloud Function 'acceptFriendRequest' is deployed and working correctly.");
+    alert("ERROR: Failed to accept Duo. Ensure your Cloud Function 'acceptFriendRequest' is deployed.");
   }
 }
 
@@ -338,7 +337,6 @@ async function declineFriend(reqId){
   loadRequests(); loadSuggested();
 }
 
-// ... (loadFriends and renderChatList are unchanged from the previous version, handling unread badges) ...
 async function loadFriends(){
   const container=document.getElementById('friendsTab'); container.innerHTML='';
   const userDocSnapshot=await db.collection('users').doc(currentUser.uid).get();
@@ -352,7 +350,6 @@ async function loadFriends(){
     return; 
   }
   
-  // Render friend cards
   const friendDocs=await Promise.all(friendUids.map(f=>db.collection('users').doc(f).get()));
   friendDocs.forEach(fDoc=>{ 
     const f=fDoc.data(); 
@@ -360,7 +357,6 @@ async function loadFriends(){
     container.appendChild(renderCard(f,'friend')); 
   });
 
-  // Render the chat list (now done with a real-time listener for unread count)
   renderChatList(friendUids);
 }
 
