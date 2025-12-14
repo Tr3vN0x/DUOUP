@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP Friends & Chat</title>
+<title>DUO UP Friends & Chat (V2)</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<style>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-functions-compat.js"></script> <style>
 /* --- BASE STYLES --- */
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
 .container { width:90%; max-width: 1000px; margin:auto; padding:20px; }
@@ -196,6 +196,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
+const functions = firebase.functions(); // Initialize Functions
+const sendMessageFunction = functions.httpsCallable('sendMessageFunction'); // Callable function reference
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 const loginPage = document.getElementById("loginPage");
@@ -425,7 +427,7 @@ function acceptRequest(requestId,senderId){
     loadFriends();
     loadSuggested(); 
   }).catch(err => {
-    alert("Transaction failed (Accept Request): Please check permissions for updates on /users and deletion on /friendRequests. Error: " + err.message);
+    alert("Transaction failed (Accept Request): " + err.message);
     console.error("Accept Request Error:", err);
   });
 }
@@ -517,25 +519,23 @@ function listenForMessages(chatId) {
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }, error => {
             console.error("Error listening to chat:", error);
-            chatMessages.innerHTML = '<p style="color:red;">Error loading messages.</p>';
+            chatMessages.innerHTML = '<p style="color:red;">Error loading messages. (Index or Rules issue on read access.)</p>';
         });
 }
 
 async function sendMessage() {
     const text = messageInput.value.trim();
-    if (text === '' || !currentChatId) return;
+    if (text === '' || !currentFriendId) return;
 
     try {
-        await db.collection('chats').doc(currentChatId).collection('messages').add({
-            senderId: currentUser.uid,
-            receiverId: currentFriendId,
-            text: text,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        // CALL THE CLOUD FUNCTION INSTEAD OF DIRECT FIREBASE WRITE
+        await sendMessageFunction({ 
+            receiverId: currentFriendId, 
+            text: text 
         });
         messageInput.value = ''; 
     } catch (error) {
-        // The error message provided here is designed to guide the user to the correct fix (Security Rules/Indexing)
-        alert("Failed to send message: Please verify your Firebase Security Rules and Indexing for chat.");
+        alert("Failed to send message: Server function error or network issue.");
         console.error("Send message error:", error);
     }
 }
