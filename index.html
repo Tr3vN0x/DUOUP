@@ -50,6 +50,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     box-shadow:0 0 10px cyan; 
     transition: all 0.2s ease-in-out;
     text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif; 
 }
 .neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
 .neon-btn.remove { border-color: red; box-shadow: 0 0 10px red; }
@@ -68,12 +69,12 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     flex-direction:column; 
     align-items:center; 
     margin-bottom: 15px;
-    cursor: pointer; /* Friends cards are now clickable */
+    cursor: pointer; 
 }
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
 
 
-/* --- CHAT BOX STYLES (NEW) --- */
+/* --- CHAT BOX STYLES --- */
 #chatBox {
     position: fixed;
     bottom: 0;
@@ -123,6 +124,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     margin: 5px 0;
     border-radius: 12px;
     max-width: 80%;
+    word-wrap: break-word; 
 }
 .message.me {
     align-self: flex-end;
@@ -170,7 +172,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <div id="chatBox" class="hidden">
     <div id="chatHeader">
         <span id="chatFriendNickname"></span>
-        <button class="neon-btn" style="border:none; box-shadow:none; padding: 0 5px; margin: 0; background: transparent; color: white;" onclick="closeChat()">X</button>
+        <button class="neon-btn" style="border:none; box-shadow:none; padding: 0 5px; margin: 0; background: transparent; color: white; font-size: 1.2em;" onclick="closeChat()">X</button>
     </div>
     <div id="chatMessages">
         </div>
@@ -182,6 +184,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 
 
 <script>
+// --- FIREBASE CONFIGURATION ---
 const firebaseConfig = {
   apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
   authDomain:"duoup-cfae6.firebaseapp.com",
@@ -207,9 +210,9 @@ const messageInput = document.getElementById("messageInput");
 let currentUser = null;
 let currentChatId = null;
 let currentFriendId = null;
-let unsubscribeChatListener = null; // Used to stop listening to old chats
+let unsubscribeChatListener = null; 
 
-// ---------------- LOGIN ----------------
+// ---------------- LOGIN/AUTH ----------------
 function login(){
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(err => alert(err.message));
 }
@@ -224,7 +227,6 @@ auth.onAuthStateChanged(async user=>{
   dashboard.classList.remove("hidden");
   currentUser = user;
 
-  // Create user profile if doesn't exist
   const userDoc = await db.collection("users").doc(user.uid).get();
   if(!userDoc.exists){
     await db.collection("users").doc(user.uid).set({
@@ -244,12 +246,12 @@ auth.onAuthStateChanged(async user=>{
   loadFriends();
 });
 
-// ---------------- LOGOUT ----------------
-function logout(){ auth.signOut(); }
+function logout(){ 
+    closeChat();
+    auth.signOut(); 
+}
 
-// ---------------- TABS ----------------
 function showTab(tab){
-  // Close chat when switching tabs
   closeChat(); 
   
   if (tab === 'suggested') loadSuggested();
@@ -262,7 +264,7 @@ function showTab(tab){
   document.getElementById(tab+"Tab").classList.remove("hidden");
 }
 
-// ---------------- LOAD SUGGESTED USERS (unchanged) ----------------
+// ---------------- LOAD FUNCTIONS ----------------
 async function loadSuggested(){
   suggestedTab.innerHTML="<p>Loading suggested users...</p>";
   
@@ -278,7 +280,6 @@ async function loadSuggested(){
       const pendingUsers = new Set();
       mySentRequestsSnap.forEach(doc => pendingUsers.add(doc.data().receiverId));
       myReceivedRequestsSnap.forEach(doc => pendingUsers.add(doc.data().senderId));
-
 
       let suggestedCount = 0;
       usersSnap.forEach(doc=>{
@@ -305,7 +306,6 @@ async function loadSuggested(){
   }
 }
 
-// ---------------- LOAD REQUESTS (unchanged) ----------------
 async function loadRequests(){
   requestsTab.innerHTML="<p>Loading requests...</p>";
   
@@ -346,7 +346,6 @@ async function loadRequests(){
   }
 }
 
-// ---------------- LOAD FRIENDS (UPDATED: Added startChat call) ----------------
 async function loadFriends(){
   friendsTab.innerHTML="<p>Loading friends...</p>";
   
@@ -369,7 +368,6 @@ async function loadFriends(){
         const u = doc.data();
         const card = document.createElement("div");
         card.className = "card";
-        // CRITICAL CHANGE: Added onclick="startChat(doc.id)" to the card
         card.setAttribute('onclick', `startChat('${doc.id}', '${u.nickname}')`);
         card.innerHTML = `<img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
           <strong>${u.nickname}</strong>
@@ -382,7 +380,7 @@ async function loadFriends(){
   }
 }
 
-// ---------------- REQUEST ACTIONS (unchanged) ----------------
+// ---------------- FRIEND ACTIONS ----------------
 async function sendRequest(receiverId){
   try {
       const existingRequestSnap = await db.collection("friendRequests")
@@ -442,7 +440,6 @@ function rejectRequest(requestId){
   });
 }
 
-// ---------------- FRIEND REMOVAL ACTION (unchanged) ----------------
 function removeFriend(friendId){
   if(!confirm("Are you sure you want to remove this friend?")) return;
 
@@ -462,22 +459,15 @@ function removeFriend(friendId){
   });
 }
 
-// ---------------- CHAT FUNCTIONS (NEW) ----------------
+// ---------------- CHAT FUNCTIONS ----------------
 
-/**
- * Generates a canonical Chat ID from two user IDs.
- * The ID is always sorted alphabetically (e.g., "ID_A-ID_B") to ensure both users get the same ID.
- */
 function getChatId(id1, id2) {
     return id1 < id2 ? `${id1}-${id2}` : `${id2}-${id1}`;
 }
 
-/**
- * Initializes the chat interface and sets up the real-time listener.
- */
 function startChat(friendId, friendNickname) {
     if (unsubscribeChatListener) {
-        unsubscribeChatListener(); // Stop listening to the previous chat
+        unsubscribeChatListener(); 
     }
 
     currentFriendId = friendId;
@@ -490,9 +480,6 @@ function startChat(friendId, friendNickname) {
     messageInput.focus();
 }
 
-/**
- * Closes the chat box and stops the real-time listener.
- */
 function closeChat() {
     if (unsubscribeChatListener) {
         unsubscribeChatListener();
@@ -504,17 +491,13 @@ function closeChat() {
     currentFriendId = null;
 }
 
-/**
- * Sets up the real-time Firestore listener for messages in the current chat.
- */
 function listenForMessages(chatId) {
     const chatRef = db.collection('chats').doc(chatId).collection('messages');
     
-    // Set up real-time listener, ordered by timestamp
     unsubscribeChatListener = chatRef
         .orderBy('timestamp', 'asc')
         .onSnapshot(snapshot => {
-            chatMessages.innerHTML = ''; // Clear existing messages
+            chatMessages.innerHTML = ''; 
             snapshot.forEach(doc => {
                 const message = doc.data();
                 const isMe = message.senderId === currentUser.uid;
@@ -524,7 +507,6 @@ function listenForMessages(chatId) {
                 
                 let time = '';
                 if (message.timestamp) {
-                    // Check if timestamp is a Firestore Timestamp object
                     const date = message.timestamp.toDate ? message.timestamp.toDate() : new Date();
                     time = ` <small>${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</small>`;
                 }
@@ -532,7 +514,6 @@ function listenForMessages(chatId) {
                 msgDiv.innerHTML = `${message.text}${time}`;
                 chatMessages.appendChild(msgDiv);
             });
-            // Scroll to the bottom of the chat window
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }, error => {
             console.error("Error listening to chat:", error);
@@ -540,9 +521,6 @@ function listenForMessages(chatId) {
         });
 }
 
-/**
- * Sends the message currently in the input field.
- */
 async function sendMessage() {
     const text = messageInput.value.trim();
     if (text === '' || !currentChatId) return;
@@ -554,9 +532,10 @@ async function sendMessage() {
             text: text,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        messageInput.value = ''; // Clear the input field
+        messageInput.value = ''; 
     } catch (error) {
-        alert("Failed to send message: " + error.message);
+        // The error message provided here is designed to guide the user to the correct fix (Security Rules/Indexing)
+        alert("Failed to send message: Please verify your Firebase Security Rules and Indexing for chat.");
         console.error("Send message error:", error);
     }
 }
