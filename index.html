@@ -469,6 +469,7 @@ async function handleSaveProfile() {
     saveProfileBtn.textContent = 'Saving...';
 
     // *** CRITICAL FIX: Build update object to guarantee security rule compliance ***
+    // This ensures ONLY the allowed fields are sent, and includes required array fields.
     const updatePayload = {
         bio: newBio,
         profileImageUrl: newImageUrl,
@@ -480,12 +481,13 @@ async function handleSaveProfile() {
         // Send the existing friends list unchanged.
         updatePayload.friends = currentUserData.friends;
     } else {
-        // If it somehow doesn't exist, send an empty list to satisfy the security rule for future updates.
+        // If it somehow doesn't exist (legacy), send an empty list to satisfy the security rule.
         updatePayload.friends = [];
     }
     // **********************************************************************************
 
     try {
+        // This is the operation that must pass the Security Rules
         await updateDoc(doc(db, "users", user.uid), updatePayload);
 
         // STEP 2: Update the globally stored data (the client's source of truth)
@@ -493,11 +495,12 @@ async function handleSaveProfile() {
         currentUserData.profileImageUrl = newImageUrl;
         
         // STEP 3: Re-render the editor to ensure all internal state and form values 
-        // are explicitly set to the new, SAVED values for persistence.
+        // are explicitly set to the new, SAVED values for persistence across tabs.
         loadProfileEditor();
         
         saveProfileBtn.textContent = 'Saved!';
         
+        // Success animation
         setTimeout(() => {
             saveProfileBtn.textContent = 'Save Profile';
             saveProfileBtn.disabled = false;
@@ -506,12 +509,16 @@ async function handleSaveProfile() {
 
     } catch (err) {
         console.error("Error saving profile:", err);
+        
+        // This block runs if the save fails (likely due to permission-denied from rules)
         saveProfileBtn.textContent = 'Error Saving';
         setTimeout(() => {
             saveProfileBtn.textContent = 'Save Profile';
             saveProfileBtn.disabled = false;
         }, 3000);
-        alert("CRITICAL ERROR: Failed to save. Please confirm your Firestore Security Rules and check the browser console for specific rejection details.");
+        
+        // Alert the user to check their console (F12) for the specific Firebase error
+        alert("CRITICAL ERROR: Save failed. Please confirm your Firestore Security Rules are set correctly and check the browser console (F12) for details on the error.");
     }
 }
 
