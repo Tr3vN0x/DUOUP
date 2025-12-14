@@ -9,38 +9,24 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
-  body { margin:0; font-family:'Orbitron',sans-serif; background:linear-gradient(270deg,#0D0D0D,#1A1A1A,#0D0D0D); background-size:600% 600%; animation:gradientAnimation 15s ease infinite; color:white; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; }
-  @keyframes gradientAnimation { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-  .hidden{ display:none; }
-  .neon-btn{ padding:8px 20px; font-family:'Orbitron',sans-serif; font-weight:bold; color:white; background:transparent; border:2px solid #00FFFF; border-radius:6px; cursor:pointer; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; margin:5px; }
-  .neon-btn:hover{ border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
-  input, select{ padding:8px; border-radius:6px; border:2px solid #00FFFF; background:transparent; color:white; margin:5px 0; }
-  .header{ display:flex; align-items:center; justify-content:space-between; width:90%; margin-top:10px; }
-  .main{ display:flex; gap:20px; width:90%; margin-top:20px; }
-  .sidebar{ width:80px; background-color:#0D0D0D; border-right:2px solid #00FFFF; display:flex; flex-direction:column; align-items:center; padding:20px 0;}
-  .sidebar h1{ writing-mode: vertical-rl; transform: rotate(180deg); font-family:'Orbitron',sans-serif; color:#00FFFF; text-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; margin-bottom:40px; }
-  .user-info{ display:flex; align-items:center; gap:15px; margin-bottom:20px; }
-  .user-info img{ width:60px; height:60px; border-radius:50%; border:2px solid #00FFFF; }
-  .online-dot{ width:12px; height:12px; border-radius:50%; border:2px solid #0D0D0D; box-shadow:0 0 5px #39FF14,0 0 10px #39FF14; }
-  .username{ font-size:1.8em; color:#00FFFF; text-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; }
-  .card-container{ display:flex; flex-wrap:wrap; gap:15px; }
-  .card{ background:#1A1A1A; border:2px solid #00FFFF; border-radius:16px; padding:15px; width:280px; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; transition:0.3s; }
-  .card:hover{ border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
-  .card h3{ font-family:'Audiowide',sans-serif; font-size:1.2em; margin-bottom:10px; color:#00FFFF; }
-  .card p{ font-size:1em; margin-bottom:10px; }
-  .chat-panel{ background:#0D0D0D; border:2px solid #FF00FF; border-radius:16px; padding:15px; width:400px; max-height:400px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
-  .message{ display:flex; align-items:flex-end; gap:10px; }
-  .message.outgoing{ flex-direction:row-reverse; }
-  .message-bubble{ padding:10px 15px; border-radius:12px; max-width:70%; font-family:'Orbitron',sans-serif; word-wrap: break-word; position: relative; }
-  .neon-incoming{ background:#1A1A1A; border:2px solid #00FFFF; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; }
-  .neon-outgoing{ background:#1A1A1A; border:2px solid #FF00FF; box-shadow:0 0 5px #FF00FF,0 0 10px #FF00FF,0 0 20px #FF00FF; }
-  .avatar-small{ width:30px; height:30px; border-radius:50%; border:2px solid #00FFFF; }
-  .avatar-small-container{ position: relative; }
-  .premium-badge{ position: absolute; top:-5px; right:-5px; background:#FFD700; color:#0D0D0D; border-radius:50%; font-size:0.8em; font-weight:bold; width:16px; height:16px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 5px #FFD700,0 0 10px #FFD700; }
-  .timestamp{ font-size:0.7em; color:#AAA; margin-top:4px; text-align:right; }
-  .chat-input{ display:flex; gap:10px; }
-  .chat-input input{ flex:1; padding:8px; border-radius:8px; border:2px solid #00FFFF; background:transparent; color:white; }
-  #profileEditor{ background:#1A1A1A; border:2px solid #00FFFF; border-radius:12px; padding:15px; width:300px; margin-top:20px; }
+body { margin:0; font-family:'Orbitron',sans-serif; background:linear-gradient(270deg,#0D0D0D,#1A1A1A,#0D0D0D); background-size:600% 600%; animation:gradientAnimation 15s ease infinite; color:white; display:flex; flex-direction:column; align-items:center; min-height:100vh; }
+@keyframes gradientAnimation { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+.hidden{ display:none; }
+.neon-btn{ padding:8px 20px; font-weight:bold; color:white; background:transparent; border:2px solid #00FFFF; border-radius:6px; cursor:pointer; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; margin:5px; }
+.neon-btn:hover{ border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
+input, select{ padding:8px; border-radius:6px; border:2px solid #00FFFF; background:transparent; color:white; margin:5px 0; }
+.header{ display:flex; justify-content:space-between; width:90%; margin-top:10px; }
+.main{ display:flex; gap:20px; width:90%; margin-top:20px; }
+.card-container{ display:flex; flex-wrap:wrap; gap:15px; }
+.card{ background:#1A1A1A; border:2px solid #00FFFF; border-radius:16px; padding:15px; width:280px; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; transition:0.3s; }
+.card:hover{ border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
+.chat-panel{ background:#0D0D0D; border:2px solid #FF00FF; border-radius:16px; padding:15px; width:400px; max-height:400px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
+.message{ display:flex; align-items:flex-end; gap:10px; }
+.message.outgoing{ flex-direction:row-reverse; }
+.message-bubble{ padding:10px 15px; border-radius:12px; max-width:70%; word-wrap: break-word; position: relative; }
+.neon-incoming{ background:#1A1A1A; border:2px solid #00FFFF; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; }
+.neon-outgoing{ background:#1A1A1A; border:2px solid #FF00FF; box-shadow:0 0 5px #FF00FF,0 0 10px #FF00FF,0 0 20px #FF00FF; }
+#profileEditor{ background:#1A1A1A; border:2px solid #00FFFF; border-radius:12px; padding:15px; width:300px; margin-top:20px; }
 </style>
 </head>
 <body>
@@ -103,144 +89,155 @@
 </div>
 
 <script>
-  const firebaseConfig = {
-    apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-    authDomain:"duoup-cfae6.firebaseapp.com",
-    projectId:"duoup-cfae6",
-    storageBucket:"duoup-cfae6.firebasestorage.app",
-    messagingSenderId:"812263060524",
-    appId:"1:812263060524:web:ac09c3ae610db1cd110d89",
-    measurementId:"G-46B67F90FK"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth=firebase.auth();
-  const db=firebase.firestore();
+const firebaseConfig = {
+  apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+  authDomain:"duoup-cfae6.firebaseapp.com",
+  projectId:"duoup-cfae6",
+  storageBucket:"duoup-cfae6.firebasestorage.app",
+  messagingSenderId:"812263060524",
+  appId:"1:812263060524:web:ac09c3ae610db1cd110d89",
+  measurementId:"G-46B67F90FK"
+};
+firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-  const loginPage=document.getElementById("loginPage");
-  const pickUsernamePage=document.getElementById("pickUsernamePage");
-  const dashboardPage=document.getElementById("dashboardPage");
+const loginPage=document.getElementById("loginPage");
+const pickUsernamePage=document.getElementById("pickUsernamePage");
+const dashboardPage=document.getElementById("dashboardPage");
 
-  // Google login
-  function loginWithGoogle(){
-    const provider=new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).then(result=>{
-      checkUsername(result.user);
-    }).catch(err=>alert("Google login failed: "+err.message));
-  }
+// ---------------- Google Login ----------------
+function loginWithGoogle(){
+  const provider=new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).then(result=>{
+    checkNickname(result.user);
+  }).catch(err=>alert("Google login failed: "+err.message));
+}
 
-  function checkUsername(user){
-    const userRef=db.collection("users").doc(user.uid);
-    userRef.get().then(doc=>{
-      if(doc.exists && doc.data().username){
-        showDashboard(doc.data());
-      } else {
-        loginPage.classList.add("hidden");
-        pickUsernamePage.classList.remove("hidden");
-      }
-    });
-  }
-
-  function saveUsername(){
-    const username=document.getElementById("usernameInput").value.trim();
-    if(!username) return alert("Enter a username");
-
-    const user=auth.currentUser;
-    if(!user) return alert("No logged-in user found. Please login again.");
-
-    db.collection("users").doc(user.uid).set({
-      username:username,
-      email:user.email,
-      profileImageUrl:user.photoURL,
-      isPremium:false,
-      status:"online",
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true}).then(()=>{
-      pickUsernamePage.classList.add("hidden");
-      showDashboard({username:username, profileImageUrl:user.photoURL});
-    }).catch(err=>alert("Error saving username: "+err.message));
-  }
-
-  function showDashboard(userData){
-    dashboardPage.classList.remove("hidden");
-    loginPage.classList.add("hidden");
-    pickUsernamePage.classList.add("hidden");
-    document.getElementById("welcomeUsername").innerText="Welcome, "+userData.username;
-    loadFriendRequests();
-    loadSuggestedDuos();
-    loadActiveDuos();
-  }
-
-  function logout(){
-    auth.signOut().then(()=>{
-      loginPage.classList.remove("hidden");
-      pickUsernamePage.classList.add("hidden");
-      dashboardPage.classList.add("hidden");
-    });
-  }
-
-  // Profile Editor
-  function openProfileEditor(){
-    document.getElementById("profileEditor").classList.remove("hidden");
-    const userRef=db.collection("users").doc(auth.currentUser.uid);
-    userRef.get().then(doc=>{
-      const data=doc.data();
-      document.getElementById("editUsername").value=data.username||"";
-      document.getElementById("editStatus").value=data.status||"";
-      // Load games
-      db.collection("games").get().then(snapshot=>{
-        const container=document.getElementById("gameSelection");
-        container.innerHTML="";
-        snapshot.docs.forEach(gameDoc=>{
-          const game=gameDoc.data();
-          const checked=data.favoriteGames && data.favoriteGames.includes(gameDoc.id)?"checked":"";
-          container.innerHTML+=`
-            <label style="display:block; margin-bottom:5px;">
-              <input type="checkbox" value="${gameDoc.id}" ${checked}>
-              <img src="${game.iconUrl}" style="width:24px; height:24px; vertical-align:middle; margin-right:5px;">
-              ${game.name} (${game.platforms})
-            </label>
-          `;
-        });
-      });
-    });
-  }
-
-  function closeProfileEditor(){
-    document.getElementById("profileEditor").classList.add("hidden");
-  }
-
-  function saveProfile(){
-    const username=document.getElementById("editUsername").value.trim();
-    const status=document.getElementById("editStatus").value.trim();
-    const checkboxes=document.querySelectorAll("#gameSelection input[type=checkbox]:checked");
-    const favoriteGames=Array.from(checkboxes).map(cb=>cb.value);
-
-    if(!username) return alert("Username cannot be empty");
-
-    db.collection("users").doc(auth.currentUser.uid).set({
-      username:username,
-      status:status,
-      favoriteGames:favoriteGames
-    },{merge:true}).then(()=>{
-      document.getElementById("welcomeUsername").innerText="Welcome, "+username;
-      closeProfileEditor();
-    }).catch(err=>alert("Error saving profile: "+err.message));
-  }
-
-  // Placeholder functions for friend requests/duos
-  function loadFriendRequests(){ /* implement Firestore logic */ }
-  function loadSuggestedDuos(){ /* implement Firestore logic */ }
-  function loadActiveDuos(){ /* implement Firestore logic */ }
-
-  auth.onAuthStateChanged(user=>{
-    if(user){
-      checkUsername(user);
+function checkNickname(user){
+  const userRef=db.collection("users").doc(user.uid);
+  userRef.get().then(doc=>{
+    if(doc.exists && doc.data().nickname){
+      showDashboard(doc.data());
     } else {
-      loginPage.classList.remove("hidden");
-      pickUsernamePage.classList.add("hidden");
-      dashboardPage.classList.add("hidden");
+      loginPage.classList.add("hidden");
+      pickUsernamePage.classList.remove("hidden");
     }
   });
+}
+
+// ---------------- Pick Username ----------------
+function saveUsername(){
+  const nickname=document.getElementById("usernameInput").value.trim();
+  if(!nickname) return alert("Enter a username");
+
+  const user=auth.currentUser;
+  if(!user) return alert("No logged-in user found");
+
+  db.collection("users").doc(user.uid).set({
+    nickname: nickname,
+    uid: user.uid,
+    email: user.email,
+    authType: "google",
+    lastActive: firebase.firestore.FieldValue.serverTimestamp(),
+    bio: "",
+    friends: [],
+    profileImageUrl: user.photoURL || "",
+    isPremium: false,
+    status: "online",
+    favoriteGames: []
+  }, {merge:true}).then(()=>{
+    pickUsernamePage.classList.add("hidden");
+    showDashboard({nickname: nickname, profileImageUrl: user.photoURL});
+  }).catch(err=>alert("Error saving username: "+err.message));
+}
+
+// ---------------- Dashboard ----------------
+function showDashboard(userData){
+  dashboardPage.classList.remove("hidden");
+  loginPage.classList.add("hidden");
+  pickUsernamePage.classList.add("hidden");
+  document.getElementById("welcomeUsername").innerText="Welcome, "+userData.nickname;
+  loadFriendRequests();
+  loadSuggestedDuos();
+  loadActiveDuos();
+}
+
+function logout(){
+  auth.signOut().then(()=>{
+    loginPage.classList.remove("hidden");
+    pickUsernamePage.classList.add("hidden");
+    dashboardPage.classList.add("hidden");
+  });
+}
+
+// ---------------- Profile Editor ----------------
+function openProfileEditor(){
+  document.getElementById("profileEditor").classList.remove("hidden");
+  const userRef=db.collection("users").doc(auth.currentUser.uid);
+  userRef.get().then(doc=>{
+    const data=doc.data();
+    document.getElementById("editUsername").value=data.nickname||"";
+    document.getElementById("editStatus").value=data.status||"";
+
+    // Load games
+    db.collection("games").get().then(snapshot=>{
+      const container=document.getElementById("gameSelection");
+      container.innerHTML="";
+      snapshot.docs.forEach(gameDoc=>{
+        const game=gameDoc.data();
+        const checked=data.favoriteGames && data.favoriteGames.includes(gameDoc.id)?"checked":"";
+        container.innerHTML+=`
+          <label style="display:block; margin-bottom:5px;">
+            <input type="checkbox" value="${gameDoc.id}" ${checked}>
+            <img src="${game.iconUrl}" style="width:24px; height:24px; vertical-align:middle; margin-right:5px;">
+            ${game.name} (${game.platforms})
+          </label>
+        `;
+      });
+    });
+  });
+}
+
+function closeProfileEditor(){
+  document.getElementById("profileEditor").classList.add("hidden");
+}
+
+function saveProfile(){
+  const nickname=document.getElementById("editUsername").value.trim();
+  const status=document.getElementById("editStatus").value.trim();
+  const checkboxes=document.querySelectorAll("#gameSelection input[type=checkbox]:checked");
+  const favoriteGames=Array.from(checkboxes).map(cb=>cb.value);
+
+  if(!nickname) return alert("Username cannot be empty");
+
+  db.collection("users").doc(auth.currentUser.uid).set({
+    nickname: nickname,
+    status: status,
+    favoriteGames: favoriteGames,
+    lastActive: firebase.firestore.FieldValue.serverTimestamp()
+  }, {merge:true}).then(()=>{
+    document.getElementById("welcomeUsername").innerText="Welcome, "+nickname;
+    closeProfileEditor();
+  }).catch(err=>alert("Error saving profile: "+err.message));
+}
+
+// ---------------- Placeholder functions ----------------
+function loadFriendRequests(){ /* Firestore integration */ }
+function loadSuggestedDuos(){ /* Firestore integration */ }
+function loadActiveDuos(){ /* Firestore integration */ }
+function sendMessage(){ /* Firestore integration */ }
+
+// ---------------- Auth State ----------------
+auth.onAuthStateChanged(user=>{
+  if(user){
+    checkNickname(user);
+  } else {
+    loginPage.classList.remove("hidden");
+    pickUsernamePage.classList.add("hidden");
+    dashboardPage.classList.add("hidden");
+  }
+});
 </script>
 </body>
 </html>
