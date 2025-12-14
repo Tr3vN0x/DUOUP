@@ -34,7 +34,7 @@ header nav button{
     margin-left:8px;
     padding:8px 16px;
     border:none;
-    border-radius:20px; /* Rounded buttons */
+    border-radius:20px;
     background:#00f6ff;
     color:#050510;
     font-weight:700;
@@ -46,12 +46,11 @@ header nav button:hover {
 }
 
 /* --- Layouts & Forms --- */
-#auth, #app, #profile {
+#auth, #app {
     min-height:100vh;
     display:flex;
     flex-direction:column;
     align-items:center;
-    padding-top:70px; /* Space for fixed header */
     width: 100%;
 }
 #auth { 
@@ -60,6 +59,15 @@ header nav button:hover {
 }
 #auth > * { margin: 10px 0; max-width: 300px; width: 90%; }
 
+/* --- App Pages/Sections --- */
+#home, #profile {
+    padding-top: 70px; /* Space for fixed header */
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 input, textarea, button{
     padding:12px;
     border-radius:8px;
@@ -67,7 +75,11 @@ input, textarea, button{
     background:#141426;
     color:white;
     font-size:16px;
+    width: 90%;
+    max-width: 300px;
 }
+textarea { min-height: 100px; }
+
 button{
     background:#5c5cff;
     color:white;
@@ -78,6 +90,7 @@ button{
 button:hover{
     background:#4a4ac9;
 }
+button#saveProfileBtn { margin-top: 20px; }
 
 /* --- Grid & Cards --- */
 .grid{
@@ -134,11 +147,13 @@ button:hover{
     margin-top:8px;
     color:#b0b7d4;
     flex-grow:1;
-    min-height: 40px; /* Ensure cards have similar height */
+    min-height: 40px; 
 }
 .card button {
     margin-top: 15px;
     border-radius: 20px;
+    max-width: none;
+    width: 100%;
 }
 
 /* --- Loading State (Spinner) --- */
@@ -162,8 +177,8 @@ button:hover{
 <header id="header" class="hidden">
     <h2>DuoUp</h2>
     <nav>
-        <button onclick="showTab('home')">Home</button>
-        <button onclick="showTab('profile')">Profile</button>
+        <button onclick="renderAppPage('home')">Home</button>
+        <button onclick="renderAppPage('profile')">Profile</button>
         <button onclick="logout()">Logout</button>
     </nav>
 </header>
@@ -222,6 +237,25 @@ const password = document.getElementById("password");
 const loadingSpinner = document.getElementById("loading-spinner");
 
 const SEVEN_DAYS_MS = 7*24*60*60*1000;
+const appPages = ["home", "profile"]; // List of valid pages/sections
+
+/* --- Core Routing Function --- */
+window.renderAppPage = (pageId) => {
+  if (!appPages.includes(pageId)) return; // Safety check
+
+  // Hide all app pages
+  appPages.forEach(id => document.getElementById(id).classList.add("hidden"));
+
+  // Show the requested page
+  document.getElementById(pageId).classList.remove("hidden");
+
+  // Execute page-specific loading logic
+  if(pageId === "home") {
+    loadUsers();
+  } else if (pageId === "profile") {
+    loadProfile(); // Ensure profile data is fresh when viewing the page
+  }
+};
 
 document.getElementById("signin").onclick = async () => {
   try {
@@ -246,17 +280,11 @@ document.getElementById("signup").onclick = async () => {
       friends: [],
       profileImageUrl: ""
     });
-    msg.textContent="Account created successfully! You are now logged in.";
+    msg.textContent="Account created successfully! Redirecting...";
   } catch(e){ msg.textContent=`Sign Up Failed: ${e.message.split('(')[0]}`; }
 };
 
 window.logout = () => signOut(auth);
-
-window.showTab = (tab) => {
-  ["home","profile"].forEach(t=>document.getElementById(t).classList.add("hidden"));
-  document.getElementById(tab).classList.remove("hidden");
-  if(tab==="home") loadUsers();
-};
 
 onAuthStateChanged(auth, async user=>{
   if(user){
@@ -264,7 +292,10 @@ onAuthStateChanged(auth, async user=>{
     authUI.classList.add("hidden");
     appUI.classList.remove("hidden");
     header.classList.remove("hidden");
-    showTab("home");
+    
+    // Critical: Ensure redirection to 'home' after successful sign-up/in
+    renderAppPage("home"); 
+    
     await loadProfile();
     updateLastActive();
     setInterval(updateLastActive, 60000); // update online status every 1 min
@@ -334,11 +365,15 @@ async function loadUsers(){
         return;
     }
 
+    let activeUserCount = 0;
+
     snap.forEach(d=>{
       const u = d.data();
       // Client-side filter to exclude the current user
       if(u.uid===currentUser.uid) return;
       
+      activeUserCount++;
+
       // Avatar Logic: Use image if available, otherwise use initial
       const initial = u.nickname? u.nickname[0].toUpperCase() : "?";
       const avatarContent = u.profileImageUrl 
@@ -357,7 +392,7 @@ async function loadUsers(){
         </div>`;
     });
 
-    if (grid.innerHTML.trim() === '') {
+    if (activeUserCount === 0) {
         grid.innerHTML = '<p style="text-align: center; margin-top: 50px;">You are the only active user!</p>';
     }
 
