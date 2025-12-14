@@ -5,65 +5,80 @@
 <title>DuoUp</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
+/* --- Basic Styling --- */
 body{font-family:sans-serif;background:#050510;color:white;margin:0;}
 .hidden{display:none;}
-header{position:fixed;top:0;width:100%;height:60px;background:#0f1224;display:flex;justify-content:space-between;align-items:center;padding:0 16px;border-bottom:1px solid #1c2148;}
-header nav button{margin-left:6px;padding:6px 12px;border:none;border-radius:6px;background:#00f6ff;color:#050510;font-weight:600;cursor:pointer;}
-#auth,#app{min-height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;padding-top:70px;}
 input,textarea,button{padding:10px;margin:5px;border-radius:5px;border:none;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;width:90%;margin-top:20px;}
-.card{background:#141426;padding:16px;border-radius:10px;border:1px solid #1c2148;}
+/* --- Header Styling --- */
+header{position:fixed;top:0;width:100%;height:60px;background:#0f1224;display:flex;justify-content:space-between;align-items:center;padding:0 16px;border-bottom:1px solid #1c2148;z-index:100;}
+header nav button{margin-left:6px;padding:6px 12px;border:none;border-radius:6px;background:#00f6ff;color:#050510;font-weight:600;cursor:pointer;}
+/* --- Page Layout --- */
+#auth,#app{min-height:100vh;display:flex;justify-content:center;align-items:center;flex-direction:column;padding-top:70px;}
+/* --- Card Grid Styling --- */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;width:90%;max-width:1200px;margin-top:20px;}
+.card{background:#141426;padding:16px;border-radius:10px;border:1px solid #1c2148;display:flex;flex-direction:column;justify-content:space-between;}
 .card-header{display:flex;align-items:center;gap:10px;}
-.avatar{width:40px;height:40px;border-radius:50%;background:#8a5cff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#050510;}
-.bio{margin-top:8px;color:#8b94b4;}
+.avatar{width:40px;height:40px;border-radius:50%;background:#8a5cff;display:flex;align-items:center;justify-content:center;font-weight:700;color:#050510;
+        /* Added for image overflow handling */
+        overflow: hidden;
+}
+.bio{margin-top:8px;margin-bottom:12px;color:#8b94b4;flex-grow:1;}
+.card button {
+    background: #5c5cff;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+}
 </style>
 </head>
 <body>
 
 <header id="header" class="hidden">
-    <h2>DuoUp</h2>
-    <nav>
-        <button onclick="showTab('home')">Home</button>
-        <button onclick="showTab('profile')">Profile</button>
-        <button onclick="logout()">Logout</button>
-    </nav>
+    <h2>DuoUp</h2>
+    <nav>
+        <button onclick="showTab('home')">Home</button>
+        <button onclick="showTab('profile')">Profile</button>
+        <button onclick="logout()">Logout</button>
+    </nav>
 </header>
 
 <div id="auth">
-    <h2>DuoUp Auth</h2>
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button id="signin">Sign In</button>
-    <button id="signup">Sign Up</button>
-    <p id="msg"></p>
+    <h2>DuoUp Auth</h2>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button id="signin">Sign In</button>
+    <button id="signup">Sign Up</button>
+    <p id="msg"></p>
 </div>
 
 <div id="app" class="hidden">
 
-    <section id="home">
-        <h2>All Users (Active)</h2>
-        <div class="grid" id="grid"></div>
-    </section>
+    <section id="home">
+        <h2>All Users (Active)</h2>
+        <div class="grid" id="grid"></div>
+    </section>
 
-    <section id="profile" class="hidden">
-        <h2>Your Profile</h2>
-        <input id="profileImageUrl" placeholder="Profile Image URL">
-        <textarea id="bio" placeholder="Your bio here"></textarea>
-        <button id="saveProfileBtn">Save</button>
-        <p id="profileMsg"></p>
-    </section>
+    <section id="profile" class="hidden">
+        <h2>Your Profile</h2>
+        <input id="profileImageUrl" placeholder="Profile Image URL">
+        <textarea id="bio" placeholder="Your bio here"></textarea>
+        <button id="saveProfileBtn">Save</button>
+        <p id="profileMsg"></p>
+    </section>
 
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+// Added query and where for server-side filtering
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-  authDomain:"duoup-cfae6.firebaseapp.com",
-  projectId:"duoup-cfae6"
+  apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+  authDomain:"duoup-cfae6.firebaseapp.com",
+  projectId:"duoup-cfae6"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -83,106 +98,117 @@ const password = document.getElementById("password");
 const SEVEN_DAYS_MS = 7*24*60*60*1000;
 
 document.getElementById("signin").onclick = async () => {
-  try {
-    await signInWithEmailAndPassword(auth,email.value,password.value);
-    msg.textContent="";
-  } catch(e){ msg.textContent=e.message; }
+  try {
+    await signInWithEmailAndPassword(auth,email.value,password.value);
+    msg.textContent="";
+  } catch(e){ msg.textContent=e.message; }
 };
 
 document.getElementById("signup").onclick = async () => {
-  try {
-    const cred = await createUserWithEmailAndPassword(auth,email.value,password.value);
-    const userDocRef = doc(db,"users",cred.user.uid);
-    await setDoc(userDocRef,{
-      uid: cred.user.uid,
-      nickname: email.value.split("@")[0],
-      email: email.value,
-      authType: "email",
-      lastActive: Date.now(),
-      bio: "",
-      friends: [],
-      profileImageUrl: ""
-    });
-    msg.textContent="User created!";
-  } catch(e){ msg.textContent=e.message; }
+  try {
+    const cred = await createUserWithEmailAndPassword(auth,email.value,password.value);
+    const userDocRef = doc(db,"users",cred.user.uid);
+    await setDoc(userDocRef,{
+      uid: cred.user.uid,
+      nickname: email.value.split("@")[0],
+      email: email.value,
+      authType: "email",
+      lastActive: Date.now(),
+      bio: "",
+      friends: [],
+      profileImageUrl: ""
+    });
+    msg.textContent="User created!";
+  } catch(e){ msg.textContent=e.message; }
 };
 
 window.logout = () => signOut(auth);
 
 window.showTab = (tab) => {
-  ["home","profile"].forEach(t=>document.getElementById(t).classList.add("hidden"));
-  document.getElementById(tab).classList.remove("hidden");
-  if(tab==="home") loadUsers();
+  ["home","profile"].forEach(t=>document.getElementById(t).classList.add("hidden"));
+  document.getElementById(tab).classList.remove("hidden");
+  if(tab==="home") loadUsers();
 };
 
 onAuthStateChanged(auth, async user=>{
-  if(user){
-    currentUser = user;
-    authUI.classList.add("hidden");
-    appUI.classList.remove("hidden");
-    header.classList.remove("hidden");
-    showTab("home");
-    await loadProfile();
-    updateLastActive();
-    setInterval(updateLastActive, 60000); // update online status every 1 min
-  }else{
-    authUI.classList.remove("hidden");
-    appUI.classList.add("hidden");
-    header.classList.add("hidden");
-  }
+  if(user){
+    currentUser = user;
+    authUI.classList.add("hidden");
+    appUI.classList.remove("hidden");
+    header.classList.remove("hidden");
+    showTab("home");
+    await loadProfile();
+    updateLastActive();
+    setInterval(updateLastActive, 60000); // update online status every 1 min
+  }else{
+    authUI.classList.remove("hidden");
+    appUI.classList.add("hidden");
+    header.classList.add("hidden");
+  }
 });
 
 async function updateLastActive(){
-  if(currentUser){
-    await updateDoc(doc(db,"users",currentUser.uid), { lastActive: Date.now() });
-  }
+  if(currentUser){
+    await updateDoc(doc(db,"users",currentUser.uid), { lastActive: Date.now() });
+  }
 }
 
 async function loadProfile(){
-  try{
-    const snap = await getDoc(doc(db,"users",currentUser.uid));
-    if(snap.exists()){
-      const data = snap.data();
-      document.getElementById("bio").value = data.bio || "";
-      document.getElementById("profileImageUrl").value = data.profileImageUrl || "";
-    }
-  }catch(e){ console.error(e); }
+  try{
+    const snap = await getDoc(doc(db,"users",currentUser.uid));
+    if(snap.exists()){
+      const data = snap.data();
+      document.getElementById("bio").value = data.bio || "";
+      document.getElementById("profileImageUrl").value = data.profileImageUrl || "";
+    }
+  }catch(e){ console.error(e); }
 }
 
 document.getElementById("saveProfileBtn").onclick = async ()=>{
-  try{
-    await updateDoc(doc(db,"users",currentUser.uid),{
-      bio: document.getElementById("bio").value,
-      profileImageUrl: document.getElementById("profileImageUrl").value
-    });
-    profileMsg.textContent="Profile saved!";
-    setTimeout(()=>profileMsg.textContent="",2000);
-  }catch(e){ profileMsg.textContent="Error saving profile"; console.error(e); }
+  try{
+    await updateDoc(doc(db,"users",currentUser.uid),{
+      bio: document.getElementById("bio").value,
+      profileImageUrl: document.getElementById("profileImageUrl").value
+    });
+    profileMsg.textContent="Profile saved!";
+    setTimeout(()=>profileMsg.textContent="",2000);
+  }catch(e){ profileMsg.textContent="Error saving profile"; console.error(e); }
 };
 
 async function loadUsers(){
-  const grid = document.getElementById("grid");
-  grid.innerHTML="";
-  try{
-    const snap = await getDocs(collection(db,"users"));
-    const now = Date.now();
-    snap.forEach(d=>{
-      const u = d.data();
-      if(u.uid===currentUser.uid) return;
-      // Only show users active in last 7 days
-      if(!u.lastActive || (now - u.lastActive)>SEVEN_DAYS_MS) return;
-      const avatar = u.nickname? u.nickname[0].toUpperCase() : "?";
-      grid.innerHTML+=`
-        <div class="card">
-          <div class="card-header">
-            <div class="avatar">${avatar}</div>
-            <strong>${u.nickname}</strong>
-          </div>
-          <div class="bio">${u.bio || "No bio set"}</div>
-          <button onclick="alert('Duo request sent to ${u.nickname}!')">Send Duo Request</button>
-        </div>`;
-    });
-  }catch(e){ console.error(e); }
+  const grid = document.getElementById("grid");
+  grid.innerHTML="";
+  try{
+    const now = Date.now();
+    // Calculate the timestamp for 7 days ago
+    const sevenDaysAgo = now - SEVEN_DAYS_MS;
+
+    // Use a Firestore Query to retrieve only users active since sevenDaysAgo
+    const usersRef = collection(db,"users");
+    const q = query(usersRef, where("lastActive", ">", sevenDaysAgo));
+    
+    const snap = await getDocs(q);
+
+    snap.forEach(d=>{
+      const u = d.data();
+      // Client-side filter to exclude the current user
+      if(u.uid===currentUser.uid) return;
+      
+      // Logic to display Profile Image or Nickname Initial
+      const avatarContent = u.profileImageUrl ? `<img src="${u.profileImageUrl}" onerror="this.onerror=null;this.parentElement.innerHTML='${u.nickname? u.nickname[0].toUpperCase() : '?'}'" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">` : (u.nickname? u.nickname[0].toUpperCase() : "?");
+      const avatarClass = u.profileImageUrl ? 'style="background:none; overflow:hidden;"' : '';
+      
+      grid.innerHTML+=`
+        <div class="card">
+          <div class="card-header">
+            <div class="avatar" ${avatarClass}>${avatarContent}</div>
+            <strong>${u.nickname}</strong>
+          </div>
+          <div class="bio">${u.bio || "No bio set"}</div>
+          <button onclick="alert('Duo request sent to ${u.nickname}!')">Send Duo Request</button>
+        </div>`;
+    });
+  }catch(e){ console.error(e); }
 }
 </script>
 
