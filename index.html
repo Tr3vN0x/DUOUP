@@ -8,7 +8,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <style>
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
 .container { width:90%; margin:auto; padding:20px; }
@@ -19,7 +18,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .card { width:260px; padding:15px; border:2px solid cyan; border-radius:14px; background:#111; box-shadow:0 0 10px cyan; }
 .avatar { width:48px; height:48px; border-radius:50%; border:2px solid cyan; object-fit:cover; }
 .user { display:flex; gap:10px; align-items:center; }
-.status-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-left:5px; }
+.status-dot { width:12px; height:12px; border-radius:50%; display:inline-block; margin-left:5px; border:2px solid #0b0b0b; }
 .input { width:100%; padding:8px; margin:5px 0; background:#000; border:2px solid cyan; color:white; border-radius:6px; }
 </style>
 </head>
@@ -79,7 +78,6 @@ auth.onAuthStateChanged(async user => {
   loginPage.classList.add("hidden");
   dashboard.classList.remove("hidden");
 
-  // Create profile if not exists
   const userSnap = await db.collection("users").doc(user.uid).get();
   if(!userSnap.exists){
     await db.collection("users").doc(user.uid).set({
@@ -87,8 +85,11 @@ auth.onAuthStateChanged(async user => {
       nickname: user.displayName || "Player",
       email: user.email,
       friends: [],
-      profileImageUrl: user.photoURL || DEFAULT_AVATAR
+      profileImageUrl: user.photoURL || DEFAULT_AVATAR,
+      status: "online"
     });
+  } else {
+    db.collection("users").doc(user.uid).update({status:"online"});
   }
   welcome.innerText = "Welcome, " + (userSnap.data()?.nickname || user.displayName);
 
@@ -98,7 +99,10 @@ auth.onAuthStateChanged(async user => {
 });
 
 // ---------------- LOGOUT ----------------
-function logout(){ auth.signOut(); }
+function logout(){
+  const uid = auth.currentUser.uid;
+  db.collection("users").doc(uid).update({status:"offline"}).then(()=> auth.signOut());
+}
 
 // ---------------- TABS ----------------
 function showTab(tab){
@@ -117,16 +121,24 @@ function loadSuggested(){
       if(doc.id === currentUserId) return;
       db.collection("users").doc(currentUserId).get().then(me => {
         const friends = me.data().friends || [];
-        if(friends.includes(doc.id)) return; // Skip if already friends
-        const u = doc.data();
-        const card = document.createElement("div");
-        card.className="card";
-        card.innerHTML=`<div class="user">
-          <img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
-          <strong>${u.nickname}</strong>
-        </div>
-        <button class="neon-btn" onclick="sendRequest('${doc.id}')">DUO UP</button>`;
-        suggestedTab.appendChild(card);
+        if(friends.includes(doc.id)) return;
+
+        // Check if a request already exists
+        db.collection("friendRequests")
+          .where("senderId","==",currentUserId)
+          .where("receiverId","==",doc.id)
+          .get().then(reqSnap=>{
+            if(!reqSnap.empty) return; // Already requested
+            const u = doc.data();
+            const card = document.createElement("div");
+            card.className="card";
+            card.innerHTML=`<div class="user">
+              <img class="avatar" src="${u.profileImageUrl||DEFAULT_AVATAR}">
+              <strong>${u.nickname}</strong>
+            </div>
+            <button class="neon-btn" onclick="sendRequest('${doc.id}')">DUO UP</button>`;
+            suggestedTab.appendChild(card);
+          });
       });
     });
   });
@@ -190,11 +202,13 @@ function loadFriends(){
       db.collection("users").doc(fid).get().then(u => {
         const d = u.data();
         const avatar = d.profileImageUrl||DEFAULT_AVATAR;
+        const statusColor = d.status === "online" ? "green" : "gray";
         const card = document.createElement("div");
         card.className="card";
         card.innerHTML=`<div class="user">
           <img class="avatar" src="${avatar}">
           <strong>${d.nickname}</strong>
+          <span class="status-dot" style="background:${statusColor}"></span>
         </div>`;
         friendsTab.appendChild(card);
       });
