@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-functions.js"></script> 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 <style>
 /* --- BASE STYLES --- */
@@ -154,10 +155,12 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
+const functions = firebase.functions(); // Initialize functions SDK
+
 const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2";
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 let currentUser = null, currentChatUid = null, unsubscribeMessages = null;
-let unsubscribeChatList = null; // Listener for real-time unread counts
+let unsubscribeChatList = null; 
 function getChatId(a,b){ return [a,b].sort().join('_'); }
 
 // ---------- AUTH ----------
@@ -190,18 +193,17 @@ auth.onAuthStateChanged(async user=>{
       profileImageUrl:user.photoURL||DEFAULT_AVATAR,
       skillRating:3,
       status:"Online",
-      unreadMessages: {} // Initialize unread messages object
+      unreadMessages: {} 
     });
   }
   document.getElementById("welcome").innerHTML = `Welcome, ${(await userRef.get()).data().nickname}${user.uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''}`;
-  // Load initial data
   loadSuggested(); 
   loadRequests(); 
   loadFriends();
   loadProfile();
 });
 
-// ---------- PROFILE EDIT ----------
+// ---------- PROFILE EDIT (No change here) ----------
 async function loadProfile() {
   const userDoc = await db.collection('users').doc(currentUser.uid).get();
   if(!userDoc.exists) return;
@@ -246,7 +248,8 @@ async function saveProfile() {
   }
 }
 
-// ---------- FRIEND REQUESTS & FRIENDS ----------
+
+// ---------- FRIEND REQUESTS & FRIENDS (with logging fix for sendRequest) ----------
 function getOwnerBadge(uid){ return uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''; }
 function renderSkillRating(r){r=parseInt(r)||0; return `<div class="skill-rating">${'⭐'.repeat(r)}${'☆'.repeat(5-r)}</div>`;}
 function renderStatus(s){ const c=s==='Online'?'status-online':s==='In Game'?'status-ingame':'status-lfd'; return `<div class="status-indicator ${c}">${s}</div>`; }
@@ -259,6 +262,7 @@ function renderCard(d,type,reqId=null){
     btn.onclick=()=>sendFriendRequest(d.uid); buttons.push(btn);
   }
   else if(type==='request'){
+    // NOTE: acceptFriend now calls a Cloud Function
     const accept=document.createElement('button'); accept.className='neon-btn'; accept.textContent='Accept'; accept.onclick=()=>acceptFriend(reqId,d.uid); 
     const decline=document.createElement('button'); decline.className='neon-btn remove'; decline.textContent='Decline'; decline.onclick=()=>declineFriend(reqId); buttons.push(accept,decline);
   }
@@ -278,15 +282,30 @@ async function loadSuggested(){
   if(container.childElementCount===0) container.innerHTML='<p>No new suggested partners found.</p>';
 }
 
+// IMPROVED: Added error handling and logging for better debugging.
 async function sendFriendRequest(toUid){
   if(toUid===currentUser.uid) return;
   const reqId=[currentUser.uid,toUid].sort().join('_');
   const reqRef=db.collection('friendRequests').doc(reqId);
-  if((await reqRef.get()).exists){ alert("Request already sent!"); return; }
-  const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
-  if((myDoc.friends||[]).includes(toUid)){ alert("Already friends!"); return; }
-  await reqRef.set({senderId:currentUser.uid, receiverId:toUid, createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-  alert("Friend request sent!"); loadSuggested(); loadRequests();
+
+  try {
+    if((await reqRef.get()).exists){ alert("Request already sent!"); return; }
+    const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
+    if((myDoc.friends||[]).includes(toUid)){ alert("Already friends!"); return; }
+
+    await reqRef.set({
+      senderId:currentUser.uid, 
+      receiverId:toUid, 
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    });
+    
+    alert("Friend request sent!"); 
+    loadSuggested(); 
+    loadRequests();
+  } catch (e) {
+    console.error("Failed to send friend request:", e);
+    alert("ERROR: Failed to send request. Check console for permission details. Ensure Firestore rules allow writing to 'friendRequests'.");
+  }
 }
 
 async function loadRequests(){
@@ -297,11 +316,21 @@ async function loadRequests(){
   snapshot.docs.forEach((doc,i)=>{ const fromUser=userDocs[i].data(); if(!fromUser)return; container.appendChild(renderCard(fromUser,'request',doc.id)); });
 }
 
-async function acceptFriend(reqId,friendUid){
-  await db.collection('friendRequests').doc(reqId).delete();
-  await db.collection('users').doc(currentUser.uid).update({friends:firebase.firestore.FieldValue.arrayUnion(friendUid)});
-  await db.collection('users').doc(friendUid).update({friends:firebase.firestore.FieldValue.arrayUnion(currentUser.uid)});
-  loadRequests(); loadFriends(); loadSuggested();
+// CRITICAL FIX: Calls a Cloud Function to securely accept friendship
+async function acceptFriend(reqId, friendUid){
+  try {
+    // Call the cloud function that handles all the atomic database updates (cross-user write)
+    const acceptFunction = functions.httpsCallable('acceptFriendRequest');
+    await acceptFunction({ reqId: reqId, friendUid: friendUid });
+
+    alert("Duo accepted!");
+    loadRequests(); 
+    loadFriends(); 
+    loadSuggested();
+  } catch (e) {
+    console.error("Failed to accept friend request via Cloud Function:", e);
+    alert("ERROR: Failed to accept Duo. Ensure your Cloud Function 'acceptFriendRequest' is deployed and working correctly.");
+  }
 }
 
 async function declineFriend(reqId){
@@ -309,6 +338,7 @@ async function declineFriend(reqId){
   loadRequests(); loadSuggested();
 }
 
+// ... (loadFriends and renderChatList are unchanged from the previous version, handling unread badges) ...
 async function loadFriends(){
   const container=document.getElementById('friendsTab'); container.innerHTML='';
   const userDocSnapshot=await db.collection('users').doc(currentUser.uid).get();
@@ -334,22 +364,17 @@ async function loadFriends(){
   renderChatList(friendUids);
 }
 
-
-// Function to manage the chat list and unread count in real-time
 function renderChatList(friendUids) {
   if(unsubscribeChatList) unsubscribeChatList();
 
   const chatList = document.getElementById('activeDuoList');
   let totalUnread = 0;
 
-  // Listen to the current user's document for real-time unread message updates
   unsubscribeChatList = db.collection('users').doc(currentUser.uid).onSnapshot(async (docSnapshot) => {
     const myData = docSnapshot.data();
     const friendUnreads = myData.unreadMessages || {};
     totalUnread = 0;
-    chatList.innerHTML = ''; // Clear the list
-
-    // Fetch friend details again to ensure the order is correct and names are current
+    chatList.innerHTML = ''; 
     const friendDocs = await Promise.all(friendUids.map(f => db.collection('users').doc(f).get()));
     
     friendDocs.forEach(fDoc => {
@@ -361,13 +386,11 @@ function renderChatList(friendUids) {
 
       const chatBtn = document.createElement('button');
       chatBtn.className = 'neon-btn chat-item-btn';
-      // Using innerHTML to include the badge span
       chatBtn.innerHTML = `${f.nickname} ${unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : ''}`;
       chatBtn.onclick = () => startChat(f.uid, f.nickname);
       chatList.appendChild(chatBtn);
     });
     
-    // Update the main friends tab badge
     const badgeEl = document.getElementById('unreadBadge');
     badgeEl.textContent = totalUnread;
     if (totalUnread > 0) {
@@ -378,20 +401,17 @@ function renderChatList(friendUids) {
   }, err => console.error("Error loading chat list:", err));
 }
 
-// Function to mark messages as read
 async function markMessagesAsRead(friendUid) {
   if (!currentUser || !friendUid) return;
-  // Atomically remove the unread count for this friend from the user's document
   await db.collection('users').doc(currentUser.uid).update({
     [`unreadMessages.${friendUid}`]: firebase.firestore.FieldValue.delete()
   }).catch(e => console.error("Error marking messages as read:", e));
 }
 
 
-// ---------- MESSAGING ----------
+// ---------- MESSAGING (Unchanged logic) ----------
 async function startChat(friendUid,nickname){
   showTab('messaging'); 
-  // Mark messages as read when opening chat
   await markMessagesAsRead(friendUid);
   
   if(unsubscribeMessages) unsubscribeMessages();
@@ -411,7 +431,6 @@ async function startChat(friendUid,nickname){
   display.innerHTML='<p style="text-align:center;color:#555;">Connecting...</p>'; 
   inputArea.classList.remove('hidden');
 
-  // Pass recipientUid to sendMessage
   sendBtn.onclick=()=>sendMessage(chatId,msgInput.value,friendUid); 
   msgInput.onkeydown=(e)=>{ if(e.key==='Enter')sendMessage(chatId,msgInput.value,friendUid); };
 
@@ -438,16 +457,13 @@ async function sendMessage(chatId,content,recipientUid){
   if(!content)return; 
   const msgInput=document.getElementById('messageInput');
   
-  // Add the message
   await db.collection('chats').doc(chatId).collection('messages').add({
     senderId:currentUser.uid,
     content:content,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   });
 
-  // Increment unread counter for the recipient
   await db.collection('users').doc(recipientUid).update({
-    // Uses FieldValue.increment to safely count unread messages
     [`unreadMessages.${currentUser.uid}`]: firebase.firestore.FieldValue.increment(1) 
   }).catch(e => console.error("Error updating unread count:", e));
   
@@ -465,18 +481,11 @@ function showTab(tab){ 
     const el=document.getElementById(tab+'Tab'); 
     if(el) el.classList.remove('hidden'); 
     
-    // Clean up listeners when leaving certain tabs
     if(tab !== 'messaging' && unsubscribeMessages){ 
       unsubscribeMessages(); 
       unsubscribeMessages=null; 
     }
-    // Keep the Chat List listener active as long as the user is in the Dashboard
-    if(tab === 'suggested' || tab === 'requests' || tab === 'profile'){
-      // Re-fetch friends data to ensure latest unread counts are shown (this is already handled by the listener, but we call loadFriends anyway for tab content)
-      loadFriends(); 
-    }
-
-    // Load data for the current tab
+    
     if(tab==='suggested') loadSuggested(); 
     else if(tab==='requests') loadRequests(); 
     else if(tab==='friends') loadFriends(); 
