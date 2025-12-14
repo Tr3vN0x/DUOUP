@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 <style>
 body { margin:0; font-family:'Orbitron',sans-serif; background:linear-gradient(270deg,#0D0D0D,#1A1A1A,#0D0D0D); background-size:600% 600%; animation:gradientAnimation 15s ease infinite; color:white; display:flex; flex-direction:column; align-items:center; min-height:100vh; }
 @keyframes gradientAnimation { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
@@ -27,6 +28,7 @@ input, select{ padding:8px; border-radius:6px; border:2px solid #00FFFF; backgro
 .neon-incoming{ background:#1A1A1A; border:2px solid #00FFFF; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; }
 .neon-outgoing{ background:#1A1A1A; border:2px solid #FF00FF; box-shadow:0 0 5px #FF00FF,0 0 10px #FF00FF,0 0 20px #FF00FF; }
 #profileEditor{ background:#1A1A1A; border:2px solid #00FFFF; border-radius:12px; padding:15px; width:300px; margin-top:20px; }
+#profilePreview{ width:80px; height:80px; border-radius:50%; border:2px solid #00FFFF; margin-bottom:10px; object-fit:cover; }
 </style>
 </head>
 <body>
@@ -80,6 +82,10 @@ input, select{ padding:8px; border-radius:6px; border:2px solid #00FFFF; backgro
   <!-- Profile Editor -->
   <div id="profileEditor" class="hidden">
     <h2>Edit Profile</h2>
+    <div>
+      <img id="profilePreview" src="" alt="Profile Preview">
+      <input type="file" id="profileImageInput" accept="image/*">
+    </div>
     <input type="text" id="editUsername" placeholder="Username">
     <input type="text" id="editStatus" placeholder="Status message">
     <div id="gameSelection"></div>
@@ -101,10 +107,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
+const storage=firebase.storage();
 
 const loginPage=document.getElementById("loginPage");
 const pickUsernamePage=document.getElementById("pickUsernamePage");
 const dashboardPage=document.getElementById("dashboardPage");
+const profileImageInput=document.getElementById("profileImageInput");
+const profilePreview=document.getElementById("profilePreview");
 
 // ---------------- Google Login ----------------
 function loginWithGoogle(){
@@ -158,6 +167,7 @@ function showDashboard(userData){
   loginPage.classList.add("hidden");
   pickUsernamePage.classList.add("hidden");
   document.getElementById("welcomeUsername").innerText="Welcome, "+userData.nickname;
+  if(userData.profileImageUrl) profilePreview.src=userData.profileImageUrl;
   loadFriendRequests();
   loadSuggestedDuos();
   loadActiveDuos();
@@ -172,6 +182,15 @@ function logout(){
 }
 
 // ---------------- Profile Editor ----------------
+profileImageInput.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(ev){ profilePreview.src = ev.target.result; };
+    reader.readAsDataURL(file);
+  }
+});
+
 function openProfileEditor(){
   document.getElementById("profileEditor").classList.remove("hidden");
   const userRef=db.collection("users").doc(auth.currentUser.uid);
@@ -179,6 +198,7 @@ function openProfileEditor(){
     const data=doc.data();
     document.getElementById("editUsername").value=data.nickname||"";
     document.getElementById("editStatus").value=data.status||"";
+    profilePreview.src = data.profileImageUrl || "";
 
     // Load games
     db.collection("games").get().then(snapshot=>{
@@ -208,16 +228,35 @@ function saveProfile(){
   const status=document.getElementById("editStatus").value.trim();
   const checkboxes=document.querySelectorAll("#gameSelection input[type=checkbox]:checked");
   const favoriteGames=Array.from(checkboxes).map(cb=>cb.value);
+  const file=profileImageInput.files[0];
 
   if(!nickname) return alert("Username cannot be empty");
+  const userId = auth.currentUser.uid;
 
+  // Upload image if selected
+  if(file){
+    const storageRef = storage.ref(`profileImages/${userId}/${file.name}`);
+    const uploadTask = storageRef.put(file);
+    uploadTask.on('state_changed', null, err=>alert("Upload failed: "+err.message), ()=>{
+      uploadTask.snapshot.ref.getDownloadURL().then(url=>{
+        saveProfileToFirestore(nickname, status, favoriteGames, url);
+      });
+    });
+  } else {
+    saveProfileToFirestore(nickname, status, favoriteGames, profilePreview.src);
+  }
+}
+
+function saveProfileToFirestore(nickname, status, favoriteGames, profileImageUrl){
   db.collection("users").doc(auth.currentUser.uid).set({
     nickname: nickname,
     status: status,
     favoriteGames: favoriteGames,
+    profileImageUrl: profileImageUrl,
     lastActive: firebase.firestore.FieldValue.serverTimestamp()
   }, {merge:true}).then(()=>{
     document.getElementById("welcomeUsername").innerText="Welcome, "+nickname;
+    profilePreview.src = profileImageUrl;
     closeProfileEditor();
   }).catch(err=>alert("Error saving profile: "+err.message));
 }
