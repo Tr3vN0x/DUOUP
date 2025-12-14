@@ -1,163 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DUO Up - Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <style>
-    /* --- Body & Background --- */
-    body {
-      margin: 0;
-      font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(270deg, #0D0D0D, #1A1A1A, #0D0D0D);
-      background-size: 600% 600%;
-      animation: gradientAnimation 15s ease infinite;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DUO Up Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+  body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    background: linear-gradient(270deg, #0D0D0D, #1A1A1A, #0D0D0D);
+    background-size: 600% 600%;
+    animation: gradientAnimation 15s ease infinite;
+    color: white;
+    display: flex;
+    height: 100vh;
+  }
+  @keyframes gradientAnimation {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
 
-    @keyframes gradientAnimation {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+  /* Sidebar */
+  .sidebar {
+    width: 80px;
+    background-color: #0D0D0D;
+    border-right: 2px solid #00FFFF;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0;
+  }
+  .sidebar h1 {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-family: 'Orbitron', sans-serif;
+    color: #00FFFF;
+    text-shadow: 0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF;
+    margin-bottom: 40px;
+  }
 
-    /* --- Login Container --- */
-    .login-container {
-      background-color: #1A1A1A;
-      border: 2px solid #00FFFF;
-      border-radius: 16px;
-      padding: 40px;
-      width: 350px;
-      text-align: center;
-      box-shadow: 0 0 10px #00FFFF, 0 0 20px #00FFFF, 0 0 30px #00FFFF;
-      transition: all 0.3s;
-    }
-    .login-container:hover {
-      border-color: #FF00FF;
-      box-shadow: 0 0 15px #FF00FF, 0 0 30px #FF00FF, 0 0 45px #FF00FF;
-    }
+  /* Main content */
+  .main {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+  }
+  .main h1 {
+    font-size: 3em;
+    color: #00FFFF;
+    text-shadow: 0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF,0 0 40px #00FFFF;
+    margin-bottom: 30px;
+  }
 
-    .login-container h1 {
-      font-family: 'Audiowide', sans-serif;
-      color: #00FFFF;
-      text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 20px #00FFFF, 0 0 40px #00FFFF;
-      margin-bottom: 30px;
-    }
+  /* Neon cards */
+  .card-container { display: flex; flex-wrap: wrap; gap: 20px; }
+  .card {
+    background-color: #1A1A1A;
+    border: 2px solid #00FFFF;
+    border-radius: 16px;
+    padding: 20px;
+    width: 300px;
+    box-shadow: 0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF;
+    transition: all 0.3s;
+  }
+  .card:hover { border-color: #FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
+  .card h3 { font-family: 'Audiowide', sans-serif; font-size: 1.5em; margin-bottom: 10px; color: #00FFFF; }
+  .card p { font-size: 1em; margin-bottom: 15px; }
 
-    /* --- Input Fields --- */
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      background: transparent;
-      border: 2px solid #00FFFF;
-      border-radius: 8px;
-      color: white;
-      font-family: 'Orbitron', sans-serif;
-      font-size: 1em;
-      transition: all 0.3s;
-    }
-    input:focus {
-      border-color: #FF00FF;
-      box-shadow: 0 0 10px #FF00FF, 0 0 20px #FF00FF;
-      outline: none;
-    }
+  /* Neon buttons */
+  .neon-btn {
+    padding: 10px 20px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    color: white;
+    background: transparent;
+    border: 2px solid #00FFFF;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF;
+    transition: all 0.3s;
+    margin-right: 10px;
+  }
+  .neon-btn:hover { border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
 
-    /* --- Buttons --- */
-    .neon-btn {
-      width: 100%;
-      padding: 12px;
-      font-family: 'Orbitron', sans-serif;
-      font-weight: bold;
-      font-size: 1em;
-      color: white;
-      background: transparent;
-      border: 2px solid #00FFFF;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF, 0 0 20px #00FFFF;
-      transition: all 0.3s;
-      margin-top: 10px;
-    }
-    .neon-btn:hover {
-      border-color: #FF00FF;
-      box-shadow: 0 0 10px #FF00FF, 0 0 20px #FF00FF, 0 0 30px #FF00FF;
-    }
-
-    .google-btn {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #FF0000;
-      border: none;
-      margin-top: 15px;
-    }
-  </style>
+  /* Avatar & online status */
+  .avatar-container { position: relative; display: inline-block; margin-bottom: 20px; }
+  .avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid #00FFFF; }
+  .online-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px; height: 12px;
+    background-color: #39FF14;
+    border-radius: 50%;
+    border: 2px solid #0D0D0D;
+    box-shadow: 0 0 5px #39FF14,0 0 10px #39FF14;
+  }
+</style>
 </head>
 <body>
 
-  <div class="login-container">
-    <h1>DUO Up</h1>
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button class="neon-btn" onclick="loginEmail()">Login</button>
-    <button class="neon-btn" onclick="signupEmail()">Sign Up</button>
-    <button class="neon-btn google-btn" onclick="loginGoogle()">Login with Google</button>
+  <div class="sidebar">
+    <h1>DUO UP</h1>
   </div>
 
-  <script>
-    // --- Firebase Initialization ---
-    const firebaseConfig = {
-      apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-      authDomain: "duoup-cfae6.firebaseapp.com",
-      projectId: "duoup-cfae6",
-      storageBucket: "duoup-cfae6.firebasestorage.app",
-      messagingSenderId: "812263060524",
-      appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
-      measurementId: "G-46B67F90FK"
-    };
+  <div class="main">
+    <div class="avatar-container">
+      <img src="https://i.pravatar.cc/60" class="avatar" id="userAvatar">
+      <span class="online-dot"></span>
+    </div>
+    <h1 id="username">Welcome, Gamer</h1>
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+    <h2>Friend Requests</h2>
+    <div class="card-container" id="friendRequests"></div>
+  </div>
 
-    // --- Email/Password Login ---
-    function loginEmail() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      auth.signInWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          alert("Logged in as: " + userCredential.user.email);
-        })
-        .catch(error => alert(error.message));
-    }
+<script>
+  // --- Firebase Init ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+    authDomain: "duoup-cfae6.firebaseapp.com",
+    projectId: "duoup-cfae6",
+    storageBucket: "duoup-cfae6.firebasestorage.app",
+    messagingSenderId: "812263060524",
+    appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
+    measurementId: "G-46B67F90FK"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    // --- Email/Password Signup ---
-    function signupEmail() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      auth.createUserWithEmailAndPassword(email, password)
-        .then(userCredential => {
-          alert("Account created: " + userCredential.user.email);
-        })
-        .catch(error => alert(error.message));
-    }
+  // --- Mock login for demo ---
+  auth.signInAnonymously().then(user => {
+    const uid = user.user.uid;
+    document.getElementById('username').innerText = "Welcome, Gamer";
 
-    // --- Google Login ---
-    function loginGoogle() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(result => {
-          alert("Logged in as: " + result.user.displayName);
-        })
-        .catch(error => alert(error.message));
-    }
-  </script>
+    // Listen for incoming friend requests
+    db.collection("friendRequests")
+      .where("receiverId","==",uid)
+      .where("status","==","pending")
+      .onSnapshot(snapshot => {
+        const container = document.getElementById("friendRequests");
+        container.innerHTML = "";
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement("div");
+          card.className = "card";
+          card.innerHTML = `
+            <h3>Friend Request</h3>
+            <p>${data.senderId} wants to duo with you in ${data.gameSlug}</p>
+            <button class="neon-btn" onclick="acceptRequest('${doc.id}','${data.senderId}','${data.gameSlug}')">Accept</button>
+            <button class="neon-btn" onclick="rejectRequest('${doc.id}')">Reject</button>
+          `;
+          container.appendChild(card);
+        });
+      });
+  });
+
+  // --- Accept / Reject functions ---
+  function acceptRequest(requestId, senderId, gameSlug){
+    db.collection("friendRequests").doc(requestId).update({status:"accepted"}).then(()=>{
+      db.collection("friends").add({
+        user1Id: auth.currentUser.uid,
+        user2Id: senderId,
+        sharedGames: [gameSlug],
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+  }
+  function rejectRequest(requestId){
+    db.collection("friendRequests").doc(requestId).update({status:"rejected"});
+  }
+</script>
+
 </body>
 </html>
