@@ -944,6 +944,7 @@ function acceptRequest(requestId,senderId){
   }).then(() => {
     alert("Request accepted! You are now friends.");
     showTab('friends'); 
+    loadUnreadCount(); 
   }).catch(err => {
     alert("Transaction failed (Accept Request): " + err.message);
     console.error("Accept Request Error:", err);
