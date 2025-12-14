@@ -19,6 +19,7 @@
 }
 
 *{box-sizing:border-box}
+
 body{
     margin:0;
     font-family:'Rajdhani',sans-serif;
@@ -57,10 +58,19 @@ header h1{
     letter-spacing:1px;
 }
 
-header button{
+header .nav-buttons button{
+    padding:8px 14px;
+    margin-left:8px;
+}
+
+header .home{
+    background:var(--primary);
+    color:#050510;
+}
+
+header .logout{
     background:var(--cta);
     color:#050510;
-    padding:8px 14px;
 }
 
 /* AUTH */
@@ -179,7 +189,10 @@ h2{
 
 <header id="header" class="hidden">
     <h1>DUOUP</h1>
-    <button id="logout">Logout</button>
+    <div class="nav-buttons">
+        <button class="home" id="homeBtn">Home</button>
+        <button class="logout" id="logout">Logout</button>
+    </div>
 </header>
 
 <!-- AUTH -->
@@ -188,7 +201,7 @@ h2{
         <h2>Welcome to DuoUp</h2>
 
         <input id="email" placeholder="Email">
-        <input id="password" type="password" placeholder="Password">
+        <input id="password" type="password" placeholder="Password (min 6 chars)">
 
         <button id="signin">Sign In</button>
         <button id="signup" style="background:var(--accent);margin-top:6px">Sign Up</button>
@@ -237,25 +250,48 @@ const grid = document.getElementById("grid");
 const email = document.getElementById("email");
 const password = document.getElementById("password");
 
-document.getElementById("signin").onclick = () =>
-    signInWithEmailAndPassword(auth,email.value,password.value);
+const homeBtn = document.getElementById("homeBtn");
+const logoutBtn = document.getElementById("logout");
 
-document.getElementById("signup").onclick = async () => {
-    const cred = await createUserWithEmailAndPassword(auth,email.value,password.value);
-    await setDoc(doc(db,"users",cred.user.uid),{
-        uid:cred.user.uid,
-        nickname:email.value.split("@")[0],
-        bio:"Looking for a duo 👀"
-    });
+/* NAV */
+function showHome(){
+    appUI.classList.remove("hidden");
+}
+
+/* AUTH ACTIONS */
+document.getElementById("signin").onclick = async () => {
+    try{
+        await signInWithEmailAndPassword(auth,email.value,password.value);
+    }catch(e){
+        alert(e.message);
+    }
 };
 
-document.getElementById("logout").onclick = () => signOut(auth);
+document.getElementById("signup").onclick = async () => {
+    try{
+        const cred = await createUserWithEmailAndPassword(auth,email.value,password.value);
+        await setDoc(doc(db,"users",cred.user.uid),{
+            uid:cred.user.uid,
+            nickname:email.value.split("@")[0],
+            bio:"Looking for a duo 👀"
+        });
+    }catch(e){
+        alert(e.message);
+    }
+};
 
+logoutBtn.onclick = async () => {
+    await signOut(auth);
+};
+
+homeBtn.onclick = showHome;
+
+/* AUTH STATE */
 onAuthStateChanged(auth, async user=>{
     if(user){
         authUI.classList.add("hidden");
-        appUI.classList.remove("hidden");
         header.classList.remove("hidden");
+        showHome();
         loadUsers();
     }else{
         authUI.classList.remove("hidden");
@@ -264,12 +300,13 @@ onAuthStateChanged(auth, async user=>{
     }
 });
 
+/* LOAD USERS */
 async function loadUsers(){
     grid.innerHTML="";
     const snap = await getDocs(collection(db,"users"));
     snap.forEach(d=>{
-        const u=d.data();
-        grid.innerHTML+=`
+        const u = d.data();
+        grid.innerHTML += `
         <div class="card">
             <div class="card-header">
                 <div class="avatar">${u.nickname[0].toUpperCase()}</div>
