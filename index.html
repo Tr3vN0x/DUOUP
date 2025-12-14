@@ -3,206 +3,91 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO Up - Cyberpunk Dashboard</title>
+<title>DUO Up - Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
-  body {
-    margin: 0;
-    font-family: 'Orbitron', sans-serif;
-    background: linear-gradient(270deg,#0D0D0D,#1A1A1A,#0D0D0D);
-    background-size:600% 600%;
-    animation: gradientAnimation 15s ease infinite;
-    color:white;
-    display:flex;
-    height:100vh;
-    overflow:hidden;
-  }
-  @keyframes gradientAnimation {
-    0%{background-position:0% 50%}
-    50%{background-position:100% 50%}
-    100%{background-position:0% 50%}
-  }
+  body { margin:0; font-family:'Orbitron',sans-serif; background:linear-gradient(270deg,#0D0D0D,#1A1A1A,#0D0D0D); background-size:600% 600%; animation:gradientAnimation 15s ease infinite; color:white; display:flex; height:100vh; overflow:hidden; }
+  @keyframes gradientAnimation { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
 
-  /* Sidebar */
-  .sidebar{
-    width:80px;
-    background-color:#0D0D0D;
-    border-right:2px solid #00FFFF;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    padding:20px 0;
-  }
-  .sidebar h1{
-    writing-mode: vertical-rl;
-    transform: rotate(180deg);
-    font-family: 'Orbitron', sans-serif;
-    color: #00FFFF;
-    text-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF;
-    margin-bottom:40px;
-  }
+  .sidebar{ width:80px; background-color:#0D0D0D; border-right:2px solid #00FFFF; display:flex; flex-direction:column; align-items:center; padding:20px 0;}
+  .sidebar h1{ writing-mode: vertical-rl; transform: rotate(180deg); font-family:'Orbitron',sans-serif; color:#00FFFF; text-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; margin-bottom:40px; }
 
-  /* Main Content */
-  .main{
-    flex:1;
-    padding:20px;
-    display:flex;
-    flex-direction:column;
-    overflow-y:auto;
-    gap:20px;
-  }
+  .main{ flex:1; padding:20px; display:flex; flex-direction:column; overflow-y:auto; gap:20px; }
 
-  .user-info{
-    display:flex;
-    align-items:center;
-    gap:15px;
-    margin-bottom:20px;
-  }
-  .user-info img{
-    width:60px; height:60px; border-radius:50%; border:2px solid #00FFFF;
-  }
-  .online-dot{
-    position:relative;
-    width:12px; height:12px;
-    border-radius:50%;
-    border:2px solid #0D0D0D;
-    box-shadow:0 0 5px #39FF14,0 0 10px #39FF14;
-  }
-  .username{
-    font-size:1.8em;
-    color:#00FFFF;
-    text-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF;
-  }
+  .user-info{ display:flex; align-items:center; gap:15px; margin-bottom:20px; }
+  .user-info img{ width:60px; height:60px; border-radius:50%; border:2px solid #00FFFF; }
+  .online-dot{ position:relative; width:12px; height:12px; border-radius:50%; border:2px solid #0D0D0D; box-shadow:0 0 5px #39FF14,0 0 10px #39FF14; }
+  .username{ font-size:1.8em; color:#00FFFF; text-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; }
 
-  /* Sections */
-  h2{
-    font-family: 'Audiowide', sans-serif;
-    color:#FF00FF;
-    text-shadow:0 0 5px #FF00FF,0 0 10px #FF00FF,0 0 20px #FF00FF;
-  }
-  .card-container{
-    display:flex;
-    flex-wrap:wrap;
-    gap:15px;
-  }
-  .card{
-    background:#1A1A1A;
-    border:2px solid #00FFFF;
-    border-radius:16px;
-    padding:15px;
-    width:280px;
-    box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF;
-    transition:0.3s;
-  }
+  h2{ font-family:'Audiowide',sans-serif; color:#FF00FF; text-shadow:0 0 5px #FF00FF,0 0 10px #FF00FF,0 0 20px #FF00FF; }
+
+  .card-container{ display:flex; flex-wrap:wrap; gap:15px; }
+  .card{ background:#1A1A1A; border:2px solid #00FFFF; border-radius:16px; padding:15px; width:280px; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; transition:0.3s; }
   .card:hover{ border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
-  .card h3{ font-family: 'Audiowide', sans-serif; font-size:1.2em; margin-bottom:10px; color:#00FFFF; }
+  .card h3{ font-family:'Audiowide',sans-serif; font-size:1.2em; margin-bottom:10px; color:#00FFFF; }
   .card p{ font-size:1em; margin-bottom:10px; }
 
-  .neon-btn{
-    padding:7px 15px;
-    font-family:'Orbitron',sans-serif;
-    font-weight:bold;
-    color:white;
-    background:transparent;
-    border:2px solid #00FFFF;
-    border-radius:6px;
-    cursor:pointer;
-    box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF;
-    transition:0.3s;
-    margin-right:5px;
-  }
+  .neon-btn{ padding:7px 15px; font-family:'Orbitron',sans-serif; font-weight:bold; color:white; background:transparent; border:2px solid #00FFFF; border-radius:6px; cursor:pointer; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; transition:0.3s; margin-right:5px; }
   .neon-btn:hover{ border-color:#FF00FF; box-shadow:0 0 10px #FF00FF,0 0 20px #FF00FF,0 0 30px #FF00FF; }
 
-  /* Chat */
-  .chat-panel{
-    background:#0D0D0D;
-    border:2px solid #FF00FF;
-    border-radius:16px;
-    padding:15px;
-    width:400px;
-    max-height:400px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-    overflow-y:auto;
-  }
-  .message{
-    display:flex;
-    align-items:flex-end;
-    gap:10px;
-  }
+  .chat-panel{ background:#0D0D0D; border:2px solid #FF00FF; border-radius:16px; padding:15px; width:400px; max-height:400px; display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
+  .message{ display:flex; align-items:flex-end; gap:10px; }
   .message.outgoing{ flex-direction:row-reverse; }
-  .message-bubble{
-    padding:10px 15px;
-    border-radius:12px;
-    max-width:70%;
-    font-family:'Orbitron',sans-serif;
-    word-wrap: break-word;
-  }
-  .neon-incoming{
-    background:#1A1A1A;
-    border:2px solid #00FFFF;
-    box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF;
-  }
-  .neon-outgoing{
-    background:#1A1A1A;
-    border:2px solid #FF00FF;
-    box-shadow:0 0 5px #FF00FF,0 0 10px #FF00FF,0 0 20px #FF00FF;
-  }
+  .message-bubble{ padding:10px 15px; border-radius:12px; max-width:70%; font-family:'Orbitron',sans-serif; word-wrap: break-word; }
+  .neon-incoming{ background:#1A1A1A; border:2px solid #00FFFF; box-shadow:0 0 5px #00FFFF,0 0 10px #00FFFF,0 0 20px #00FFFF; }
+  .neon-outgoing{ background:#1A1A1A; border:2px solid #FF00FF; box-shadow:0 0 5px #FF00FF,0 0 10px #FF00FF,0 0 20px #FF00FF; }
   .avatar-small{ width:30px; height:30px; border-radius:50%; border:2px solid #00FFFF; }
 
-  .chat-input{
-    display:flex;
-    gap:10px;
-  }
-  .chat-input input{
-    flex:1;
-    padding:8px;
-    border-radius:8px;
-    border:2px solid #00FFFF;
-    background:transparent;
-    color:white;
-  }
+  .chat-input{ display:flex; gap:10px; }
+  .chat-input input{ flex:1; padding:8px; border-radius:8px; border:2px solid #00FFFF; background:transparent; color:white; }
+
+  .search-username{ display:flex; gap:10px; margin-bottom:20px; }
+  .search-username input{ flex:1; padding:8px; border-radius:8px; border:2px solid #00FFFF; background:transparent; color:white; }
 </style>
 </head>
 <body>
 
-  <div class="sidebar"><h1>DUO UP</h1></div>
+<div class="sidebar"><h1>DUO UP</h1></div>
 
-  <div class="main">
-    <!-- User Info -->
-    <div class="user-info">
-      <img id="userAvatar" src="https://i.pravatar.cc/60">
-      <span class="online-dot" id="onlineDot"></span>
-      <div class="username" id="username">Welcome, Gamer</div>
-    </div>
-
-    <!-- Friend Requests -->
-    <h2>Friend Requests</h2>
-    <div class="card-container" id="friendRequests"></div>
-
-    <!-- Suggested Duos -->
-    <h2>Suggested Duos</h2>
-    <div class="card-container" id="suggestedDuos"></div>
-
-    <!-- Active Friends -->
-    <h2>Active Duos</h2>
-    <div class="card-container" id="activeDuos"></div>
-
-    <!-- Chat Panel -->
-    <h2>Chat</h2>
-    <div class="chat-panel" id="chatPanel"></div>
-    <div class="chat-input">
-      <input type="text" id="messageInput" placeholder="Type a message...">
-      <button class="neon-btn" onclick="sendMessage()">Send</button>
-    </div>
+<div class="main">
+  <!-- User Info -->
+  <div class="user-info">
+    <img id="userAvatar" src="https://i.pravatar.cc/60">
+    <span class="online-dot" id="onlineDot"></span>
+    <div class="username" id="username">Welcome, Gamer</div>
   </div>
 
+  <!-- Username Search -->
+  <div class="search-username">
+    <input type="text" id="usernameSearchInput" placeholder="Search username...">
+    <button class="neon-btn" onclick="searchUserByUsername(document.getElementById('usernameSearchInput').value)">Search</button>
+  </div>
+
+  <!-- Friend Requests -->
+  <h2>Friend Requests</h2>
+  <div class="card-container" id="friendRequests"></div>
+
+  <!-- Suggested Duos -->
+  <h2>Suggested Duos</h2>
+  <div class="card-container" id="suggestedDuos"></div>
+
+  <!-- Active Friends -->
+  <h2>Active Duos</h2>
+  <div class="card-container" id="activeDuos"></div>
+
+  <!-- Chat Panel -->
+  <h2>Chat</h2>
+  <div class="chat-panel" id="chatPanel"></div>
+  <div class="chat-input">
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button class="neon-btn" onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
 <script>
-  // Firebase
   const firebaseConfig = {
     apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
     authDomain:"duoup-cfae6.firebaseapp.com",
@@ -216,17 +101,27 @@
   const auth=firebase.auth();
   const db=firebase.firestore();
 
-  // Mock login
   auth.signInAnonymously().then(user=>{
     const uid=user.user.uid;
+    const userRef=db.collection("users").doc(uid);
 
-    // Fetch current user info
-    db.collection("users").doc(uid).get().then(doc=>{
-      if(doc.exists){
+    // Check for username
+    userRef.get().then(doc=>{
+      if(doc.exists && doc.data().username){
         const data=doc.data();
-        document.getElementById("username").innerText=data.username;
+        document.getElementById("username").innerText="Welcome, "+data.username;
         document.getElementById("userAvatar").src=data.profileImageUrl;
         document.getElementById("onlineDot").style.backgroundColor=data.status==='online'?'#39FF14':'#FF0000';
+      } else {
+        let username=prompt("Enter your username:");
+        if(username){
+          userRef.set({
+            username:username,
+            status:"online",
+            profileImageUrl:"https://i.pravatar.cc/60",
+            createdAt:firebase.firestore.FieldValue.serverTimestamp()
+          },{merge:true}).then(()=>{document.getElementById("username").innerText="Welcome, "+username;});
+        }
       }
     });
 
@@ -252,7 +147,7 @@
       });
     });
 
-    // Suggested Duos (example: users sharing a game)
+    // Suggested Duos
     db.collection("users").where("status","==","online").limit(5).get().then(snapshot=>{
       const container=document.getElementById("suggestedDuos");
       snapshot.docs.forEach(doc=>{
@@ -290,34 +185,18 @@
       });
     });
 
-    // Chat real-time listener
     window.currentChatId=null;
     window.currentChatUid=null;
   });
 
-  // Accept / Reject
   function acceptRequest(requestId,senderId,gameSlug){
     db.collection("friendRequests").doc(requestId).update({status:"accepted"}).then(()=>{
-      db.collection("friends").add({
-        user1Id:auth.currentUser.uid,
-        user2Id:senderId,
-        sharedGames:[gameSlug],
-        timestamp:firebase.firestore.FieldValue.serverTimestamp()
-      });
+      db.collection("friends").add({user1Id:auth.currentUser.uid,user2Id:senderId,sharedGames:[gameSlug],timestamp:firebase.firestore.FieldValue.serverTimestamp()});
     });
   }
-  function rejectRequest(requestId){
-    db.collection("friendRequests").doc(requestId).update({status:"rejected"});
-  }
-
+  function rejectRequest(requestId){ db.collection("friendRequests").doc(requestId).update({status:"rejected"}); }
   function sendFriendRequest(receiverId){
-    db.collection("friendRequests").add({
-      senderId:auth.currentUser.uid,
-      receiverId:receiverId,
-      gameSlug:"valorant",
-      status:"pending",
-      timestamp:firebase.firestore.FieldValue.serverTimestamp()
-    });
+    db.collection("friendRequests").add({senderId:auth.currentUser.uid,receiverId:receiverId,gameSlug:"valorant",status:"pending",timestamp:firebase.firestore.FieldValue.serverTimestamp()});
   }
 
   function openChat(otherUid){
@@ -326,8 +205,7 @@
     chatPanel.innerHTML="";
     const chatId=[auth.currentUser.uid,otherUid].sort().join("_");
 
-    db.collection("messages").where("conversationId","==",chatId).orderBy("timestamp")
-    .onSnapshot(snapshot=>{
+    db.collection("messages").where("conversationId","==",chatId).orderBy("timestamp").onSnapshot(snapshot=>{
       chatPanel.innerHTML="";
       snapshot.docs.forEach(doc=>{
         const msg=doc.data();
@@ -342,7 +220,6 @@
       });
       chatPanel.scrollTop=chatPanel.scrollHeight;
     });
-
     window.currentChatId=chatId;
   }
 
@@ -351,17 +228,17 @@
     const input=document.getElementById("messageInput");
     const content=input.value;
     if(!content) return;
-    db.collection("messages").add({
-      conversationId:window.currentChatId,
-      content:content,
-      senderId:auth.currentUser.uid,
-      timestamp:firebase.firestore.FieldValue.serverTimestamp(),
-      isRead:"false",
-      type:"text"
-    });
+    db.collection("messages").add({conversationId:window.currentChatId,content:content,senderId:auth.currentUser.uid,timestamp:firebase.firestore.FieldValue.serverTimestamp(),isRead:"false",type:"text"});
     input.value="";
   }
 
+  function searchUserByUsername(username){
+    db.collection("users").where("username","==",username).get().then(snapshot=>{
+      if(snapshot.empty){ alert("User not found"); return; }
+      snapshot.docs.forEach(doc=>{ openChat(doc.id); });
+    });
+  }
 </script>
+
 </body>
 </html>
