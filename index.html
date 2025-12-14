@@ -230,16 +230,16 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
-// --- OWNER UID CONSTANT (CRITICAL: THIS IS YOUR OWNER ID) ---
-const OWNER_UID = "GmH4xJp92vY8sbwIWgJWjFw9MOQ2"; 
+// --- OWNER UID CONSTANT (CRITICAL: YOUR NEW OWNER ID) ---
+const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; 
 
 let currentUser = null;
 
-// Helper function to render the Owner Badge
+// Helper function to render the Owner Badge (Purple Checkmark)
 function getOwnerBadge(uid) {
     if (uid === OWNER_UID) {
-        // Neon Pink/Magenta Starburst for the Owner
-        return '<span style="color: magenta; text-shadow: 0 0 5px magenta, 0 0 10px #ff00ff; margin-left: 5px; font-weight: 700;" title="App Owner">◈</span>';
+        // Neon Purple Checkmark for the Owner
+        return '<span style="color: purple; text-shadow: 0 0 5px #800080, 0 0 10px #cc33ff; margin-left: 5px; font-weight: 700; font-size: 1.2em;" title="App Owner">✓</span>';
     }
     return '';
 }
