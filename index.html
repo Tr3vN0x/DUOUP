@@ -13,23 +13,23 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <style>
-body {
+body{
   margin:0;
   font-family:'Orbitron',sans-serif;
   background:linear-gradient(270deg,#0d0d0d,#1a1a1a,#0d0d0d);
   background-size:600% 600%;
-  animation:gradient 15s ease infinite;
+  animation:bg 15s ease infinite;
   color:white;
 }
-@keyframes gradient{
+@keyframes bg{
   0%{background-position:0% 50%}
   50%{background-position:100% 50%}
   100%{background-position:0% 50%}
 }
 .hidden{display:none}
 .neon-btn{
-  border:2px solid #00ffff;
   background:transparent;
+  border:2px solid #00ffff;
   color:white;
   padding:8px 16px;
   border-radius:6px;
@@ -48,6 +48,8 @@ input{
   border-radius:6px;
   width:100%;
 }
+.container{padding:20px}
+.flex{display:flex;gap:20px;flex-wrap:wrap}
 .card{
   background:#111;
   border:2px solid #00ffff;
@@ -60,7 +62,7 @@ input{
   border-color:#ff00ff;
   box-shadow:0 0 20px #ff00ff;
 }
-.user-card{
+.user{
   display:flex;
   gap:10px;
   align-items:center;
@@ -76,10 +78,6 @@ input{
   font-size:10px;
   color:#ffd700;
 }
-.container{
-  padding:20px;
-}
-.flex{display:flex;gap:20px;flex-wrap:wrap}
 .header{
   display:flex;
   justify-content:space-between;
@@ -90,20 +88,22 @@ input{
 
 <body>
 
+<!-- LOGIN -->
 <div id="loginPage" class="container">
   <h1>DUO UP</h1>
   <button class="neon-btn" onclick="login()">Login with Google</button>
 </div>
 
+<!-- USERNAME PICK (ONE TIME) -->
 <div id="usernamePage" class="container hidden">
-  <h2>Pick a Username</h2>
-  <input id="usernameInput" placeholder="Username">
+  <h2>Pick Your Username</h2>
+  <input id="usernameInput" placeholder="Username (permanent)">
   <br><br>
   <button class="neon-btn" onclick="saveUsername()">Continue</button>
 </div>
 
+<!-- DASHBOARD -->
 <div id="dashboard" class="container hidden">
-
   <div class="header">
     <h2 id="welcome"></h2>
     <div>
@@ -119,13 +119,15 @@ input{
   <div id="suggested" class="flex"></div>
 </div>
 
+<!-- PROFILE EDITOR -->
 <div id="profileEditor" class="container hidden">
-  <h2>Edit Profile</h2>
+  <h2>Profile</h2>
+
+  <p><strong>Username:</strong> <span id="lockedUsername"></span></p>
 
   <img id="preview" class="avatar"><br><br>
   <input type="file" id="file"><br><br>
 
-  <input id="editUsername" placeholder="Username"><br><br>
   <input id="editStatus" placeholder="Status"><br><br>
 
   <button class="neon-btn" onclick="saveProfile()">Save</button>
@@ -144,8 +146,14 @@ const auth=firebase.auth();
 const db=firebase.firestore();
 const storage=firebase.storage();
 
+/* AUTH */
+
 function login(){
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+}
+
+function logout(){
+  auth.signOut();
 }
 
 auth.onAuthStateChanged(user=>{
@@ -158,13 +166,15 @@ auth.onAuthStateChanged(user=>{
 
   db.collection("users").doc(user.uid).get().then(doc=>{
     if(doc.exists){
-      showDashboard(doc.data());
+      loadDashboard();
     }else{
       loginPage.classList.add("hidden");
       usernamePage.classList.remove("hidden");
     }
   });
 });
+
+/* USERNAME (ONE TIME ONLY) */
 
 function saveUsername(){
   const user=auth.currentUser;
@@ -178,22 +188,72 @@ function saveUsername(){
     profileImageUrl:user.photoURL||"",
     status:"online",
     isPremium:false,
-    friends:[]
-  }).then(()=>location.reload());
+    friends:[],
+    lastActive:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(()=>loadDashboard());
 }
 
-function showDashboard(u){
-  welcome.innerText="Welcome "+u.nickname;
-  dashboard.classList.remove("hidden");
+/* DASHBOARD (LIVE SYNC) */
+
+function loadDashboard(){
   loginPage.classList.add("hidden");
   usernamePage.classList.add("hidden");
-  loadSuggested();
-  loadRequests();
+  dashboard.classList.remove("hidden");
+
+  db.collection("users").doc(auth.currentUser.uid)
+  .onSnapshot(doc=>{
+    const u=doc.data();
+    welcome.innerText="Welcome "+u.nickname;
+    loadSuggested();
+    loadRequests();
+  });
 }
 
-function logout(){
-  auth.signOut();
+/* PROFILE */
+
+function openProfile(){
+  profileEditor.classList.remove("hidden");
+
+  db.collection("users").doc(auth.currentUser.uid).get().then(doc=>{
+    const u=doc.data();
+    lockedUsername.innerText=u.nickname;
+    editStatus.value=u.status||"";
+    preview.src=u.profileImageUrl||"";
+  });
 }
+
+function closeProfile(){
+  profileEditor.classList.add("hidden");
+}
+
+file.onchange=e=>{
+  const r=new FileReader();
+  r.onload=x=>preview.src=x.target.result;
+  r.readAsDataURL(e.target.files[0]);
+};
+
+function saveProfile(){
+  const uid=auth.currentUser.uid;
+  const f=file.files[0];
+
+  if(f){
+    storage.ref("avatars/"+uid).put(f)
+    .then(s=>s.ref.getDownloadURL())
+    .then(url=>updateProfile(url));
+  }else{
+    updateProfile(preview.src);
+  }
+}
+
+function updateProfile(url){
+  db.collection("users").doc(auth.currentUser.uid).update({
+    status:editStatus.value,
+    profileImageUrl:url,
+    lastActive:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(closeProfile);
+}
+
+/* SUGGESTED DUOS */
 
 function loadSuggested(){
   suggested.innerHTML="";
@@ -203,7 +263,7 @@ function loadSuggested(){
       const u=doc.data();
       suggested.innerHTML+=`
       <div class="card">
-        <div class="user-card">
+        <div class="user">
           <img class="avatar" src="${u.profileImageUrl||''}">
           <div>
             <strong>${u.nickname}</strong>
@@ -217,6 +277,8 @@ function loadSuggested(){
     });
   });
 }
+
+/* FRIEND REQUESTS */
 
 function sendRequest(id){
   db.collection("friendRequests").add({
@@ -237,7 +299,7 @@ function loadRequests(){
       db.collection("users").doc(doc.data().senderId).get().then(u=>{
         friendRequests.innerHTML+=`
         <div class="card">
-          <div class="user-card">
+          <div class="user">
             <img class="avatar" src="${u.data().profileImageUrl||''}">
             <strong>${u.data().nickname}</strong>
           </div>
@@ -252,45 +314,6 @@ function loadRequests(){
 function accept(id){
   db.collection("friendRequests").doc(id).update({status:"accepted"});
   loadRequests();
-}
-
-function openProfile(){
-  profileEditor.classList.remove("hidden");
-  db.collection("users").doc(auth.currentUser.uid).get().then(doc=>{
-    editUsername.value=doc.data().nickname;
-    editStatus.value=doc.data().status;
-    preview.src=doc.data().profileImageUrl;
-  });
-}
-
-function closeProfile(){
-  profileEditor.classList.add("hidden");
-}
-
-file.onchange=e=>{
-  const r=new FileReader();
-  r.onload=x=>preview.src=x.target.result;
-  r.readAsDataURL(e.target.files[0]);
-};
-
-function saveProfile(){
-  const uid=auth.currentUser.uid;
-  const fileData=file.files[0];
-
-  if(fileData){
-    storage.ref("avatars/"+uid).put(fileData).then(s=>s.ref.getDownloadURL())
-    .then(url=>updateProfile(url));
-  }else{
-    updateProfile(preview.src);
-  }
-}
-
-function updateProfile(url){
-  db.collection("users").doc(auth.currentUser.uid).update({
-    nickname:editUsername.value,
-    status:editStatus.value,
-    profileImageUrl:url
-  }).then(()=>location.reload());
 }
 </script>
 </body>
