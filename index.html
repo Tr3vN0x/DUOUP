@@ -291,8 +291,6 @@ async function loadUserProfile() {
         input.disabled = false;
         document.getElementById("usernameMessage").textContent = "You have one change remaining.";
     }
-    
-    // In a full application, you'd load gamer cards here.
 }
 
 // ---------- TABS ----------
@@ -350,22 +348,32 @@ async function acceptFriend(reqId){
         await db.runTransaction(async t=>{
             const doc=await t.get(reqRef);
             if(!doc.exists) throw new Error("Request gone!");
-            const {senderId, receiverId}=doc.data();
-            const senderRef=db.collection("users").doc(senderId);
-            const receiverRef=db.collection("users").doc(receiverId);
             
-            // Atomically add the friend to both user's friend lists
-            t.update(senderRef,{friends:firebase.firestore.FieldValue.arrayUnion(receiverId)});
-            t.update(receiverRef,{friends:firebase.firestore.FieldValue.arrayUnion(senderId)});
-            t.delete(reqRef); // Delete the request
+            const {senderId, receiverId} = doc.data(); // Get both UIDs from the request document
+            
+            const senderRef = db.collection("users").doc(senderId);
+            const receiverRef = db.collection("users").doc(receiverId);
+            
+            // 1. Atomically add the friend to both user's friend lists
+            t.update(senderRef, {
+                friends: firebase.firestore.FieldValue.arrayUnion(receiverId)
+            });
+            t.update(receiverRef, {
+                friends: firebase.firestore.FieldValue.arrayUnion(senderId)
+            });
+            
+            // 2. Delete the request
+            t.delete(reqRef); 
         });
         alert("Friend accepted! You are now Duos.");
     } catch (e) {
         alert("Transaction failed: " + e.message);
+        console.error("Accept friend transaction failed:", e);
     }
+    // Refresh all related views for consistency
     loadFriendRequests();
     loadFriends();
-    loadUserProfile(); // Update local friend list cache
+    loadUserProfile(); 
 }
 
 async function declineFriend(reqId){ 
@@ -377,6 +385,48 @@ async function declineFriend(reqId){
     }
     loadFriendRequests(); 
 }
+
+// NEW: Function to remove a friend and delete the chat
+async function removeFriend(friendUid) {
+    if (!currentUser || friendUid === currentUser.uid) return;
+
+    if (!confirm(`Are you sure you want to remove this profile from your Duo list? This will also clear the chat history.`)) {
+        return;
+    }
+
+    const userRef = db.collection("users").doc(currentUser.uid);
+    const friendRef = db.collection("users").doc(friendUid);
+    const chatId = getChatId(currentUser.uid, friendUid);
+    const chatRef = db.collection("chats").doc(chatId);
+    
+    try {
+        await db.runTransaction(async (t) => {
+            // 1. Remove friendUid from the current user's friends array
+            t.update(userRef, {
+                friends: firebase.firestore.FieldValue.arrayRemove(friendUid)
+            });
+
+            // 2. Remove currentUser.uid from the friend's friends array
+            t.update(friendRef, {
+                friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
+            });
+            
+            // 3. Delete the chat document
+            t.delete(chatRef); 
+
+        });
+        alert(`Successfully removed Duo.`);
+    } catch (e) {
+        alert("Error removing Duo: " + e.message);
+        console.error("Friend removal transaction failed:", e);
+    }
+    
+    // Refresh views
+    loadFriends();
+    loadUserProfile();
+    showTab('friends'); // Move back to the friend list after removal
+}
+
 
 async function loadFriendRequests(){
     requestsTab.innerHTML="<h3>Incoming Requests</h3>";
@@ -527,8 +577,6 @@ function initMessaging(){
           if(!fDoc.exists) return;
           const friendData = fDoc.data();
           
-          // This is a placeholder; proper chat systems need message-level read receipts. 
-          // For this client-only example, we'll assume unreadMessages is a global counter. 
           const unread=currentProfileData.unreadMessages; 
           
           const btn=document.createElement("button");
@@ -786,7 +834,7 @@ async function filterSearchResults(){
     });
 }
 
-// ---------- VIEW PROFILE (NEW) ----------
+// ---------- VIEW PROFILE (UPDATED) ----------
 async function viewUserProfile(uid, data = null) {
     showTab('viewProfile');
     const contentDiv = document.getElementById('viewProfileContent');
@@ -809,9 +857,14 @@ async function viewUserProfile(uid, data = null) {
 
     let actionButton = '';
     if (!isCurrentUser && !isFriend) {
+        // Option 1: Send Request
         actionButton = `<button class="neon-btn" style="border-color:cyan; box-shadow:0 0 10px cyan;" onclick="sendFriendRequest('${uid}')">Send Duo Request</button>`;
     } else if (isFriend) {
-        actionButton = `<button class="neon-btn" style="border-color:magenta; box-shadow:0 0 10px magenta;" onclick="showTab('messaging'); openChat('${uid}')">Message Duo</button>`;
+        // Option 2: Message/Remove Friend (UPDATED)
+        actionButton = `
+            <button class="neon-btn" style="border-color:magenta; box-shadow:0 0 10px magenta;" onclick="showTab('messaging'); openChat('${uid}')">Message Duo</button>
+            <button class="neon-btn remove" style="margin-left: 10px;" onclick="removeFriend('${uid}')">Remove Duo</button>
+        `;
     }
     
     contentDiv.innerHTML = `
