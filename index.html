@@ -37,7 +37,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 /* Header */
 .header { background:#111; border-bottom:3px solid cyan; box-shadow:0 0 20px rgba(0,255,255,0.5); padding:10px 0; margin-bottom:20px; display:flex; align-items:center; justify-content:center; }
 .header h1 { font-size:2.5em; color:#fff; text-shadow:0 0 5px cyan,0 0 10px cyan,0 0 15px magenta; margin:0; }
-/* Updated Icon Container for Lightning Bolt */
+/* Icon Container for Lightning Bolt */
 .icon-container { margin-right:15px; font-size:2.5em; color:yellow; text-shadow:0 0 5px yellow,0 0 10px orange; }
 /* Buttons */
 .neon-btn { border:2px solid cyan; background:transparent; color:white; padding:8px 14px; margin:5px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px cyan; transition:all 0.2s ease-in-out; text-transform:uppercase; font-family:'Orbitron',sans-serif; }
@@ -62,10 +62,15 @@ textarea { resize: vertical; }
 .card-content-box { display:flex; flex-direction:column; align-items:center; width:100%; margin-bottom:15px; padding-bottom:15px; border-bottom:1px dashed #333; }
 .avatar { width:80px; height:80px; border-radius:50%; border:4px solid magenta; object-fit:cover; margin-bottom:15px; }
 .skill-rating { color:gold; font-size:1.4em; margin-bottom:10px; }
+.discipline { font-size:0.9em; padding:4px 10px; border-radius:4px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; color:#0b0b0b; }
+.discipline-offensive { background-color:red; }
+.discipline-defensive { background-color:lime; }
+.discipline-research { background-color:cyan; }
+
 .status-indicator { font-size:0.9em; padding:4px 10px; border-radius:4px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; }
 .status-online { background-color:#00cc00; color:#0b0b0b; box-shadow:0 0 5px #00ff00; }
 .status-ingame { background-color:#ffaa00; color:#0b0b0b; box-shadow:0 0 5px #ffaa00; }
-.status-lfd { background-color:#00aaff; color:#0b0b0b; box-shadow:0 0 5px #00aaff; }
+.status-lfd { background-color:#ff00ff; color:white; box-shadow:0 0 5px #ff00ff; border:1px solid #ff00ff; }
 /* Co-Founder Badge Style */
 .nickname-group { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
 .co-founder-badge { 
@@ -114,10 +119,27 @@ textarea { resize: vertical; }
 .profile-stat { width:100%; max-width:400px; display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #333; margin-bottom:5px; }
 .profile-stat span:first-child { color: cyan; font-weight:bold; }
 .profile-stat span:last-child { text-align:right; }
+
+/* New Feature Style: Random Cyber Fact Box */
+.fact-box {
+    margin-top: 20px;
+    padding: 15px;
+    border: 2px dashed yellow;
+    background: #33330030;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 400px;
+    width: 100%;
+}
+.fact-box h4 {
+    color: yellow;
+    margin-top: 0;
+    text-shadow: 0 0 5px yellow;
+}
 </style>
 </head>
 <body>
-<div class="header"><div class="icon-container">⚡</div><h1>DUO UP</h1></div>
+<div class="header"><div class="icon-container">⚡</div><h1>DUO UP (Cyber Social Platform)</h1></div>
 
 <div id="loginPage" class="container">
 <p style="text-align:center;">Log in to connect and find your next cyber-duo.</p>
@@ -149,6 +171,13 @@ textarea { resize: vertical; }
 <option value="Online">Online</option>
 <option value="In Game">In Game</option>
 <option value="LFD">Looking For Duo (LFD)</option>
+</select>
+<label style="color:cyan; margin-left:15px;">Discipline:</label>
+<select id="disciplineFilter" onchange="filterSearchResults()">
+<option value="">Any Discipline</option>
+<option value="Offensive">Offensive (Red Team)</option>
+<option value="Defensive">Defensive (Blue Team)</option>
+<option value="Research">Research/Exploit Dev</option>
 </select>
 </div>
 <div id="searchResults" class="card-container"></div>
@@ -206,20 +235,36 @@ textarea { resize: vertical; }
 </div>
 <div style="display:flex; gap:30px; margin-bottom:20px; flex-wrap:wrap;">
 <div>
-<label style="color: cyan; display:block; margin-bottom:5px;">Skill Rating (1-5):</label>
-<input id="profileSkillRating" type="number" min="1" max="5">
+    <label style="color: cyan; display:block; margin-bottom:5px;">Skill Rating (1-5):</label>
+    <input id="profileSkillRating" type="number" min="1" max="5">
 </div>
 <div>
-<label style="color: cyan; display:block; margin-bottom:5px;">Current Status:</label>
-<select id="profileStatus">
-<option value="Online">Online</option>
-<option value="In Game">In Game</option>
-<option value="LFD">Looking For Duo (LFD)</option>
-</select>
+    <label style="color: cyan; display:block; margin-bottom:5px;">Cyber Discipline:</label>
+    <select id="profileDiscipline">
+        <option value="Offensive">Offensive (Red Team)</option>
+        <option value="Defensive">Defensive (Blue Team)</option>
+        <option value="Research">Research/Exploit Dev</option>
+        <option value="None">Prefer not to say</option>
+    </select>
 </div>
+</div>
+<div style="display:flex; align-items:center; margin-bottom:20px; gap:20px;">
+    <div>
+        <label style="color: cyan; display:block; margin-bottom:5px;">Current Status:</label>
+        <select id="profileStatus">
+            <option value="Online">Online</option>
+            <option value="In Game">In Game</option>
+            <option value="LFD">Looking For Duo (LFD)</option>
+        </select>
+    </div>
 </div>
 <button class="neon-btn" style="border-color:#00ff00; box-shadow:0 0 10px #00ff00;" onclick="saveProfile()">Save Profile</button>
 <p id="saveMessage" style="color:#00ff00; margin-top:10px;"></p>
+</div>
+<div class="fact-box">
+    <h4>Random Cyber Fact</h4>
+    <p id="randomFact">Click 'Get New Fact' to learn something cool!</p>
+    <button class="neon-btn" onclick="displayRandomFact()">Get New Fact</button>
 </div>
 </div>
 
@@ -248,6 +293,27 @@ let allUsersCache=[];
 let requestCache = {}; 
 let currentChatId=null;
 let chatListener=null;
+
+// ----------------------------------------------------
+// 🌟 NEW FEATURE: RANDOM CYBER FACTS
+// ----------------------------------------------------
+const CYBER_FACTS = [
+    "The first computer virus was called 'Creeper' in 1971, and the program 'Reaper' was created to delete it.",
+    "A single bitcoin transaction consumes as much energy as a typical American household uses in over a week.",
+    "The term 'bug' for a computer error originated in 1947 when a moth got stuck in a relay of the Harvard Mark II computer.",
+    "Over 300,000 new pieces of malware are created and analyzed daily.",
+    "95% of cyber security breaches are due to human error.",
+    "The most commonly used password in the world is still '123456'.",
+    "The dark web accounts for about 5% of the total internet.",
+    "DDoS stands for Distributed Denial of Service, which overwhelms a server with traffic.",
+    "A honeypot is a decoy computer system set up to attract and study cyber attackers."
+];
+
+function displayRandomFact() {
+    const factEl = document.getElementById('randomFact');
+    const randomIndex = Math.floor(Math.random() * CYBER_FACTS.length);
+    factEl.textContent = CYBER_FACTS[randomIndex];
+}
 
 // ----------------------------------------------------
 // 🌟 CO-FOUNDER / BADGE LOGIC 
@@ -300,7 +366,7 @@ function showTab(tab){
         case 'search': filterSearchResults(); break;
         case 'friends': loadFriends(); break;
         case 'messaging': loadChatList(); break;
-        case 'profile': loadUserProfile(); break;
+        case 'profile': loadUserProfile(); displayRandomFact(); break; // Display fact on profile tab load
         default: break;
     }
     document.getElementById(tab+'Tab')?.classList.remove('hidden');
@@ -351,6 +417,8 @@ function renderUserCard(uid, data, requestInfo){
     card.onclick=()=>viewProfile(uid, data);
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
     const badge = getCoFounderBadge(uid);
+    const discipline = data.discipline || 'None';
+    const disciplineClass = `discipline-${discipline.toLowerCase()}`;
 
     let cardButtons;
     
@@ -382,6 +450,7 @@ function renderUserCard(uid, data, requestInfo){
             <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
             ${badge}
         </div>
+        <div class="discipline ${disciplineClass}">${discipline}</div>
         <div class="skill-rating">${'⭐'.repeat(data.skillRating||3)}</div>
         <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
         <p style="margin:5px 0; font-size:0.9em; text-align:center; color:#ccc;">${data.bio||'No bio provided.'}</p>
@@ -397,6 +466,8 @@ function renderDuoCard(uid, data){
     card.onclick=()=>viewProfile(uid, data);
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
     const badge = getCoFounderBadge(uid);
+    const discipline = data.discipline || 'None';
+    const disciplineClass = `discipline-${discipline.toLowerCase()}`;
 
     card.innerHTML=`
         <div class="card-content-box">
@@ -405,6 +476,7 @@ function renderDuoCard(uid, data){
             <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
             ${badge}
         </div>
+        <div class="discipline ${disciplineClass}">${discipline}</div>
         <div style="color:lime; margin:5px 0;">ACCEPTED DUO</div>
         <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
         </div>
@@ -423,6 +495,8 @@ function renderRequestCard(senderUid, data, requestId){
     card.className='card request-card';
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
     const badge = getCoFounderBadge(senderUid);
+    const discipline = data.discipline || 'None';
+    const disciplineClass = `discipline-${discipline.toLowerCase()}`;
 
     const cardButtons = `
         <div style="display:flex; gap:10px;">
@@ -438,6 +512,7 @@ function renderRequestCard(senderUid, data, requestId){
             <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
             ${badge}
         </div>
+        <div class="discipline ${disciplineClass}">${discipline}</div>
         <div style="color:yellow; margin:5px 0;">Incoming Request</div>
         <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
         </div>
@@ -742,13 +817,43 @@ async function sendMessage() {
 }
 
 // ---------------------------
-// Profile and Search Placeholders
-function filterSearchResults() { document.getElementById('searchResults').innerHTML = '<p>Search functionality pending...</p>'; }
+// Search Filter Logic (now includes Discipline)
+function filterSearchResults() { 
+    const searchInput = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const disciplineFilter = document.getElementById('disciplineFilter').value; // NEW
+
+    const searchResultsEl = document.getElementById('searchResults');
+    searchResultsEl.innerHTML = '';
+
+    const filteredUsers = allUsersCache.filter(user => {
+        if (user.id === currentUser.uid) return false;
+
+        const nicknameMatch = (user.nickname || '').toLowerCase().includes(searchInput);
+        const bioMatch = (user.bio || '').toLowerCase().includes(searchInput);
+        const statusMatch = statusFilter ? (user.status === statusFilter) : true;
+        const disciplineMatch = disciplineFilter ? (user.discipline === disciplineFilter) : true; // NEW
+
+        return (nicknameMatch || bioMatch) && statusMatch && disciplineMatch;
+    });
+
+    if (filteredUsers.length === 0) {
+        searchResultsEl.innerHTML = '<p style="width:100%; text-align:center; color:magenta;">No players match your search criteria.</p>';
+        return;
+    }
+
+    filteredUsers.forEach(user => {
+        const card = renderUserCard(user.id, user, requestCache[user.id]);
+        if (card) searchResultsEl.appendChild(card);
+    });
+}
 
 function viewProfile(uid, data) {
     const requestInfo = requestCache[uid];
     let profileButton = '';
     const badge = getCoFounderBadge(uid);
+    const discipline = data.discipline || 'None';
+    const disciplineClass = `discipline-${discipline.toLowerCase()}`;
 
     // Logic for the profile viewing buttons
     if (requestInfo && requestInfo.status === 'accepted') {
@@ -777,7 +882,8 @@ function viewProfile(uid, data) {
             <h2 style="margin:10px 0;">${data.nickname}</h2>
             ${badge}
         </div>
-        <div class="profile-stat"><span>Status:</span><span class="status-indicator status-${(data.status||'Online').replace(/\s/g,'').toLowerCase()}">${data.status||'Online'}</span></div>
+        <div class="profile-stat"><span>Discipline:</span><span class="discipline ${disciplineClass}" style="margin:0;">${discipline}</span></div>
+        <div class="profile-stat"><span>Status:</span><span class="status-indicator status-${(data.status||'Online').replace(/\s/g,'').toLowerCase()}" style="margin:0;">${data.status||'Online'}</span></div>
         <div class="profile-stat"><span>Skill Rating:</span><span>${'⭐'.repeat(data.skillRating||3)}</span></div>
         <p style="margin-top:20px; color:magenta; font-weight:bold;">Bio:</p>
         <p style="text-align:center; max-width:400px;">${data.bio||'No bio provided.'}</p>
@@ -825,7 +931,7 @@ async function loadUserProfile() {
     document.getElementById('profileBio').value = data.bio || '';
     document.getElementById('profileSkillRating').value = data.skillRating || 3;
     document.getElementById('profileStatus').value = data.status || 'Online';
-    // Use stored URL, or the default Google photo, or the local fallback image
+    document.getElementById('profileDiscipline').value = data.discipline || 'Offensive'; // NEW: Load discipline
     document.getElementById('profileAvatar').src = data.profileImageUrl || currentUser.photoURL || DEFAULT_AVATAR;
 
     document.getElementById('avatarFile').value = ''; 
@@ -857,6 +963,7 @@ async function saveProfile() {
         bio: document.getElementById('profileBio').value,
         skillRating: parseInt(document.getElementById('profileSkillRating').value),
         status: document.getElementById('profileStatus').value,
+        discipline: document.getElementById('profileDiscipline').value, // NEW: Save discipline
     };
 
     // --- 1. Handle Nickname Change ---
@@ -937,6 +1044,7 @@ auth.onAuthStateChanged(async user=>{
             bio:'New Cyber Warrior!',
             skillRating:3,
             status:'Online',
+            discipline:'Offensive', // NEW: Default discipline
             nicknameChangeCount: 0 
         });
     }
