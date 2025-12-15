@@ -28,9 +28,34 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 #profileSkillRating, #profileStatus { width: 100%; max-width: 200px; }
 .flex { display:flex; gap:15px; flex-wrap:wrap; }
 .card-container { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; }
-.card { width: 100%; max-width:300px; padding:15px; border:2px solid cyan; border-radius:12px; background:#111; box-shadow:0 0 10px cyan; display:flex; flex-direction:column; align-items:center; margin-bottom:15px; cursor:pointer; }
+
+/* --- USER CARD (New Styles for Gamer Card preview) --- */
+.card { 
+    width: 100%; 
+    max-width:300px; 
+    padding:15px; 
+    border:2px solid cyan; 
+    border-radius:12px; 
+    background:#111; 
+    box-shadow:0 0 10px cyan; 
+    display:flex; 
+    flex-direction:column; 
+    align-items:center; 
+    margin-bottom:15px; 
+    cursor:pointer; 
+    overflow: hidden; /* Ensure card content doesn't bleed */
+}
 .card-content { display:flex; flex-direction:column; align-items:center; width:100%; margin-bottom:10px; }
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
+.card-gamer-preview {
+    width: 100%;
+    height: 100px; /* Fixed height for the preview */
+    object-fit: cover;
+    margin-top: 10px;
+    border-radius: 6px;
+    border: 1px solid magenta;
+    box-shadow: inset 0 0 5px magenta;
+}
 .owner-badge-box { display:inline-block; padding:2px 6px; margin-left:8px; font-size:0.7em; font-weight:bold; letter-spacing:1px; border-radius:4px; text-transform:uppercase; background:#3a005c; color:#ffccff; border:1px solid #ff00ff; box-shadow:0 0 5px #ff00ff,0 0 10px #cc33ff, inset 0 0 5px #ff00ff; vertical-align:middle; }
 .skill-rating { color:gold; font-size:1.2em; margin-bottom:5px; }
 .status-indicator { font-size:0.8em; padding:3px 8px; border-radius:4px; font-weight:bold; margin-bottom:10px; }
@@ -250,7 +275,7 @@ const storage = firebase.storage();
 // OWNER UID (Used for a display badge)
 const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQql9HQ2"; 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-let currentUser=null, currentChatUid=null, unsubscribeMessages=null, unsubscribeUnread=null; // Renamed unsubscribeChatList to unsubscribeUnread
+let currentUser=null, currentChatUid=null, unsubscribeMessages=null, unsubscribeUnread=null; 
 let currentProfileData = {}; 
 let pendingRequests = {}; 
 let sentRequests = {};   
@@ -308,7 +333,7 @@ auth.onAuthStateChanged(async user=>{
     loadFriendRequests();
     await loadFriends();
     initMessaging();
-    monitorUnreadMessages(); // Start monitoring the unread counter
+    monitorUnreadMessages(); 
 });
 
 async function loadRelationshipStatus() {
@@ -333,27 +358,24 @@ async function loadRelationshipStatus() {
 
 async function loadUserProfile() {
     const userDoc = await db.collection("users").doc(currentUser.uid).get();
-    currentProfileData = userDoc.data() || {}; // Use empty object fallback
+    currentProfileData = userDoc.data() || {}; 
 
     profileAvatar.src = currentProfileData.profileImageUrl || DEFAULT_AVATAR;
     
     const currentDisplayUsername = currentProfileData.username || 'Loading...';
 
-    // Set the placeholder for the nickname/identifier
     profileNickname.value = currentProfileData.nickname || currentUser.displayName || "Unknown User";
     
     profileBio.value = currentProfileData.bio || "";
     profileSkillRating.value = currentProfileData.skillRating || "1";
     profileStatus.value = currentProfileData.status || "Online";
 
-    // --- FIX: Ensure display shows the current username or a loading state ---
     document.getElementById("usernameDisplay").textContent = `@${currentDisplayUsername}`;
     
     const changeBtn = document.getElementById("changeUsernameBtn");
     const input = document.getElementById("newUsernameInput");
     const messageElement = document.getElementById("usernameMessage");
 
-    // CRITICAL: Check for existence of username and usernameChanged flag
     const hasChanged = currentProfileData.usernameChanged === true;
     
     if (hasChanged) {
@@ -368,7 +390,7 @@ async function loadUserProfile() {
         messageElement.textContent = "You have one change remaining to set your unique @handle.";
     }
     
-    renderGamerCards(); // Render gamer cards on profile load
+    renderGamerCards(); 
 }
 
 // ---------- TABS ----------
@@ -387,7 +409,7 @@ function showTab(tab){
     }
 }
 
-// ---------- CORE USER CARD RENDERING ----------
+// ---------- CORE USER CARD RENDERING (UPDATED) ----------
 
 function renderUserCard(d, data) {
     const nickname = data.nickname || "Unknown Player";
@@ -396,17 +418,25 @@ function renderUserCard(d, data) {
     const skillRating = data.skillRating || 0; 
     const status = data.status || "Offline";
     const statusClass = status.replace(/\s/g, "").toLowerCase(); 
+    const firstGamerCard = (data.gamerCards && data.gamerCards.length > 0) ? data.gamerCards[0] : null; // NEW: Get first card
     
     const card = document.createElement("div");
     card.className = "card";
-    card.onclick = () => viewUserProfile(d.id, data);
+    card.onclick = () => viewUserProfile(d.id); // View profile passes the UID
     
-    card.innerHTML = `<div class="card-content">
+    // Updated Card Inner HTML to include the Gamer Card Preview
+    let cardContentHTML = `<div class="card-content">
         <img src="${profileImageUrl}" class="avatar">
         <strong>${username}</strong> ${d.id === OWNER_UID ? '<span class="owner-badge-box">OWNER</span>' : ''}
         <span class="skill-rating">${'⭐'.repeat(skillRating)}</span>
         <span class="status-indicator status-${statusClass}">${status}</span>
     </div>`;
+
+    if (firstGamerCard) {
+        cardContentHTML += `<img src="${firstGamerCard}" class="card-gamer-preview" alt="Gamer Card Preview">`;
+    }
+
+    card.innerHTML = cardContentHTML;
 
     let actionBtn = null;
     let statusText = null;
@@ -416,7 +446,6 @@ function renderUserCard(d, data) {
         statusText.style.color = 'lime';
         statusText.textContent = "✅ Duo Partner";
         
-        // --- REMOVE DUO BUTTON ---
         const removeBtn = document.createElement("button");
         removeBtn.className = "neon-btn remove";
         removeBtn.textContent = "Remove Duo";
@@ -431,13 +460,11 @@ function renderUserCard(d, data) {
         const acceptBtn = document.createElement("button");
         acceptBtn.className = "neon-btn";
         acceptBtn.textContent = "Accept";
-        // --- ACCEPT DUO CALL (FUNCTIONAL) ---
         acceptBtn.onclick = (e) => { e.stopPropagation(); acceptFriend(pendingRequests[d.id]); };
         
         const declineBtn = document.createElement("button");
         declineBtn.className = "neon-btn remove";
         declineBtn.textContent = "Decline";
-        // --- DECLINE DUO CALL (FUNCTIONAL) ---
         declineBtn.onclick = (e) => { e.stopPropagation(); declineFriend(pendingRequests[d.id]); };
         
         card.appendChild(acceptBtn);
@@ -507,7 +534,9 @@ function filterSearchResults() {
 
         const bio = (data.bio || '').toLowerCase();
         const nickname = (data.nickname || '').toLowerCase();
-        if (searchTerm && !(nickname.includes(searchTerm) || bio.includes(searchTerm))) {
+        const username = (data.username || '').toLowerCase();
+
+        if (searchTerm && !(nickname.includes(searchTerm) || bio.includes(searchTerm) || username.includes(searchTerm))) {
             return false;
         }
 
@@ -638,6 +667,8 @@ async function removeFriend(friendUid) {
             });
             
             // 3. Delete the chat document 
+            // Note: This does NOT delete the subcollection messages. This is a client limitation
+            // and usually requires a Cloud Function (not implemented here) for full cleanup.
             t.delete(chatRef);    
         });
         alert(`Successfully removed Duo.`);
@@ -735,7 +766,6 @@ function initMessaging() {
     const activeDuoList = document.getElementById('activeDuoList');
     activeDuoList.innerHTML = "";
 
-    // Reset current chat listener
     if(unsubscribeMessages) {
         unsubscribeMessages();
         unsubscribeMessages = null;
@@ -760,9 +790,7 @@ function initMessaging() {
         btn.textContent = display;
         
         btn.onclick = () => {
-            // Un-highlight previous button
             document.querySelectorAll('.chat-item-btn').forEach(b => b.style.borderColor = 'cyan');
-            // Highlight current button
             btn.style.borderColor = 'magenta';
             openChat(uid, display);
         };
@@ -771,7 +799,6 @@ function initMessaging() {
         activeDuoList.appendChild(btn);
     });
 
-    // Attach send message handler once
     document.getElementById('sendMessageBtn').onclick = sendMessage;
     document.getElementById('messageInput').onkeydown = (e) => {
         if (e.key === 'Enter') {
@@ -800,10 +827,8 @@ function openChat(friendUid, friendDisplay) {
     const chatRef = db.collection("chats").doc(chatId);
     const messagesRef = chatRef.collection("messages");
 
-    // Start listening for new messages, ordered by timestamp
     unsubscribeMessages = messagesRef.orderBy("timestamp", "asc").onSnapshot(snapshot => {
         
-        // Clear the display only on the first load or if messages are cleared
         if (messageDisplay.innerHTML.includes('secure connection...')) {
              messageDisplay.innerHTML = '';
         }
@@ -815,7 +840,6 @@ function openChat(friendUid, friendDisplay) {
             }
         });
         
-        // Always scroll to the bottom after adding new messages
         messageDisplay.scrollTop = messageDisplay.scrollHeight;
         
         // IMPORTANT: Reset unread counter for *this* chat when it's opened
@@ -872,13 +896,10 @@ async function sendMessage() {
     };
 
     try {
-        // Use a batch to write the message and update the receiver's unread counter atomically
         const batch = db.batch();
         
-        // 1. Add the new message to the subcollection
         batch.set(messagesRef.doc(), message);
         
-        // 2. Increment the receiver's unread counter (This is done on the main document)
         const receiverRef = db.collection("users").doc(receiverId);
         batch.update(receiverRef, {
             unreadMessages: firebase.firestore.FieldValue.increment(1)
@@ -886,7 +907,7 @@ async function sendMessage() {
 
         await batch.commit();
 
-        input.value = ''; // Clear input on success
+        input.value = ''; 
         
     } catch (e) {
         console.error("Failed to send message:", e);
@@ -908,7 +929,6 @@ function monitorUnreadMessages() {
             const data = doc.data();
             const unreadCount = data.unreadMessages || 0;
             
-            // Also update currentProfileData so loadUserProfile/loadFriends has fresh data
             currentProfileData = data; 
 
             if (unreadCount > 0) {
@@ -922,6 +942,108 @@ function monitorUnreadMessages() {
     }, error => {
         console.error("Error monitoring unread messages:", error);
     });
+}
+
+
+// ---------- PROFILE VIEWING FUNCTIONS (NEW) ----------
+
+/**
+ * Loads and displays the full profile of a target user.
+ * @param {string} targetUid The UID of the user to view.
+ */
+async function viewUserProfile(targetUid) {
+    if (!currentUser || targetUid === currentUser.uid) {
+        showTab('profile'); 
+        return;
+    }
+
+    const viewProfileContent = document.getElementById('viewProfileContent');
+    viewProfileContent.innerHTML = `<p style="color:yellow;">Loading profile data...</p>`;
+    showTab('viewProfile'); 
+
+    try {
+        const userDoc = await db.collection("users").doc(targetUid).get();
+
+        if (!userDoc.exists) {
+            viewProfileContent.innerHTML = `<p style="color:red;">Error: User profile not found.</p>`;
+            return;
+        }
+
+        const data = userDoc.data();
+        const isFriend = currentProfileData.friends && currentProfileData.friends.includes(targetUid);
+        
+        // Determine the current relationship status for the button
+        let actionButtonHTML = '';
+        if (isFriend) {
+            actionButtonHTML = `<button class="neon-btn remove" onclick="removeFriend('${targetUid}')">Remove Duo</button>
+                                <button class="neon-btn" style="border-color:magenta; box-shadow:0 0 10px magenta;" onclick="showChatFromProfile('${targetUid}')">Message Duo</button>`;
+        } else if (pendingRequests[targetUid]) {
+            actionButtonHTML = `<p style="color:yellow;">Pending Request from them. Go to 'Requests' tab to accept.</p>`;
+        } else if (sentRequests[targetUid]) {
+            actionButtonHTML = `<p style="color:orange;">Request Sent.</p>`;
+        } else {
+            actionButtonHTML = `<button class="neon-btn" onclick="sendFriendRequest('${targetUid}')">Send Duo Request</button>`;
+        }
+
+        // Generate Gamer Card HTML
+        const gamerCards = data.gamerCards || [];
+        const gamerCardHTML = gamerCards.map((url, index) => `
+            <div class="gamer-card" style="cursor:zoom-in;" onclick="window.open('${url}', '_blank')">
+                <img src="${url}" alt="Gamer Card ${index + 1}">
+            </div>
+        `).join('');
+
+        // Build the full profile view structure
+        viewProfileContent.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 30px;">
+                <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar" style="width: 120px; height: 120px; border-color: magenta; margin-bottom: 15px;">
+                <h2 style="color:cyan; margin: 0;">${data.nickname || 'Unknown Player'}</h2>
+                <h3 id="usernameDisplay" style="color:yellow; margin: 5px 0 15px 0;">@${data.username || 'N/A'}</h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <span class="skill-rating" style="font-size: 1.5em;">${'⭐'.repeat(data.skillRating || 0)}</span>
+                    <span class="status-indicator status-${(data.status || 'Offline').replace(/\s/g, "").toLowerCase()}">${data.status || 'Offline'}</span>
+                </div>
+                
+                <p style="border: 1px dashed #555; padding: 10px; border-radius: 6px; width: 100%; max-width: 500px; font-style: italic;">
+                    ${data.bio || 'No public bio set.'}
+                </p>
+
+                <div style="margin-top: 20px;">
+                    ${actionButtonHTML}
+                </div>
+            </div>
+
+            <h3 style="color:magenta; border-bottom: 1px solid magenta; padding-bottom: 5px; margin-top: 30px;">Gamer Cards (${gamerCards.length})</h3>
+            <div class="gamer-card-container" style="border: none; padding: 0;">
+                ${gamerCardHTML || '<p>This user has no Gamer Cards to display.</p>'}
+            </div>
+        `;
+
+    } catch (e) {
+        viewProfileContent.innerHTML = `<p style="color:red;">Failed to load profile: ${e.message}</p>`;
+        console.error("View Profile Error:", e);
+    }
+}
+
+/**
+ * Helper function to switch to the messaging tab and open the chat with the specified friend.
+ */
+function showChatFromProfile(targetUid) {
+    const friendData = friendUsers[targetUid];
+    if (friendData) {
+        const chatBtn = document.querySelector(`#activeDuoList button[data-uid="${targetUid}"]`);
+        if (chatBtn) {
+            document.querySelectorAll('.chat-item-btn').forEach(b => b.style.borderColor = 'cyan');
+            chatBtn.style.borderColor = 'magenta';
+            openChat(targetUid, friendData.username ? `@${friendData.username}` : (friendData.nickname || 'Unknown'));
+            showTab('messaging');
+        } else {
+            alert("Could not find this friend in your active chat list. Please check the Friends tab.");
+        }
+    } else {
+         alert("Cannot start chat: User is not recognized as a current Duo Partner.");
+    }
 }
 
 
@@ -1005,7 +1127,6 @@ function isValidUsername(username) {
     if (!username || username.length < 3 || username.length > 20) {
         return { valid: false, message: "Username must be between 3 and 20 characters." };
     }
-    // Only allow lowercase letters (a-z) and numbers (0-9)
     if (!/^[a-z0-9]+$/.test(username)) {
         return { valid: false, message: "Username can only contain lowercase letters (a-z) and numbers (0-9)." };
     }
@@ -1050,13 +1171,12 @@ async function attemptUsernameChange() {
             const usernameDoc = await t.get(usernameDocRef);
 
             if (usernameDoc.exists) {
-                // If it exists and the UID doesn't match, it's taken.
                 if (usernameDoc.data().uid !== currentUser.uid) {
                     throw new Error(`Username @${newUsername} is already taken.`);
                 }
             }
 
-            // 2. Clean up the old username index entry (if a valid one exists and is owned by the user)
+            // 2. Clean up the old username index entry 
             if (oldUsername && oldUsername.length > 0) { 
                 const oldUsernameDocRef = db.collection("usernames").doc(oldUsername);
                 const oldUsernameIndexDoc = await t.get(oldUsernameDocRef);
@@ -1076,7 +1196,7 @@ async function attemptUsernameChange() {
             const userRef = db.collection("users").doc(currentUser.uid);
             t.update(userRef, {
                 username: newUsername,
-                usernameChanged: true // Permanently lock the username change
+                usernameChanged: true 
             });
         });
 
@@ -1107,7 +1227,6 @@ function renderGamerCards() {
     const gamerCards = currentProfileData.gamerCards || [];
     const maxCards = 8;
 
-    // 1. Render existing cards
     gamerCards.forEach((cardUrl, index) => {
         const card = document.createElement('div');
         card.className = 'gamer-card';
@@ -1117,7 +1236,6 @@ function renderGamerCards() {
         list.appendChild(card);
     });
 
-    // 2. Render the upload slot if max limit hasn't been reached
     if (gamerCards.length < maxCards) {
         const slot = document.createElement('div');
         slot.className = 'gamer-card-slot';
@@ -1184,7 +1302,6 @@ async function removeGamerCard(cardUrl) {
     const userRef = db.collection("users").doc(currentUser.uid);
     
     try {
-        // 1. Remove the URL from the user's profile array
         await userRef.update({
             gamerCards: firebase.firestore.FieldValue.arrayRemove(cardUrl)
         });
@@ -1197,11 +1314,6 @@ async function removeGamerCard(cardUrl) {
         saveMessage.textContent = `Error removing card: ${e.message}`;
         console.error("Gamer Card Removal Error:", e);
     }
-}
-
-// Placeholder for full profile view (Not yet implemented)
-function viewUserProfile(uid, data) {
-    alert(`Viewing profile for UID: ${uid}. Logic for viewing full profile is a next step.`);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
