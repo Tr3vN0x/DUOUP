@@ -219,7 +219,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
         <h3 style="color:cyan; margin-top: 25px;">Unique Username (@)</h3>
         <p id="usernameDisplay">@Loading...</p>
         <div id="usernameEditor" style="margin-bottom: 20px;">
-            <input type="text" id="newUsernameInput" placeholder="Enter new username (A-Z, 0-9, 3-20 chars)" style="flex-grow: 1;">
+            <input type="text" id="newUsernameInput" placeholder="Enter new username (a-z, 0-9, 3-20 chars)" style="flex-grow: 1;">
             <button class="neon-btn" id="changeUsernameBtn" onclick="attemptUsernameChange()">Set/Change Username</button>
         </div>
         <p id="usernameMessage" style="color: yellow;"></p>
@@ -248,1098 +248,184 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
                 </select>
             </div>
         </div>
-        <h3 style="color:cyan; margin-top: 25px;">Gamer Card Manager (Max 8)</h3>
-        <p style="font-size: 0.9em; color: gray;">Click the "+" slot to upload a new card (Max 2MB per image).</p>
-        <div id="gamerCardList" class="gamer-card-container" style="border: 1px dashed cyan; padding: 10px; border-radius: 6px; margin-bottom: 15px;"></div>
-        <button class="neon-btn" style="border-color: #00ff00; box-shadow: 0 0 10px #00ff00;" onclick="saveProfile()">Save Profile</button>
-        <p id="saveMessage" style="color: #00ff00; margin-top: 10px;"></p>
+        <h3 style="color:cyan; margin-top: 25px;">Gamer Card Slots</h3>
+        <div id="gamerCardSlots" class="gamer-card-container"></div>
     </div>
 </div>
 
 <script>
-// ---------- FIREBASE INIT (USE YOUR OWN CONFIG HERE) ----------
+// Firebase initialization (replace with your config)
 const firebaseConfig = {
-    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",    
-    authDomain: "duoup-cfae6.firebaseapp.com",
-    projectId: "duoup-cfae6",
-    storageBucket: "duoup-cfae6.firebasestorage.app",
-    messagingSenderId: "812263060524",
-    appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
-    measurementId: "G-46B67F90FK"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
 
-// OWNER UID (Used for a display badge)
-const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQql9HQ2"; 
-const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-let currentUser=null, currentChatUid=null, unsubscribeMessages=null, unsubscribeUnread=null; 
-let currentProfileData = {}; 
-let pendingRequests = {}; 
-let sentRequests = {};   
-let allUsersCache = [];    
-let friendUsers = {}; // Users marked as friends/duos
-let blockedUsers = {}; // New: Track UIDs blocked by the current user
+let currentUser = null;
+let blockedUsers = {}; // object with blocked UID keys
+let allUsersCache = []; // cache of all users
+const OWNER_UID = "OWNER_USER_ID"; // lightning-bolt CO-FOUNDER
 
-function getChatId(a,b){ return [a,b].sort().join('_'); }
-
-// ---------- AUTH ----------
-function login(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message)); }
-function logout(){ 
-    if(unsubscribeMessages) unsubscribeMessages(); 
-    if(unsubscribeUnread) unsubscribeUnread(); 
-    auth.signOut(); 
+// --- LOGIN / LOGOUT ---
+function login() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(result => {
+        currentUser = result.user;
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        document.getElementById('welcome').innerText = `Welcome, ${currentUser.displayName || currentUser.email}`;
+        loadBlockedUsers();
+        loadAllUsers();
+        loadProfile();
+    }).catch(console.error);
 }
 
-auth.onAuthStateChanged(async user=>{
-    if(!user){ loginPage.classList.remove("hidden"); dashboard.classList.add("hidden"); return; }
-    loginPage.classList.add("hidden"); dashboard.classList.remove("hidden"); currentUser=user;
-    
-    const userRef=db.collection("users").doc(user.uid);
-    const userDoc = await userRef.get();
-
-    if(!userDoc.exists){
-        const baseName = (user.displayName || user.email.split('@')[0]).replace(/\s/g, '').toLowerCase();
-        const defaultUsername = baseName.substring(0, 16) + Math.floor(1000 + Math.random() * 9000); 
-        
-        await userRef.set({
-            uid: user.uid,
-            username: defaultUsername,    
-            usernameChanged: false, 
-            bio: "New Cyber Warrior seeking a Duo partner!",
-            skillRating: 3, 
-            status: "Online",
-            friends: [],
-            duoSince: {}, 
-            unreadMessages: 0,
-            profileImageUrl: user.photoURL || DEFAULT_AVATAR,
-            nickname: user.displayName, 
-            gamerCards: []
-        });
-        await db.collection("usernames").doc(defaultUsername).set({
-            uid: user.uid,
-            username: defaultUsername
-        });
-    }
-    
-    await loadUserProfile(); 
-    await loadRelationshipStatus(); 
-    await loadBlocks(); // New: Load existing blocks
-    welcome.textContent=`Welcome, ${currentUser.displayName || currentUser.email}`;
-    await loadAllUsers(); 
-    loadFriendRequests();
-    await loadFriends();
-    initMessaging();
-    monitorUnreadMessages(); 
-});
-
-async function loadRelationshipStatus() {
-    if (!currentUser) return;
-    pendingRequests = {};
-    sentRequests = {};
-
-    const incomingSnap = await db.collection("friendRequests")
-        .where("receiverId", "==", currentUser.uid)
-        .get();
-    incomingSnap.forEach(doc => {
-        pendingRequests[doc.data().senderId] = doc.id;
-    });
-
-    const outgoingSnap = await db.collection("friendRequests")
-        .where("senderId", "==", currentUser.uid)
-        .get();
-    outgoingSnap.forEach(doc => {
-        sentRequests[doc.data().receiverId] = doc.id;
-    });
+function logout() {
+    auth.signOut().then(() => location.reload());
 }
 
-// New function to load UIDs currently blocked by the user
-async function loadBlocks() {
-    if (!currentUser) return;
-    blockedUsers = {};
-    
-    // Block document ID format: {blockerId}_{blockedId}
-    const blocksSnap = await db.collection("blocks")
-        .where("blockerId", "==", currentUser.uid) 
-        .get();
-        
-    blocksSnap.forEach(doc => {
-        // The document ID is 'myuid_blockeduid'
-        const blockedUid = doc.id.split('_')[1];
-        blockedUsers[blockedUid] = doc.id; // Store the blocked UID and the block document ID
-    });
-}
-
-async function loadUserProfile() {
-    const userDoc = await db.collection("users").doc(currentUser.uid).get();
-    currentProfileData = userDoc.data() || {}; 
-
-    profileAvatar.src = currentProfileData.profileImageUrl || DEFAULT_AVATAR;
-    
-    const currentDisplayUsername = currentProfileData.username || 'Loading...';
-
-    profileNickname.value = currentProfileData.nickname || currentUser.displayName || "Unknown User";
-    
-    profileBio.value = currentProfileData.bio || "";
-    profileSkillRating.value = currentProfileData.skillRating || "1";
-    profileStatus.value = currentProfileData.status || "Online";
-
-    document.getElementById("usernameDisplay").textContent = `@${currentDisplayUsername}`;
-    
-    const changeBtn = document.getElementById("changeUsernameBtn");
-    const input = document.getElementById("newUsernameInput");
-    const messageElement = document.getElementById("usernameMessage");
-
-    const hasChanged = currentProfileData.usernameChanged === true;
-    
-    if (hasChanged) {
-        changeBtn.textContent = "Changed Once (Locked)";
-        changeBtn.disabled = true;
-        input.disabled = true;
-        messageElement.textContent = "Your unique username has been permanently set.";
-    } else {
-        changeBtn.textContent = "Set/Change Username";
-        changeBtn.disabled = false;
-        input.disabled = false;
-        messageElement.textContent = "You have one change remaining to set your unique @handle.";
-    }
-    
-    renderGamerCards(); 
-}
-
-// ---------- TABS ----------
-function showTab(tab){
-    allUsersTab.classList.add("hidden"); searchTab.classList.add("hidden"); requestsTab.classList.add("hidden");
-    friendsTab.classList.add("hidden"); messagingTab.classList.add("hidden"); profileTab.classList.add("hidden");
-    viewProfileTab.classList.add("hidden");
-    
+// --- TAB MANAGEMENT ---
+function showTab(tab) {
+    document.querySelectorAll('#dashboard > div, #profileTab, #viewProfileTab').forEach(el => el.classList.add('hidden'));
     switch(tab){
-      case "allUsers": allUsersTab.classList.remove("hidden"); loadAllUsers(); break; 
-      case "search": searchTab.classList.remove("hidden"); filterSearchResults(); break; 
-      case "requests": requestsTab.classList.remove("hidden"); loadFriendRequests(); break; 
-      case "friends": friendsTab.classList.remove("hidden"); loadFriends(); break; 
-      case "messaging": messagingTab.classList.remove("hidden"); break;
-      case "profile": profileTab.classList.remove("hidden"); loadUserProfile(); break; 
-      case "viewProfile": viewProfileTab.classList.remove("hidden"); break; 
+        case 'allUsers': document.getElementById('allUsersTab').classList.remove('hidden'); break;
+        case 'search': document.getElementById('searchTab').classList.remove('hidden'); break;
+        case 'requests': document.getElementById('requestsTab').classList.remove('hidden'); break;
+        case 'friends': document.getElementById('friendsTab').classList.remove('hidden'); break;
+        case 'messaging': document.getElementById('messagingTab').classList.remove('hidden'); break;
+        case 'profile': document.getElementById('profileTab').classList.remove('hidden'); break;
+        case 'viewProfile': document.getElementById('viewProfileTab').classList.remove('hidden'); break;
     }
 }
 
-// ---------- CORE USER CARD RENDERING ----------
+// --- BLOCKED USERS ---
+async function loadBlockedUsers() {
+    const snapshot = await db.collection("blocks").where("blocker", "==", currentUser.uid).get();
+    blockedUsers = {};
+    snapshot.forEach(doc => { blockedUsers[doc.data().blocked] = true; });
+}
 
-function renderUserCard(d, data) {
-    const nickname = data.nickname || "Unknown Player";
-    const username = data.username ? `@${data.username}` : nickname;
-    const profileImageUrl = data.profileImageUrl || DEFAULT_AVATAR;
-    const skillRating = data.skillRating || 0; 
-    const status = data.status || "Offline";
-    const statusClass = status.replace(/\s/g, "").toLowerCase(); 
-    const firstGamerCard = (data.gamerCards && data.gamerCards.length > 0) ? data.gamerCards[0] : null; 
-    
-    const card = document.createElement("div");
-    card.className = "card";
-    card.onclick = () => viewUserProfile(d.id); 
-    
-    let cardContentHTML = `<div class="card-content">
-        <img src="${profileImageUrl}" class="avatar">
-        <strong>${username}</strong> ${d.id === OWNER_UID ? '<span class="owner-badge-box">OWNER</span>' : ''}
+// --- LOAD ALL USERS ---
+async function loadAllUsers() {
+    const snapshot = await db.collection('users').get();
+    allUsersCache = [];
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        if(doc.id === currentUser.uid || blockedUsers[doc.id]) return;
+        allUsersCache.push({id: doc.id, data});
+    });
+    renderAllUsers(allUsersCache);
+}
+
+// --- RENDER USER CARD ---
+function renderUserCard(user) {
+    const data = user.data;
+    const usernameDisplay = data.username ? `@${data.username}` : data.nickname;
+    const skillRating = data.skillRating || 1;
+    const status = data.status || 'Online';
+    let statusClass = 'online';
+    if(status === 'Online') statusClass='online';
+    else if(status==='In Game') statusClass='ingame';
+    else if(status==='LFD') statusClass='lfd';
+    let card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `<div class="card-content">
+        <img src="${data.avatar || 'https://via.placeholder.com/50'}" class="avatar">
+        <strong>${usernameDisplay}</strong> ${user.id === OWNER_UID ? '<span class="owner-badge-box">CO-FOUNDER</span>' : ''}
         <span class="skill-rating">${'⭐'.repeat(skillRating)}</span>
         <span class="status-indicator status-${statusClass}">${status}</span>
     </div>`;
-
-    if (firstGamerCard) {
-        cardContentHTML += `<img src="${firstGamerCard}" class="card-gamer-preview" alt="Gamer Card Preview">`;
-    }
-
-    card.innerHTML = cardContentHTML;
-
-    let actionBtn = null;
-    let statusText = null;
-    
-    // Check if the card user is marked as a friend/duo
-    if (currentProfileData.friends && currentProfileData.friends.includes(d.id)) {
-        statusText = document.createElement("p");
-        statusText.style.color = 'lime';
-        statusText.textContent = "✅ Duo Partner";
-        
-        // Removed 'Remove Duo' button from card preview to simplify UI, only available on profile view
-        
-    } else if (pendingRequests[d.id]) {
-        statusText = document.createElement("p");
-        statusText.style.color = 'yellow';
-        statusText.textContent = "❗ Incoming Request";
-        
-    } else if (sentRequests[d.id]) {
-        statusText = document.createElement("p");
-        statusText.style.color = 'orange';
-        statusText.textContent = "⏳ Request Sent";
-        
-    } else {
-        actionBtn = document.createElement("button");
-        actionBtn.className = "neon-btn";
-        actionBtn.textContent = "Send Duo Request";
-        actionBtn.onclick = (e) => { e.stopPropagation(); sendFriendRequest(d.id); };
-    }
-    
-    if (actionBtn) card.appendChild(actionBtn);
-    if (statusText && !pendingRequests[d.id]) card.appendChild(statusText); 
-
+    card.addEventListener('click', ()=>{ viewUserProfile(user.id); });
     return card;
 }
 
-
-// ---------- USER & SEARCH FUNCTIONS ----------
-
-async function loadAllUsers(){
-    allUsersTab.innerHTML = "<h3>Suggested Players</h3>";
-    
-    if (allUsersCache.length === 0) {
-        try {
-            const querySnap=await db.collection("users").get();
-            allUsersCache = querySnap.docs.map(d => ({
-                id: d.id,
-                data: d.data()
-            }));
-        } catch(e) {
-            console.error("Error loading all users:", e);
-            allUsersTab.innerHTML += `<p style="color:red;">Error loading players: ${e.message}. Check console for details.</p>`;
-            return;
-        }
-    }
-
-    if (allUsersCache.length === 0) {
-           allUsersTab.innerHTML += "<p>No other players found in the database.</p>";
-           return;
-    }
-
-    allUsersCache.forEach(({id, data})=>{
-      if(id === currentUser.uid) return;
-      
-      const card = renderUserCard({id}, data); 
-      allUsersTab.appendChild(card);
+// --- RENDER ALL USERS ---
+function renderAllUsers(users){
+    const container = document.getElementById('allUsersTab');
+    container.innerHTML='';
+    users.forEach(user=>{
+        container.appendChild(renderUserCard(user));
     });
 }
 
+// --- VIEW USER PROFILE ---
+async function viewUserProfile(uid) {
+    showTab('viewProfile');
+    const doc = await db.collection('users').doc(uid).get();
+    if(!doc.exists) return;
+    const data = doc.data();
+    const usernameDisplay = data.username ? `@${data.username}` : data.nickname;
+    document.getElementById('viewProfileContent').innerHTML = `
+        <h2>${usernameDisplay} ${uid===OWNER_UID?'<span class="owner-badge-box">CO-FOUNDER</span>':''}</h2>
+        <img src="${data.avatar||'https://via.placeholder.com/100'}" class="avatar" style="width:100px;height:100px;">
+        <p>Bio: ${data.bio||'No bio'}</p>
+        <p>Skill: ${'⭐'.repeat(data.skillRating||1)}</p>
+        <p>Status: ${data.status||'Online'}</p>
+    `;
+}
+
+// --- SEARCH FILTER ---
 function filterSearchResults() {
-    const searchResults = document.getElementById('searchResults');
-    searchResults.innerHTML = "";
-    
-    const searchTerm = searchInput.value.toLowerCase();
+    const query = document.getElementById('searchInput').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
-    const skillFilter = parseInt(document.getElementById('skillFilter').value, 10);
-
-    const filtered = allUsersCache.filter(({id, data}) => {
-        if (id === currentUser.uid) return false;
-
-        const bio = (data.bio || '').toLowerCase();
-        const nickname = (data.nickname || '').toLowerCase();
-        const username = (data.username || '').toLowerCase();
-
-        if (searchTerm && !(nickname.includes(searchTerm) || bio.includes(searchTerm) || username.includes(searchTerm))) {
-            return false;
-        }
-
-        if (statusFilter && data.status !== statusFilter) {
-            return false;
-        }
-
-        if (skillFilter > 0 && (data.skillRating || 0) < skillFilter) {
-            return false;
-        }
-
+    const minSkill = parseInt(document.getElementById('skillFilter').value);
+    const filtered = allUsersCache.filter(({id,data})=>{
+        if(blockedUsers[id]) return false;
+        if(query && !((data.nickname||'').toLowerCase().includes(query) || (data.bio||'').toLowerCase().includes(query))) return false;
+        if(statusFilter && data.status!==statusFilter) return false;
+        if(minSkill>0 && (data.skillRating||0)<minSkill) return false;
         return true;
     });
-
-    if (filtered.length === 0) {
-        searchResults.innerHTML = "<p>No players match your search criteria.</p>";
-    } else {
-        filtered.forEach(({id, data}) => {
-            const card = renderUserCard({id}, data);
-            searchResults.appendChild(card);
-        });
-    }
-}
-
-// ---------- FRIEND REQUESTS & BLOCKING ACTIONS ----------
-
-async function sendFriendRequest(toUid){
-    if(!currentUser || toUid===currentUser.uid) return alert("Cannot send a request to yourself.");
-    
-    if (currentProfileData.friends && currentProfileData.friends.includes(toUid)) {
-        return alert("You are already Duos with this user.");
-    }
-    
-    const reqId = getChatId(currentUser.uid, toUid);
-    const reqRef = db.collection("friendRequests").doc(reqId);
-    
-    try {
-        await reqRef.set({
-            senderId: currentUser.uid,          
-            receiverId: toUid,                
-            status: "pending",                
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert("Duo Request sent! Waiting for acceptance.");
-        
-        await loadRelationshipStatus(); 
-        loadAllUsers(); 
-        filterSearchResults();
-        
-    } catch(e) {
-        alert("Error sending request: " + e.message);
-        console.error("Friend Request Send Error:", e);
-    }
-    loadFriendRequests();
-}
-
-/**
- * Note: acceptFriend logic has been removed as acceptance must be handled 
- * via a secure backend process (like a Cloud Function) to ensure atomic writes 
- * to both user documents and the deletion of the request document.
- * The client only sends and declines requests.
- */
-
-async function declineFriend(reqId){    
-    try {
-        // Simple deletion of the request document is allowed by the receiver (security rule)
-        await db.collection("friendRequests").doc(reqId).delete();   
-        alert("Request declined.");
-    } catch(e) {
-        alert("Error declining request: " + e.message);
-    }
-    await loadRelationshipStatus(); 
-    loadFriendRequests();    
-    loadAllUsers(); 
-}
-
-async function removeFriend(friendUid) {
-    if (!currentUser || friendUid === currentUser.uid) return;
-
-    if (!confirm(`Are you sure you want to remove this profile from your Duo list? This will also clear the chat history.`)) {
-        return;
-    }
-
-    const userRef = db.collection("users").doc(currentUser.uid);
-    const friendRef = db.collection("users").doc(friendUid);
-    const chatId = getChatId(currentUser.uid, friendUid);
-    const chatRef = db.collection("chats").doc(chatId);
-    
-    try {
-        await db.runTransaction(async (t) => {
-            // Remove friendUid from the current user's friends array
-            t.update(userRef, {
-                friends: firebase.firestore.FieldValue.arrayRemove(friendUid),
-            });
-
-            // Remove currentUser.uid from the friend's friends array
-            t.update(friendRef, {
-                friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid),
-            });
-            
-            // Delete the chat document 
-            t.delete(chatRef);    
-        });
-        alert(`Successfully removed Duo.`);
-    } catch (e) {
-        alert("Error removing Duo: " + e.message);
-        console.error("Friend removal transaction failed:", e);
-    }
-    
-    await loadRelationshipStatus(); 
-    loadFriends();
-    loadUserProfile();
-    loadAllUsers(); 
-    showTab('friends'); 
-}
-
-async function blockUser(targetUid) {
-    if (!currentUser || targetUid === currentUser.uid) return;
-
-    if (!confirm(`Are you sure you want to block this user? This will stop them from messaging you.`)) {
-        return;
-    }
-
-    // Document ID format: {blockerId}_{blockedId}
-    const blockId = `${currentUser.uid}_${targetUid}`; 
-    const blockRef = db.collection("blocks").doc(blockId);
-    
-    try {
-        await blockRef.set({
-            blockerId: currentUser.uid,
-            blockedId: targetUid,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        alert(`User @${friendUsers[targetUid]?.username || targetUid} has been blocked.`);
-    } catch (e) {
-        alert("Error blocking user: " + e.message);
-        console.error("Block User Error:", e);
-    }
-    
-    await loadBlocks(); 
-    viewUserProfile(targetUid); // Refresh profile view
-}
-
-async function unblockUser(targetUid) {
-    if (!currentUser || targetUid === currentUser.uid) return;
-
-    if (!confirm(`Are you sure you want to UNBLOCK this user? They will be able to message you again.`)) {
-        return;
-    }
-    
-    const blockId = blockedUsers[targetUid]; // Use the stored document ID
-    
-    try {
-        if (blockId) {
-            await db.collection("blocks").doc(blockId).delete();
-            alert(`User @${friendUsers[targetUid]?.username || targetUid} has been unblocked.`);
-        } else {
-            alert("Error: Block record not found.");
-        }
-    } catch (e) {
-        alert("Error unblocking user: " + e.message);
-        console.error("Unblock User Error:", e);
-    }
-
-    await loadBlocks(); 
-    viewUserProfile(targetUid); // Refresh profile view
-}
-
-async function loadFriendRequests(){
-    requestsTab.innerHTML="<h3>Incoming Requests</h3>";
-    const querySnap=await db.collection("friendRequests")
-      .where("receiverId","==",currentUser.uid).get();
-      
-    const requestsData = await Promise.all(querySnap.docs.map(async d => {
-        const request = d.data();
-        const senderDoc = await db.collection("users").doc(request.senderId).get();
-        const senderData = senderDoc.data() || { username: 'Unknown', nickname: 'Unknown User' };
-        
-        return {
-            id: d.id, // This is the request document ID
-            senderId: request.senderId, // The UID of the sender
-            display: senderData.username ? `@${senderData.username}` : (senderData.nickname || 'Unknown User'),
-        };
-    }));
-
-    if (requestsData.length === 0) {
-        requestsTab.innerHTML += "<p>No new Duo requests.</p>";
-    }
-
-    requestsData.forEach(r => {
-        const div = document.createElement("div");
-        div.className = "card";
-        // Clicking the card takes you to the sender's profile
-        div.onclick = () => viewUserProfile(r.senderId); 
-        div.innerHTML = `<div class="card-content"><strong>${r.display}</strong> wants to duo!</div>`;
-        
-        // --- BUTTONS CONNECTED HERE ---
-        // ACCEPT button removed as it requires a secure transaction/Cloud Function
-        
-        const declineBtn = document.createElement("button");
-        declineBtn.className = "neon-btn remove";   
-        declineBtn.textContent = "Decline";
-        // Connect to the declineFriend function using the request ID (r.id)
-        declineBtn.onclick = (e) => {   
-            e.stopPropagation();   
-            declineFriend(r.id);   
-        };
-        
-        // Placeholder button/message for acceptance process
-        const acceptPlaceholder = document.createElement("button");
-        acceptPlaceholder.className = "neon-btn";
-        acceptPlaceholder.textContent = "Accept (Backend)";
-        acceptPlaceholder.title = "Acceptance is handled via a secure backend process/Cloud Function";
-        acceptPlaceholder.disabled = true;
-
-        div.appendChild(acceptPlaceholder);   
-        div.appendChild(declineBtn);
-        requestsTab.appendChild(div);
+    const container = document.getElementById('searchResults');
+    container.innerHTML='';
+    filtered.forEach(user=>{
+        container.appendChild(renderUserCard(user));
     });
 }
 
-
-// ---------- FRIENDS & CHAT CORE IMPLEMENTATION ----------
-
-async function loadFriends() {
-    friendsTab.innerHTML = "<h3>My Duos</h3>";
-    const friendUids = currentProfileData.friends || [];
-    
-    if (friendUids.length === 0) {
-        friendsTab.innerHTML += "<p>You have no Duos. Send a request to find a partner!</p>";
-        return;
-    }
-
-    const friendDocs = await Promise.all(friendUids.map(uid => db.collection('users').doc(uid).get()));
-    
-    friendUsers = {}; 
-    friendDocs.forEach(doc => {
-        if (doc.exists) {
-            const data = doc.data();
-            friendUsers[doc.id] = data; 
-            const card = renderUserCard({ id: doc.id }, data);
-            friendsTab.appendChild(card);
-        }
-    });
-    
-    initMessaging(); 
+// --- PROFILE ---
+async function loadProfile() {
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    if(!doc.exists) return;
+    const data = doc.data();
+    document.getElementById('profileAvatar').src = data.avatar || 'https://via.placeholder.com/80';
+    document.getElementById('profileNickname').value = data.nickname || currentUser.uid;
+    document.getElementById('profileBio').value = data.bio || '';
+    document.getElementById('profileSkillRating').value = data.skillRating || 1;
+    document.getElementById('profileStatus').value = data.status || 'Online';
+    document.getElementById('usernameDisplay').innerText = data.username ? `@${data.username}` : 'Not Set';
 }
 
-function initMessaging() {
-    const friendUids = currentProfileData.friends || [];
-    const activeDuoList = document.getElementById('activeDuoList');
-    activeDuoList.innerHTML = "";
-
-    if(unsubscribeMessages) {
-        unsubscribeMessages();
-        unsubscribeMessages = null;
-    }
-    currentChatUid = null;
-    document.getElementById('chatHeader').textContent = "Select a Duo";
-    document.getElementById('messageDisplay').innerHTML = "";
-    document.getElementById('messageInputArea').classList.add("hidden");
-
-
-    if (friendUids.length === 0) {
-        activeDuoList.innerHTML = "<p>Add Duos to start chatting.</p>";
-        return;
-    }
-    
-    friendUids.forEach(uid => {
-        const friendData = friendUsers[uid];
-        const display = friendData.username ? `@${friendData.username}` : (friendData.nickname || 'Unknown');
-        
-        const btn = document.createElement('button');
-        btn.className = 'neon-btn chat-item-btn';
-        btn.textContent = display;
-        
-        btn.onclick = () => {
-            document.querySelectorAll('.chat-item-btn').forEach(b => b.style.borderColor = 'cyan');
-            btn.style.borderColor = 'magenta';
-            openChat(uid, display);
-        };
-        
-        btn.setAttribute('data-uid', uid); 
-        activeDuoList.appendChild(btn);
-    });
-
-    document.getElementById('sendMessageBtn').onclick = sendMessage;
-    document.getElementById('messageInput').onkeydown = (e) => {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    };
-}
-
-
-function openChat(friendUid, friendDisplay) {
-    if (unsubscribeMessages) unsubscribeMessages(); 
-
-    currentChatUid = friendUid;
-    const chatId = getChatId(currentUser.uid, friendUid);
-    const messageDisplay = document.getElementById('messageDisplay');
-    
-    document.getElementById('chatHeader').textContent = `Chatting with ${friendDisplay}`;
-    document.getElementById('messageInputArea').classList.remove("hidden");
-    messageDisplay.innerHTML = 'Establishing secure connection...'; 
-
-    // Collection: /chats/{chatId}/messages
-    // Fields used: senderId, timestamp, text (from your schema)
-    const messagesRef = db.collection("chats").doc(chatId).collection("messages");
-
-    unsubscribeMessages = messagesRef.orderBy("timestamp", "asc").onSnapshot(snapshot => {
-        
-        if (messageDisplay.innerHTML.includes('secure connection...')) {
-             messageDisplay.innerHTML = '';
-        }
-
-        snapshot.docChanges().forEach(change => {
-            if (change.type === "added") {
-                const messageData = change.doc.data();
-                renderMessage(messageData);
-            }
-        });
-        
-        messageDisplay.scrollTop = messageDisplay.scrollHeight;
-        
-        // This should probably be handled by a Cloud Function for efficiency/security,
-        // but for client-side functionality, we clear the unread count here.
-        db.collection("users").doc(currentUser.uid).update({
-            unreadMessages: 0
-        }).catch(e => console.warn("Failed to reset unread count:", e));
-
-    }, error => {
-        console.error("Error setting up chat listener:", error);
-        messageDisplay.innerHTML = `<p style="color:red;">Error loading chat: ${error.message}</p>`;
-    });
-}
-
-function renderMessage(messageData) {
-    const messageDisplay = document.getElementById('messageDisplay');
-    const isMine = messageData.senderId === currentUser.uid;
-    
-    const wrapper = document.createElement('div');
-    wrapper.className = `message-wrapper ${isMine ? 'message-mine' : 'message-other'}`;
-
-    const bubble = document.createElement('div');
-    bubble.className = 'message-bubble';
-    bubble.textContent = messageData.text;
-
-    wrapper.appendChild(bubble);
-    messageDisplay.appendChild(wrapper);
-}
-
-
-async function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const text = input.value.trim();
-
-    if (!text || !currentChatUid) return;
-    
-    const chatId = getChatId(currentUser.uid, currentChatUid);
-    const receiverId = currentChatUid;
-
-    const messagesRef = db.collection("chats").doc(chatId).collection("messages");
-
-    const message = {
-        senderId: currentUser.uid,
-        receiverId: receiverId, // Required by security rules
-        text: text,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp() // Timestamp from your schema
-    };
-
-    try {
-        const batch = db.batch();
-        
-        batch.set(messagesRef.doc(), message);
-        
-        // Increment unread count on receiver's profile
-        const receiverRef = db.collection("users").doc(receiverId);
-        batch.update(receiverRef, {
-            unreadMessages: firebase.firestore.FieldValue.increment(1)
-        });
-
-        await batch.commit();
-
-        input.value = ''; 
-        
-    } catch (e) {
-        console.error("Failed to send message:", e);
-        // The security rule will trigger an error if the user is blocked!
-        if (e.message.includes('permission')) {
-             alert("Message failed: You may have been blocked by this user.");
-        } else {
-             alert("Error sending message. Check console for details.");
-        }
-    }
-}
-
-function monitorUnreadMessages() {
-    if (unsubscribeUnread) unsubscribeUnread();
-    
-    const userRef = db.collection("users").doc(currentUser.uid);
-    const unreadBadge = document.getElementById('unreadBadge');
-
-    unsubscribeUnread = userRef.onSnapshot(doc => {
-        if (doc.exists) {
-            const data = doc.data();
-            const unreadCount = data.unreadMessages || 0;
-            
-            currentProfileData = data; 
-
-            if (unreadCount > 0) {
-                unreadBadge.textContent = unreadCount;
-                unreadBadge.classList.remove("hidden");
-            } else {
-                unreadBadge.textContent = "0";
-                unreadBadge.classList.add("hidden");
-            }
-        }
-    }, error => {
-        console.error("Error monitoring unread messages:", error);
-    });
-}
-
-
-// ---------- PROFILE VIEWING FUNCTIONS ----------
-
-async function viewUserProfile(targetUid) {
-    if (!currentUser || targetUid === currentUser.uid) {
-        showTab('profile'); 
-        return;
-    }
-
-    const viewProfileContent = document.getElementById('viewProfileContent');
-    viewProfileContent.innerHTML = `<p style="color:yellow;">Loading profile data...</p>`;
-    showTab('viewProfile'); 
-
-    try {
-        const userDoc = await db.collection("users").doc(targetUid).get();
-
-        if (!userDoc.exists) {
-            viewProfileContent.innerHTML = `<p style="color:red;">Error: User profile not found.</p>`;
-            return;
-        }
-
-        const data = userDoc.data();
-        const isFriend = currentProfileData.friends && currentProfileData.friends.includes(targetUid);
-        const isBlocked = blockedUsers[targetUid] !== undefined; // Check if the target is in the blockedUsers list
-        
-        let actionButtonHTML = '';
-        
-        if (isBlocked) {
-            actionButtonHTML += `<p style="color:orange; font-weight:bold;">🚫 You have blocked this user.</p>`;
-            actionButtonHTML += `<button class="neon-btn" onclick="unblockUser('${targetUid}')">Unblock User</button>`;
-        } else if (isFriend) {
-            actionButtonHTML += `<p style="color:#00ff00; font-weight:bold;">✅ Duo Partner</p>`;
-            actionButtonHTML += `<button class="neon-btn" style="border-color:magenta; box-shadow:0 0 10px magenta;" onclick="showChatFromProfile('${targetUid}')">Message Duo</button>`;
-            actionButtonHTML += `<button class="neon-btn remove" onclick="removeFriend('${targetUid}')">Remove Duo</button>`;
-            actionButtonHTML += `<button class="neon-btn remove" onclick="blockUser('${targetUid}')">Block User</button>`; // Can block friends too
-            
-        } else if (pendingRequests[targetUid]) {
-            actionButtonHTML = `<p style="color:yellow;">❗ Incoming Request. Go to 'Requests' tab to accept/decline.</p>`;
-            actionButtonHTML += `<button class="neon-btn remove" onclick="blockUser('${targetUid}')">Block User</button>`;
-        } else if (sentRequests[targetUid]) {
-            actionButtonHTML = `<p style="color:orange;">⏳ Request Sent.</p>`;
-            actionButtonHTML += `<button class="neon-btn remove" onclick="blockUser('${targetUid}')">Block User</button>`;
-        } else {
-            actionButtonHTML = `<button class="neon-btn" onclick="sendFriendRequest('${targetUid}')">Send Duo Request</button>`;
-            actionButtonHTML += `<button class="neon-btn remove" onclick="blockUser('${targetUid}')">Block User</button>`;
-        }
-        
-        // ... (Gamer Card HTML logic remains the same) ...
-        const gamerCards = data.gamerCards || [];
-        const gamerCardHTML = gamerCards.map((url, index) => `
-            <div class="gamer-card" style="cursor:zoom-in;" onclick="window.open('${url}', '_blank')">
-                <img src="${url}" alt="Gamer Card ${index + 1}">
-            </div>
-        `).join('');
-
-        viewProfileContent.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 30px;">
-                <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar" style="width: 120px; height: 120px; border-color: magenta; margin-bottom: 15px;">
-                <h2 style="color:cyan; margin: 0;">${data.nickname || 'Unknown Player'}</h2>
-                <h3 id="usernameDisplay" style="color:yellow; margin: 5px 0 15px 0;">@${data.username || 'N/A'}</h3>
-                
-                <div style="margin-bottom: 20px;">
-                    <span class="skill-rating" style="font-size: 1.5em;">${'⭐'.repeat(data.skillRating || 0)}</span>
-                    <span class="status-indicator status-${(data.status || 'Offline').replace(/\s/g, "").toLowerCase()}">${data.status || 'Offline'}</span>
-                </div>
-                
-                <p style="border: 1px dashed #555; padding: 10px; border-radius: 6px; width: 100%; max-width: 500px; font-style: italic;">
-                    ${data.bio || 'No public bio set.'}
-                </p>
-
-                <div style="margin-top: 20px;">
-                    ${actionButtonHTML}
-                </div>
-            </div>
-
-            <h3 style="color:magenta; border-bottom: 1px solid magenta; padding-bottom: 5px; margin-top: 30px;">Gamer Cards (${gamerCards.length})</h3>
-            <div class="gamer-card-container" style="border: none; padding: 0;">
-                ${gamerCardHTML || '<p>This user has no Gamer Cards to display.</p>'}
-            </div>
-        `;
-
-    } catch (e) {
-        viewProfileContent.innerHTML = `<p style="color:red;">Failed to load profile: ${e.message}</p>`;
-        console.error("View Profile Error:", e);
-    }
-}
-
-function showChatFromProfile(targetUid) {
-    const friendData = friendUsers[targetUid];
-    if (friendData) {
-        const chatBtn = document.querySelector(`#activeDuoList button[data-uid="${targetUid}"]`);
-        if (chatBtn) {
-            document.querySelectorAll('.chat-item-btn').forEach(b => b.style.borderColor = 'cyan');
-            chatBtn.style.borderColor = 'magenta';
-            openChat(targetUid, friendData.username ? `@${friendData.username}` : (friendData.nickname || 'Unknown'));
-            showTab('messaging');
-        } else {
-            alert("Could not find this friend in your active chat list. Please check the Duos tab.");
-        }
-    } else {
-         alert("Cannot start chat: User is not recognized as a current Duo Partner.");
-    }
-}
-
-
-// ---------- PROFILE EDITING FUNCTIONS (Unchanged) ----------
-
-function previewAvatar(input) {
-    const preview = document.getElementById('profileAvatar');
-    if (input.files && input.files[0]) {
+function previewAvatar(input){
+    if(input.files && input.files[0]){
         const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-        };
+        reader.onload = e => document.getElementById('profileAvatar').src = e.target.result;
         reader.readAsDataURL(input.files[0]);
-    } else {
-        preview.src = currentProfileData.profileImageUrl || DEFAULT_AVATAR; 
     }
 }
 
-async function uploadAvatar(file) {
-    if (!file) return currentProfileData.profileImageUrl; 
-    
-    const storageRef = storage.ref();
-    const avatarRef = storageRef.child(`avatars/${currentUser.uid}/${file.name}`);
-    
-    try {
-        const snapshot = await avatarRef.put(file);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        return downloadURL;
-    } catch (e) {
-        console.error("Avatar upload failed:", e);
-        alert("Failed to upload avatar: " + e.message);
-        return currentProfileData.profileImageUrl; 
-    }
-}
-
-async function saveProfile() {
-    const saveMessage = document.getElementById('saveMessage');
-    saveMessage.textContent = "Saving...";
-
-    const bio = document.getElementById('profileBio').value;
-    const skillRating = parseInt(document.getElementById('profileSkillRating').value, 10);
-    const status = document.getElementById('profileStatus').value;
-    const avatarFile = document.getElementById('avatarUpload').files[0];
-    
-    let newImageUrl = currentProfileData.profileImageUrl;
-
-    if (avatarFile) {
-        newImageUrl = await uploadAvatar(avatarFile);
-    }
-    
-    const userRef = db.collection("users").doc(currentUser.uid);
-
-    try {
-        await userRef.update({
-            bio: bio,
-            skillRating: skillRating,
-            status: status,
-            profileImageUrl: newImageUrl, 
-        });
-
-        document.getElementById('avatarUpload').value = ''; 
-        
-        await loadUserProfile(); 
-        saveMessage.textContent = "Profile saved successfully!";
-        
-        loadAllUsers();
-        loadFriends();
-        
-        setTimeout(() => saveMessage.textContent = "", 3000);
-
-    } catch (e) {
-        saveMessage.textContent = `Error saving profile: ${e.message}`;
-        console.error("Profile Save Error:", e);
-    }
-}
-
-
-// ---------- UNIQUE USERNAME LOGIC (Unchanged) ----------
-
-function isValidUsername(username) {
-    if (!username || username.length < 3 || username.length > 20) {
-        return { valid: false, message: "Username must be between 3 and 20 characters." };
-    }
-    if (!/^[a-z0-9]+$/.test(username)) {
-        return { valid: false, message: "Username can only contain lowercase letters (a-z) and numbers (0-9)." };
-    }
-    return { valid: true, message: "" };
-}
-
+// --- CHANGE USERNAME ---
 async function attemptUsernameChange() {
-    const input = document.getElementById("newUsernameInput");
-    const newUsername = input.value.toLowerCase().trim();
-    const messageElement = document.getElementById("usernameMessage");
-    const changeBtn = document.getElementById("changeUsernameBtn");
-
-    const validation = isValidUsername(newUsername);
-    if (!validation.valid) {
-        messageElement.textContent = validation.message;
-        messageElement.style.color = 'red';
+    const newUsername = document.getElementById('newUsernameInput').value.toLowerCase().trim();
+    if(!/^[a-z0-9]{3,20}$/.test(newUsername)){
+        document.getElementById('usernameMessage').innerText = 'Invalid format.';
         return;
     }
-
-    if (currentProfileData.usernameChanged === true) {
-        messageElement.textContent = "Your unique username can only be changed once.";
-        messageElement.style.color = 'red';
-        return;
-    }
-
-    if (newUsername === currentProfileData.username) {
-        messageElement.textContent = "This is your current username.";
-        messageElement.style.color = 'yellow';
-        return;
-    }
-
-    messageElement.textContent = "Checking availability and updating...";
-    messageElement.style.color = 'yellow';
-    changeBtn.disabled = true;
-
-    const oldUsername = currentProfileData.username;
-    
-    try {
-        await db.runTransaction(async t => {
-            const usernameDocRef = db.collection("usernames").doc(newUsername);
-            const usernameDoc = await t.get(usernameDocRef);
-
-            if (usernameDoc.exists) {
-                if (usernameDoc.data().uid !== currentUser.uid) {
-                    throw new Error(`Username @${newUsername} is already taken.`);
-                }
-            }
-
-            if (oldUsername && oldUsername.length > 0) { 
-                const oldUsernameDocRef = db.collection("usernames").doc(oldUsername);
-                const oldUsernameIndexDoc = await t.get(oldUsernameDocRef);
-                
-                if (oldUsernameIndexDoc.exists && oldUsernameIndexDoc.data().uid === currentUser.uid) {
-                    t.delete(oldUsernameDocRef);
-                }
-            }
-
-            t.set(usernameDocRef, {
-                uid: currentUser.uid,
-                username: newUsername
-            });
-
-            const userRef = db.collection("users").doc(currentUser.uid);
-            t.update(userRef, {
-                username: newUsername,
-                usernameChanged: true 
-            });
-        });
-
-        messageElement.textContent = `Success! Your new username is @${newUsername}. You can no longer change it.`;
-        messageElement.style.color = '#00ff00';
-        input.value = '';
-        
-        await loadUserProfile();
-
-    } catch (e) {
-        const errorMsg = e.message.includes("Username @") 
-                         ? e.message 
-                         : "A database error occurred during the update. Check console for details.";
-        messageElement.textContent = errorMsg;
-        messageElement.style.color = 'red';
-        console.error("Username Change Transaction Error:", e);
-    } finally {
-        changeBtn.disabled = false;
-    }
+    const snap = await db.collection('users').where('username','==',newUsername).get();
+    if(!snap.empty){ document.getElementById('usernameMessage').innerText='Username taken.'; return; }
+    await db.collection('users').doc(currentUser.uid).update({username:newUsername});
+    document.getElementById('usernameDisplay').innerText = `@${newUsername}`;
+    document.getElementById('usernameMessage').innerText='Username updated!';
 }
 
-
-// ---------- GAMER CARD FUNCTIONS (Unchanged) ----------
-
-function renderGamerCards() {
-    const list = document.getElementById('gamerCardList');
-    list.innerHTML = '';
-    const gamerCards = currentProfileData.gamerCards || [];
-    const maxCards = 8;
-
-    gamerCards.forEach((cardUrl, index) => {
-        const card = document.createElement('div');
-        card.className = 'gamer-card';
-        card.innerHTML = `<img src="${cardUrl}" alt="Gamer Card ${index + 1}">
-                          <button class="neon-btn remove" style="position: absolute; bottom: 5px; right: 5px; padding: 5px 8px; font-size: 0.7em;" 
-                                  onclick="event.stopPropagation(); removeGamerCard('${cardUrl}')">X</button>`;
-        list.appendChild(card);
-    });
-
-    if (gamerCards.length < maxCards) {
-        const slot = document.createElement('div');
-        slot.className = 'gamer-card-slot';
-        slot.innerHTML = '<span>+</span>';
-        
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = 'image/*';
-        fileInput.style.display = 'none';
-        // Pass the file input reference to the handler function
-        fileInput.onchange = (e) => handleCardUpload(e.target.files[0]);
-
-        slot.onclick = () => fileInput.click();
-        
-        list.appendChild(slot);
-        list.appendChild(fileInput); 
-    }
-}
-
-async function handleCardUpload(file) {
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) { 
-        return alert("Image file size must be less than 2MB.");
-    }
-    
-    if (!confirm(`Are you sure you want to upload this ${file.name} as a new Gamer Card?`)) {
-        return;
-    }
-
-    const saveMessage = document.getElementById('saveMessage');
-    saveMessage.textContent = "Uploading Gamer Card...";
-
-    const storageRef = storage.ref();
-    // Use a unique name to prevent collisions
-    const fileName = `${new Date().getTime()}_${file.name}`;
-    // Create a path specific to the user
-    const cardRef = storageRef.child(`gamer_cards/${currentUser.uid}/${fileName}`);
-
-    try {
-        // 1. Upload the image to Firebase Storage
-        const snapshot = await cardRef.put(file);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        
-        // 2. Save the URL to the user's Firestore document
-        const userRef = db.collection("users").doc(currentUser.uid);
-        await userRef.update({
-            // Use arrayUnion to add the URL to the array atomically
-            gamerCards: firebase.firestore.FieldValue.arrayUnion(downloadURL)
-        });
-
-        saveMessage.textContent = "Gamer Card uploaded and added successfully!";
-        await loadUserProfile(); // Re-render the profile and cards
-        setTimeout(() => saveMessage.textContent = "", 3000);
-
-    } catch (e) {
-        saveMessage.textContent = `Error uploading card: ${e.message}`;
-        console.error("Gamer Card Upload Error:", e);
-    }
-}
-
-async function removeGamerCard(cardUrl) {
-    if (!confirm("Are you sure you want to remove this Gamer Card?")) {
-        return;
-    }
-    
-    const saveMessage = document.getElementById('saveMessage');
-    saveMessage.textContent = "Removing Gamer Card...";
-
-    const userRef = db.collection("users").doc(currentUser.uid);
-    
-    try {
-        // Use arrayRemove to delete the URL from the array atomically
-        await userRef.update({
-            gamerCards: firebase.firestore.FieldValue.arrayRemove(cardUrl)
-        });
-        
-        saveMessage.textContent = "Gamer Card removed successfully!";
-        await loadUserProfile(); 
-        setTimeout(() => saveMessage.textContent = "", 3000);
-
-    } catch (e) {
-        saveMessage.textContent = `Error removing card: ${e.message}`;
-        console.error("Gamer Card Removal Error:", e);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialization handled by auth.onAuthStateChanged
-});
 </script>
+
 </body>
 </html>
