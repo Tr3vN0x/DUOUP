@@ -10,7 +10,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 <style>
-/* --- BASE STYLES --- */
+/* --- BASE STYLES (Kept for continuity) --- */
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
 .container { width:90%; max-width:1000px; margin:auto; padding:20px; }
 .hidden { display:none !important; }
@@ -54,7 +54,6 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .gamer-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gamer-card-slot { width: 150px; height: 150px; border: 2px dashed magenta; border-radius: 8px; display: flex; justify-content: center; align-items: center; position: relative; cursor: pointer; background: #0d0d0d; }
 .gamer-card-slot span { font-size: 3em; color: magenta; }
-/* New Username-specific styles */
 #usernameDisplay { font-size: 1.5em; font-weight: bold; color: yellow; text-shadow: 0 0 5px orange; margin-bottom: 15px; }
 #usernameEditor { display: flex; gap: 10px; align-items: center; }
 
@@ -213,6 +212,7 @@ let currentProfileData = {};
 let pendingRequests = {}; 
 let sentRequests = {};    
 let allUsersCache = [];   
+let friendUsers = {}; // Cache for friend data for chat list
 
 function getChatId(a,b){ return [a,b].sort().join('_'); }
 
@@ -264,6 +264,7 @@ async function loadRelationshipStatus() {
     pendingRequests = {};
     sentRequests = {};
 
+    // Incoming requests (where I am the receiver)
     const incomingSnap = await db.collection("friendRequests")
         .where("receiverId", "==", currentUser.uid)
         .get();
@@ -271,6 +272,7 @@ async function loadRelationshipStatus() {
         pendingRequests[doc.data().senderId] = doc.id;
     });
 
+    // Outgoing requests (where I am the sender)
     const outgoingSnap = await db.collection("friendRequests")
         .where("senderId", "==", currentUser.uid)
         .get();
@@ -295,7 +297,7 @@ async function loadUserProfile() {
     profileSkillRating.value = currentProfileData.skillRating || "1";
     profileStatus.value = currentProfileData.status || "Online";
 
-    document.getElementById("usernameDisplay").textContent = `@${currentProfileData.username}`;
+    document.getElementById("usernameDisplay").textContent = `@${currentProfileData.username || 'n/a'}`;
     
     const changeBtn = document.getElementById("changeUsernameBtn");
     const input = document.getElementById("newUsernameInput");
@@ -315,10 +317,12 @@ async function loadUserProfile() {
 
 // ---------- TABS ----------
 function showTab(tab){
+    // Hide all tabs
     allUsersTab.classList.add("hidden"); searchTab.classList.add("hidden"); requestsTab.classList.add("hidden");
     friendsTab.classList.add("hidden"); messagingTab.classList.add("hidden"); profileTab.classList.add("hidden");
     viewProfileTab.classList.add("hidden");
     
+    // Show the requested tab and load data
     switch(tab){
       case "allUsers": allUsersTab.classList.remove("hidden"); loadAllUsers(); break; 
       case "search": searchTab.classList.remove("hidden"); filterSearchResults(); break; 
@@ -329,7 +333,161 @@ function showTab(tab){
     }
 }
 
-// ---------- FRIEND REQUESTS (Updated to include security rule logic) ----------
+// ---------- CORE USER CARD RENDERING (FIXED TO PREVENT CRASHES) ----------
+
+function renderUserCard(d, data) {
+    // Provide safe defaults for potentially missing fields to prevent rendering crash
+    const nickname = data.nickname || "Unknown Player";
+    const username = data.username ? `@${data.username}` : nickname;
+    const profileImageUrl = data.profileImageUrl || DEFAULT_AVATAR;
+    const skillRating = data.skillRating || 0; // Default to 0 stars
+    const status = data.status || "Offline";
+    const statusClass = status.replace(/\s/g, "").toLowerCase(); // Removes spaces (e.g., 'In Game' -> 'ingame')
+    
+    const card = document.createElement("div");
+    card.className = "card";
+    card.onclick = () => viewUserProfile(d.id, data);
+    
+    card.innerHTML = `<div class="card-content">
+        <img src="${profileImageUrl}" class="avatar">
+        <strong>${username}</strong> ${d.id === OWNER_UID ? '<span class="owner-badge-box">OWNER</span>' : ''}
+        <span class="skill-rating">${'⭐'.repeat(skillRating)}</span>
+        <span class="status-indicator status-${statusClass}">${status}</span>
+    </div>`;
+
+    let actionBtn = null;
+    let statusText = null;
+
+    // --- Relationship Logic ---
+
+    if (currentProfileData.friends && currentProfileData.friends.includes(d.id)) {
+        // Status 1: Already Friends
+        statusText = document.createElement("p");
+        statusText.style.color = 'lime';
+        statusText.textContent = "✅ Duo Partner";
+        
+        // Add Remove Friend Button
+        const removeBtn = document.createElement("button");
+        removeBtn.className = "neon-btn remove";
+        removeBtn.textContent = "Remove Duo";
+        removeBtn.onclick = (e) => { e.stopPropagation(); removeFriend(d.id); };
+        card.appendChild(removeBtn);
+
+    } else if (pendingRequests[d.id]) {
+        // Status 2: User has sent me a request (Accept/Decline needed)
+        statusText = document.createElement("p");
+        statusText.style.color = 'yellow';
+        statusText.textContent = "❗ Incoming Request";
+        
+        const acceptBtn = document.createElement("button");
+        acceptBtn.className = "neon-btn";
+        acceptBtn.textContent = "Accept";
+        acceptBtn.onclick = (e) => { e.stopPropagation(); acceptFriend(pendingRequests[d.id]); };
+        
+        const declineBtn = document.createElement("button");
+        declineBtn.className = "neon-btn remove";
+        declineBtn.textContent = "Decline";
+        declineBtn.onclick = (e) => { e.stopPropagation(); declineFriend(pendingRequests[d.id]); };
+        
+        card.appendChild(acceptBtn);
+        card.appendChild(declineBtn);
+        
+    } else if (sentRequests[d.id]) {
+        // Status 3: I have sent a request to the user (Pending)
+        statusText = document.createElement("p");
+        statusText.style.color = 'orange';
+        statusText.textContent = "⏳ Request Sent";
+        
+    } else {
+        // Status 4: No relationship (Send Request)
+        actionBtn = document.createElement("button");
+        actionBtn.className = "neon-btn";
+        actionBtn.textContent = "Send Duo Request";
+        actionBtn.onclick = (e) => { e.stopPropagation(); sendFriendRequest(d.id); };
+    }
+    
+    if (actionBtn) card.appendChild(actionBtn);
+    if (statusText) card.appendChild(statusText);
+
+    return card;
+}
+
+
+// ---------- USER & SEARCH FUNCTIONS (FIXED) ----------
+
+async function loadAllUsers(){
+    allUsersTab.innerHTML = "<h3>Suggested Players</h3>";
+    
+    if (allUsersCache.length === 0) {
+        try {
+            const querySnap=await db.collection("users").get();
+            allUsersCache = querySnap.docs.map(d => ({
+                id: d.id,
+                data: d.data()
+            }));
+        } catch(e) {
+            console.error("Error loading all users:", e);
+            allUsersTab.innerHTML += `<p style="color:red;">Error loading players: ${e.message}. Check console for details.</p>`;
+            return;
+        }
+    }
+
+    if (allUsersCache.length === 0) {
+         allUsersTab.innerHTML += "<p>No other players found in the database.</p>";
+         return;
+    }
+
+    allUsersCache.forEach(({id, data})=>{
+      if(id === currentUser.uid) return;
+      
+      const card = renderUserCard({id}, data); 
+      allUsersTab.appendChild(card);
+    });
+}
+
+function filterSearchResults() {
+    const searchResults = document.getElementById('searchResults');
+    searchResults.innerHTML = "";
+    
+    const searchTerm = searchInput.value.toLowerCase();
+    const statusFilter = statusFilter.value;
+    const skillFilter = parseInt(skillFilter.value, 10);
+
+    const filtered = allUsersCache.filter(({id, data}) => {
+        if (id === currentUser.uid) return false;
+
+        // Search by Nickname or Bio
+        const bio = (data.bio || '').toLowerCase();
+        const nickname = (data.nickname || '').toLowerCase();
+        if (searchTerm && !(nickname.includes(searchTerm) || bio.includes(searchTerm))) {
+            return false;
+        }
+
+        // Filter by Status
+        if (statusFilter && data.status !== statusFilter) {
+            return false;
+        }
+
+        // Filter by Skill
+        if (skillFilter > 0 && (data.skillRating || 0) < skillFilter) {
+            return false;
+        }
+
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        searchResults.innerHTML = "<p>No players match your search criteria.</p>";
+    } else {
+        filtered.forEach(({id, data}) => {
+            const card = renderUserCard({id}, data);
+            searchResults.appendChild(card);
+        });
+    }
+}
+
+// ---------- FRIEND REQUESTS ----------
+
 async function sendFriendRequest(toUid){
     if(!currentUser || toUid===currentUser.uid) return alert("Cannot send a request to yourself.");
     
@@ -337,39 +495,26 @@ async function sendFriendRequest(toUid){
         return alert("You are already friends with this user.");
     }
     
-    // Check if request already exists in either direction
-    const reqId = [currentUser.uid, toUid].sort().join('_');
+    // Create a deterministic request ID for easy lookup and uniqueness
+    const reqId = getChatId(currentUser.uid, toUid);
     const reqRef = db.collection("friendRequests").doc(reqId);
-    const reqSnap = await reqRef.get();
-    
-    if(reqSnap.exists) {
-        const data = reqSnap.data();
-        if(data.senderId === currentUser.uid) {
-            return alert("Request already sent and is pending.");
-        } else {
-            return alert("This user has already sent YOU a request. Check the Requests tab.");
-        }
-    }
     
     try {
         await reqRef.set({
             senderId: currentUser.uid,        
-            receiverId: toUid,                // <--- CRITICAL FIELD 1
-            status: "pending",                // <--- CRITICAL FIELD 2
+            receiverId: toUid,                
+            status: "pending",                
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         alert("Friend request sent!");
         
+        // Re-load data to update button states immediately
         await loadRelationshipStatus(); 
-        if (!allUsersTab.classList.contains("hidden")) {
-            loadAllUsers(); 
-        }
-        if (!searchTab.classList.contains("hidden")) {
-            filterSearchResults(); 
-        }
+        loadAllUsers(); 
+        filterSearchResults();
         
     } catch(e) {
-        // If this fails, the console error will show PERMISSION_DENIED
+        // This is where you would see the PERMISSION_DENIED error if the rules are wrong
         alert("Error sending request: " + e.message);
         console.error("Friend Request Send Error:", e);
     }
@@ -448,11 +593,8 @@ async function removeFriend(friendUid) {
                 friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
             });
             
-            // 3. Delete the chat document 
-            // NOTE: Security rules deny direct chat modification, 
-            // but this is allowed in a transaction for clean-up.
+            // 3. Delete the chat document (Rule allows this in a transaction)
             t.delete(chatRef);    
-
         });
         alert(`Successfully removed Duo.`);
     } catch (e) {
@@ -517,19 +659,170 @@ async function loadFriendRequests(){
     });
 }
 
-// ... (Functions like loadFriends, renderUserCard, loadAllUsers, filterSearchResults, initMessaging, openChat, sendMessage, etc., would continue here, using the structure defined in previous steps.)
-// For brevity, I'll include just the necessary placeholders to avoid errors:
 
-function loadFriends(){ /* implementation based on previous steps */ }
-function renderUserCard(d, data){ /* implementation based on previous steps */ }
-async function loadAllUsers(){ /* implementation based on previous steps */ }
-async function filterSearchResults(){ /* implementation based on previous steps */ }
-function initMessaging(){ /* implementation based on previous steps */ }
-function openChat(uid, nickname){ /* implementation based on previous steps */ }
-function sendMessage(){ /* implementation based on previous steps */ }
-function attemptUsernameChange(){ /* implementation based on previous steps */ }
-function saveProfile(){ /* implementation based on previous steps */ }
-function viewUserProfile(uid, data){ /* implementation based on previous steps */ }
+// ---------- FRIENDS & CHAT ----------
+
+async function loadFriends() {
+    friendsTab.innerHTML = "<h3>My Duos</h3>";
+    const friendUids = currentProfileData.friends || [];
+    
+    if (friendUids.length === 0) {
+        friendsTab.innerHTML += "<p>You have no Duos. Find a partner!</p>";
+        return;
+    }
+
+    // Fetch friend data concurrently
+    const friendDocs = await Promise.all(friendUids.map(uid => db.collection('users').doc(uid).get()));
+    
+    friendDocs.forEach(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            friendUsers[doc.id] = data; // Cache for messaging
+            const card = renderUserCard({ id: doc.id }, data);
+            friendsTab.appendChild(card);
+        }
+    });
+    
+    // Re-render chat list to use the updated friendUsers cache
+    initMessaging(); 
+}
+
+function initMessaging() {
+    const friendUids = currentProfileData.friends || [];
+    const activeDuoList = document.getElementById('activeDuoList');
+    activeDuoList.innerHTML = "";
+
+    if (unsubscribeChatList) unsubscribeChatList();
+    
+    if (friendUids.length === 0) {
+        activeDuoList.innerHTML = "<p>Add Duos to start chatting.</p>";
+        return;
+    }
+    
+    // Create list items for each friend
+    friendUids.forEach(uid => {
+        const friendData = friendUsers[uid];
+        const display = friendData.username ? `@${friendData.username}` : (friendData.nickname || 'Unknown');
+        
+        const btn = document.createElement('button');
+        btn.className = 'neon-btn chat-item-btn';
+        btn.textContent = display;
+        btn.onclick = () => openChat(uid, display);
+        btn.setAttribute('data-uid', uid); 
+        activeDuoList.appendChild(btn);
+    });
+    
+    // Set up real-time listener for unread messages on the current user's document
+    const userRef = db.collection("users").doc(currentUser.uid);
+    unsubscribeChatList = userRef.onSnapshot(doc => {
+        if (doc.exists) {
+            currentProfileData = doc.data();
+            const unread = currentProfileData.unreadMessages || 0;
+            const badge = document.getElementById('unreadBadge');
+            
+            if (unread > 0) {
+                badge.textContent = unread;
+                badge.classList.remove('hidden');
+                document.title = `(${unread}) DUO UP`;
+            } else {
+                badge.classList.add('hidden');
+                document.title = `DUO UP`;
+            }
+        }
+    }, error => console.error("Unread message listener error:", error));
+}
+
+
+function openChat(uid, nickname) {
+    if (unsubscribeMessages) unsubscribeMessages(); 
+    currentChatUid = uid;
+    
+    document.getElementById('chatHeader').textContent = `Chatting with ${nickname}`;
+    document.getElementById('messageInputArea').classList.remove('hidden');
+    document.getElementById('messageDisplay').innerHTML = "";
+
+    // Clear unread count on chat open for this user (client-side only for now)
+    // NOTE: In a full app, you would need a transaction to reset the unreadMessages count 
+    // on the 'users' document, which is an advanced feature.
+    
+    const chatId = getChatId(currentUser.uid, uid);
+    const messagesRef = db.collection('chats').doc(chatId).collection('messages').orderBy('createdAt');
+
+    // Listener for real-time messages
+    unsubscribeMessages = messagesRef.onSnapshot(snapshot => {
+        const display = document.getElementById('messageDisplay');
+        display.innerHTML = ''; 
+        
+        snapshot.docs.forEach(doc => {
+            const data = doc.data();
+            const isMine = data.senderId === currentUser.uid;
+            
+            const wrapper = document.createElement('div');
+            wrapper.className = `message-wrapper ${isMine ? 'message-mine' : 'message-other'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = data.text;
+            
+            wrapper.appendChild(bubble);
+            display.appendChild(wrapper);
+        });
+        
+        // Auto-scroll to the bottom
+        display.scrollTop = display.scrollHeight;
+        
+    }, error => console.error("Message listener error:", error));
+    
+    // Attach send message handler once
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+    sendMessageBtn.onclick = sendMessage;
+    document.getElementById('messageInput').onkeypress = (e) => {
+        if (e.key === 'Enter') sendMessage();
+    };
+}
+
+
+async function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+    if (!text || !currentChatUid) return;
+
+    const chatId = getChatId(currentUser.uid, currentChatUid);
+    const messagesRef = db.collection('chats').doc(chatId).collection('messages');
+    
+    try {
+        await messagesRef.add({
+            senderId: currentUser.uid, // <-- Critical field checked by security rule
+            text: text,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        input.value = ''; // Clear input
+        
+    } catch(e) {
+        alert("Error sending message: " + e.message);
+        console.error("Message Send Error:", e);
+    }
+}
+
+// ---------- PROFILE FUNCTIONS (Placeholders) ----------
+function attemptUsernameChange() {
+    alert("Username change logic disabled for this step, but your rules are ready for it!");
+}
+function saveProfile() {
+    alert("Profile save logic disabled for this step.");
+}
+function viewUserProfile(uid, data) {
+    alert(`Viewing profile for UID: ${uid}. Logic for viewing full profile is a next step.`);
+}
+
+
+// Ensure the messaging functions are connected
+document.addEventListener('DOMContentLoaded', () => {
+    // Only set event listener here if it's not set inside openChat
+    // Since it IS set inside openChat, we leave this empty.
+});
+
 
 </script>
 
