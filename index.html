@@ -141,7 +141,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
         <div style="display: flex; align-items: center; margin-bottom: 20px;">
             <img id="profileAvatar" class="avatar" style="width: 80px; height: 80px; margin-right: 20px; border-color: magenta;" src="">
             <div>
-                <label style="color: cyan; display: block; margin-bottom: 5px;">Nickname (Internal):</label>
+                <label style="color: cyan; display: block; margin-bottom: 5px;">Unique Identifier:</label>
                 <input type="text" id="profileNickname" value="User Nickname" disabled>
             </div>
         </div>
@@ -191,8 +191,8 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 
 <script>
 // ---------- FIREBASE INIT ----------
+// NOTE: You MUST replace this configuration with your actual Firebase project settings
 const firebaseConfig = {
-    // NOTE: REPLACE with your actual Firebase configuration
     apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw", 
     authDomain: "duoup-cfae6.firebaseapp.com",
     projectId: "duoup-cfae6",
@@ -226,21 +226,22 @@ auth.onAuthStateChanged(async user=>{
     const userDoc = await userRef.get();
 
     if(!userDoc.exists){
-        const defaultUsername = user.displayName.replace(/\s/g, '').toLowerCase() || `user_${Date.now()}`;
-        // New user setup, prompt for username if needed later, for now use default
+        const defaultUsername = (user.displayName || user.email.split('@')[0]).replace(/\s/g, '').toLowerCase() + Math.floor(Math.random() * 100);
+        // New user setup
         await userRef.set({
             uid: user.uid,
             username: defaultUsername, 
             usernameChanged: false,
-            bio: "",
+            bio: "New Cyber Warrior seeking a Duo partner!",
             skillRating: 3, // Default skill
             status: "Online",
             friends: [],
             unreadMessages: 0,
             profileImageUrl: user.photoURL || DEFAULT_AVATAR,
+            nickname: user.displayName, // Store original Google nickname
             gamerCards: []
         });
-        // Also create the initial unique username index document
+        // Create the initial unique username index document
         await db.collection("usernames").doc(defaultUsername).set({
             uid: user.uid,
             username: defaultUsername
@@ -261,7 +262,13 @@ async function loadUserProfile() {
     currentProfileData = userDoc.data();
 
     profileAvatar.src = currentProfileData.profileImageUrl || DEFAULT_AVATAR;
-    profileNickname.value = currentUser.displayName || "Unknown"; // Google display name is the nickname
+    
+    // FIX: Display the unique username (@) as the primary identifier in the editor
+    const currentDisplayIdentifier = currentProfileData.username ? 
+                                     `@${currentProfileData.username}` : 
+                                     (currentUser.displayName || "Unknown");
+
+    profileNickname.value = currentDisplayIdentifier;
     
     profileBio.value = currentProfileData.bio || "";
     profileSkillRating.value = currentProfileData.skillRating || "1";
@@ -308,10 +315,8 @@ function showTab(tab){
 async function sendFriendRequest(toUid){
     if(!currentUser || toUid===currentUser.uid) return;
     
-    // Check if they are already friends
     if (currentProfileData.friends && currentProfileData.friends.includes(toUid)) {
-        alert("You are already friends with this user.");
-        return;
+        return alert("You are already friends with this user.");
     }
     
     const reqId=[currentUser.uid,toUid].sort().join('_');
@@ -381,12 +386,12 @@ async function loadFriendRequests(){
     const requestsData = await Promise.all(querySnap.docs.map(async d => {
         const request = d.data();
         const senderDoc = await db.collection("users").doc(request.senderId).get();
-        // Use username for display if available
+        // Use username for display
         const senderData = senderDoc.data() || { username: 'Unknown', nickname: 'Unknown User' };
         
         return {
             id: d.id,
-            display: senderData.username ? `@${senderData.username}` : (senderDoc.data().nickname || 'Unknown User'),
+            display: senderData.username ? `@${senderData.username}` : (senderData.nickname || 'Unknown User'),
             senderUid: request.senderId
         };
     }));
@@ -446,6 +451,7 @@ async function loadFriends(){
       div.innerHTML=`<div class="card-content">
         <img src="${d.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
         <strong>${display}</strong>
+        <span class="skill-rating">${'⭐'.repeat(d.skillRating||0)}</span>
         <span class="status-indicator status-${d.status.replace(" ","").toLowerCase()}">${d.status}</span>
         </div>`;
       friendsTab.appendChild(div);
@@ -521,7 +527,7 @@ function initMessaging(){
           if(!fDoc.exists) return;
           const friendData = fDoc.data();
           
-          // This is a placeholder; a proper chat system needs message-level read receipts.
+          // This is a placeholder; proper chat systems need message-level read receipts. 
           // For this client-only example, we'll assume unreadMessages is a global counter. 
           const unread=currentProfileData.unreadMessages; 
           
@@ -676,7 +682,7 @@ async function attemptUsernameChange() {
         if (displayError.includes("already taken")) {
              displayError = "That username is already taken. Please try another.";
         } else if (displayError.includes("failed preconditions")) {
-             displayError = "Transaction failed (likely a conflict). Please try again.";
+             displayError = "Transaction failed (likely a conflict). Please check your Security Rules and try again.";
         } else {
              displayError = "An unknown error occurred: " + error.message;
         }
@@ -813,8 +819,8 @@ async function viewUserProfile(uid, data = null) {
             <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar" style="width: 100px; height: 100px; border-color:magenta;">
             <div>
                 <h3 style="color:cyan; margin:0; font-size:2em;">${display} ${isOwner ? '<span class="owner-badge-box">OWNER</span>' : ''}</h3>
-                <p style="color:white; margin:5px 0 0 0;">Nickname: ${data.nickname || 'N/A'}</p>
-                <p style="color:white; margin:5px 0 0 0;">UID: ${uid}</p>
+                <p style="color:white; margin:5px 0 0 0;">Google Nickname: ${data.nickname || 'N/A'}</p>
+                <p style="color:white; margin:5px 0 0 0;">Unique ID: ${uid}</p>
             </div>
         </div>
         
