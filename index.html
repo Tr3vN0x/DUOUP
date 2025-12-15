@@ -694,7 +694,8 @@
             
             // Generate a unique ID for the card
             const cardId = currentUser.uid; 
-            const path = `gamerCards/${cardId}/${Date.now()}_${file.name}`;
+            // Ensures a unique path for the file in storage.
+            const path = `gamerCards/${cardId}/${Date.now()}_${file.name}`; 
             const storageRef = storage.ref(path);
 
             try {
@@ -716,6 +717,8 @@
                         await db.collection('gamerCards').doc(cardId).set({
                             uid: currentUser.uid,
                             imageUrl: downloadURL,
+                            // Store the storage path to enable file deletion later (optional, but good practice)
+                            storagePath: path, 
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
                         
@@ -765,12 +768,17 @@
             try {
                 const cardId = currentUser.uid;
                 
+                // Get the card data to find the storage path
+                const cardDoc = await db.collection('gamerCards').doc(cardId).get();
+                const cardData = cardDoc.data();
+
                 // 1. Delete the Firestore document (Requires Rule 4 delete permission)
                 await db.collection('gamerCards').doc(cardId).delete();
 
-                // 2. (Optional but recommended) Delete the actual file from storage
-                // This requires more complex storage rules, so for simplicity, we'll skip for now 
-                // but keep in mind the image file might still exist.
+                // 2. Delete the actual file from storage (if path exists)
+                if (cardData && cardData.storagePath) {
+                    await storage.ref(cardData.storagePath).delete();
+                }
 
                 alert("Gamer Card deleted.");
                 loadGamerCard(currentUser.uid); // Reload display
@@ -804,8 +812,9 @@
                 const btn = document.createElement('button');
                 btn.className = 'neon-btn';
                 btn.textContent = 'Send Request';
-                btn.onclick = (e) => { e.stopPropagation(); sendFriendRequest(d.uid); };
-                buttons.push(btn);
+                // FIX: Ensured the correct UID is passed
+                btn.onclick = (e) => { e.stopPropagation(); sendFriendRequest(d.uid); }; 
+                buttons.appendChild(btn);
             } else if (type === 'request') {
                 const acceptBtn = document.createElement('button');
                 acceptBtn.className = 'neon-btn accept';
@@ -817,25 +826,25 @@
                 declineBtn.textContent = 'Decline';
                 declineBtn.onclick = (e) => { e.stopPropagation(); declineFriend(d.uid); };
                 
-                buttons.push(acceptBtn, declineBtn);
+                buttons.appendChild(acceptBtn);
+                buttons.appendChild(declineBtn);
             } else if (type === 'friend') {
                 const chatBtn = document.createElement('button');
                 chatBtn.className = 'neon-btn';
                 chatBtn.textContent = 'Chat';
                 chatBtn.onclick = (e) => { e.stopPropagation(); startChat(d.uid, d.nickname); };
                 
-                // --- ADDED: NEW BUTTON FOR UNFRIENDING ---
                 const removeBtn = document.createElement('button'); 
                 removeBtn.className = 'neon-btn remove'; 
                 removeBtn.textContent = 'Remove Duo';
                 removeBtn.onclick = (e) => { e.stopPropagation(); unfriendDuo(d.uid); };
-                // --- END NEW BUTTON ---
                 
-                buttons.push(chatBtn, removeBtn);
+                buttons.appendChild(chatBtn);
+                buttons.appendChild(removeBtn);
             }
 
-            buttons.forEach(btn => card.appendChild(btn));
-            card.prepend(userInfo);
+            card.appendChild(userInfo);
+            card.appendChild(buttons);
             return card;
         }
 
@@ -855,7 +864,7 @@
                     }
                 });
                 
-                // Fetch current user's requests (Requires Rule 2 read permission)
+                // Fetch current user's *sent* requests (Requires Rule 2 read permission)
                 const requestsSnapshot = await db.collection('friendRequests')
                     .where('senderId', '==', currentUser.uid)
                     .get();
@@ -874,7 +883,9 @@
             const searchTerm = document.getElementById('search-bar').value.toLowerCase();
             listDiv.innerHTML = '';
             
-            const myFriends = (currentUser && currentUser.friends) || [];
+            // Get current user's friends list
+            const userDoc = db.collection('users').doc(currentUser.uid).get();
+            const myFriends = (userDoc.data && userDoc.data().friends) || [];
             
             const filteredUsers = allUsers.filter(user => {
                 const isFriend = myFriends.includes(user.uid);
@@ -952,7 +963,11 @@
 
 
         async function sendFriendRequest(receiverId) {
-            if (!currentUser || !receiverId) return;
+            if (!currentUser || !receiverId) {
+                 // CRITICAL FIX: Ensure receiverId is not undefined here
+                console.error("sendFriendRequest failed: receiverId is missing.");
+                return alert('Failed to send friend request: Invalid recipient.');
+            }
 
             const senderId = currentUser.uid;
             
@@ -1042,7 +1057,6 @@
             }
         }
 
-        // --- NEW FUNCTION: Unfriend Duo ---
         async function unfriendDuo(friendUid) {
             if (!currentUser || !confirm(`Are you sure you want to remove this Duo?`)) return;
 
@@ -1059,18 +1073,13 @@
                     const friendRef = db.collection('users').doc(friendUid);
                     transaction.update(friendRef, { friends: firebase.firestore.FieldValue.arrayRemove(myUid) });
 
-                    // 3. Clear unread messages for this chat on both sides (Optional cleanup)
+                    // 3. Clear unread messages for this chat on both sides (Requires Rule 1.3/1.4 update permission)
                     transaction.update(myRef, { [`unreadMessages.${friendUid}`]: firebase.firestore.FieldValue.delete() });
                     transaction.update(friendRef, { [`unreadMessages.${myUid}`]: firebase.firestore.FieldValue.delete() });
-                    
-                    // 4. Delete the chat document (Optional: prevents future chat if re-friended)
-                    // transaction.delete(db.collection('chats').doc(chatId));
-                    // transaction.delete(db.collection('messages').doc(chatId)); // Cannot delete subcollections in a transaction
-
                 });
 
                 alert("Duo successfully removed.");
-                // Reload tabs to update the UI
+                
                 loadFriends(); 
                 loadAllUsers();
                 showTab('friends'); 
@@ -1150,11 +1159,9 @@
                 });
                 
                 // 2. Mark the other user as having an unread message from me (Requires Rule 1.4 update permission)
-                // This is a simplified way to track unread status, by setting a placeholder value
                 await db.collection('users').doc(currentChatPartnerId).update({
                     [`unreadMessages.${currentUser.uid}`]: true
                 });
-
 
                 input.value = ''; // Clear input
             } catch (error) {
@@ -1169,14 +1176,13 @@
 
             try {
                 // Remove the unread marker from the current user's document.
-                // This requires Rule 1.3 update permission, specifically to allow deleting a field.
+                // Requires Rule 1.3 update permission with `unreadMessages` included in `hasOnly` list.
                 await db.collection('users').doc(myUid).update({
                     [`unreadMessages.${partnerId}`]: firebase.firestore.FieldValue.delete()
                 });
                 
             } catch (error) {
                 console.error("Error marking messages as read (Rule 1.3):", error);
-                // Note: The permission error here means Rule 1.3 is preventing the FieldValue.delete operation.
             }
         }
 
