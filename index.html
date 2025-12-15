@@ -294,7 +294,17 @@ async function sendFriendRequest(toUid){
     const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
     if((myDoc.friends||[]).includes(toUid)){ alert("Already friends!"); return; }
 
-    // Line ~309: The database write operation that must pass security rules
+    // ===================================================================
+    // CRITICAL DEBUGGING CODE: CHECK THE CONSOLE (F12) AFTER HITTING SEND
+    // ===================================================================
+    console.log("--- DEBUGGING FRIEND REQUEST DATA ---");
+    console.log("Logged in UID (request.auth.uid):", currentUser.uid);
+    console.log("Sender ID being sent (request.resource.data.senderId):", currentUser.uid);
+    console.log("Receiver ID being sent (request.resource.data.receiverId):", toUid);
+    console.log("-------------------------------------");
+    // ===================================================================
+    
+    // Line ~308: The database write operation that is failing
     await reqRef.set({
       senderId:currentUser.uid, 
       receiverId:toUid, 
@@ -306,7 +316,7 @@ async function sendFriendRequest(toUid){
     loadRequests();
   } catch (e) {
     console.error("Failed to send friend request:", e);
-    alert("ERROR: Failed to send request. Ensure your Firestore rules are correctly published.");
+    alert("ERROR: Failed to send request. Check console output for debug data and ensure Firestore rules are published.");
   }
 }
 
@@ -377,7 +387,7 @@ function renderChatList(friendUids) {
     const friendDocs = await Promise.all(friendUids.map(f => db.collection('users').doc(f).get()));
     
     friendDocs.forEach(fDoc => {
-      const f = fDoc.data();
+      const f = fDoc.data(); 
       if (!f) return;
 
       const unreadCount = friendUnreads[f.uid] || 0;
