@@ -454,18 +454,8 @@ function renderUserCard(d, data) {
         statusText.style.color = 'yellow';
         statusText.textContent = "❗ Incoming Request";
         
-        const acceptBtn = document.createElement("button");
-        acceptBtn.className = "neon-btn";
-        acceptBtn.textContent = "Accept";
-        acceptBtn.onclick = (e) => { e.stopPropagation(); acceptFriend(pendingRequests[d.id]); };
-        
-        const declineBtn = document.createElement("button");
-        declineBtn.className = "neon-btn remove";
-        declineBtn.textContent = "Decline";
-        declineBtn.onclick = (e) => { e.stopPropagation(); declineFriend(pendingRequests[d.id]); };
-        
-        card.appendChild(acceptBtn);
-        card.appendChild(declineBtn);
+        // Buttons for pending requests are NOT added here to prevent confusion.
+        // They are only added in the dedicated 'requestsTab'.
         
     } else if (sentRequests[d.id]) {
         statusText = document.createElement("p");
@@ -480,7 +470,7 @@ function renderUserCard(d, data) {
     }
     
     if (actionBtn) card.appendChild(actionBtn);
-    if (statusText) card.appendChild(statusText);
+    if (statusText && !pendingRequests[d.id]) card.appendChild(statusText); // Only show status text if not a pending request (to avoid double text)
 
     return card;
 }
@@ -712,9 +702,9 @@ async function loadFriendRequests(){
         const senderData = senderDoc.data() || { username: 'Unknown', nickname: 'Unknown User' };
         
         return {
-            id: d.id,
+            id: d.id, // This is the request document ID
+            senderId: request.senderId, // The UID of the sender
             display: senderData.username ? `@${senderData.username}` : (senderData.nickname || 'Unknown User'),
-            senderUid: request.senderId
         };
     }));
 
@@ -725,12 +715,15 @@ async function loadFriendRequests(){
     requestsData.forEach(r => {
         const div = document.createElement("div");
         div.className = "card";
-        div.onclick = () => viewUserProfile(r.senderUid); 
+        // Clicking the card takes you to the sender's profile
+        div.onclick = () => viewUserProfile(r.senderId); 
         div.innerHTML = `<div class="card-content"><strong>${r.display}</strong> wants to duo!</div>`;
         
+        // --- BUTTONS CONNECTED HERE ---
         const acceptBtn = document.createElement("button");
         acceptBtn.className = "neon-btn";   
         acceptBtn.textContent = "Accept";
+        // **Connect to the acceptFriend function using the request ID (r.id)**
         acceptBtn.onclick = (e) => {   
             e.stopPropagation();   
             acceptFriend(r.id);    
@@ -739,6 +732,7 @@ async function loadFriendRequests(){
         const declineBtn = document.createElement("button");
         declineBtn.className = "neon-btn remove";   
         declineBtn.textContent = "Decline";
+        // **Connect to the declineFriend function using the request ID (r.id)**
         declineBtn.onclick = (e) => {   
             e.stopPropagation();   
             declineFriend(r.id);   
@@ -983,7 +977,7 @@ async function viewUserProfile(targetUid) {
                                 <button class="neon-btn remove" onclick="removeFriend('${targetUid}')">Remove Duo</button>
                                 <button class="neon-btn" style="border-color:magenta; box-shadow:0 0 10px magenta;" onclick="showChatFromProfile('${targetUid}')">Message Duo</button>`;
         } else if (pendingRequests[targetUid]) {
-            actionButtonHTML = `<p style="color:yellow;">Pending Request from them. Go to 'Requests' tab to accept.</p>`;
+            actionButtonHTML = `<p style="color:yellow;">Pending Request from them. Go to 'Requests' tab to accept/decline.</p>`;
         } else if (sentRequests[targetUid]) {
             actionButtonHTML = `<p style="color:orange;">Request Sent.</p>`;
         } else {
