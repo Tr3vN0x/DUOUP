@@ -81,7 +81,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <div id="requestsTab" class="flex hidden"></div>
 <div id="friendsTab" class="flex hidden"></div>
 
-<div id="messagingTab" class="hidden" style="display:flex; height:600px; border:2px solid magenta; background:#111; border-radius:12px;">
+<div id="messagingTab" class="hidden" style="display:flex; height:600px; border:2px solid magenta; border-radius:12px; background:#111;">
 <div id="chatList" style="width:30%; padding:10px; border-right:1px solid #333; overflow-y:auto;">
 <h3>Active Duos</h3>
 <div id="activeDuoList">No friends to chat with.</div>
@@ -141,15 +141,15 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 </div>
 
 <script>
-// ---------- FIREBASE INIT (UPDATE THIS WITH YOUR CONFIG) ----------
+// ---------- FIREBASE INIT (YOUR CORRECT CONFIGURATION) ----------
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY", // <-- REPLACE THIS
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // <-- REPLACE THIS
-  projectId: "YOUR_PROJECT_ID", // <-- REPLACE THIS
-  storageBucket: "YOUR_PROJECT_ID.appspot.com", // <-- REPLACE THIS
-  messagingSenderId: "YOUR_SENDER_ID", // <-- REPLACE THIS
-  appId: "YOUR_APP_ID", // <-- REPLACE THIS
-  measurementId: "YOUR_MEASUREMENT_ID" // <-- REPLACE THIS
+  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+  authDomain: "duoup-cfae6.firebaseapp.com",
+  projectId: "duoup-cfae6",
+  storageBucket: "duoup-cfae6.firebasestorage.app",
+  messagingSenderId: "812263060524",
+  appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
+  measurementId: "G-46B67F90FK"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -259,11 +259,9 @@ function renderCard(d,type,reqId=null){
   let buttons=[];
   if(type==='suggest'){ 
     const btn=document.createElement('button'); btn.className='neon-btn'; btn.textContent='Send Request'; 
-    // Line 262: The button onclick handler that calls the function
     btn.onclick=()=>sendFriendRequest(d.uid); buttons.push(btn);
   }
   else if(type==='request'){
-    // ACCEPT CALLS THE CLOUD FUNCTION
     const accept=document.createElement('button'); accept.className='neon-btn'; accept.textContent='Accept'; accept.onclick=()=>acceptFriend(reqId,d.uid); 
     const decline=document.createElement('button'); decline.className='neon-btn remove'; decline.textContent='Decline'; decline.onclick=()=>declineFriend(reqId); buttons.push(accept,decline);
   }
@@ -296,7 +294,7 @@ async function sendFriendRequest(toUid){
     const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
     if((myDoc.friends||[]).includes(toUid)){ alert("Already friends!"); return; }
 
-    // Line 309: The database write operation that must pass security rules
+    // Line ~309: The database write operation that must pass security rules
     await reqRef.set({
       senderId:currentUser.uid, 
       receiverId:toUid, 
@@ -308,7 +306,7 @@ async function sendFriendRequest(toUid){
     loadRequests();
   } catch (e) {
     console.error("Failed to send friend request:", e);
-    alert("ERROR: Failed to send request. Check console for permission details. Ensure Firestore rules are correctly published.");
+    alert("ERROR: Failed to send request. Ensure your Firestore rules are correctly published.");
   }
 }
 
@@ -320,7 +318,7 @@ async function loadRequests(){
   snapshot.docs.forEach((doc,i)=>{ const fromUser=userDocs[i].data(); if(!fromUser)return; container.appendChild(renderCard(fromUser,'request',doc.id)); });
 }
 
-// Calls the Cloud Function for acceptance
+// Calls the Cloud Function for acceptance (Requires functions/index.js deployment)
 async function acceptFriend(reqId, friendUid){
   try {
     const acceptFunction = functions.httpsCallable('acceptFriendRequest');
