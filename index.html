@@ -143,13 +143,13 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <script>
 // ---------- FIREBASE INIT (UPDATE THIS WITH YOUR CONFIG) ----------
 const firebaseConfig = {
-  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-  authDomain: "duoup-cfae6.firebaseapp.com",
-  projectId: "duoup-cfae6",
-  storageBucket: "duoup-cfae6.appspot.com",
-  messagingSenderId: "812263060524",
-  appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
-  measurementId: "G-46B67F90FK"
+  apiKey: "YOUR_API_KEY", // <-- REPLACE THIS
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com", // <-- REPLACE THIS
+  projectId: "YOUR_PROJECT_ID", // <-- REPLACE THIS
+  storageBucket: "YOUR_PROJECT_ID.appspot.com", // <-- REPLACE THIS
+  messagingSenderId: "YOUR_SENDER_ID", // <-- REPLACE THIS
+  appId: "YOUR_APP_ID", // <-- REPLACE THIS
+  measurementId: "YOUR_MEASUREMENT_ID" // <-- REPLACE THIS
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -157,7 +157,7 @@ const db = firebase.firestore();
 const storage = firebase.storage();
 const functions = firebase.functions(); // Initializes Cloud Functions SDK
 
-const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2";
+const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; // Replace with your actual admin UID
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 let currentUser = null, currentChatUid = null, unsubscribeMessages = null;
 let unsubscribeChatList = null; 
@@ -203,7 +203,7 @@ auth.onAuthStateChanged(async user=>{
   loadProfile();
 });
 
-// ---------- PROFILE EDIT & UTILITIES (Unchanged) ----------
+// ---------- PROFILE EDIT & UTILITIES ----------
 async function loadProfile() {
   const userDoc = await db.collection('users').doc(currentUser.uid).get();
   if(!userDoc.exists) return;
@@ -259,6 +259,7 @@ function renderCard(d,type,reqId=null){
   let buttons=[];
   if(type==='suggest'){ 
     const btn=document.createElement('button'); btn.className='neon-btn'; btn.textContent='Send Request'; 
+    // Line 262: The button onclick handler that calls the function
     btn.onclick=()=>sendFriendRequest(d.uid); buttons.push(btn);
   }
   else if(type==='request'){
@@ -295,7 +296,7 @@ async function sendFriendRequest(toUid){
     const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
     if((myDoc.friends||[]).includes(toUid)){ alert("Already friends!"); return; }
 
-    // Write operation that needs to pass Security Rules
+    // Line 309: The database write operation that must pass security rules
     await reqRef.set({
       senderId:currentUser.uid, 
       receiverId:toUid, 
@@ -363,7 +364,7 @@ async function loadFriends(){
   renderChatList(friendUids);
 }
 
-// ---------- MESSAGING & TABS (Unchanged) ----------
+// ---------- MESSAGING & TABS ----------
 function renderChatList(friendUids) {
   if(unsubscribeChatList) unsubscribeChatList();
 
