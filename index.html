@@ -480,12 +480,13 @@ async function loadAllUsers(){
     const allUsersTab = document.getElementById('allUsersTab');
     allUsersTab.innerHTML = "<h3>Suggested Players</h3>";
     try {
+        // This is the correct way to get all users for the 'Suggested' list
         const snapshot = await db.collection("users").get(); 
         
         allUsersCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
         allUsersCache.forEach(user => {
-            // Only filter out the current user. Blocked filter removed entirely.
+            // Only filter out the current user.
             if (user.id !== currentUser.uid) { 
                 allUsersTab.appendChild(renderUserCard({ uid: user.id }, user));
             }
@@ -509,7 +510,7 @@ function filterSearchResults() {
     searchResultsDiv.innerHTML = ""; 
 
     const filteredUsers = allUsersCache.filter(user => {
-        // Only filter out self. Blocked filter removed entirely.
+        // Only filter out self.
         if (user.id === currentUser.uid) {
             return false;
         }
@@ -568,10 +569,13 @@ async function loadFriends() {
             .where("status", "==", "pending")
             .get();
             
-        incomingRequests = requestsSnapshot.docs.map(doc => ({ 
-            requestId: doc.id, 
-            senderId: doc.data().senderId 
-        }));
+        requestsSnapshot.forEach(doc => {
+            const data = doc.data();
+            incomingRequests.push({ 
+                requestId: doc.id, 
+                senderId: data.senderId 
+            });
+        });
         
     } catch(e) {
         console.error("Error loading incoming requests:", e);
@@ -753,7 +757,6 @@ async function sendFriendRequest(targetUid) {
 
     } catch (e) {
         console.error("Send Request Error:", e);
-        // This is the line that throws if rules are not published/correctly matched
         alert("Failed to send request: " + (e.message || "Check Security Rules & Data Integrity."));
     }
 }
@@ -938,7 +941,7 @@ auth.onAuthStateChanged(async user=>{
 
     // 1. Initial User Setup or Data Repair
     if(!userDoc.exists){
-        // --- If document does not exist, set the full default profile ---
+        // --- If document does not exist, set the full default profile (uids array is intentionally removed) ---
         const baseName = (user.displayName || user.email.split('@')[0]).replace(/\s/g, '').toLowerCase();
         const defaultUsername = baseName.substring(0, 16).replace(/[^a-z0-9]/g, '').slice(0, 16 - 4) + Math.floor(1000 + Math.random() * 9000); 
         
@@ -949,7 +952,7 @@ auth.onAuthStateChanged(async user=>{
             bio: "New Cyber Warrior seeking a Duo partner!", 
             skillRating: 3, 
             status: "Online", 
-            friends: [], 
+            friends: [], // Array for Duo partner UIDs
             profileImageUrl: user.photoURL || DEFAULT_AVATAR, 
             nickname: user.displayName, 
             gamerCards: [], 
