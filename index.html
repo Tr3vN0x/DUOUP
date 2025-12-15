@@ -672,7 +672,7 @@ function renderUserCard(d, data) {
     } else if (isFriend) {
         actionButton = `<button class="neon-btn remove" onclick="event.stopPropagation(); removeFriend('${d.uid}')">Remove Duo</button>`;
     } else {
-        // FIX: Ensure the UID is passed as a string literal correctly
+        // Fix: Ensure the UID is passed as a string literal correctly
         actionButton = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${d.uid}')">Send Request</button>`;
     }
     // --- END 1. DETERMINE STATUS AND BUTTON ACTION ---
@@ -715,13 +715,15 @@ async function sendFriendRequest(targetUid) {
     // DEBUG CHECK (Ensure targetUid is not undefined/empty)
     if (!targetUid || targetUid.length < 10) {
         console.error("sendFriendRequest aborted: targetUid is invalid or missing:", targetUid);
-        alert("Cannot send request: Target user ID is missing. Try logging out and back in, or contact support.");
+        alert("Cannot send request: Target user ID is missing.");
         return;
     }
     
-    // CRITICAL: Document ID must be canonical for security rules to work
-    const requestId = `${currentUser.uid}_${targetUid}`;
-    const reverseRequestId = `${targetUid}_${currentUser.uid}`;
+    // CRITICAL: Document ID must be canonical (Sender_Receiver)
+    const senderUid = currentUser.uid;
+    const receiverUid = targetUid;
+    const requestId = `${senderUid}_${receiverUid}`;
+    const reverseRequestId = `${receiverUid}_${senderUid}`;
 
     try {
         const requestRef = db.collection("requests").doc(requestId);
@@ -743,11 +745,12 @@ async function sendFriendRequest(targetUid) {
             return;
         }
 
-        // 3. Send the new request using .doc(requestId).set() to enforce ID
+        // 3. Send the new request using .doc(requestId).set() 
+        // NOTE: This object structure MUST perfectly match the Security Rules
         await requestRef.set({
-            senderId: currentUser.uid, 
-            receiverId: targetUid,     
-            status: 'pending',
+            senderId: senderUid,       // Matches Condition 1 (request.resource.data.senderId == request.auth.uid)
+            receiverId: receiverUid,   // Used to check Condition 2
+            status: 'pending',         // Matches Condition 3
             sentAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -757,7 +760,7 @@ async function sendFriendRequest(targetUid) {
 
     } catch (e) {
         console.error("Send Request Error:", e);
-        alert("Failed to send request: " + (e.message || "Check Security Rules & Data Integrity."));
+        alert("CRITICAL FIREBASE ERROR: Failed to send request. Check published Security Rules.");
     }
 }
 
@@ -941,7 +944,7 @@ auth.onAuthStateChanged(async user=>{
 
     // 1. Initial User Setup or Data Repair
     if(!userDoc.exists){
-        // --- If document does not exist, set the full default profile (uids array is intentionally removed) ---
+        // --- If document does not exist, set the full default profile ---
         const baseName = (user.displayName || user.email.split('@')[0]).replace(/\s/g, '').toLowerCase();
         const defaultUsername = baseName.substring(0, 16).replace(/[^a-z0-9]/g, '').slice(0, 16 - 4) + Math.floor(1000 + Math.random() * 9000); 
         
