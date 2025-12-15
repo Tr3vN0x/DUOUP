@@ -42,7 +42,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 #chatList { padding:10px; border-right:1px solid #333; overflow-y:auto; }
 #chatWindow { display:flex; flex-direction:column; padding:10px; }
 
-/* --- CHAT BUBBLE STYLES (Fixed) --- */
+/* --- CHAT BUBBLE STYLES --- */
 #messageDisplay { 
     flex-grow: 1; 
     overflow-y: auto; 
@@ -250,7 +250,7 @@ const storage = firebase.storage();
 // OWNER UID (Used for a display badge)
 const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQql9HQ2"; 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-let currentUser=null, currentChatUid=null, unsubscribeMessages=null, unsubscribeChatList=null;
+let currentUser=null, currentChatUid=null, unsubscribeMessages=null, unsubscribeUnread=null; // Renamed unsubscribeChatList to unsubscribeUnread
 let currentProfileData = {}; 
 let pendingRequests = {}; 
 let sentRequests = {};   
@@ -261,7 +261,11 @@ function getChatId(a,b){ return [a,b].sort().join('_'); }
 
 // ---------- AUTH ----------
 function login(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message)); }
-function logout(){ if(unsubscribeMessages) unsubscribeMessages(); if(unsubscribeChatList) unsubscribeChatList(); auth.signOut(); }
+function logout(){ 
+    if(unsubscribeMessages) unsubscribeMessages(); 
+    if(unsubscribeUnread) unsubscribeUnread(); 
+    auth.signOut(); 
+}
 
 auth.onAuthStateChanged(async user=>{
     if(!user){ loginPage.classList.remove("hidden"); dashboard.classList.add("hidden"); return; }
@@ -302,8 +306,9 @@ auth.onAuthStateChanged(async user=>{
     welcome.textContent=`Welcome, ${currentUser.displayName || currentUser.email}`;
     await loadAllUsers(); 
     loadFriendRequests();
-    loadFriends();
+    await loadFriends();
     initMessaging();
+    monitorUnreadMessages(); // Start monitoring the unread counter
 });
 
 async function loadRelationshipStatus() {
@@ -699,7 +704,7 @@ async function loadFriendRequests(){
 }
 
 
-// ---------- FRIENDS & CHAT ----------
+// ---------- FRIENDS & CHAT CORE IMPLEMENTATION ----------
 
 async function loadFriends() {
     friendsTab.innerHTML = "<h3>My Duos</h3>";
@@ -730,8 +735,17 @@ function initMessaging() {
     const activeDuoList = document.getElementById('activeDuoList');
     activeDuoList.innerHTML = "";
 
-    if (unsubscribeChatList) unsubscribeChatList();
-    
+    // Reset current chat listener
+    if(unsubscribeMessages) {
+        unsubscribeMessages();
+        unsubscribeMessages = null;
+    }
+    currentChatUid = null;
+    document.getElementById('chatHeader').textContent = "Select a Duo";
+    document.getElementById('messageDisplay').innerHTML = "";
+    document.getElementById('messageInputArea').classList.add("hidden");
+
+
     if (friendUids.length === 0) {
         activeDuoList.innerHTML = "<p>Add Duos to start chatting.</p>";
         return;
@@ -744,15 +758,170 @@ function initMessaging() {
         const btn = document.createElement('button');
         btn.className = 'neon-btn chat-item-btn';
         btn.textContent = display;
-        // Placeholder: Full chat logic needs to be implemented next
-        btn.onclick = () => alert(`Chat with ${display} is coming soon!`); 
+        
+        btn.onclick = () => {
+            // Un-highlight previous button
+            document.querySelectorAll('.chat-item-btn').forEach(b => b.style.borderColor = 'cyan');
+            // Highlight current button
+            btn.style.borderColor = 'magenta';
+            openChat(uid, display);
+        };
+        
         btn.setAttribute('data-uid', uid); 
         activeDuoList.appendChild(btn);
     });
+
+    // Attach send message handler once
+    document.getElementById('sendMessageBtn').onclick = sendMessage;
+    document.getElementById('messageInput').onkeydown = (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    };
+}
+
+
+/**
+ * Sets up the real-time listener for messages in the selected chat.
+ * @param {string} friendUid The UID of the friend to chat with.
+ * @param {string} friendDisplay The username/nickname of the friend.
+ */
+function openChat(friendUid, friendDisplay) {
+    if (unsubscribeMessages) unsubscribeMessages(); 
+
+    currentChatUid = friendUid;
+    const chatId = getChatId(currentUser.uid, friendUid);
+    const messageDisplay = document.getElementById('messageDisplay');
     
-    // Placeholder for where chat list listener was incomplete:
-    // const userRef = db.collection("users").doc(currentUser.uid);
-    // unsubscribeChatList = ...
+    document.getElementById('chatHeader').textContent = `Chatting with ${friendDisplay}`;
+    document.getElementById('messageInputArea').classList.remove("hidden");
+    messageDisplay.innerHTML = 'Establishing secure connection...'; 
+
+    const chatRef = db.collection("chats").doc(chatId);
+    const messagesRef = chatRef.collection("messages");
+
+    // Start listening for new messages, ordered by timestamp
+    unsubscribeMessages = messagesRef.orderBy("timestamp", "asc").onSnapshot(snapshot => {
+        
+        // Clear the display only on the first load or if messages are cleared
+        if (messageDisplay.innerHTML.includes('secure connection...')) {
+             messageDisplay.innerHTML = '';
+        }
+
+        snapshot.docChanges().forEach(change => {
+            if (change.type === "added") {
+                const messageData = change.doc.data();
+                renderMessage(messageData);
+            }
+        });
+        
+        // Always scroll to the bottom after adding new messages
+        messageDisplay.scrollTop = messageDisplay.scrollHeight;
+        
+        // IMPORTANT: Reset unread counter for *this* chat when it's opened
+        db.collection("users").doc(currentUser.uid).update({
+            unreadMessages: 0
+        }).catch(e => console.warn("Failed to reset unread count:", e));
+
+    }, error => {
+        console.error("Error setting up chat listener:", error);
+        messageDisplay.innerHTML = `<p style="color:red;">Error loading chat: ${error.message}</p>`;
+    });
+}
+
+/**
+ * Renders a single message bubble to the display.
+ * @param {object} messageData The message object from Firestore.
+ */
+function renderMessage(messageData) {
+    const messageDisplay = document.getElementById('messageDisplay');
+    const isMine = messageData.senderId === currentUser.uid;
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = `message-wrapper ${isMine ? 'message-mine' : 'message-other'}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.textContent = messageData.text;
+
+    wrapper.appendChild(bubble);
+    messageDisplay.appendChild(wrapper);
+}
+
+
+/**
+ * Sends the message currently in the input field.
+ */
+async function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+
+    if (!text || !currentChatUid) return;
+    
+    const chatId = getChatId(currentUser.uid, currentChatUid);
+    const receiverId = currentChatUid;
+
+    const chatRef = db.collection("chats").doc(chatId);
+    const messagesRef = chatRef.collection("messages");
+
+    const message = {
+        senderId: currentUser.uid,
+        receiverId: receiverId,
+        text: text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    try {
+        // Use a batch to write the message and update the receiver's unread counter atomically
+        const batch = db.batch();
+        
+        // 1. Add the new message to the subcollection
+        batch.set(messagesRef.doc(), message);
+        
+        // 2. Increment the receiver's unread counter (This is done on the main document)
+        const receiverRef = db.collection("users").doc(receiverId);
+        batch.update(receiverRef, {
+            unreadMessages: firebase.firestore.FieldValue.increment(1)
+        });
+
+        await batch.commit();
+
+        input.value = ''; // Clear input on success
+        
+    } catch (e) {
+        console.error("Failed to send message:", e);
+        alert("Error sending message. Check security rules.");
+    }
+}
+
+/**
+ * Monitors the current user's unreadMessages counter in real-time.
+ */
+function monitorUnreadMessages() {
+    if (unsubscribeUnread) unsubscribeUnread();
+    
+    const userRef = db.collection("users").doc(currentUser.uid);
+    const unreadBadge = document.getElementById('unreadBadge');
+
+    unsubscribeUnread = userRef.onSnapshot(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            const unreadCount = data.unreadMessages || 0;
+            
+            // Also update currentProfileData so loadUserProfile/loadFriends has fresh data
+            currentProfileData = data; 
+
+            if (unreadCount > 0) {
+                unreadBadge.textContent = unreadCount;
+                unreadBadge.classList.remove("hidden");
+            } else {
+                unreadBadge.textContent = "0";
+                unreadBadge.classList.add("hidden");
+            }
+        }
+    }, error => {
+        console.error("Error monitoring unread messages:", error);
+    });
 }
 
 
@@ -830,7 +999,7 @@ async function saveProfile() {
 }
 
 
-// ---------- UNIQUE USERNAME LOGIC (FIXED) ----------
+// ---------- UNIQUE USERNAME LOGIC (ROBUST) ----------
 
 function isValidUsername(username) {
     if (!username || username.length < 3 || username.length > 20) {
@@ -856,7 +1025,7 @@ async function attemptUsernameChange() {
         return;
     }
 
-    if (currentProfileData.usernameChanged) {
+    if (currentProfileData.usernameChanged === true) {
         messageElement.textContent = "Your unique username can only be changed once.";
         messageElement.style.color = 'red';
         return;
@@ -881,14 +1050,20 @@ async function attemptUsernameChange() {
             const usernameDoc = await t.get(usernameDocRef);
 
             if (usernameDoc.exists) {
-                // If it exists, someone else owns it, transaction must abort
-                throw new Error(`Username @${newUsername} is already taken.`);
+                // If it exists and the UID doesn't match, it's taken.
+                if (usernameDoc.data().uid !== currentUser.uid) {
+                    throw new Error(`Username @${newUsername} is already taken.`);
+                }
             }
 
-            // --- FIX: Only attempt to delete the old index if a valid one exists ---
-            if (oldUsername && oldUsername !== 'Loading...') { 
+            // 2. Clean up the old username index entry (if a valid one exists and is owned by the user)
+            if (oldUsername && oldUsername.length > 0) { 
                 const oldUsernameDocRef = db.collection("usernames").doc(oldUsername);
-                t.delete(oldUsernameDocRef);
+                const oldUsernameIndexDoc = await t.get(oldUsernameDocRef);
+                
+                if (oldUsernameIndexDoc.exists && oldUsernameIndexDoc.data().uid === currentUser.uid) {
+                    t.delete(oldUsernameDocRef);
+                }
             }
 
             // 3. Create the new username index entry
@@ -905,16 +1080,19 @@ async function attemptUsernameChange() {
             });
         });
 
-        messageElement.textContent = `Success! Your new username is @${newUsername}.`;
+        messageElement.textContent = `Success! Your new username is @${newUsername}. You can no longer change it.`;
         messageElement.style.color = '#00ff00';
         input.value = '';
         
         await loadUserProfile();
 
     } catch (e) {
-        const errorMsg = e.message.includes("Username @") ? e.message : "An unexpected error occurred during the update.";
+        const errorMsg = e.message.includes("Username @") 
+                         ? e.message 
+                         : "A database error occurred during the update. Check console for details.";
         messageElement.textContent = errorMsg;
         messageElement.style.color = 'red';
+        console.error("Username Change Transaction Error:", e);
     } finally {
         changeBtn.disabled = false;
     }
