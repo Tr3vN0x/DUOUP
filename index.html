@@ -348,7 +348,7 @@ async function loadUserProfile() {
         messageElement.style.color = 'yellow';
     }
     
-    // Placeholder for game slot rendering
+    // NOTE: The call to renderGameSlots() was removed here to fix the ReferenceError.
     // renderGameSlots(); 
 }
 
@@ -483,7 +483,8 @@ async function loadAllUsers(){
     const allUsersTab = document.getElementById('allUsersTab');
     allUsersTab.innerHTML = "<h3>Suggested Players</h3>";
     try {
-        const snapshot = await db.collection("users").limit(100).get();
+        // Only load the first 100 users for suggestions/search caching
+        const snapshot = await db.collection("users").limit(100).get(); 
         allUsersCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
         allUsersCache.forEach(user => {
@@ -584,7 +585,7 @@ async function loadFriends() {
 function renderUserCard(d, data) {
     const card = document.createElement('div');
     card.className = 'card';
-    // card.onclick = () => viewUserProfile(d.uid); // Disabled until viewProfileTab is implemented
+    // card.onclick = () => viewUserProfile(d.uid); 
 
     let actionButton = '';
     const isFriend = Array.isArray(currentProfileData.friends) && currentProfileData.friends.includes(d.uid);
@@ -633,23 +634,25 @@ function renderUserCard(d, data) {
 async function addFriend(targetUid) {
     if (!currentUser) return;
     
-    // --- Defensive Check: Ensure 'friends' field exists and is an array ---
-    // If the current profile data doesn't have a friends array, we set it to an empty array first.
-    // This addresses the persistent permission error by pre-validating the array type.
+    // --- Defensive Check (Fix for persistent permission error) ---
+    // This ensures the 'friends' field is an array before attempting arrayUnion
     if (!currentProfileData.friends || !Array.isArray(currentProfileData.friends)) {
         await db.collection("users").doc(currentUser.uid).set({
             friends: []
         }, { merge: true });
+        // Update local state immediately for the next step to succeed
         currentProfileData.friends = []; 
     }
     // --- End Defensive Check ---
 
     try {
+        // This is the arrayUnion that was previously failing
         await db.collection("users").doc(currentUser.uid).update({
             friends: firebase.firestore.FieldValue.arrayUnion(targetUid)
         });
         
         alert(`Successfully added ${targetUid.substring(0, 8)}... as a Duo.`);
+        // Reload all necessary UI components
         await loadUserProfile(); 
         await loadFriends();
         loadAllUsers(); 
@@ -685,17 +688,9 @@ function getCanonicalChatId(uid1, uid2) {
     return participants.join('_');
 }
 
-function loadChatList() {
-    // Placeholder logic for loading chat list
-}
-
-async function startChat(targetUid, targetProfile) {
-    // Placeholder logic for starting chat
-}
-
-async function sendMessage() {
-    // Placeholder logic for sending message
-}
+function loadChatList() { /* Placeholder */ }
+async function startChat(targetUid, targetProfile) { /* Placeholder */ }
+async function sendMessage() { /* Placeholder */ }
 
 
 // --- AUTHENTICATION FUNCTIONS ---
@@ -717,7 +712,6 @@ function previewAvatar(input) {
 function addGameSlot() {
      alert("Add Game Slot placeholder called.");
 }
-// function renderGameSlots() { /* Placeholder */ }
 
 
 // ------------------------------------------------
@@ -738,7 +732,7 @@ auth.onAuthStateChanged(async user=>{
     const userRef=db.collection("users").doc(user.uid);
     const userDoc = await userRef.get();
 
-    // 1. User Setup and Initialization (handles new and existing users with missing fields)
+    // 1. User Setup and Initialization
     if(!userDoc.exists){
         // --- Generate Default Username ---
         const baseName = (user.displayName || user.email.split('@')[0]).replace(/\s/g, '').toLowerCase();
