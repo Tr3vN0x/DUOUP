@@ -164,7 +164,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     <div id="searchResults" class="card-container"></div>
 </div>
 
-<div id="friendsTab" class="flex hidden"></div>
+<div id="friendsTab" class="flex hidden" style="flex-direction: column;"></div>
 
 <div id="messagingTab" class="hidden">
     <div id="chatList">
@@ -666,7 +666,7 @@ function renderUserCard(d, data) {
     } else if (isFriend) {
         actionButton = `<button class="neon-btn remove" onclick="event.stopPropagation(); removeFriend('${d.uid}')">Remove Duo</button>`;
     } else {
-        // Default action is to send a request (This replaces the old instant 'addFriend')
+        // Default action is to send a request
         actionButton = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${d.uid}')">Send Request</button>`;
     }
     // --- END 1. DETERMINE STATUS AND BUTTON ACTION ---
@@ -701,14 +701,16 @@ function renderUserCard(d, data) {
 }
 
 
-// --- FRIENDSHIP FUNCTIONS ---
+// --- FRIEND REQUEST FUNCTIONS ---
 
 async function sendFriendRequest(targetUid) {
     if (!currentUser) return;
 
+    // CRITICAL: Document ID must be canonical for security rules to work
+    const requestId = `${currentUser.uid}_${targetUid}`;
+    const reverseRequestId = `${targetUid}_${currentUser.uid}`;
+
     try {
-        const requestId = `${currentUser.uid}_${targetUid}`;
-        const reverseRequestId = `${targetUid}_${currentUser.uid}`;
         const requestRef = db.collection("requests").doc(requestId);
         
         // 1. Check for request from this user (A->B)
@@ -728,10 +730,10 @@ async function sendFriendRequest(targetUid) {
             return;
         }
 
-        // 3. Send the new request
+        // 3. Send the new request using .doc(requestId).set() to enforce ID
         await requestRef.set({
-            senderId: currentUser.uid,
-            receiverId: targetUid,
+            senderId: currentUser.uid, 
+            receiverId: targetUid,     
             status: 'pending',
             sentAt: firebase.firestore.FieldValue.serverTimestamp()
         });
