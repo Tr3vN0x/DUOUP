@@ -730,7 +730,9 @@ function viewProfile(uid, data) {
     showTab('viewProfile');
 }
 
-// 🌟 ONE-TIME NICKNAME CHANGE FIX: Load
+// ----------------------------------------------------
+// 🌟 NICKNAME CHANGE LOGIC (Load) 
+// ----------------------------------------------------
 async function loadUserProfile() {
     if(!currentUser) return;
     const data = currentProfileData;
@@ -755,7 +757,9 @@ async function loadUserProfile() {
     }
 }
 
-// 🌟 ONE-TIME NICKNAME CHANGE FIX: Save
+// ----------------------------------------------------
+// 🌟 NICKNAME CHANGE LOGIC (Save)
+// ----------------------------------------------------
 async function saveProfile() {
     if(!currentUser) return;
     const messageEl = document.getElementById('saveMessage');
@@ -778,12 +782,13 @@ async function saveProfile() {
             updates.nickname = newNickname;
             updates.nicknameChangeCount = (currentProfileData.nicknameChangeCount || 0) + 1;
         } else {
+            // This is a safety check, should be disabled by loadUserProfile
             messageEl.textContent = 'Error: Nickname change limit reached.';
             messageEl.style.color = 'red';
             return;
         }
     } else if (nicknameInput.disabled && newNickname !== oldNickname) {
-         // Should not happen, but safe to check
+         // Should not happen if loadUserProfile worked, but prevents bypassing the limit
          messageEl.textContent = 'Error: Nickname is locked and cannot be changed.';
          messageEl.style.color = 'red';
          return;
@@ -806,8 +811,9 @@ async function saveProfile() {
     }
 }
 
-// ---------------------------
-// Auth listener
+// ----------------------------------------------------
+// 🌟 NICKNAME CHANGE LOGIC (Initial Auth)
+// ----------------------------------------------------
 auth.onAuthStateChanged(async user=>{
     if(!user){
         document.getElementById('loginPage').classList.remove('hidden');
@@ -829,7 +835,7 @@ auth.onAuthStateChanged(async user=>{
             bio:'New Cyber Warrior!',
             skillRating:3,
             status:'Online',
-            nicknameChangeCount: 0 // Initialize count
+            nicknameChangeCount: 0 // Initialize count for the one-time change
         });
     }
 
