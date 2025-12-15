@@ -41,7 +41,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 #chatList { padding:10px; border-right:1px solid #333; overflow-y:auto; }
 #chatWindow { display:flex; flex-direction:column; padding:10px; }
 
-/* --- CHAT BUBBLE STYLES --- */
+/* --- CHAT BUBBLE STYLES (Fixed) --- */
 #messageDisplay { 
     flex-grow: 1; 
     overflow-y: auto; 
@@ -414,11 +414,13 @@ function renderUserCard(d, data) {
         const acceptBtn = document.createElement("button");
         acceptBtn.className = "neon-btn";
         acceptBtn.textContent = "Accept";
+        // --- ACCEPT DUO CALL (FUNCTIONAL) ---
         acceptBtn.onclick = (e) => { e.stopPropagation(); acceptFriend(pendingRequests[d.id]); };
         
         const declineBtn = document.createElement("button");
         declineBtn.className = "neon-btn remove";
         declineBtn.textContent = "Decline";
+        // --- DECLINE DUO CALL (FUNCTIONAL) ---
         declineBtn.onclick = (e) => { e.stopPropagation(); declineFriend(pendingRequests[d.id]); };
         
         card.appendChild(acceptBtn);
@@ -513,7 +515,7 @@ function filterSearchResults() {
     }
 }
 
-// ---------- FRIEND REQUESTS & REMOVALS ----------
+// ---------- FRIEND REQUESTS & REMOVALS (Transaction Logic) ----------
 
 async function sendFriendRequest(toUid){
     if(!currentUser || toUid===currentUser.uid) return alert("Cannot send a request to yourself.");
@@ -557,13 +559,16 @@ async function acceptFriend(reqId){
             const senderRef = db.collection("users").doc(senderId);
             const receiverRef = db.collection("users").doc(receiverId);
             
+            // 1. Add Receiver to Sender's friends list
             t.update(senderRef, {
                 friends: firebase.firestore.FieldValue.arrayUnion(receiverId)
             });
+            // 2. Add Sender to Receiver's friends list
             t.update(receiverRef, {
                 friends: firebase.firestore.FieldValue.arrayUnion(senderId)
             });
             
+            // 3. Delete the request document
             t.delete(reqRef);    
         });
         alert("Friend accepted! You are now Duos.");
@@ -591,7 +596,6 @@ async function declineFriend(reqId){
     loadAllUsers(); 
 }
 
-// --- DUO REMOVAL LOGIC ---
 async function removeFriend(friendUid) {
     if (!currentUser || friendUid === currentUser.uid) return;
 
@@ -616,8 +620,7 @@ async function removeFriend(friendUid) {
                 friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
             });
             
-            // 3. Delete the chat document (Requires updated security rules)
-            // Note: If the document doesn't exist (no messages sent), this will effectively do nothing without error.
+            // 3. Delete the chat document (Requires fixed security rules)
             t.delete(chatRef);    
         });
         alert(`Successfully removed Duo.`);
@@ -697,7 +700,7 @@ async function loadFriends() {
 
     const friendDocs = await Promise.all(friendUids.map(uid => db.collection('users').doc(uid).get()));
     
-    friendUsers = {}; // Clear and rebuild cache
+    friendUsers = {}; 
     friendDocs.forEach(doc => {
         if (doc.exists) {
             const data = doc.data();
