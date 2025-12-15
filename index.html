@@ -428,7 +428,7 @@ async function loadDuoCache() {
         return true;
     } catch (e) {
          console.error("Error loading Duo Cache:", e);
-         alert(`FATAL ERROR: Could not load Duo status. Check Firestore Rules for /requests. Details: ${e.message}`);
+         // NOTE: The Firebase rule update (allow read) should fix this error.
          return false;
     }
 }
@@ -455,7 +455,7 @@ async function loadAllUsers(silent = false){
     // Step 2: Load all requests involving the current user (critical for status checks)
     const cacheLoaded = await loadDuoCache();
     if (!cacheLoaded) {
-        if (!silent) container.innerHTML=`<p style="width:100%; text-align:center; color:red;">Error loading Duo status. Check Firestore Rules for /requests.</p>`; 
+        if (!silent) container.innerHTML=`<p style="width:100%; text-align:center; color:red;">Error loading Duo status. Please check your security rules for /requests.</p>`; 
         return;
     }
 
