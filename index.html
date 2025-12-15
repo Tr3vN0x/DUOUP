@@ -290,7 +290,7 @@ let currentUser = null,
 let currentProfileData = {}; 
 let allUsersCache = [];    
 let friendProfiles = {}; 
-let blockedUsers = {}; 
+let blockedUsers = {}; // We keep this variable, but we won't use it for filtering right now.
 
 
 // ------------------------------------------------
@@ -460,6 +460,7 @@ async function attemptUsernameChange() {
 
 // --- FRIENDSHIP, SEARCH, AND BLOCK LOADING ---
 async function loadBlocks() {
+    // We are deliberately keeping this function so we can easily add it back later.
     if (!currentUser) return;
     blockedUsers = {};
     
@@ -474,7 +475,8 @@ async function loadBlocks() {
             blockedUsers[blockedUid] = docId;
         });
     } catch (e) {
-        console.warn("Could not load blocks list. Check security rules for /blocks.", e);
+        // Suppress warning during testing phase
+        // console.warn("Could not load blocks list. Check security rules for /blocks.", e); 
     }
 }
 
@@ -488,9 +490,7 @@ async function loadAllUsers(){
         allUsersCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
         allUsersCache.forEach(user => {
-            // CRITICAL TEMPORARY CHANGE: Only filter out the current user. 
-            // The block list check (!blockedUsers[user.id]) is intentionally REMOVED 
-            // to ensure ALL accounts are displayed for testing.
+            // CRITICAL CHANGE: Only filter out the current user. Blocked filter removed entirely.
             if (user.id !== currentUser.uid) { 
                 allUsersTab.appendChild(renderUserCard({ uid: user.id }, user));
             }
@@ -514,8 +514,8 @@ function filterSearchResults() {
     searchResultsDiv.innerHTML = ""; 
 
     const filteredUsers = allUsersCache.filter(user => {
-        // 1. Filter out self and blocked users (Blocks are still applied in search for now)
-        if (user.id === currentUser.uid || blockedUsers[user.id]) {
+        // CRITICAL CHANGE: Only filter out self. Blocked filter removed entirely.
+        if (user.id === currentUser.uid) {
             return false;
         }
 
@@ -782,7 +782,7 @@ auth.onAuthStateChanged(async user=>{
     
     // 2. Load Core Data
     await loadUserProfile(); 
-    await loadBlocks(); 
+    await loadBlocks(); // This still runs, but the result is not used for display.
 
     // 3. Load UI Data
     document.getElementById("welcome").textContent=`Welcome, ${currentUser.displayName || currentUser.email}`;
