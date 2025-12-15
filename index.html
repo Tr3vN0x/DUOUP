@@ -1,200 +1,219 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP Profiles & Friends (Client-Only)</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
-<style>
-body {margin:0;font-family:'Orbitron',sans-serif;background:#0b0b0b;color:white;}
-.container {width:90%;max-width:1000px;margin:auto;padding:20px;}
-.hidden {display:none !important;}
-.header {background:#111;border-bottom:3px solid cyan;box-shadow:0 0 20px rgba(0,255,255,0.5);padding:10px 0;margin-bottom:20px;display:flex;align-items:center;justify-content:center;}
-.header h1 {font-size:2.5em;color:#fff;text-shadow:0 0 5px cyan,0 0 10px cyan,0 0 15px magenta;margin:0;}
-.icon-container {margin-right:15px;font-size:2.5em;color:cyan;text-shadow:0 0 5px cyan,0 0 10px magenta;}
-.neon-btn {border:2px solid cyan;background:transparent;color:white;padding:8px 14px;margin:5px;border-radius:6px;cursor:pointer;box-shadow:0 0 10px cyan;transition:all 0.2s ease-in-out;text-transform:uppercase;font-family:'Orbitron',sans-serif;white-space: nowrap;}
-.neon-btn:hover {border-color:magenta;box-shadow:0 0 15px magenta;}
-.neon-btn.remove {border-color:red;box-shadow:0 0 10px red;}
-.neon-btn.remove:hover {border-color:orange;box-shadow:0 0 15px orange;}
-#messageInput, #profileNickname, #profileBio, #profileSkillRating, #profileStatus, #searchInput, #statusFilter, #skillFilter {flex-grow:1;padding:10px;border:1px solid cyan;background:#181818;color:white;border-radius:6px;font-family:inherit;outline:none;}
-#profileBio {resize: vertical;}
-#profileSkillRating, #profileStatus {width:100%;max-width:200px;}
-.flex {display:flex;gap:15px;flex-wrap:wrap;}
-.card-container {display:flex;flex-wrap:wrap;gap:15px;justify-content:center;}
-.card {width:100%;max-width:300px;padding:15px;border:2px solid cyan;border-radius:12px;background:#111;box-shadow:0 0 10px cyan;display:flex;flex-direction:column;align-items:center;margin-bottom:15px;}
-.card-content {display:flex;flex-direction:column;align-items:center;width:100%;margin-bottom:10px;}
-.avatar {width:50px;height:50px;border-radius:50%;border:2px solid cyan;object-fit:cover;margin-bottom:10px;}
-.skill-rating {color:gold;font-size:1.2em;margin-bottom:5px;}
-.status-indicator {font-size:0.8em;padding:3px 8px;border-radius:4px;font-weight:bold;margin-bottom:10px;}
-.status-online {background-color:#00cc00;color:#0b0b0b;box-shadow:0 0 5px #00ff00;}
-.status-ingame {background-color:#ffaa00;color:#0b0b0b;box-shadow:0 0 5px #ffaa00;}
-.status-lfd {background-color:#00aaff;color:#0b0b0b;box-shadow:0 0 5px #00aaff;}
-.unread-badge {background-color:magenta;color:white;border-radius:50%;padding:2px 7px;margin-left:5px;font-size:0.7em;font-weight:bold;box-shadow:0 0 5px magenta;}
-</style>
+  <title>DuoUp</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    #appDiv { display: none; }
+    input { margin: 5px; }
+    button { margin: 5px; }
+    .friend, .request { margin-bottom: 10px; }
+    .message { border: 1px solid #ccc; padding: 5px; margin: 5px 0; }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 </head>
 <body>
-<div class="header"><div class="icon-container">⚡</div><h1>DUO UP</h1></div>
+  <h1>DuoUp</h1>
+  <div id="loginDiv">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login</button>
+    <button id="signupBtn">Sign Up</button>
+  </div>
 
-<div id="loginPage" class="container">
-<p style="text-align:center;">Find your perfect partner and dominate the cyber-arena.</p>
-<div style="text-align:center;">
-<button class="neon-btn" onclick="login()">Login with Google</button>
-</div>
-</div>
+  <div id="appDiv">
+    <h2>Stars: <span id="stars">0</span></h2>
+    
+    <h2>Friend Requests</h2>
+    <ul id="friendRequests"></ul>
+    
+    <h2>Friends</h2>
+    <ul id="friendsList"></ul>
 
-<div id="dashboard" class="container hidden">
-<h2 id="welcome"></h2>
-<div style="margin-bottom:20px;">
-<button class="neon-btn" onclick="showTab('allUsers')">Suggested</button>
-<button class="neon-btn" onclick="showTab('requests')">Requests</button>
-<button class="neon-btn" onclick="showTab('friends')">Friends</button>
-<button class="neon-btn" onclick="showTab('profile')">Profile</button>
-<button class="neon-btn" onclick="logout()">Logout</button>
-</div>
+    <h2>Send Friend Request</h2>
+    <input type="email" id="friendEmail" placeholder="Friend's email">
+    <button id="sendRequestBtn">Send Request</button>
 
-<div id="allUsersTab" class="card-container"></div>
-<div id="requestsTab" class="flex hidden"></div>
-<div id="friendsTab" class="flex hidden"></div>
-<div id="profileTab" class="hidden">
-<h2>Cyber-Profile Editor</h2>
-<div style="padding:20px;border:2px solid magenta;border-radius:10px;background:#1a1a1a;">
-<img id="profileAvatar" class="avatar" style="width:80px;height:80px;margin-bottom:10px;" src="">
-<label>Nickname:</label>
-<input type="text" id="profileNickname" disabled>
-<label>Bio/Tagline:</label>
-<textarea id="profileBio" rows="3"></textarea>
-<label>Skill Rating (1-5):</label>
-<select id="profileSkillRating">
-<option value="1">⭐</option><option value="2">⭐⭐</option><option value="3">⭐⭐⭐</option>
-<option value="4">⭐⭐⭐⭐</option><option value="5">⭐⭐⭐⭐⭐</option></select>
-<label>Status:</label>
-<select id="profileStatus"><option value="Online">Online</option><option value="In Game">In Game</option><option value="LFD">Looking For Duo (LFD)</option></select>
-<button class="neon-btn" onclick="saveProfile()">Save Profile</button>
-<p id="saveMessage"></p>
-</div>
-</div>
+    <h2>Messages</h2>
+    <ul id="messagesList"></ul>
+    <input type="text" id="messageInput" placeholder="Type message">
+    <button id="sendMessageBtn">Send</button>
+  </div>
 
 <script>
-// Firebase init
 const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "..."
+  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+  authDomain: "duoup-cfae6.firebaseapp.com",
+  projectId: "duoup-cfae6",
+  storageBucket: "duoup-cfae6.firebasestorage.app",
+  messagingSenderId: "812263060524",
+  appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
+  measurementId: "G-46B67F90FK"
 };
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
 
-const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-let currentUser = null;
+const loginDiv = document.getElementById("loginDiv");
+const appDiv = document.getElementById("appDiv");
 
-function login(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e=>alert(e.message)); }
-function logout(){ auth.signOut(); }
+let currentUser;
 
-auth.onAuthStateChanged(async user=>{
-  if(!user){ loginPage.classList.remove("hidden"); dashboard.classList.add("hidden"); return; }
-  loginPage.classList.add("hidden"); dashboard.classList.remove("hidden"); currentUser=user;
-  const userRef = db.collection("users").doc(user.uid);
-  if(!(await userRef.get()).exists){
-    await userRef.set({uid:user.uid,nickname:user.displayName||"Player",bio:"",friends:[],profileImageUrl:user.photoURL||DEFAULT_AVATAR,skillRating:3,status:"Online"});
+async function createUserDoc(user) {
+  const docRef = db.collection("users").doc(user.uid);
+  const doc = await docRef.get();
+  if (!doc.exists) {
+    await docRef.set({ 
+      friends: [], 
+      stars: 0,
+      email: user.email
+    });
   }
-  const data = (await userRef.get()).data();
-  document.getElementById("welcome").innerHTML = `Welcome, ${data.nickname}`;
-  loadAllUsers(); loadRequests(); loadFriends(); loadProfile();
-});
+}
 
-async function loadAllUsers(){
-  const container = document.getElementById('allUsersTab'); container.innerHTML='';
-  const snapshot = await db.collection('users').get();
-  snapshot.docs.forEach(doc=>{
-    const d=doc.data(); if(d.uid===currentUser.uid) return;
-    const card=document.createElement('div'); card.className='card';
-    card.innerHTML=`<div class="card-content"><img src="${d.profileImageUrl||DEFAULT_AVATAR}" class="avatar"><h3>${d.nickname}</h3></div>`;
-    const btn=document.createElement('button'); btn.className='neon-btn'; btn.textContent='Send Request';
-    btn.onclick=()=>sendFriendRequest(d.uid);
-    card.appendChild(btn); container.appendChild(card);
+// --- Authentication ---
+document.getElementById("loginBtn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  try {
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    currentUser = userCredential.user;
+    await createUserDoc(currentUser);
+    loadApp();
+  } catch(e) { alert(e.message); }
+};
+
+document.getElementById("signupBtn").onclick = async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+    currentUser = userCredential.user;
+    await createUserDoc(currentUser);
+    loadApp();
+  } catch(e) { alert(e.message); }
+};
+
+// --- Load main app ---
+async function loadApp() {
+  loginDiv.style.display = "none";
+  appDiv.style.display = "block";
+  loadStars();
+  loadFriendRequests();
+  loadFriends();
+  loadMessages();
+}
+
+// --- Stars ---
+async function loadStars() {
+  const userDoc = await db.collection("users").doc(currentUser.uid).get();
+  document.getElementById("stars").textContent = userDoc.data().stars || 0;
+}
+
+// --- Friend Requests ---
+async function loadFriendRequests() {
+  const reqList = document.getElementById("friendRequests");
+  reqList.innerHTML = "";
+  const snapshot = await db.collection("friendRequests")
+    .where("receiverId", "==", currentUser.uid)
+    .get();
+  snapshot.forEach(doc => {
+    const li = document.createElement("li");
+    li.className = "request";
+    li.textContent = doc.data().senderEmail;
+    const acceptBtn = document.createElement("button");
+    acceptBtn.textContent = "Accept";
+    acceptBtn.onclick = () => acceptFriend(doc.id, doc.data().senderId);
+    li.appendChild(acceptBtn);
+    reqList.appendChild(li);
   });
 }
 
-async function sendFriendRequest(toUid){
-  if(!currentUser) return; const reqId=[currentUser.uid,toUid].sort().join('_');
-  const reqRef=db.collection('friendRequests').doc(reqId);
-  if((await reqRef.get()).exists){ alert("Request already sent!"); return; }
-  await reqRef.set({senderId:currentUser.uid,receiverId:toUid,createdAt:firebase.firestore.FieldValue.serverTimestamp()});
-  alert("Request sent!"); loadAllUsers(); loadRequests();
-}
-
-async function loadRequests(){
-  const container=document.getElementById('requestsTab'); container.innerHTML='';
-  const snapshot=await db.collection('friendRequests').where('receiverId','==',currentUser.uid).get();
-  if(snapshot.empty){ container.innerHTML='No friend requests.'; return; }
-  for(const doc of snapshot.docs){
-    const senderData=(await db.collection('users').doc(doc.data().senderId).get()).data();
-    const card=document.createElement('div'); card.className='card';
-    card.innerHTML=`<div class="card-content"><img src="${senderData.profileImageUrl||DEFAULT_AVATAR}" class="avatar"><h3>${senderData.nickname}</h3></div>`;
-    const acceptBtn=document.createElement('button'); acceptBtn.className='neon-btn'; acceptBtn.textContent='Accept';
-    acceptBtn.onclick=()=>acceptFriend(doc.id,senderData.uid);
-    const declineBtn=document.createElement('button'); declineBtn.className='neon-btn remove'; declineBtn.textContent='Decline';
-    declineBtn.onclick=()=>declineFriend(doc.id);
-    card.appendChild(acceptBtn); card.appendChild(declineBtn); container.appendChild(card);
-  }
-}
-
-async function acceptFriend(reqId, friendUid){
-  try{
-    await db.collection('users').doc(currentUser.uid).update({friends:firebase.firestore.FieldValue.arrayUnion(friendUid)});
+async function acceptFriend(reqId, senderUid) {
+  try {
+    await db.collection('users').doc(currentUser.uid).update({
+      friends: firebase.firestore.FieldValue.arrayUnion(senderUid)
+    });
     await db.collection('friendRequests').doc(reqId).delete();
-    alert("Duo accepted!");
-    loadRequests(); loadFriends(); loadAllUsers();
-  } catch(e){ console.error(e); alert("Error accepting duo. Check console."); }
+    alert("Duo accepted! +1 star");
+    // Increase stars
+    await db.collection('users').doc(currentUser.uid).update({
+      stars: firebase.firestore.FieldValue.increment(1)
+    });
+    loadStars();
+    loadFriendRequests();
+    loadFriends();
+  } catch(e) { console.error(e); alert("Error accepting duo"); }
 }
 
-async function declineFriend(reqId){
-  await db.collection('friendRequests').doc(reqId).delete();
-  loadRequests(); loadAllUsers();
-}
-
-async function loadFriends(){
-  const container=document.getElementById('friendsTab'); container.innerHTML='';
-  const doc=await db.collection('users').doc(currentUser.uid).get();
-  const friends=doc.data().friends||[];
-  for(const fUid of friends){
-    const fData=(await db.collection('users').doc(fUid).get()).data();
-    const card=document.createElement('div'); card.className='card';
-    card.innerHTML=`<div class="card-content"><img src="${fData.profileImageUrl||DEFAULT_AVATAR}" class="avatar"><h3>${fData.nickname}</h3></div>`;
-    container.appendChild(card);
+// --- Friends List ---
+async function loadFriends() {
+  const friendsList = document.getElementById("friendsList");
+  friendsList.innerHTML = "";
+  const userDoc = await db.collection("users").doc(currentUser.uid).get();
+  const friends = userDoc.data().friends || [];
+  for (let friendUid of friends) {
+    const friendDoc = await db.collection("users").doc(friendUid).get();
+    const li = document.createElement("li");
+    li.className = "friend";
+    li.textContent = friendDoc.data().email || friendUid;
+    friendsList.appendChild(li);
   }
 }
 
-async function loadProfile(){
-  const doc=await db.collection('users').doc(currentUser.uid).get(); const d=doc.data();
-  document.getElementById('profileAvatar').src=d.profileImageUrl||DEFAULT_AVATAR;
-  document.getElementById('profileNickname').value=d.nickname||'';
-  document.getElementById('profileBio').value=d.bio||'';
-  document.getElementById('profileSkillRating').value=d.skillRating||3;
-  document.getElementById('profileStatus').value=d.status||'Online';
-}
-
-async function saveProfile(){
-  await db.collection('users').doc(currentUser.uid).update({
-    bio:document.getElementById('profileBio').value,
-    skillRating:parseInt(document.getElementById('profileSkillRating').value),
-    status:document.getElementById('profileStatus').value
+// --- Send Friend Request ---
+document.getElementById("sendRequestBtn").onclick = async () => {
+  const friendEmail = document.getElementById("friendEmail").value;
+  const snapshot = await db.collection("users").where("email", "==", friendEmail).get();
+  if (snapshot.empty) { alert("User not found"); return; }
+  const friendDoc = snapshot.docs[0];
+  await db.collection("friendRequests").doc().set({
+    senderId: currentUser.uid,
+    senderEmail: currentUser.email,
+    receiverId: friendDoc.id,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
   });
-  document.getElementById('saveMessage').textContent='Profile saved!';
+  alert("Request sent!");
+};
+
+// --- Messaging ---
+async function loadMessages() {
+  const messagesList = document.getElementById("messagesList");
+  messagesList.innerHTML = "";
+  const snapshot = await db.collection("messages")
+    .where("participants", "array-contains", currentUser.uid)
+    .orderBy("timestamp", "asc")
+    .get();
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    const li = document.createElement("li");
+    li.className = "message";
+    li.textContent = `${data.senderEmail}: ${data.text}`;
+    messagesList.appendChild(li);
+  });
 }
 
-function hideAllTabs(){ ['allUsersTab','requestsTab','friendsTab','profileTab'].forEach(t=>document.getElementById(t).classList.add('hidden')); }
-function showTab(tab){ hideAllTabs(); document.getElementById(tab+'Tab')?.classList.remove('hidden'); }
-
+document.getElementById("sendMessageBtn").onclick = async () => {
+  const text = document.getElementById("messageInput").value;
+  if (!text) return;
+  // Send to all friends
+  const userDoc = await db.collection("users").doc(currentUser.uid).get();
+  const friends = userDoc.data().friends || [];
+  for (let friendUid of friends) {
+    await db.collection("messages").add({
+      participants: [currentUser.uid, friendUid],
+      senderId: currentUser.uid,
+      senderEmail: currentUser.email,
+      text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+  document.getElementById("messageInput").value = "";
+  loadMessages();
+};
 </script>
 </body>
 </html>
