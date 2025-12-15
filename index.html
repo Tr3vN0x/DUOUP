@@ -10,29 +10,90 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 <style>
+/* --- BASE STYLES --- */
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
 .container { width:90%; max-width:1000px; margin:auto; padding:20px; }
 .hidden { display:none !important; }
 .header { background:#111; border-bottom:3px solid cyan; box-shadow:0 0 20px rgba(0,255,255,0.5); padding:10px 0; margin-bottom:20px; display:flex; align-items:center; justify-content:center; }
 .header h1 { font-size:2.5em; color:#fff; text-shadow:0 0 5px cyan,0 0 10px cyan,0 0 15px magenta; margin:0; }
 .icon-container { margin-right:15px; font-size:2.5em; color:cyan; text-shadow:0 0 5px cyan,0 0 10px magenta; }
-.neon-btn { border:2px solid cyan; background:transparent; color:white; padding:8px 14px; margin:5px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px cyan; transition:all 0.2s ease-in-out; text-transform:uppercase; font-family:'Orbitron',sans-serif; white-space: nowrap; }
+.neon-btn { 
+    border:2px solid cyan; 
+    background:transparent; 
+    color:white; 
+    padding:8px 14px; 
+    margin:5px; 
+    border-radius:6px; 
+    cursor:pointer; 
+    box-shadow:0 0 10px cyan; 
+    transition:all 0.2s ease-in-out; 
+    text-transform:uppercase; 
+    font-family:'Orbitron',sans-serif; 
+    white-space: nowrap; 
+}
 .neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; transform: translateY(-1px); }
 .neon-btn:disabled { border-color: #555; box-shadow: none; color: #555; cursor: not-allowed; }
 .neon-btn.remove { border-color:red; box-shadow:0 0 10px red; }
 .neon-btn.remove:hover { border-color:orange; box-shadow:0 0 15px orange; }
 .neon-btn.add { border-color:lime; box-shadow:0 0 10px lime; }
 .neon-btn.add:hover { border-color:green; box-shadow:0 0 15px green; }
-.neon-btn.pending { border-color: yellow; box-shadow: 0 0 10px yellow; color: yellow; cursor: default; }
+.neon-btn.pending { 
+    border-color: yellow; 
+    box-shadow: 0 0 10px yellow; 
+    color: yellow; 
+    cursor: default; 
+}
 
-input[type="text"], input[type="number"], textarea, select { flex-grow:1; padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px; font-family:inherit; outline:none; transition: border-color 0.2s, box-shadow 0.2s; }
-input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus { border-color: magenta; box-shadow: 0 0 8px magenta; }
+/* --- INPUT AND SELECT STYLES --- */
+input[type="text"], input[type="number"], textarea, select { 
+    flex-grow:1; 
+    padding:10px; 
+    border:1px solid cyan; 
+    background:#181818; 
+    color:white; 
+    border-radius:6px; 
+    font-family:inherit; 
+    outline:none; 
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+input[type="text"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+    border-color: magenta;
+    box-shadow: 0 0 8px magenta;
+}
 textarea { resize: vertical; }
 
+/* --- CARD STYLES --- */
 .card-container { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; padding-top: 10px; }
-.card { width: 100%; max-width: 300px; padding: 20px; border: 3px solid transparent; border-radius: 8px; background: #181818; box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 5px rgba(0, 255, 255, 0.2); border-image-source: linear-gradient(45deg, cyan, magenta, cyan); border-image-slice: 1; display: flex; flex-direction: column; align-items: center; cursor: pointer; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
-.card:hover { transform: translateY(-5px); box-shadow: 0 0 30px magenta, inset 0 0 10px rgba(255, 0, 255, 0.5); }
-.card-content-box { display: flex; flex-direction: column; align-items: center; width: 100%; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #333; }
+.card {
+    width: 100%;
+    max-width: 300px; 
+    padding: 20px;
+    border: 3px solid transparent; 
+    border-radius: 8px;
+    background: #181818; 
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 5px rgba(0, 255, 255, 0.2);
+    border-image-source: linear-gradient(45deg, cyan, magenta, cyan);
+    border-image-slice: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 30px magenta, inset 0 0 10px rgba(255, 0, 255, 0.5); 
+}
+.card-content-box { 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px; 
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #333; 
+}
 .avatar { width:80px; height:80px; border-radius:50%; border:4px solid magenta; object-fit:cover; margin-bottom:15px; }
 .skill-rating { color:gold; font-size:1.4em; margin-bottom:10px; }
 .status-indicator { font-size:0.9em; padding:4px 10px; border-radius:4px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; }
@@ -40,9 +101,30 @@ textarea { resize: vertical; }
 .status-ingame { background-color:#ffaa00; color:#0b0b0b; box-shadow:0 0 5px #ffaa00; }
 .status-lfd { background-color:#00aaff; color:#0b0b0b; box-shadow:0 0 5px #00aaff; }
 
-#navigationBar { display: flex; justify-content: center; flex-wrap: wrap; padding: 10px; background: #151515; border-radius: 8px; margin-bottom: 30px; border: 1px solid #333; }
-#searchControls { display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #004444; }
+/* --- NAVIGATION AND SEARCH STYLES --- */
+#navigationBar {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 10px;
+    background: #151515;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    border: 1px solid #333;
+}
+#searchControls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #1a1a1a;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #004444;
+}
 
+/* --- MESSAGING SPECIFIC STYLES --- */
 #messagingTab { display: flex; gap: 20px; height: 75vh; }
 #chatList { width: 300px; padding: 15px; border: 2px solid cyan; border-radius: 8px; background: #1a1a1a; overflow-y: auto; }
 #activeDuoList { margin-top: 10px; }
@@ -57,10 +139,33 @@ textarea { resize: vertical; }
 .message.received { background: #333333; align-self: flex-start; border-bottom-left-radius: 5px; }
 #messageInputArea { padding: 10px; border-top: 2px solid magenta; background: #0b0b0b; display: flex; gap: 10px; }
 
-#viewProfileContent { padding: 30px; border: 3px solid magenta; border-radius: 12px; background: #1a1a1a; margin-top: 20px; display: flex; flex-direction: column; align-items: center; }
-.profile-stat { width: 100%; max-width: 400px; display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #333; margin-bottom: 5px; }
-.profile-stat span:first-child { color: cyan; font-weight: bold; }
-.profile-stat span:last-child { text-align: right; }
+/* --- PROFILE VIEW STYLES --- */
+#viewProfileContent {
+    padding: 30px;
+    border: 3px solid magenta;
+    border-radius: 12px;
+    background: #1a1a1a;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.profile-stat {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed #333;
+    margin-bottom: 5px;
+}
+.profile-stat span:first-child {
+    color: cyan;
+    font-weight: bold;
+}
+.profile-stat span:last-child {
+    text-align: right;
+}
 </style>
 </head>
 <body>
@@ -103,7 +208,7 @@ textarea { resize: vertical; }
     <div id="searchResults" class="card-container"></div>
 </div>
 
-<div id="friendsTab" class="container hidden"></div>
+<div id="friendsTab" class="container hidden" style="display:block;"></div>
 
 <div id="messagingTab" class="hidden">
     <div id="chatList">
@@ -114,7 +219,7 @@ textarea { resize: vertical; }
         <h3 id="chatHeader">Select a Duo to start messaging</h3>
         <div id="messageDisplay"></div>
         <div id="messageInputArea" class="hidden">
-            <input type="text" id="messageInput" placeholder="Type your message..." onkeyup="if(event.key === 'Enter') sendMessage()">
+            <input type="text" id="messageInput" placeholder="Type your message..." onkeyup="if(event.key==='Enter') sendMessage()">
             <button class="neon-btn" id="sendMessageBtn" onclick="sendMessage()">Send</button>
         </div>
     </div>
@@ -160,7 +265,7 @@ textarea { resize: vertical; }
 </div>
 
 <script>
-// --- Firebase Init ---
+// --- Firebase Web Init ---
 const firebaseConfig = {
   apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
   authDomain: "duoup-cfae6.firebaseapp.com",
@@ -175,120 +280,142 @@ const db = firebase.firestore();
 const storage = firebase.storage();
 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-let currentUser=null, currentProfileData={}, allUsersCache=[], friendProfiles={}, currentChatUid=null, chatListener=null;
 
-// --- Auth ---
+// --- Global State ---
+let currentUser = null;
+let currentProfileData = {};
+let allUsersCache = [];
+let friendProfiles = {};
+let currentChatUid = null;
+let chatListener = null;
+
+// --- Authentication ---
 function login(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
 function logout(){ if(chatListener) chatListener(); auth.signOut(); }
 
-// --- Tab Management ---
+// ----------------------------------------------------------------------
+// --- TAB MANAGEMENT ---
+// ----------------------------------------------------------------------
 function showTab(tab){
     document.querySelectorAll('#allUsersTab, #searchTab, #friendsTab, #messagingTab, #profileTab, #viewProfileTab').forEach(e=>e.classList.add('hidden'));
-    if(tab!=='messaging' && chatListener){ chatListener(); chatListener=null; currentChatUid=null; }
+    if(tab !== 'messaging' && chatListener) { chatListener(); chatListener = null; currentChatUid = null; }
+
     switch(tab){
         case 'allUsers': loadAllUsers(); break;
         case 'search': filterSearchResults(); break;
         case 'friends': loadFriends(); break;
         case 'messaging': loadChatList(); break;
         case 'profile': loadUserProfile(); break;
+        case 'viewProfile': break;
+        default: console.warn("Unknown tab:", tab); return;
     }
+
     document.getElementById(tab+'Tab')?.classList.remove('hidden');
 }
 
-// --- Core Functions ---
-async function loadAllUsers(){
-    if(!currentUser) return;
-    const container=document.getElementById('allUsersTab'); container.innerHTML="<h3>Suggested Players</h3>";
-    try{
-        const snapshot=await db.collection('users').get();
-        allUsersCache=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-        allUsersCache.forEach(user=>{ if(user.id!==currentUser.uid) container.appendChild(renderUserCard(user.id,user)); });
-    }catch(e){ container.innerHTML+=`<p style="color:red;">Error loading users: ${e.message}</p>`; }
-}
-
-async function checkFriendRequestStatus(targetUid){
-    if(!currentUser) return null;
-    const id=`${currentUser.uid}_${targetUid}`, reverseId=`${targetUid}_${currentUser.uid}`;
-    const doc=await db.collection('requests').doc(id).get();
-    if(doc.exists) return doc.data().status;
-    const reverseDoc=await db.collection('requests').doc(reverseId).get();
-    if(reverseDoc.exists) return reverseDoc.data().status==='pending'?'incoming':reverseDoc.data().status;
-    return null;
-}
-
+// --- Render User Card ---
 async function renderUserCard(uid,data){
-    const card=document.createElement('div'); card.className='card';
-    card.onclick=()=>viewProfile(uid);
-    const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
-    const friend=currentProfileData.friends?.includes(uid);
-    const requestStatus=await checkFriendRequestStatus(uid);
-    let buttonHTML='';
-    if(friend){ buttonHTML=`<button class="neon-btn remove" onclick="showTab('messaging'); startChat('${uid}')">Message Duo</button>`; }
-    else if(requestStatus==='pending'){ buttonHTML=`<button class="neon-btn pending" disabled>Request Pending</button>`; }
-    else if(requestStatus==='incoming'){ buttonHTML=`<button class="neon-btn add" onclick="respondToFriendRequest('${uid}','accept')">Accept</button><button class="neon-btn remove" onclick="respondToFriendRequest('${uid}','decline')">Decline</button>`; }
-    else{ buttonHTML=`<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`; }
-    card.innerHTML=`<div class="card-content-box"><img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar"><h3 style="margin:0;">${data.username?`@${data.username}`:data.nickname||'Unknown'}</h3><div class="skill-rating">${'⭐'.repeat(data.skillRating||3)}</div><div class="status-indicator status-${statusClass}">${data.status||'Online'}</div><p style="margin:5px 0; font-size:0.9em; text-align:center; color:#ccc;">${data.bio||'No bio provided.'}</p></div>${buttonHTML}`;
+    const card=document.createElement('div'); 
+    card.className='card';
+    card.onclick=()=>viewProfile(uid); 
+
+    const statusClass = (data.status || 'Online').replace(/\s/g, '').toLowerCase();
+
+    card.innerHTML=`
+        <div class="card-content-box">
+            <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
+            <h3 style="margin:0;">${data.username ? `@${data.username}` : data.nickname||'Unknown'}</h3>
+            <div class="skill-rating">${'⭐'.repeat(data.skillRating || 3)}</div>
+            <div class="status-indicator status-${statusClass}">${data.status || 'Online'}</div>
+            <p style="margin:5px 0; font-size:0.9em; text-align:center; color:#ccc;">${data.bio||'No bio provided.'}</p>
+        </div>
+        <button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>
+    `;
     return card;
 }
 
-// --- Friend Requests ---
-async function sendFriendRequest(targetUid){
+// --- Load Users ---
+async function loadAllUsers(){
     if(!currentUser) return;
-    const id=`${currentUser.uid}_${targetUid}`;
-    try{
-        await db.collection('requests').doc(id).set({senderId:currentUser.uid, receiverId:targetUid, status:'pending', sentAt:firebase.firestore.FieldValue.serverTimestamp()});
-        alert("Request sent!");
-        loadAllUsers(); filterSearchResults();
-    }catch(e){ console.error(e); alert("Failed to send request."); }
+    const container = document.getElementById('allUsersTab');
+    container.innerHTML = "<h3>Suggested Players</h3>";
+
+    try {
+        const snapshot = await db.collection('users').get();
+        allUsersCache = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
+
+        for (const user of allUsersCache){
+            if(user.id===currentUser.uid) continue;
+            const card = await renderUserCard(user.id,user);
+            container.appendChild(card);
+        }
+    } catch(e){
+        container.innerHTML += `<p style="color:red;">Error loading users: ${e.message}</p>`;
+    }
 }
 
-async function respondToFriendRequest(senderUid, action){
-    if(!currentUser) return;
-    const id=`${senderUid}_${currentUser.uid}`; const ref=db.collection('requests').doc(id);
-    try{
-        if(action==='accept'){
-            await ref.update({status:'accepted'});
-            const batch=db.batch();
-            batch.update(db.collection('users').doc(currentUser.uid),{friends:firebase.firestore.FieldValue.arrayUnion(senderUid)});
-            batch.update(db.collection('users').doc(senderUid),{friends:firebase.firestore.FieldValue.arrayUnion(currentUser.uid)});
-            await batch.commit();
-        } else if(action==='decline'){ await ref.update({status:'declined'}); }
-        loadFriends(); loadAllUsers(); filterSearchResults();
-    }catch(e){ console.error(e); alert("Failed to update friend request."); }
+// --- Filter Search ---
+async function filterSearchResults(){
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+    const results = document.getElementById('searchResults'); results.innerHTML='';
+    for(const u of allUsersCache){
+        if(u.id===currentUser.uid) continue;
+        if(!u.nickname?.toLowerCase().includes(q) && !u.bio?.toLowerCase().includes(q)) continue;
+        if(status && u.status!==status) continue;
+        const card = await renderUserCard(u.id,u);
+        results.appendChild(card);
+    }
 }
 
 // --- Load Friends ---
 async function loadFriends(){
     if(!currentUser) return;
-    const container=document.getElementById('friendsTab'); container.innerHTML="<h3>Your Duos</h3><div class='card-container' id='duosContainer'></div>";
-    const duosContainer=document.getElementById('duosContainer');
+    const container=document.getElementById('friendsTab'); 
+    container.innerHTML="<h3>Your Duos</h3><div class='card-container' id='duosContainer'></div>";
+    const duosContainer = document.getElementById('duosContainer');
+    
     const doc=await db.collection('users').doc(currentUser.uid).get();
     currentProfileData=doc.data();
     const friends=currentProfileData.friends||[];
-    if(friends.length===0){ duosContainer.innerHTML="<p>No duos yet. Send a request from 'Suggested' or 'Search'.</p>"; return; }
-    const friendDocs=await Promise.all(friends.map(uid=>db.collection('users').doc(uid).get()));
-    friendDocs.forEach(d=>{ friendProfiles[d.id]=d.data(); duosContainer.appendChild(renderUserCard(d.id,d.data())); });
+
+    if(friends.length===0){duosContainer.innerHTML="<p>No duos yet. Send a request from 'Suggested' or 'Search'.</p>"; return;}
+
+    for(const uid of friends){
+        const d = await db.collection('users').doc(uid).get();
+        friendProfiles[uid] = d.data();
+        const card = await renderUserCard(uid,d.data());
+        duosContainer.appendChild(card);
+    }
 }
 
-// --- Search ---
-function filterSearchResults(){
-    const q=document.getElementById('searchInput').value.toLowerCase();
-    const status=document.getElementById('statusFilter').value;
-    const results=document.getElementById('searchResults'); results.innerHTML='';
-    allUsersCache.forEach(async u=>{
-        if(u.id===currentUser.uid) return;
-        if(!u.nickname?.toLowerCase().includes(q)&&!u.bio?.toLowerCase().includes(q)) return;
-        if(status&&u.status!==status) return;
-        results.appendChild(await renderUserCard(u.id,u));
-    });
+// --- Send Friend Request ---
+async function sendFriendRequest(uid){
+    if(!currentUser) return;
+    const id = `${currentUser.uid}_${uid}`;
+    try {
+        await db.collection('requests').doc(id).set({
+            senderId:currentUser.uid,
+            receiverId:uid,
+            status:'pending',
+            sentAt:firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("Request sent! Check the Duos tab for responses.");
+        await loadAllUsers(); 
+        await filterSearchResults();
+    } catch(e){
+        alert("Failed to send request. Check console.");
+        console.error(e);
+    }
 }
 
-// --- Profile ---
+// --- Profile Functions ---
 async function loadUserProfile(){
     if(!currentUser) return;
     const doc=await db.collection('users').doc(currentUser.uid).get();
     currentProfileData=doc.data();
     const data=currentProfileData;
+
     document.getElementById('profileAvatar').src=data.profileImageUrl||DEFAULT_AVATAR;
     document.getElementById('profileNickname').value=data.nickname||"N/A";
     document.getElementById('profileBio').value=data.bio||"";
@@ -298,7 +425,8 @@ async function loadUserProfile(){
 
 async function saveProfile(){
     if(!currentUser) return;
-    const saveMsg=document.getElementById('saveMessage'); saveMsg.textContent="Saving...";
+    const saveMsg=document.getElementById('saveMessage');
+    saveMsg.textContent="Saving...";
     try{
         await db.collection('users').doc(currentUser.uid).update({
             bio:document.getElementById('profileBio').value,
@@ -306,76 +434,39 @@ async function saveProfile(){
             status:document.getElementById('profileStatus').value
         });
         saveMsg.textContent="Profile saved successfully!";
-        loadUserProfile();
-    }catch(e){ saveMsg.textContent=`Error: ${e.message}`; console.error(e); }
-}
-
-// --- Messaging ---
-function getChatId(u1,u2){ return [u1,u2].sort().join('_'); }
-
-async function loadChatList(){
-    if(Object.keys(friendProfiles).length===0) await loadFriends();
-    const list=document.getElementById('activeDuoList'); list.innerHTML='';
-    const friends=currentProfileData.friends||[];
-    if(friends.length===0){ list.innerHTML="<p style='color:yellow; font-size:0.9em;'>No duos. Add one from the 'Duos' tab.</p>"; return; }
-    friends.forEach(uid=>{
-        const friend=friendProfiles[uid]; if(!friend) return;
-        const entry=document.createElement('div'); entry.className='chat-entry'; entry.textContent=friend.username||friend.nickname;
-        entry.onclick=()=>startChat(uid); list.appendChild(entry);
-    });
-}
-
-async function startChat(targetUid){
-    if(chatListener) chatListener();
-    document.querySelectorAll('.chat-entry').forEach(el=>el.classList.remove('active'));
-    document.querySelector(`.chat-entry[onclick="startChat('${targetUid}')"]`)?.classList.add('active');
-    currentChatUid=targetUid;
-    const header=document.getElementById('chatHeader'); const friend=friendProfiles[targetUid];
-    header.textContent="Chat with "+(friend?.username||friend?.nickname||'Duo');
-    const display=document.getElementById('messageDisplay'); display.innerHTML='Connecting...';
-    document.getElementById('messageInputArea').classList.remove('hidden');
-    const chatId=getChatId(currentUser.uid,targetUid);
-    const chatRef=db.collection('chats').doc(chatId);
-    try{ await chatRef.set({participants:[currentUser.uid,targetUid].sort(), createdAt:firebase.firestore.FieldValue.serverTimestamp()}, {merge:true}); }catch(e){ console.error(e); display.innerHTML='<p style="color:red;">Failed to initiate chat.</p>'; return; }
-    chatListener=chatRef.collection('messages').orderBy('timestamp','asc').onSnapshot(snapshot=>{
-        display.innerHTML='';
-        snapshot.forEach(d=>{
-            const m=d.data(); const div=document.createElement('div'); div.className='message '+(m.senderId===currentUser.uid?'sent':'received');
-            const time=m.timestamp?new Date(m.timestamp.toDate()).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}):'...';
-            const senderName=m.senderId===currentUser.uid?'You':(friend?.username||friend?.nickname||'Duo');
-            div.innerHTML=`<p style="margin:0; font-weight:bold; font-size:0.8em; color:${m.senderId===currentUser.uid?'lime':'cyan'};">${senderName}</p><p style="margin:0;">${m.text}</p><span style="font-size:0.6em; color:#888; display:block; text-align:${m.senderId===currentUser.uid?'right':'left'};">${time}</span>`;
-            display.appendChild(div);
-        });
-        display.scrollTop=display.scrollHeight;
-    }, error=>{ console.error("Chat Listener Error:",error); display.innerHTML=`<p style="color:red;">Error: ${error.message}</p>`; });
-}
-
-async function sendMessage(){
-    if(!currentUser||!currentChatUid) return;
-    const input=document.getElementById('messageInput'); const text=input.value.trim(); if(!text) return;
-    const chatId=getChatId(currentUser.uid,currentChatUid);
-    try{
-        await db.collection('chats').doc(chatId).collection('messages').add({
-            senderId:currentUser.uid,
-            receiverId:currentChatUid,
-            text,
-            timestamp:firebase.firestore.FieldValue.serverTimestamp()
-        });
-        input.value='';
-    }catch(e){ console.error(e); alert("Failed to send message."); }
+        await loadUserProfile();
+    } catch(e){
+        saveMsg.textContent=`Error saving: ${e.message}`;
+        console.error(e);
+    }
 }
 
 // --- Auth Listener ---
 auth.onAuthStateChanged(async user=>{
-    if(!user){document.getElementById('loginPage').classList.remove('hidden');document.getElementById('dashboard').classList.add('hidden'); return;}
+    if(!user){document.getElementById('loginPage').classList.remove('hidden'); document.getElementById('dashboard').classList.add('hidden'); return;}
     document.getElementById('loginPage').classList.add('hidden'); document.getElementById('dashboard').classList.remove('hidden');
     currentUser=user;
+
     const uRef=db.collection('users').doc(user.uid); const uDoc=await uRef.get();
-    if(!uDoc.exists){ await uRef.set({nickname:user.displayName, profileImageUrl:user.photoURL, friends:[], bio:'New Cyber Warrior!', skillRating:3, status:'Online'}); }
-    await loadUserProfile(); await loadAllUsers(); await loadFriends();
-    document.getElementById('welcome').textContent=`Welcome, ${currentProfileData.nickname||user.displayName}`;
+    if(!uDoc.exists){
+        await uRef.set({
+            nickname:user.displayName,
+            profileImageUrl:user.photoURL,
+            friends:[],
+            bio:'New Cyber Warrior!',
+            skillRating:3,
+            status:'Online'
+        });
+    }
+
+    await loadUserProfile(); 
+    await loadAllUsers(); 
+    await loadFriends();
+
+    document.getElementById('welcome').textContent = `Welcome, ${currentProfileData.nickname || user.displayName}`;
     showTab('allUsers');
 });
 </script>
+
 </body>
 </html>
