@@ -49,6 +49,18 @@ textarea { resize: vertical; }
 .status-online { background-color:#00cc00; color:#0b0b0b; box-shadow:0 0 5px #00ff00; }
 .status-ingame { background-color:#ffaa00; color:#0b0b0b; box-shadow:0 0 5px #ffaa00; }
 .status-lfd { background-color:#00aaff; color:#0b0b0b; box-shadow:0 0 5px #00aaff; }
+/* Co-Founder Badge Style */
+.co-founder-badge { 
+    background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700); 
+    color: #333; 
+    font-size: 0.75em; 
+    padding: 2px 8px; 
+    border-radius: 4px; 
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    box-shadow: 0 0 5px #FFD700;
+}
 /* Nav */
 #navigationBar { display:flex; justify-content:center; flex-wrap:wrap; padding:10px; background:#151515; border-radius:8px; margin-bottom:30px; border:1px solid #333; }
 #searchControls { display:flex; gap:15px; margin-bottom:20px; align-items:center; flex-wrap:wrap; background:#1a1a1a; padding:15px; border-radius:8px; border:1px solid #004444; }
@@ -158,13 +170,17 @@ textarea { resize: vertical; }
 <div id="profileTab" class="hidden container">
 <h2>Cyber-Profile Editor</h2>
 <div style="padding:20px; border:2px solid magenta; border-radius:10px; background:#1a1a1a;">
-<div style="display:flex; align-items:center; margin-bottom:20px;">
-<img id="profileAvatar" class="avatar" src="" style="width:80px;height:80px;margin-right:20px;border-color:cyan;">
-<div>
-<label style="color: cyan; display:block; margin-bottom:5px;">Unique Identifier:</label>
-<input type="text" id="profileNickname" value="User Nickname" placeholder="Your Unique Nickname">
-<p id="nicknameChangeInfo" style="color:yellow; font-size:0.8em; margin:5px 0 0 0;">(You get one free nickname change.)</p>
-</div>
+<div style="display:flex; align-items:center; margin-bottom:20px; flex-wrap:wrap;">
+    <div style="margin-right:20px; display:flex; flex-direction:column; align-items:center;">
+        <img id="profileAvatar" class="avatar" src="" style="width:100px;height:100px;border-color:cyan;">
+        <p style="font-size:0.8em; margin:5px 0 0 0;">Upload New:</p>
+        <input type="file" id="avatarFile" accept="image/*" style="width:150px; font-size:0.8em; border:none;" onchange="previewAvatar(event)">
+    </div>
+    <div style="flex-grow:1; min-width:200px;">
+        <label style="color: cyan; display:block; margin-bottom:5px;">Unique Identifier:</label>
+        <input type="text" id="profileNickname" value="User Nickname" placeholder="Your Unique Nickname">
+        <p id="nicknameChangeInfo" style="color:yellow; font-size:0.8em; margin:5px 0 0 0;">(You get one free nickname change.)</p>
+    </div>
 </div>
 <div style="margin-bottom:15px;">
 <label style="color: cyan; display:block; margin-bottom:5px;">Bio/Tagline:</label>
@@ -214,6 +230,23 @@ let allUsersCache=[];
 let requestCache = {}; // Global variable to store request states
 let currentChatId=null;
 let chatListener=null;
+
+// ----------------------------------------------------
+// 🌟 CO-FOUNDER / BADGE LOGIC 
+// ----------------------------------------------------
+const CO_FOUNDER_UIDS = [
+    "GmH4xJp92vY8sbwIWgJWjFw9MOQ2", // UID provided by user
+    // Add your own UID here if you want the badge
+];
+
+function getCoFounderBadge(uid) {
+    if (CO_FOUNDER_UIDS.includes(uid)) {
+        return '<div class="co-founder-badge">Co-Founder / Developer</div>';
+    }
+    return '';
+}
+// ----------------------------------------------------
+
 
 // ---------------------------
 // Utility Functions
@@ -299,6 +332,7 @@ function renderUserCard(uid, data, requestInfo){
     card.className='card';
     card.onclick=()=>viewProfile(uid, data);
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
+    const badge = getCoFounderBadge(uid); // Get the badge HTML
 
     let cardButtons;
     if (requestInfo) {
@@ -327,6 +361,7 @@ function renderUserCard(uid, data, requestInfo){
         <div class="card-content-box">
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
         <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
+        ${badge}
         <div class="skill-rating">${'⭐'.repeat(data.skillRating||3)}</div>
         <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
         <p style="margin:5px 0; font-size:0.9em; text-align:center; color:#ccc;">${data.bio||'No bio provided.'}</p>
@@ -342,11 +377,13 @@ function renderDuoCard(uid, data){
     card.className='card';
     card.onclick=()=>viewProfile(uid, data);
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
+    const badge = getCoFounderBadge(uid); // Get the badge HTML
 
     card.innerHTML=`
         <div class="card-content-box">
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar" style="border-color:lime;">
         <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
+        ${badge}
         <div style="color:lime; margin:5px 0;">ACCEPTED DUO</div>
         <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
         </div>
@@ -365,6 +402,7 @@ function renderRequestCard(senderUid, data, requestId){
     const card=document.createElement('div');
     card.className='card request-card';
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
+    const badge = getCoFounderBadge(senderUid); // Get the badge HTML
 
     const cardButtons = `
         <div style="display:flex; gap:10px;">
@@ -377,6 +415,7 @@ function renderRequestCard(senderUid, data, requestId){
         <div class="card-content-box">
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar" style="border-color:orange;">
         <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
+        ${badge}
         <div style="color:yellow; margin:5px 0;">Incoming Request</div>
         <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
         </div>
@@ -708,6 +747,7 @@ function viewProfile(uid, data) {
     // Determine button state for profile view
     const requestInfo = requestCache[uid];
     let profileButton = '';
+    const badge = getCoFounderBadge(uid); // Get the badge HTML
 
     if (requestInfo && requestInfo.status === 'accepted') {
         profileButton = `<button class="neon-btn" style="margin-top:10px;" onclick="openChat('${uid}', '${data.nickname}')">Start Chat</button>
@@ -721,6 +761,7 @@ function viewProfile(uid, data) {
     document.getElementById('viewProfileContent').innerHTML = `
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar" style="width:120px; height:120px; border-color:cyan;">
         <h2 style="margin:10px 0;">${data.nickname}</h2>
+        ${badge}
         <div class="profile-stat"><span>Status:</span><span class="status-indicator status-${(data.status||'Online').replace(/\s/g,'').toLowerCase()}">${data.status||'Online'}</span></div>
         <div class="profile-stat"><span>Skill Rating:</span><span>${'⭐'.repeat(data.skillRating||3)}</span></div>
         <p style="margin-top:20px; color:magenta; font-weight:bold;">Bio:</p>
@@ -728,6 +769,38 @@ function viewProfile(uid, data) {
         ${profileButton}
     `;
     showTab('viewProfile');
+}
+
+
+// ----------------------------------------------------
+// 🌟 CUSTOM PROFILE PICTURE LOGIC (Preview)
+// ----------------------------------------------------
+function previewAvatar(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('profileAvatar').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+// ----------------------------------------------------
+// 🌟 CUSTOM PROFILE PICTURE LOGIC (Upload to Storage)
+// ----------------------------------------------------
+async function uploadAvatar(file) {
+    if (!file) return null;
+
+    const storageRef = storage.ref();
+    const avatarRef = storageRef.child(`avatars/${currentUser.uid}`);
+    
+    // Upload the file
+    const snapshot = await avatarRef.put(file);
+    
+    // Get the public URL
+    const downloadURL = await snapshot.ref.getDownloadURL();
+    return downloadURL;
 }
 
 // ----------------------------------------------------
@@ -745,6 +818,9 @@ async function loadUserProfile() {
     document.getElementById('profileStatus').value = data.status || 'Online';
     document.getElementById('profileAvatar').src = data.profileImageUrl || currentUser.photoURL || DEFAULT_AVATAR;
 
+    // Clear file input on load
+    document.getElementById('avatarFile').value = ''; 
+
     // Check if nickname has already been changed once (count >= 1)
     if (data.nicknameChangeCount && data.nicknameChangeCount >= 1) {
         nicknameInput.disabled = true;
@@ -758,13 +834,16 @@ async function loadUserProfile() {
 }
 
 // ----------------------------------------------------
-// 🌟 NICKNAME CHANGE LOGIC (Save)
+// 🌟 NICKNAME + AVATAR CHANGE LOGIC (Save)
 // ----------------------------------------------------
 async function saveProfile() {
     if(!currentUser) return;
     const messageEl = document.getElementById('saveMessage');
     const nicknameInput = document.getElementById('profileNickname');
+    const avatarFile = document.getElementById('avatarFile').files[0];
+
     messageEl.textContent = 'Saving...';
+    messageEl.style.color = 'yellow';
     
     const newNickname = nicknameInput.value.trim();
     const oldNickname = currentProfileData.nickname;
@@ -775,37 +854,53 @@ async function saveProfile() {
         status: document.getElementById('profileStatus').value,
     };
 
-    // Check for nickname change only if the field is not disabled
+    // --- 1. Handle Nickname Change ---
     if (!nicknameInput.disabled && newNickname !== oldNickname) {
-        // Enforce the one-time change limit
         if (!currentProfileData.nicknameChangeCount || currentProfileData.nicknameChangeCount === 0) {
             updates.nickname = newNickname;
             updates.nicknameChangeCount = (currentProfileData.nicknameChangeCount || 0) + 1;
         } else {
-            // This is a safety check, should be disabled by loadUserProfile
             messageEl.textContent = 'Error: Nickname change limit reached.';
             messageEl.style.color = 'red';
             return;
         }
     } else if (nicknameInput.disabled && newNickname !== oldNickname) {
-         // Should not happen if loadUserProfile worked, but prevents bypassing the limit
          messageEl.textContent = 'Error: Nickname is locked and cannot be changed.';
          messageEl.style.color = 'red';
          return;
     }
 
+    // --- 2. Handle Avatar Upload ---
+    if (avatarFile) {
+        messageEl.textContent = 'Uploading avatar and saving profile...';
+        try {
+            const imageUrl = await uploadAvatar(avatarFile);
+            updates.profileImageUrl = imageUrl;
+        } catch(e) {
+            console.error("Avatar upload failed:", e);
+            messageEl.textContent = `Error: Avatar upload failed. ${e.message}`;
+            messageEl.style.color = 'red';
+            return; 
+        }
+    }
 
+    // --- 3. Update Firestore Document ---
     try {
         await db.collection('users').doc(currentUser.uid).update(updates);
+        
+        // Update local cache and UI elements
         currentProfileData = {...currentProfileData, ...updates};
         document.getElementById('welcome').textContent=`Welcome, ${currentProfileData.nickname||currentUser.displayName}`;
+        
         messageEl.textContent = 'Profile Saved!';
         messageEl.style.color = '#00ff00';
-        // Reload profile view to update disabled state if nickname was just changed
+        
+        // Reload profile view to update disabled state and clear file input
         loadUserProfile(); 
+        
         setTimeout(() => messageEl.textContent = '', 3000);
     } catch(e) {
-        console.error("Save failed:", e);
+        console.error("Profile update failed:", e);
         messageEl.textContent = `Error: ${e.message}`;
         messageEl.style.color = 'red';
     }
