@@ -7,7 +7,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP</title>
+<title>DUO UP (Cyber Social Platform)</title>
+
+<link rel="icon" type="image/x-icon" href="https://your-domain.com/favicon.ico">
+<link rel="apple-touch-icon" href="https://your-domain.com/apple-touch-icon.png">
+
+<meta property="og:title" content="DUO UP: Find Your Next Cyber Social Partner">
+<meta property="og:description" content="The ultimate platform for cyber warriors to connect, build duos, and dominate the digital landscape.">
+<meta property="og:image" content="https://your-domain.com/duo-up-thumbnail.png">
+<meta property="og:url" content="https://your-domain.com/">
+<meta property="og:type" content="website">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@YourTwitterHandle">
+<meta name="twitter:title" content="DUO UP: Cyber Social Platform">
+<meta name="twitter:description" content="Connect, duo up, and conquer. Find your next teammate today.">
+<meta name="twitter:image" content="https://your-domain.com/duo-up-thumbnail.png">
+
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
@@ -100,7 +116,7 @@ textarea { resize: vertical; }
 </style>
 </head>
 <body>
-<div class="header"><div class="icon-container">⚡</div><h1>DUO UP</h1></div>
+<div class="header"><div class="icon-container">⚡</div><h1>DUO UP (Cyber Social Platform)</h1></div>
 
 <div id="loginPage" class="container">
 <p style="text-align:center;">Log in to connect and find your next cyber-duo.</p>
@@ -228,7 +244,7 @@ const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 let currentUser=null;
 let currentProfileData={};
 let allUsersCache=[]; 
-let requestCache = {}; // Global variable to store request states
+let requestCache = {}; 
 let currentChatId=null;
 let chatListener=null;
 
@@ -237,7 +253,6 @@ let chatListener=null;
 // ----------------------------------------------------
 const CO_FOUNDER_UIDS = [
     "GmH4xJp92vY8sbwIWgJWjFw9MOQ2", // UID provided by user
-    // Add your own UID here if you want the badge
 ];
 
 function getCoFounderBadge(uid) {
@@ -252,7 +267,6 @@ function getCoFounderBadge(uid) {
 // ---------------------------
 // Utility Functions
 function getChatId(otherUid) {
-    // Generates a consistent chat ID by sorting UIDs
     return [currentUser.uid, otherUid].sort().join('_');
 }
 
@@ -270,7 +284,6 @@ function logout(){ if(chatListener) chatListener(); auth.signOut(); }
 function showTab(tab){
     document.querySelectorAll('#allUsersTab,#searchTab,#friendsTab,#messagingTab,#profileTab,#viewProfileTab').forEach(e=>e.classList.add('hidden'));
 
-    // Cleanup chat listener when leaving messaging tab
     if(tab!=='messaging' && chatListener){
         chatListener();
         chatListener=null;
@@ -298,11 +311,9 @@ async function loadAllUsers(){
     const container=document.getElementById('allUsersTab');
     container.innerHTML="<h3>Loading Suggested Players...</h3>";
     try{
-        // 1. Cache all users
         const snapshot=await db.collection('users').get();
         allUsersCache=snapshot.docs.map(d=>({id:d.id,...d.data()}));
         
-        // 2. Pre-fetch ALL related requests (sent, received, accepted)
         const requestsSnap = await db.collection('requests')
             .where('participants', 'array-contains', currentUser.uid)
             .get();
@@ -311,7 +322,6 @@ async function loadAllUsers(){
         requestsSnap.forEach(doc => {
             const data = doc.data();
             const otherUid = data.senderId === currentUser.uid ? data.receiverId : data.senderId;
-            // Store request details by the other user's ID
             requestCache[otherUid] = { id: doc.id, status: data.status, senderId: data.senderId };
         });
 
@@ -319,42 +329,34 @@ async function loadAllUsers(){
 
         allUsersCache.forEach(user=>{
             if(user.id===currentUser.uid) return;
-            // Pass the request status for dynamic button rendering
             const card=renderUserCard(user.id, user, requestCache[user.id]);
             if(card) container.appendChild(card);
         });
     }catch(e){ container.innerHTML+=`<p style="width:100%; text-align:center; color:red;">Error loading users: ${e.message}</p>`; }
 }
 
-// Updated function signature: uid, data, requestInfo (new parameter)
 function renderUserCard(uid, data, requestInfo){
     if(!data) return null;
     const card=document.createElement('div');
     card.className='card';
     card.onclick=()=>viewProfile(uid, data);
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
-    const badge = getCoFounderBadge(uid); // Get the badge HTML
+    const badge = getCoFounderBadge(uid);
 
     let cardButtons;
     if (requestInfo) {
-        // State 2, 3, or 4: Request exists
         if (requestInfo.status === 'pending') {
             if (requestInfo.senderId === currentUser.uid) {
-                // State 2: Pending (Outbound)
                 cardButtons = `<button class="neon-btn pending">Pending</button>`; 
             } else {
-                // State 3: Pending (Inbound) - Should be handled on the Duos tab
                 cardButtons = `<button class="neon-btn pending">Request Sent To You</button>`;
             }
         } else if (requestInfo.status === 'accepted') {
-            // State 4: Accepted Duo
             cardButtons = `<button class="neon-btn" style="border-color:lime; color:lime;">Duo</button>`;
         } else {
-            // Request was rejected/deleted/other - allow new request
             cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
         }
     } else {
-        // State 1: No request exists
         cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
     }
 
@@ -374,13 +376,12 @@ function renderUserCard(uid, data, requestInfo){
     return card;
 }
 
-// Render Card for an Accepted Duo (Updated with Remove Duo button)
 function renderDuoCard(uid, data){
     const card=document.createElement('div');
     card.className='card';
     card.onclick=()=>viewProfile(uid, data);
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
-    const badge = getCoFounderBadge(uid); // Get the badge HTML
+    const badge = getCoFounderBadge(uid);
 
     card.innerHTML=`
         <div class="card-content-box">
@@ -401,13 +402,12 @@ function renderDuoCard(uid, data){
 }
 
 
-// Render Card for an incoming Request
 function renderRequestCard(senderUid, data, requestId){
     if(!data) return null;
     const card=document.createElement('div');
     card.className='card request-card';
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
-    const badge = getCoFounderBadge(senderUid); // Get the badge HTML
+    const badge = getCoFounderBadge(senderUid);
 
     const cardButtons = `
         <div style="display:flex; gap:10px;">
@@ -440,10 +440,8 @@ async function loadFriends() {
     pendingListEl.innerHTML = 'Loading Requests...';
     friendListEl.innerHTML = 'Loading Duos...';
     
-    // Ensure user data is cached for rendering
     await loadAllUsers(); 
 
-    // 1. PENDING REQUESTS: Query where current user is the receiver
     try {
         const pendingSnapshot = await db.collection('requests')
             .where('receiverId', '==', currentUser.uid)
@@ -469,7 +467,6 @@ async function loadFriends() {
         pendingListEl.innerHTML = `<p style="width:100%; text-align:center; color:red;">ERROR loading Pending Requests: ${e.message}.</p>`;
     }
     
-    // 2. ACCEPTED DUOS: Query where current user is a participant and status is 'accepted'
     try {
         const acceptedSnapshot = await db.collection('requests')
             .where('participants', 'array-contains', currentUser.uid)
@@ -494,12 +491,11 @@ async function loadFriends() {
         
     } catch (e) {
         console.error("ERROR loading Accepted Duos:", e);
-        friendListEl.innerHTML = `<p style="width:100%; text-align:center; color:red;">ERROR loading Accepted Duos: ${e.message}. Check Security Rules and Index (participants + status).</p>`;
+        friendListEl.innerHTML = `<p style="width:100%; text-align:center; color:red;">ERROR loading Accepted Duos: ${e.message}.</p>`;
     }
 }
 
 
-// Handle Request Logic (Accept/Reject)
 async function handleRequest(requestId, newStatus) {
     if (!currentUser) return;
     
@@ -517,16 +513,13 @@ async function handleRequest(requestId, newStatus) {
 
             transaction.update(docRef, {
                 status: newStatus,
-                // Only add participants field if accepted
                 ...(newStatus === 'accepted' && { participants: participants }), 
                 handledAt: firebase.firestore.FieldValue.serverTimestamp()
             });
             
-            // If accepted, also ensure the chat document exists
             if (newStatus === 'accepted') {
                 const chatRef = db.collection('chats').doc(requestId);
                 const chatDoc = await transaction.get(chatRef);
-                // Create the chat document if it doesn't exist
                 if (!chatDoc.exists) {
                     transaction.set(chatRef, {
                         participants: participants,
@@ -545,7 +538,6 @@ async function handleRequest(requestId, newStatus) {
     }
 }
 
-// NEW FUNCTION: Remove Duo
 async function removeDuo(otherUid) {
     if (!currentUser) return;
     const requestId = getChatId(otherUid);
@@ -555,15 +547,11 @@ async function removeDuo(otherUid) {
     }
 
     try {
-        // 1. Delete the request document (Duo relationship)
         await db.collection('requests').doc(requestId).delete();
         
-        // Note: We intentionally leave the chat history in the 'chats' collection for simplicity.
-        
         alert("Duo successfully removed.");
-        loadFriends(); // Reload the Duos list
+        loadFriends(); 
         
-        // Close chat window if open for this duo
         if (currentChatId === requestId) {
             if (chatListener) chatListener();
             currentChatId = null;
@@ -579,7 +567,6 @@ async function removeDuo(otherUid) {
 }
 
 
-// Send Friend Request
 async function sendFriendRequest(uid){
     if(!currentUser || currentUser.uid === uid) return;
     const id = getChatId(uid);
@@ -595,18 +582,17 @@ async function sendFriendRequest(uid){
             return;
         }
 
-        // Must include both UIDs in the `participants` field for security rules to work
         const participants = [currentUser.uid, uid].sort();
         
         await requestRef.set({
             senderId: currentUser.uid,
             receiverId: uid,
             status: 'pending',
-            participants: participants, // Needed for the 'read' rule to work on suggested users
+            participants: participants, 
             sentAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         alert("Request sent successfully!");
-        loadAllUsers(); // Reload to update button state
+        loadAllUsers(); 
     }catch(e){
         console.error("Error sending friend request:", e);
         alert("Failed to send request. Check your security rules and console for details.");
@@ -621,7 +607,6 @@ async function loadChatList() {
     duoListEl.innerHTML = 'Loading Duos for chat...';
 
     try {
-        // Use the accepted duos query
         const acceptedSnapshot = await db.collection('requests')
             .where('participants', 'array-contains', currentUser.uid)
             .where('status', '==', 'accepted')
@@ -661,7 +646,6 @@ async function loadChatList() {
     }
 }
 
-// Message display logic for bubbles
 function openChat(otherUid, otherNickname) {
     if (chatListener) {
         chatListener();
@@ -681,21 +665,17 @@ function openChat(otherUid, otherNickname) {
         snapshot.forEach(doc => {
             const data = doc.data();
             const messageEl = document.createElement('div');
-            // Applies 'sent' or 'received' class for styling
             messageEl.className = `message ${data.senderId === currentUser.uid ? 'sent' : 'received'}`;
             
-            // Format time nicely
             const time = data.timestamp 
                 ? new Date(data.timestamp.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
                 : 'N/A';
                 
-            // Include the text and the styled time span inside the bubble
             messageEl.innerHTML = `${data.text} <span>${time}</span>`;
             
             messageDisplay.appendChild(messageEl);
         });
 
-        // Auto-scroll to the bottom of the chat window
         messageDisplay.scrollTop = messageDisplay.scrollHeight;
     }, error => {
         console.error("Error listening to messages:", error);
@@ -703,7 +683,6 @@ function openChat(otherUid, otherNickname) {
     });
 }
 
-// Transactional message sending
 async function sendMessage() {
     const messageInput = document.getElementById('messageInput');
     const text = messageInput.value.trim();
@@ -717,7 +696,6 @@ async function sendMessage() {
             const [id1, id2] = currentChatId.split('_');
             const participants = [id1, id2].sort();
 
-            // 1. Ensure the CHAT document exists (needed if chat is new)
             if (!chatDoc.exists) {
                 transaction.set(chatRef, {
                     participants: participants,
@@ -725,14 +703,12 @@ async function sendMessage() {
                 });
             }
 
-            // 2. Add the MESSAGE to the subcollection
             transaction.set(chatRef.collection('messages').doc(), {
                 text: text,
                 senderId: currentUser.uid,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             });
 
-            // 3. Update last message timestamp on the parent chat document
             transaction.update(chatRef, {
                 lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
             });
@@ -751,10 +727,9 @@ async function sendMessage() {
 function filterSearchResults() { document.getElementById('searchResults').innerHTML = '<p>Search functionality pending...</p>'; }
 
 function viewProfile(uid, data) {
-    // Determine button state for profile view
     const requestInfo = requestCache[uid];
     let profileButton = '';
-    const badge = getCoFounderBadge(uid); // Get the badge HTML
+    const badge = getCoFounderBadge(uid);
 
     if (requestInfo && requestInfo.status === 'accepted') {
         profileButton = `<button class="neon-btn" style="margin-top:10px;" onclick="openChat('${uid}', '${data.nickname}')">Start Chat</button>
@@ -782,7 +757,7 @@ function viewProfile(uid, data) {
 
 
 // ----------------------------------------------------
-// 🌟 CUSTOM PROFILE PICTURE LOGIC (Preview)
+// 🌟 CUSTOM PROFILE PICTURE LOGIC (Upload and Save)
 // ----------------------------------------------------
 function previewAvatar(event) {
     const file = event.target.files[0];
@@ -795,27 +770,18 @@ function previewAvatar(event) {
     }
 }
 
-// ----------------------------------------------------
-// 🌟 CUSTOM PROFILE PICTURE LOGIC (Upload to Storage)
-// ----------------------------------------------------
 async function uploadAvatar(file) {
     if (!file) return null;
 
     const storageRef = storage.ref();
-    // Unique path uses the user's UID to enforce security rules
     const avatarRef = storageRef.child(`avatars/${currentUser.uid}`);
     
-    // Upload the file
     const snapshot = await avatarRef.put(file);
     
-    // Get the public URL for Firestore
     const downloadURL = await snapshot.ref.getDownloadURL();
     return downloadURL;
 }
 
-// ----------------------------------------------------
-// 🌟 NICKNAME CHANGE LOGIC (Load) 
-// ----------------------------------------------------
 async function loadUserProfile() {
     if(!currentUser) return;
     const data = currentProfileData;
@@ -826,13 +792,10 @@ async function loadUserProfile() {
     document.getElementById('profileBio').value = data.bio || '';
     document.getElementById('profileSkillRating').value = data.skillRating || 3;
     document.getElementById('profileStatus').value = data.status || 'Online';
-    // Load the saved URL or the default/Google provided URL
     document.getElementById('profileAvatar').src = data.profileImageUrl || currentUser.photoURL || DEFAULT_AVATAR;
 
-    // Clear file input on load to ensure old file isn't re-uploaded unnecessarily
     document.getElementById('avatarFile').value = ''; 
 
-    // Check if nickname has already been changed once (count >= 1)
     if (data.nicknameChangeCount && data.nicknameChangeCount >= 1) {
         nicknameInput.disabled = true;
         changeInfo.textContent = "(Your one-time nickname change has been used.)";
@@ -844,9 +807,6 @@ async function loadUserProfile() {
     }
 }
 
-// ----------------------------------------------------
-// 🌟 NICKNAME + AVATAR CHANGE LOGIC (Save)
-// ----------------------------------------------------
 async function saveProfile() {
     if(!currentUser) return;
     const messageEl = document.getElementById('saveMessage');
@@ -899,17 +859,14 @@ async function saveProfile() {
     try {
         await db.collection('users').doc(currentUser.uid).update(updates);
         
-        // Update local cache and UI elements
         currentProfileData = {...currentProfileData, ...updates};
         document.getElementById('welcome').textContent=`Welcome, ${currentProfileData.nickname||currentUser.displayName}`;
         
         messageEl.textContent = 'Profile Saved!';
         messageEl.style.color = '#00ff00';
         
-        // Reload profile view to update disabled state and clear file input
         loadUserProfile(); 
         
-        // Ensure image preview is the final saved image
         if (updates.profileImageUrl) {
             document.getElementById('profileAvatar').src = updates.profileImageUrl;
         }
@@ -939,14 +896,13 @@ auth.onAuthStateChanged(async user=>{
     const uDoc=await uRef.get();
 
     if(!uDoc.exists){
-        // Initialize new user with nicknameChangeCount = 0
         await uRef.set({
             nickname:user.displayName,
             profileImageUrl:user.photoURL,
             bio:'New Cyber Warrior!',
             skillRating:3,
             status:'Online',
-            nicknameChangeCount: 0 // Initialize count for the one-time change
+            nicknameChangeCount: 0 
         });
     }
 
