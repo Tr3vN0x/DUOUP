@@ -8,10 +8,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DUO UP Profiles & Friends</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
 <style>
 /* --- Base styles --- */
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
@@ -120,7 +120,7 @@ textarea { resize: vertical; }
 <div id="chatWindow">
 <h3 id="chatHeader">Select a Duo to start messaging</h3>
 <div id="messageDisplay"></div>
-<div id="messageInputArea" class="hidden">
+<div id="messageInputArea" class.hidden">
 <input type="text" id="messageInput" placeholder="Type your message..." onkeyup="if(event.key==='Enter') sendMessage()">
 <button class="neon-btn" id="sendMessageBtn" onclick="sendMessage()">Send</button>
 </div>
@@ -188,14 +188,13 @@ const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 let currentUser=null;
 let currentProfileData={};
 let allUsersCache=[];
-let friendProfiles={};
-let currentChatId=null; // Changed from Uid to Id for consistency with chat document ID
+let currentChatId=null;
 let chatListener=null;
 
 // ---------------------------
 // Utility Functions
 function getChatId(otherUid) {
-    // Standard way to create a consistent, sortable chat ID for two users
+    // Ensures a consistent chat ID regardless of who starts the chat
     return [currentUser.uid, otherUid].sort().join('_');
 }
 
@@ -208,18 +207,17 @@ function logout(){ if(chatListener) chatListener(); auth.signOut(); }
 // Tab switching
 function showTab(tab){
     document.querySelectorAll('#allUsersTab,#searchTab,#friendsTab,#messagingTab,#profileTab,#viewProfileTab').forEach(e=>e.classList.add('hidden'));
-    
+
     // Cleanup chat listener when switching away from messaging
-    if(tab!=='messaging' && chatListener){ 
-        chatListener(); 
-        chatListener=null; 
+    if(tab!=='messaging' && chatListener){
+        chatListener();
+        chatListener=null;
         currentChatId=null;
-        document.getElementById('messageDisplay').innerHTML = ''; // Clear messages
+        document.getElementById('messageDisplay').innerHTML = '';
         document.getElementById('chatHeader').textContent = 'Select a Duo to start messaging';
         document.getElementById('messageInputArea').classList.add('hidden');
     }
-    
-    // Load data for the selected tab
+
     switch(tab){
         case 'allUsers': loadAllUsers(); break;
         case 'search': filterSearchResults(); break;
@@ -238,11 +236,9 @@ async function loadAllUsers(){
     const container=document.getElementById('allUsersTab');
     container.innerHTML="<h3>Suggested Players</h3>";
     try{
-        // Read all public user data
         const snapshot=await db.collection('users').get();
         allUsersCache=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-        
-        // Filter out current user and render cards
+
         allUsersCache.forEach(user=>{
             if(user.id===currentUser.uid) return;
             const card=renderUserCard(user.id,user);
@@ -255,13 +251,13 @@ async function loadAllUsers(){
 function renderUserCard(uid,data){
     if(!data) return null;
     const card=document.createElement('div'); card.className='card';
+    // Use an anonymous function to pass arguments correctly to viewProfile
     card.onclick=()=>viewProfile(uid, data);
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
-    
-    // Check if friend or pending request logic would go here in a real app
-    
+
+    // Render the button that sends the request
     const friendBtn = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
-    
+
     card.innerHTML=`
         <div class="card-content-box">
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
@@ -276,13 +272,12 @@ function renderUserCard(uid,data){
 }
 
 // ---------------------------
-// Profile/Search View (simplified, only implemented `viewProfile` placeholder)
+// Profile/Search View
 function filterSearchResults() {
-    // Placeholder function for search logic
     document.getElementById('searchResults').innerHTML = '<p>Search functionality pending...</p>';
 }
 
-async function viewProfile(uid, data) {
+function viewProfile(uid, data) {
     // Populate profile view with data
     document.getElementById('viewProfileContent').innerHTML = `
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar" style="width:120px; height:120px; border-color:cyan;">
@@ -320,10 +315,9 @@ async function saveProfile() {
         skillRating: parseInt(document.getElementById('profileSkillRating').value),
         status: document.getElementById('profileStatus').value,
     };
-    
-    // **IMPORTANT SECURITY NOTE:** // The security rules now protect the 'friends' array, so we don't need to read/write it here.
 
     try {
+        // Use update() to only send fields that are allowed to be changed
         await db.collection('users').doc(currentUser.uid).update(updates);
         currentProfileData = {...currentProfileData, ...updates}; // Update local cache
         messageEl.textContent = 'Profile Saved!';
@@ -338,20 +332,14 @@ async function saveProfile() {
 // Friends / Duos
 async function loadFriends() {
     const friendListEl = document.getElementById('friendList');
-    friendListEl.innerHTML = 'Loading Duos...';
-    // This is placeholder logic. In a real app, you'd check a 'friends' subcollection
-    // or the 'friends' array on the user profile, but we disabled writing to that array 
-    // for security, so we'd need a more complex system (e.g., pending/accepted requests).
-    
-    // Simplified: show the current user's UID as a placeholder
-    friendListEl.innerHTML = `<p style="color:yellow;">Friend logic is simplified: requests pending/accepted logic goes here.</p>`;
+    friendListEl.innerHTML = '<p style="color:yellow;">Friend/Duo listing logic requires server-side logic (e.g., Cloud Functions or complex rules) to manage the accepted requests. Using a placeholder for now.</p>';
 }
 
 // ---------------------------
 // Friend Request
 async function sendFriendRequest(uid){
     if(!currentUser || currentUser.uid === uid) return;
-    const id=getChatId(uid); // Using the consistent chat ID for the request document as well.
+    const id=getChatId(uid); // Use consistent ID for requests (and future chat doc)
     try{
         await db.collection('requests').doc(id).set({
             senderId:currentUser.uid,
@@ -365,19 +353,17 @@ async function sendFriendRequest(uid){
 }
 
 // ---------------------------
-// Messaging
+// Messaging Logic (FIXED and implemented)
 async function loadChatList() {
-    // Placeholder: In a real app, this would query a 'userChats' collection
-    // to find all chats the current user is a participant in.
     const duoListEl = document.getElementById('activeDuoList');
     duoListEl.innerHTML = '';
-    
-    // Simplified: just list a few 'dummy' chat partners
+
+    // Placeholder: In a real app, you would query the 'chats' collection where 'participants' array contains currentUser.uid
     const dummyDuos = [
         { uid: 'partner1', nickname: 'CyberAce' },
         { uid: 'partner2', nickname: 'SynthWitch' },
     ];
-    
+
     dummyDuos.forEach(duo => {
         const chatEntry = document.createElement('div');
         chatEntry.className = 'chat-entry';
@@ -385,7 +371,7 @@ async function loadChatList() {
         chatEntry.onclick = () => openChat(duo.uid, duo.nickname);
         duoListEl.appendChild(chatEntry);
     });
-    
+
     if (dummyDuos.length === 0) {
         duoListEl.textContent = 'No Duos yet.';
     }
@@ -395,28 +381,31 @@ function openChat(otherUid, otherNickname) {
     if (chatListener) {
         chatListener(); // Unsubscribe from the previous chat
     }
-    
+
+    // Highlight the active chat
+    document.querySelectorAll('.chat-entry').forEach(e => e.classList.remove('active'));
+    // Note: You'd need to correctly identify and add the 'active' class based on otherUid
+
     currentChatId = getChatId(otherUid);
     document.getElementById('chatHeader').textContent = `Duo Chat: ${otherNickname}`;
     document.getElementById('messageDisplay').innerHTML = 'Loading messages...';
     document.getElementById('messageInputArea').classList.remove('hidden');
 
-    // Start listening to messages subcollection
     const messagesRef = db.collection('chats').doc(currentChatId).collection('messages').orderBy('timestamp', 'asc');
-    
+
+    // Attach real-time listener
     chatListener = messagesRef.onSnapshot(snapshot => {
         const messageDisplay = document.getElementById('messageDisplay');
-        messageDisplay.innerHTML = ''; // Clear existing messages
+        messageDisplay.innerHTML = '';
         
         snapshot.forEach(doc => {
             const data = doc.data();
             const messageEl = document.createElement('div');
             messageEl.className = `message ${data.senderId === currentUser.uid ? 'sent' : 'received'}`;
-            messageEl.textContent = data.text;
+            messageEl.innerHTML = `<strong>${data.senderId === currentUser.uid ? 'You' : otherNickname}:</strong> ${data.text}`; // Added sender label
             messageDisplay.appendChild(messageEl);
         });
-        
-        // Scroll to the bottom
+
         messageDisplay.scrollTop = messageDisplay.scrollHeight;
     }, error => {
         console.error("Error listening to messages:", error);
@@ -430,26 +419,25 @@ async function sendMessage() {
 
     if (!text || !currentChatId) return;
 
-    // A chat document must exist before messages can be sent.
-    // Ensure the chat document exists on first send.
     const chatRef = db.collection('chats').doc(currentChatId);
     try {
         await db.runTransaction(async (transaction) => {
             const chatDoc = await transaction.get(chatRef);
-            
-            // Check if chat document needs to be created
+            const [id1, id2] = currentChatId.split('_');
+
+            // 1. Create chat document if it doesn't exist (relies on 'create' rule for /chats/{chatId})
             if (!chatDoc.exists) {
-                const [id1, id2] = currentChatId.split('_');
+                // The sort in getChatId ensures id1 and id2 are sorted alphabetically
                 transaction.set(chatRef, {
                     participants: [id1, id2],
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 });
             }
 
-            // Add the message to the subcollection
+            // 2. Add the message to the subcollection (relies on 'create' rule for /messages/{messageId})
             transaction.set(chatRef.collection('messages').doc(), {
                 text: text,
-                senderId: currentUser.uid,
+                senderId: currentUser.uid, // Security rule ensures this matches request.auth.uid
                 timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             });
         });
@@ -466,21 +454,20 @@ async function sendMessage() {
 // ---------------------------
 // Auth listener
 auth.onAuthStateChanged(async user=>{
-    if(!user){ 
-        document.getElementById('loginPage').classList.remove('hidden'); 
-        document.getElementById('dashboard').classList.add('hidden'); 
+    if(!user){
+        document.getElementById('loginPage').classList.remove('hidden');
+        document.getElementById('dashboard').classList.add('hidden');
         return;
     }
-    document.getElementById('loginPage').classList.add('hidden'); 
+    document.getElementById('loginPage').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
     currentUser=user;
-    
-    const uRef=db.collection('users').doc(user.uid); 
+
+    const uRef=db.collection('users').doc(user.uid);
     const uDoc=await uRef.get();
-    
+
     if(!uDoc.exists){
-        // Only set the fields required. The security rules will prevent setting 'friends'
-        // or other unauthorized fields. The 'friends' array is intentionally omitted here.
+        // Initial setup for a new user. Omit 'friends' array to satisfy security rules.
         await uRef.set({
             nickname:user.displayName,
             profileImageUrl:user.photoURL,
@@ -489,7 +476,7 @@ auth.onAuthStateChanged(async user=>{
             status:'Online'
         });
     }
-    
+
     currentProfileData=(await uRef.get()).data();
     document.getElementById('welcome').textContent=`Welcome, ${currentProfileData.nickname||user.displayName}`;
     showTab('allUsers');
