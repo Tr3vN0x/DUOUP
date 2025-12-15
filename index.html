@@ -21,8 +21,8 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
 .neon-btn.remove { border-color:red; box-shadow:0 0 10px red; }
 .neon-btn.remove:hover { border-color:orange; box-shadow:0 0 15px orange; }
-#messageInput, #profileBio, #profileSkillRating, #profileStatus, #searchInput, #statusFilter, #skillFilter, #profileNickname { flex-grow:1; padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px; font-family:inherit; outline:none; }
-#messageInput:focus, #profileBio:focus, #profileSkillRating:focus, #profileStatus:focus { border-color: magenta; box-shadow: 0 0 8px magenta; }
+#messageInput, #profileBio, #profileSkillRating, #profileStatus, #searchInput, #statusFilter, #skillFilter, #profileNickname, #newUsernameInput { flex-grow:1; padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px; font-family:inherit; outline:none; }
+#messageInput:focus, #profileBio:focus, #profileSkillRating:focus, #profileStatus:focus, #newUsernameInput:focus { border-color: magenta; box-shadow: 0 0 8px magenta; }
 #profileBio { resize: vertical; }
 #profileSkillRating, #profileStatus { width: 100%; max-width: 200px; }
 .flex { display:flex; gap:15px; flex-wrap:wrap; }
@@ -132,7 +132,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <div id="viewProfileTab" class="hidden container">
     <button class="neon-btn" onclick="showTab('allUsers')">← Back to Suggested</button>
     <div id="viewProfileContent" style="padding: 20px; border: 2px solid magenta; border-radius: 10px; background: #1a1a1a; margin-top: 20px;">
-    </div>
+        </div>
 </div>
 
 <div id="profileTab" class="hidden">
@@ -192,14 +192,14 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <script>
 // ---------- FIREBASE INIT ----------
 const firebaseConfig = {
-  // NOTE: REPLACE with your actual Firebase configuration
-  apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw", 
-  authDomain: "duoup-cfae6.firebaseapp.com",
-  projectId: "duoup-cfae6",
-  storageBucket: "duoup-cfae6.firebasestorage.app",
-  messagingSenderId: "812263060524",
-  appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
-  measurementId: "G-46B67F90FK"
+    // NOTE: REPLACE with your actual Firebase configuration
+    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw", 
+    authDomain: "duoup-cfae6.firebaseapp.com",
+    projectId: "duoup-cfae6",
+    storageBucket: "duoup-cfae6.firebasestorage.app",
+    messagingSenderId: "812263060524",
+    appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
+    measurementId: "G-46B67F90FK"
 };
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -226,13 +226,14 @@ auth.onAuthStateChanged(async user=>{
     const userDoc = await userRef.get();
 
     if(!userDoc.exists){
+        const defaultUsername = user.displayName.replace(/\s/g, '').toLowerCase() || `user_${Date.now()}`;
         // New user setup, prompt for username if needed later, for now use default
         await userRef.set({
             uid: user.uid,
-            username: user.displayName.replace(/\s/g, '').toLowerCase() || `user_${Date.now()}`, // Default username
+            username: defaultUsername, 
             usernameChanged: false,
             bio: "",
-            skillRating: 0,
+            skillRating: 3, // Default skill
             status: "Online",
             friends: [],
             unreadMessages: 0,
@@ -240,9 +241,9 @@ auth.onAuthStateChanged(async user=>{
             gamerCards: []
         });
         // Also create the initial unique username index document
-        await db.collection("usernames").doc(user.displayName.replace(/\s/g, '').toLowerCase() || `user_${Date.now()}`).set({
+        await db.collection("usernames").doc(defaultUsername).set({
             uid: user.uid,
-            username: user.displayName.replace(/\s/g, '').toLowerCase() || `user_${Date.now()}`
+            username: defaultUsername
         });
     }
     
@@ -273,7 +274,7 @@ async function loadUserProfile() {
     const input = document.getElementById("newUsernameInput");
 
     if (currentProfileData.usernameChanged) {
-        changeBtn.textContent = "Changed Once";
+        changeBtn.textContent = "Changed Once (Locked)";
         changeBtn.disabled = true;
         input.disabled = true;
         document.getElementById("usernameMessage").textContent = "Your unique username can only be changed once.";
@@ -283,6 +284,8 @@ async function loadUserProfile() {
         input.disabled = false;
         document.getElementById("usernameMessage").textContent = "You have one change remaining.";
     }
+    
+    // In a full application, you'd load gamer cards here.
 }
 
 // ---------- TABS ----------
@@ -293,7 +296,7 @@ function showTab(tab){
     
     switch(tab){
       case "allUsers": allUsersTab.classList.remove("hidden"); break;
-      case "search": searchTab.classList.remove("hidden"); break;
+      case "search": searchTab.classList.remove("hidden"); filterSearchResults(); break; // Reload search results
       case "requests": requestsTab.classList.remove("hidden"); break;
       case "friends": friendsTab.classList.remove("hidden"); break;
       case "messaging": messagingTab.classList.remove("hidden"); break;
@@ -304,10 +307,24 @@ function showTab(tab){
 // ---------- FRIEND REQUESTS ----------
 async function sendFriendRequest(toUid){
     if(!currentUser || toUid===currentUser.uid) return;
+    
+    // Check if they are already friends
+    if (currentProfileData.friends && currentProfileData.friends.includes(toUid)) {
+        alert("You are already friends with this user.");
+        return;
+    }
+    
     const reqId=[currentUser.uid,toUid].sort().join('_');
     const reqRef=db.collection("friendRequests").doc(reqId);
     const reqSnap=await reqRef.get();
-    if(reqSnap.exists) return alert("Request already exists.");
+    if(reqSnap.exists) {
+        const data = reqSnap.data();
+        if(data.senderId === currentUser.uid) {
+            return alert("Request already sent and is pending.");
+        } else {
+            return alert("This user has already sent YOU a request. Check the Requests tab.");
+        }
+    }
     try {
         await reqRef.set({
             senderId: currentUser.uid,
@@ -337,12 +354,13 @@ async function acceptFriend(reqId){
             t.update(receiverRef,{friends:firebase.firestore.FieldValue.arrayUnion(senderId)});
             t.delete(reqRef); // Delete the request
         });
-        alert("Friend accepted!");
+        alert("Friend accepted! You are now Duos.");
     } catch (e) {
         alert("Transaction failed: " + e.message);
     }
     loadFriendRequests();
     loadFriends();
+    loadUserProfile(); // Update local friend list cache
 }
 
 async function declineFriend(reqId){ 
@@ -363,12 +381,13 @@ async function loadFriendRequests(){
     const requestsData = await Promise.all(querySnap.docs.map(async d => {
         const request = d.data();
         const senderDoc = await db.collection("users").doc(request.senderId).get();
-        // Use username for display if available, otherwise use nickname
+        // Use username for display if available
         const senderData = senderDoc.data() || { username: 'Unknown', nickname: 'Unknown User' };
         
         return {
             id: d.id,
-            display: senderData.username ? `@${senderData.username}` : senderData.nickname,
+            display: senderData.username ? `@${senderData.username}` : (senderDoc.data().nickname || 'Unknown User'),
+            senderUid: request.senderId
         };
     }));
 
@@ -379,6 +398,7 @@ async function loadFriendRequests(){
     requestsData.forEach(r => {
         const div = document.createElement("div");
         div.className = "card";
+        div.onclick = () => viewUserProfile(r.senderUid); // Click to view sender's profile
         div.innerHTML = `<div class="card-content"><strong>${r.display}</strong> wants to duo!</div>`;
         
         const acceptBtn = document.createElement("button");
@@ -420,9 +440,14 @@ async function loadFriends(){
       const d=fDoc.data();
       const div=document.createElement("div");
       div.className="card";
+      div.onclick = () => viewUserProfile(f); // Click to view friend's profile
       // Use username for card display
       const display = d.username ? `@${d.username}` : d.nickname;
-      div.innerHTML=`<strong>${display}</strong><span class="status-indicator status-${d.status.replace(" ","").toLowerCase()}">${d.status}</span>`;
+      div.innerHTML=`<div class="card-content">
+        <img src="${d.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
+        <strong>${display}</strong>
+        <span class="status-indicator status-${d.status.replace(" ","").toLowerCase()}">${d.status}</span>
+        </div>`;
       friendsTab.appendChild(div);
     });
 }
@@ -440,16 +465,27 @@ async function loadAllUsers(){
 
       const card=document.createElement("div");
       card.className="card";
+      card.onclick = () => viewUserProfile(d.id, data);
       card.innerHTML=`<div class="card-content">
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
         <strong>${display}</strong> ${d.id===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''}
         <span class="skill-rating">${'⭐'.repeat(data.skillRating||0)}</span>
         <span class="status-indicator status-${data.status.replace(" ","").toLowerCase()}">${data.status}</span>
         </div>`;
-      const btn=document.createElement("button");
-      btn.className="neon-btn"; btn.textContent="Send Friend Request";
-      btn.onclick=(e)=>{ e.stopPropagation(); sendFriendRequest(d.id); };
-      card.appendChild(btn);
+      
+      // Only show request button if not already friends
+      if (!currentProfileData.friends || !currentProfileData.friends.includes(d.id)) {
+        const btn=document.createElement("button");
+        btn.className="neon-btn"; btn.textContent="Send Friend Request";
+        btn.onclick=(e)=>{ e.stopPropagation(); sendFriendRequest(d.id); };
+        card.appendChild(btn);
+      } else {
+        const statusText = document.createElement("p");
+        statusText.style.color = 'lime';
+        statusText.textContent = "✅ Friends";
+        card.appendChild(statusText);
+      }
+      
       allUsersTab.appendChild(card);
     });
 }
@@ -459,16 +495,38 @@ function initMessaging(){
     if(unsubscribeChatList) unsubscribeChatList();
     unsubscribeChatList=db.collection("users").doc(currentUser.uid)
       .onSnapshot(doc=>{
-        const friends=doc.data().friends||[];
+        currentProfileData.friends = doc.data().friends || []; // Update local friends list
+        currentProfileData.unreadMessages = doc.data().unreadMessages || 0;
+        
+        const friends=currentProfileData.friends;
         const activeDuoList=document.getElementById("activeDuoList");
         activeDuoList.innerHTML="";
+        
+        // Update Friends button badge
+        const unreadBadge = document.getElementById("unreadBadge");
+        if (currentProfileData.unreadMessages > 0) {
+            unreadBadge.textContent = currentProfileData.unreadMessages;
+            unreadBadge.classList.remove("hidden");
+        } else {
+            unreadBadge.classList.add("hidden");
+        }
+        
+        if (friends.length === 0) {
+            activeDuoList.textContent = "No friends to chat with.";
+            return;
+        }
+
         friends.forEach(async f=>{
           const fDoc=await db.collection("users").doc(f).get();
           if(!fDoc.exists) return;
           const friendData = fDoc.data();
+          
+          // This is a placeholder; a proper chat system needs message-level read receipts.
+          // For this client-only example, we'll assume unreadMessages is a global counter. 
+          const unread=currentProfileData.unreadMessages; 
+          
           const btn=document.createElement("button");
           btn.className="neon-btn chat-item-btn";
-          const unread=friendData.unreadMessages||0;
           
           const display = friendData.username ? `@${friendData.username}` : friendData.nickname;
 
@@ -514,6 +572,9 @@ function openChat(friendUid){
           messageDisplay.scrollTop=messageDisplay.scrollHeight;
         });
       });
+      
+    // Clear unread count for the current user when opening the chat
+    db.collection("users").doc(currentUser.uid).update({ unreadMessages: 0 });
 }
 
 sendMessageBtn.onclick=sendMessage;
@@ -534,31 +595,34 @@ async function sendMessage(){
             createdAt:firebase.firestore.FieldValue.serverTimestamp()
         });
         const receiverRef=db.collection("users").doc(currentChatUid);
-        // This is client-side implementation of unread messages count
+        // Increment receiver's unread messages count
         await receiverRef.update({unreadMessages:firebase.firestore.FieldValue.increment(1)});
     } catch (e) {
         alert("Error sending message: " + e.message);
     }
 }
 
-// ---------- PROFILE & USERNAME ----------
+// ---------- PROFILE & USERNAME (FIXED) ----------
 function validateUsername(username) {
     if (username.length < 3 || username.length > 20) {
         return "Username must be between 3 and 20 characters.";
     }
-    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+    // Only allow letters, numbers, hyphens, and underscores
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) { 
         return "Username can only contain letters, numbers, hyphens (-), and underscores (_).";
     }
     return null; // Valid
 }
 
 async function attemptUsernameChange() {
-    if (!currentUser || currentProfileData.usernameChanged) {
-        document.getElementById("usernameMessage").textContent = "Error: Username can only be changed once.";
+    if (!currentUser) return;
+
+    if (currentProfileData.usernameChanged) {
+        document.getElementById("usernameMessage").textContent = "Error: Your unique username can only be changed once.";
         return;
     }
 
-    const newUsername = document.getElementById("newUsernameInput").value.trim();
+    const newUsername = document.getElementById("newUsernameInput").value.trim().toLowerCase(); // Normalize to lowercase
     const validationError = validateUsername(newUsername);
 
     if (validationError) {
@@ -573,6 +637,7 @@ async function attemptUsernameChange() {
     
     const messageEl = document.getElementById("usernameMessage");
     messageEl.textContent = "Checking availability and processing change...";
+    document.getElementById("changeUsernameBtn").disabled = true;
 
     try {
         await db.runTransaction(async (t) => {
@@ -580,8 +645,7 @@ async function attemptUsernameChange() {
             const newUsernameDoc = await t.get(newUsernameRef);
 
             if (newUsernameDoc.exists) {
-                // This will fail the transaction
-                throw new Error("Username is already taken.");
+                throw new Error("Username is already taken by another user.");
             }
 
             const oldUsername = currentProfileData.username;
@@ -589,7 +653,10 @@ async function attemptUsernameChange() {
             const userRef = db.collection("users").doc(currentUser.uid);
             
             // 1. Delete old username mapping
-            t.delete(oldUsernameRef);
+            const oldUsernameDoc = await t.get(oldUsernameRef);
+            if (oldUsernameDoc.exists) {
+                t.delete(oldUsernameRef);
+            }
             
             // 2. Create new username mapping
             t.set(newUsernameRef, { uid: currentUser.uid, username: newUsername });
@@ -602,12 +669,23 @@ async function attemptUsernameChange() {
         });
 
         messageEl.textContent = `Username successfully changed to @${newUsername}! This change is permanent.`;
-        // Re-load profile data to reflect changes in UI
-        await loadUserProfile();
+        await loadUserProfile(); // Refresh UI and data
         
     } catch (error) {
-        messageEl.textContent = "Error changing username: " + error.message;
+        let displayError = error.message;
+        if (displayError.includes("already taken")) {
+             displayError = "That username is already taken. Please try another.";
+        } else if (displayError.includes("failed preconditions")) {
+             displayError = "Transaction failed (likely a conflict). Please try again.";
+        } else {
+             displayError = "An unknown error occurred: " + error.message;
+        }
+
+        messageEl.textContent = "Error changing username: " + displayError;
         console.error("Username transaction failed:", error);
+
+    } finally {
+        document.getElementById("changeUsernameBtn").disabled = false;
     }
 }
 
@@ -623,6 +701,7 @@ avatarUpload.onchange=async e=>{
         // Update user profile with new URL
         await db.collection("users").doc(currentUser.uid).update({ profileImageUrl: url });
         document.getElementById("saveMessage").textContent = "Avatar updated successfully!";
+        await loadUserProfile(); // Refresh data/UI
     } catch(e) {
         document.getElementById("saveMessage").textContent = "Error uploading avatar: " + e.message;
     }
@@ -638,13 +717,14 @@ async function saveProfile(){
             status: profileStatus.value,
         });
         document.getElementById("saveMessage").textContent = "Profile saved successfully!";
+        await loadUserProfile(); // Refresh data/UI
     } catch (e) {
         document.getElementById("saveMessage").textContent = "Error saving profile: " + e.message;
     }
     setTimeout(()=>document.getElementById("saveMessage").textContent="",3000);
 }
 
-// ---------- SEARCH ----------
+// ---------- SEARCH (COMPLETED) ----------
 searchInput.addEventListener("input", filterSearchResults);
 statusFilter.addEventListener("change", filterSearchResults);
 skillFilter.addEventListener("change", filterSearchResults);
@@ -663,27 +743,102 @@ async function filterSearchResults(){
       
       const display = data.username ? `@${data.username}` : data.nickname;
       
+      // 1. Nickname/Bio Search
       if(q && !(display.toLowerCase().includes(q) || (data.bio||"").toLowerCase().includes(q))) return;
-      if(status && data.status!==status) return;
-      if((data.skillRating||0)<minSkill) return;
       
+      // 2. Status Filter
+      if(status && data.status !== status) return;
+
+      // 3. Skill Rating Filter
+      if((data.skillRating || 0) < minSkill) return;
+
+      // --- Rendering Logic ---
       const card=document.createElement("div");
       card.className="card";
+      card.onclick = () => viewUserProfile(d.id, data);
       card.innerHTML=`<div class="card-content">
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
-        <strong>${display}</strong>
+        <strong>${display}</strong> ${d.id===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''}
         <span class="skill-rating">${'⭐'.repeat(data.skillRating||0)}</span>
         <span class="status-indicator status-${data.status.replace(" ","").toLowerCase()}">${data.status}</span>
+        <p style="font-size:0.8em; margin:5px 0; max-height: 40px; overflow: hidden; color:#ccc;">${data.bio || 'No bio set.'}</p>
         </div>`;
-      const btn=document.createElement("button");
-      btn.className="neon-btn"; btn.textContent="Send Friend Request";
-      btn.onclick=(e)=>{ e.stopPropagation(); sendFriendRequest(d.id); };
-      card.appendChild(btn);
+        
+      if (!currentProfileData.friends || !currentProfileData.friends.includes(d.id)) {
+          const btn=document.createElement("button");
+          btn.className="neon-btn"; btn.textContent="Send Friend Request";
+          btn.onclick=(e)=>{ e.stopPropagation(); sendFriendRequest(d.id); };
+          card.appendChild(btn);
+      } else {
+          const statusText = document.createElement("p");
+          statusText.style.color = 'lime';
+          statusText.textContent = "✅ Friends";
+          card.appendChild(statusText);
+      }
+      
       container.appendChild(card);
     });
 }
 
-</script>
+// ---------- VIEW PROFILE (NEW) ----------
+async function viewUserProfile(uid, data = null) {
+    showTab('viewProfile');
+    const contentDiv = document.getElementById('viewProfileContent');
+    contentDiv.innerHTML = 'Loading profile...';
 
+    if (!data) {
+        const doc = await db.collection('users').doc(uid).get();
+        if (doc.exists) {
+            data = doc.data();
+        } else {
+            contentDiv.innerHTML = '<p style="color:red;">Error: User profile not found.</p>';
+            return;
+        }
+    }
+    
+    const display = data.username ? `@${data.username}` : (data.nickname || 'Unknown User');
+    const isOwner = uid === OWNER_UID;
+    const isFriend = currentProfileData.friends && currentProfileData.friends.includes(uid);
+    const isCurrentUser = uid === currentUser.uid;
+
+    let actionButton = '';
+    if (!isCurrentUser && !isFriend) {
+        actionButton = `<button class="neon-btn" style="border-color:cyan; box-shadow:0 0 10px cyan;" onclick="sendFriendRequest('${uid}')">Send Duo Request</button>`;
+    } else if (isFriend) {
+        actionButton = `<button class="neon-btn" style="border-color:magenta; box-shadow:0 0 10px magenta;" onclick="showTab('messaging'); openChat('${uid}')">Message Duo</button>`;
+    }
+    
+    contentDiv.innerHTML = `
+        <div style="display:flex; align-items:center; gap:20px; border-bottom:1px solid #333; padding-bottom:15px; margin-bottom:20px;">
+            <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar" style="width: 100px; height: 100px; border-color:magenta;">
+            <div>
+                <h3 style="color:cyan; margin:0; font-size:2em;">${display} ${isOwner ? '<span class="owner-badge-box">OWNER</span>' : ''}</h3>
+                <p style="color:white; margin:5px 0 0 0;">Nickname: ${data.nickname || 'N/A'}</p>
+                <p style="color:white; margin:5px 0 0 0;">UID: ${uid}</p>
+            </div>
+        </div>
+        
+        <div style="margin-bottom:20px;">
+            <p style="color:cyan; font-weight:bold; margin-bottom:5px;">Status:</p>
+            <span class="status-indicator status-${data.status.replace(" ","").toLowerCase()}">${data.status}</span>
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <p style="color:cyan; font-weight:bold; margin-bottom:5px;">Skill Rating:</p>
+            <span class="skill-rating" style="font-size:2em;">${'⭐'.repeat(data.skillRating || 0)}</span>
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <p style="color:cyan; font-weight:bold; margin-bottom:5px;">Bio/Tagline:</p>
+            <p style="color:#eee; border-left: 3px solid cyan; padding-left: 10px;">${data.bio || 'This user has not set a bio yet.'}</p>
+        </div>
+        
+        <div style="margin-top:20px; text-align:center;">
+            ${actionButton}
+        </div>
+    `;
+}
+
+</script>
 </body>
 </html>
