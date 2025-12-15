@@ -654,6 +654,8 @@ function renderRequestCard(d, data, requestId) {
 // --- RENDERING AND CORE LOGIC ---
 function renderUserCard(d, data) {
     const card = document.createElement('div');
+    // Store the UID directly on the card for potential future use (like viewing profile)
+    card.dataset.uid = d.uid; 
     card.className = 'card';
     
     // --- 1. DETERMINE STATUS AND BUTTON ACTION ---
@@ -666,7 +668,7 @@ function renderUserCard(d, data) {
     } else if (isFriend) {
         actionButton = `<button class="neon-btn remove" onclick="event.stopPropagation(); removeFriend('${d.uid}')">Remove Duo</button>`;
     } else {
-        // Default action is to send a request
+        // FIX: Ensure the UID is passed as a string literal correctly
         actionButton = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${d.uid}')">Send Request</button>`;
     }
     // --- END 1. DETERMINE STATUS AND BUTTON ACTION ---
@@ -705,7 +707,14 @@ function renderUserCard(d, data) {
 
 async function sendFriendRequest(targetUid) {
     if (!currentUser) return;
-
+    
+    // DEBUG CHECK (Ensure targetUid is not undefined/empty)
+    if (!targetUid || targetUid.length < 10) {
+        console.error("sendFriendRequest aborted: targetUid is invalid or missing:", targetUid);
+        alert("Cannot send request: Target user ID is missing. Try logging out and back in, or contact support.");
+        return;
+    }
+    
     // CRITICAL: Document ID must be canonical for security rules to work
     const requestId = `${currentUser.uid}_${targetUid}`;
     const reverseRequestId = `${targetUid}_${currentUser.uid}`;
@@ -725,7 +734,7 @@ async function sendFriendRequest(targetUid) {
 
         if (reverseRequestDoc.exists) {
             // If they requested us first, auto-accept
-            await acceptFriendRequest(targetUid, reverseRequestId);
+            await acceptFriendRequest(targetUid, reverseRequestDoc.id); // Use the existing doc ID
             alert("Request was found! Automatically accepted and added as Duo.");
             return;
         }
@@ -744,7 +753,8 @@ async function sendFriendRequest(targetUid) {
 
     } catch (e) {
         console.error("Send Request Error:", e);
-        alert("Failed to send request: " + (e.message || "Check Security Rules."));
+        // This is the line that throws if rules are not published/correctly matched
+        alert("Failed to send request: " + (e.message || "Check Security Rules & Data Integrity."));
     }
 }
 
