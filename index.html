@@ -199,6 +199,7 @@ const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 let currentUser=null;
 let currentProfileData={};
 let allUsersCache=[]; 
+let requestCache = {}; // Global variable to store request states (New for state logic)
 let currentChatId=null;
 let chatListener=null;
 
@@ -251,27 +252,65 @@ async function loadAllUsers(){
     const container=document.getElementById('allUsersTab');
     container.innerHTML="<h3>Loading Suggested Players...</h3>";
     try{
-        // Cache all users for quick lookup
+        // 1. Cache all users
         const snapshot=await db.collection('users').get();
         allUsersCache=snapshot.docs.map(d=>({id:d.id,...d.data()}));
+        
+        // 2. Pre-fetch ALL related requests (sent, received, accepted)
+        // We query where the currentUser is a participant (sender or receiver)
+        const requestsSnap = await db.collection('requests')
+            .where('participants', 'array-contains', currentUser.uid)
+            .get();
+            
+        requestCache = {};
+        requestsSnap.forEach(doc => {
+            const data = doc.data();
+            const otherUid = data.senderId === currentUser.uid ? data.receiverId : data.senderId;
+            // Store request details by the other user's ID
+            requestCache[otherUid] = { id: doc.id, status: data.status, senderId: data.senderId };
+        });
+
         container.innerHTML=""; 
 
         allUsersCache.forEach(user=>{
             if(user.id===currentUser.uid) return;
-            const card=renderUserCard(user.id,user);
+            // Pass the request status for dynamic button rendering
+            const card=renderUserCard(user.id, user, requestCache[user.id]);
             if(card) container.appendChild(card);
         });
     }catch(e){ container.innerHTML+=`<p style="width:100%; text-align:center; color:red;">Error loading users: ${e.message}</p>`; }
 }
 
-function renderUserCard(uid,data){
+// Updated function signature: uid, data, requestInfo (new parameter)
+function renderUserCard(uid, data, requestInfo){
     if(!data) return null;
     const card=document.createElement('div');
     card.className='card';
     card.onclick=()=>viewProfile(uid, data);
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
 
-    const cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
+    let cardButtons;
+    if (requestInfo) {
+        // State 2, 3, or 4: Request exists
+        if (requestInfo.status === 'pending') {
+            if (requestInfo.senderId === currentUser.uid) {
+                // State 2: Pending (Outbound)
+                cardButtons = `<button class="neon-btn pending">Pending</button>`; 
+            } else {
+                // State 3: Pending (Inbound) - Should be handled on the Duos tab
+                cardButtons = `<button class="neon-btn pending">Request Sent To You</button>`;
+            }
+        } else if (requestInfo.status === 'accepted') {
+            // State 4: Accepted Duo
+            cardButtons = `<button class="neon-btn" style="border-color:lime; color:lime;">Duo</button>`;
+        } else {
+            // Request was rejected/deleted/other - allow new request
+            cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
+        }
+    } else {
+        // State 1: No request exists
+        cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
+    }
 
     card.innerHTML=`
         <div class="card-content-box">
@@ -286,7 +325,7 @@ function renderUserCard(uid,data){
     return card;
 }
 
-// Render Card for an Accepted Duo
+// Render Card for an Accepted Duo (Updated with Remove Duo button)
 function renderDuoCard(uid, data){
     const card=document.createElement('div');
     card.className='card';
@@ -300,7 +339,10 @@ function renderDuoCard(uid, data){
         <div style="color:lime; margin:5px 0;">ACCEPTED DUO</div>
         <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
         </div>
-        <button class="neon-btn" onclick="event.stopPropagation(); openChat('${uid}', '${data.nickname}')">Message Duo</button>
+        <div style="display:flex; gap:5px;">
+            <button class="neon-btn" onclick="event.stopPropagation(); openChat('${uid}', '${data.nickname}')">Message Duo</button>
+            <button class="neon-btn remove" onclick="event.stopPropagation(); removeDuo('${uid}')">Remove Duo</button>
+        </div>
     `;
     return card;
 }
@@ -372,6 +414,7 @@ async function loadFriends() {
     
     // 2. ACCEPTED DUOS: Query where current user is a participant and status is 'accepted'
     try {
+        // This query relies on the Index 2 (participants/Array + status/Ascending) and the final Security Rule fix.
         const acceptedSnapshot = await db.collection('requests')
             .where('participants', 'array-contains', currentUser.uid)
             .where('status', '==', 'accepted')
@@ -394,7 +437,6 @@ async function loadFriends() {
         }
         
     } catch (e) {
-        // This is the error we have been fighting. If it appears, the Index or Security Rule fix is still needed.
         console.error("ERROR loading Accepted Duos:", e);
         friendListEl.innerHTML = `<p style="width:100%; text-align:center; color:red;">ERROR loading Accepted Duos: ${e.message}. Check Security Rules and Index 2 (participants + status).</p>`;
     }
@@ -446,6 +488,40 @@ async function handleRequest(requestId, newStatus) {
     }
 }
 
+// NEW FUNCTION: Remove Duo
+async function removeDuo(otherUid) {
+    if (!currentUser) return;
+    const requestId = getChatId(otherUid);
+
+    if (!confirm(`Are you sure you want to remove this Duo? This will end your connection.`)) {
+        return;
+    }
+
+    try {
+        // 1. Delete the request document (Duo relationship)
+        await db.collection('requests').doc(requestId).delete();
+        
+        // 2. Optional: Delete the chat history associated with the duo
+        // await db.collection('chats').doc(requestId).delete(); 
+
+        alert("Duo successfully removed.");
+        loadFriends(); // Reload the Duos list
+        
+        // Close chat window if open for this duo
+        if (currentChatId === requestId) {
+            if (chatListener) chatListener();
+            currentChatId = null;
+            document.getElementById('messageDisplay').innerHTML = '';
+            document.getElementById('chatHeader').textContent = 'Select a Duo to start messaging';
+            document.getElementById('messageInputArea').classList.add('hidden');
+        }
+
+    } catch (e) {
+        console.error("Error removing duo:", e);
+        alert(`Failed to remove duo. Error: ${e.message}`);
+    }
+}
+
 
 // Send Friend Request
 async function sendFriendRequest(uid){
@@ -470,7 +546,7 @@ async function sendFriendRequest(uid){
             sentAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         alert("Request sent successfully!");
-        loadAllUsers();
+        loadAllUsers(); // Reload to update button state
     }catch(e){
         console.error("Error sending friend request:", e);
         alert("Failed to send request. Check your security rules and console for details.");
@@ -597,6 +673,19 @@ async function sendMessage() {
 function filterSearchResults() { document.getElementById('searchResults').innerHTML = '<p>Search functionality pending...</p>'; }
 
 function viewProfile(uid, data) {
+    // Determine button state for profile view
+    const requestInfo = requestCache[uid];
+    let profileButton = '';
+
+    if (requestInfo && requestInfo.status === 'accepted') {
+        profileButton = `<button class="neon-btn" style="margin-top:10px;" onclick="openChat('${uid}', '${data.nickname}')">Start Chat</button>
+                         <button class="neon-btn remove" style="margin-top:10px;" onclick="removeDuo('${uid}')">Remove Duo</button>`;
+    } else if (requestInfo && requestInfo.status === 'pending') {
+        profileButton = `<button class="neon-btn pending" style="margin-top:20px;">Request Pending</button>`;
+    } else {
+        profileButton = `<button class="neon-btn add" style="margin-top:20px;" onclick="sendFriendRequest('${uid}')">Send Request</button>`;
+    }
+
     document.getElementById('viewProfileContent').innerHTML = `
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar" style="width:120px; height:120px; border-color:cyan;">
         <h2 style="margin:10px 0;">${data.nickname}</h2>
@@ -604,8 +693,7 @@ function viewProfile(uid, data) {
         <div class="profile-stat"><span>Skill Rating:</span><span>${'⭐'.repeat(data.skillRating||3)}</span></div>
         <p style="margin-top:20px; color:magenta; font-weight:bold;">Bio:</p>
         <p style="text-align:center; max-width:400px;">${data.bio||'No bio provided.'}</p>
-        <button class="neon-btn add" style="margin-top:20px;" onclick="sendFriendRequest('${uid}')">Send Request</button>
-        <button class="neon-btn" style="margin-top:10px;" onclick="openChat('${uid}', '${data.nickname}')">Start Chat</button>
+        ${profileButton}
     `;
     showTab('viewProfile');
 }
