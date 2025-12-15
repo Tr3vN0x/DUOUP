@@ -31,23 +31,17 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .flex { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; }
 .card-container { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; }
 
-/* --- USER CARD (Major Update for Glowing Box Look) --- */
+/* --- USER CARD --- */
 .card {
     width: 100%;
     max-width: 320px; 
     padding: 15px;
-    
-    /* Neon Border and Background */
     border: 3px solid transparent; 
     border-radius: 6px;
     background: #181818; 
-    /* Main glow effect */
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 5px rgba(0, 255, 255, 0.2);
-    
-    /* Diagonal/Angular Border Effect */
     border-image-source: linear-gradient(45deg, cyan, magenta, cyan);
     border-image-slice: 1;
-    
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -58,10 +52,8 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 }
 .card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 0 25px magenta, inset 0 0 10px rgba(255, 0, 255, 0.5); /* Hover Glow */
+    box-shadow: 0 0 25px magenta, inset 0 0 10px rgba(255, 0, 255, 0.5); 
 }
-
-/* New internal wrapper for clean layout */
 .card-content-box { 
     display: flex;
     flex-direction: column;
@@ -69,7 +61,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     width: 100%;
     margin-bottom: 10px; 
     padding-bottom: 10px;
-    border-bottom: 1px dashed #333; /* Separator */
+    border-bottom: 1px dashed #333; 
 }
 .avatar { width:60px; height:60px; border-radius:50%; border:3px solid magenta; object-fit:cover; margin-bottom:10px; }
 .card-gamer-preview {
@@ -81,7 +73,32 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     border: 1px solid cyan;
     box-shadow: inset 0 0 5px cyan;
 }
-.owner-badge-box { display:inline-block; padding:2px 6px; margin-left:8px; font-size:0.7em; font-weight:bold; letter-spacing:1px; border-radius:4px; text-transform:uppercase; background:#3a005c; color:#ffccff; border:1px solid #ff00ff; box-shadow:0 0 5px #ff00ff,0 0 10px #cc33ff, inset 0 0 5px #ff00ff; vertical-align:middle; }
+
+/* --- OWNER BADGE (UPDATED) --- */
+.owner-badge-box { 
+    display:inline-block; 
+    padding:2px 6px; 
+    margin-left:8px; 
+    font-size:0.7em; 
+    font-weight:bold; 
+    letter-spacing:1px; 
+    border-radius:4px; 
+    text-transform:uppercase; 
+    background:#3a005c; 
+    color:#ffccff;
+    border:1px solid #ff00ff; 
+    box-shadow:0 0 5px #ff00ff, 0 0 10px #cc33ff, inset 0 0 5px #ff00ff; 
+    vertical-align:middle; 
+    font-size: 0.8em; 
+}
+.owner-badge-box:before {
+    content: "⚡ "; /* DUO UP Icon */
+    color: yellow;
+    text-shadow: 0 0 5px yellow;
+    margin-right: 2px;
+}
+/* --- END OWNER BADGE --- */
+
 .skill-rating { color:gold; font-size:1.2em; margin-bottom:5px; }
 .status-indicator { font-size:0.8em; padding:3px 8px; border-radius:4px; font-weight:bold; margin-bottom:10px; }
 .status-online { background-color:#00cc00; color:#0b0b0b; box-shadow:0 0 5px #00ff00; }
@@ -153,7 +170,6 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     .icon-container { font-size: 1.5em; } 
     .dashboard div { display: flex; flex-wrap: wrap; justify-content: center; } 
     .card { max-width: 100%; } 
-    /* ... (other media queries omitted for focus) ... */
 }
 </style>
 </head>
@@ -618,10 +634,13 @@ function renderUserCard(d, data) {
         card.onclick = () => viewUserProfile(d.id); 
     }
     
+    // Check if the user is the specific OWNER_UID
+    const isOwner = d.id === OWNER_UID;
+
     let cardContentHTML = `
         <div class="card-content-box">
             <img src="${profileImageUrl}" class="avatar">
-            <strong>${username}</strong> ${d.id === OWNER_UID ? '<span class="owner-badge-box">OWNER</span>' : ''}
+            <strong>${username}</strong> ${isOwner ? '<span class="owner-badge-box">OWNER</span>' : ''}
             <span class="skill-rating">${'⭐'.repeat(skillRating)}</span>
             <span class="status-indicator status-${statusClass}">${status}</span>
         </div>`;
@@ -771,6 +790,11 @@ async function viewUserProfile(uid) {
 
     const isFriend = currentProfileData.friends.includes(uid);
     const isBlocked = blockedUsers[uid];
+    
+    // Check if the user is the specific OWNER_UID
+    const isOwner = uid === OWNER_UID;
+    const ownerBadgeHtml = isOwner ? '<span class="owner-badge-box">OWNER</span>' : '';
+
     const buttonHtml = `
         <button class="neon-btn remove" onclick="removeFriend('${uid}')" style="display:${isFriend ? 'inline-block' : 'none'};">Remove Duo</button>
         <button class="neon-btn remove" onclick="blockUser('${uid}')" style="border-color:red; box-shadow:0 0 10px red; display:${!isBlocked ? 'inline-block' : 'none'};">Block User</button>
@@ -783,7 +807,7 @@ async function viewUserProfile(uid) {
         <div style="display:flex; align-items:flex-start; margin-bottom: 20px;">
             <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar" style="width: 100px; height: 100px; margin-right: 20px;">
             <div>
-                <h3 style="margin-top:0;">${data.nickname || 'Unknown'} ${uid === OWNER_UID ? '<span class="owner-badge-box">OWNER</span>' : ''}</h3>
+                <h3 style="margin-top:0;">${data.nickname || 'Unknown'} ${ownerBadgeHtml}</h3>
                 <p style="color:cyan; font-size:1.2em;">@${data.username}</p>
                 <p class="skill-rating">${'⭐'.repeat(data.skillRating || 0)}</p>
                 <p class="status-indicator status-${(data.status || 'Offline').replace(/\s/g, "").toLowerCase()}">${data.status || 'Offline'}</p>
