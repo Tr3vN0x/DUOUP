@@ -15,15 +15,30 @@
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
 .container { width:90%; max-width:1000px; margin:auto; padding:20px; }
 .hidden { display:none !important; }
+
 /* --- HEADER & ICON --- */
-.header { background:#111; border-bottom:3px solid cyan; box-shadow:0 0 20px rgba(0,255,255,0.5); padding:10px 0; margin-bottom:20px; display:flex; align-items:center; justify-content:center; }
-.header h1 { font-size:2.5em; color:#fff; text-shadow:0 0 5px cyan,0 0 10px cyan,0 0 15px magenta; margin:0; }
+.header { 
+    background:#111; border-bottom:3px solid cyan; box-shadow:0 0 20px rgba(0,255,255,0.5); 
+    padding:10px 0; margin-bottom:20px; display:flex; align-items:center; 
+    justify-content:center; 
+}
+.header h1 { 
+    font-size:2.5em; color:#fff; text-shadow:0 0 5px cyan,0 0 10px cyan,0 0 15px magenta; 
+    margin:0; 
+}
 .icon-container { margin-right:15px; font-size:2.5em; color:cyan; text-shadow:0 0 5px cyan,0 0 10px magenta; }
+
 /* --- BUTTONS & INPUTS --- */
-.neon-btn { border:2px solid cyan; background:transparent; color:white; padding:8px 14px; margin:5px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px cyan; transition:all 0.2s ease-in-out; text-transform:uppercase; font-family:'Orbitron',sans-serif; }
+.neon-btn { 
+    border:2px solid cyan; background:transparent; color:white; padding:8px 14px; 
+    margin:5px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px cyan; 
+    transition:all 0.2s ease-in-out; text-transform:uppercase; font-family:'Orbitron',sans-serif;
+    white-space: nowrap; 
+}
 .neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; }
 .neon-btn.remove { border-color:red; box-shadow:0 0 10px red; }
 .neon-btn.remove:hover { border-color:orange; box-shadow:0 0 15px orange; }
+
 #messageInput, #profileNickname, #profileBio, #profileSkillRating, #profileStatus { 
     flex-grow:1; padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px; font-family:inherit; outline:none; 
 }
@@ -32,10 +47,18 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 }
 #profileBio { resize: vertical; }
 #profileSkillRating, #profileStatus { width: 100%; max-width: 200px; }
+
+
 /* --- CARDS & PROFILES --- */
 .flex { display:flex; gap:15px; flex-wrap:wrap; }
-.card-container { display:flex; flex-wrap:wrap; gap:15px; }
-.card { width:250px; padding:15px; border:2px solid cyan; border-radius:12px; background:#111; box-shadow:0 0 10px cyan; display:flex; flex-direction:column; align-items:center; margin-bottom:15px; }
+.card-container { display:flex; flex-wrap:wrap; gap:15px; justify-content:center; }
+.card { 
+    width: 100%; 
+    max-width:300px; 
+    padding:15px; border:2px solid cyan; border-radius:12px; background:#111; 
+    box-shadow:0 0 10px cyan; display:flex; flex-direction:column; 
+    align-items:center; margin-bottom:15px; 
+}
 .card-content { display:flex; flex-direction:column; align-items:center; width:100%; margin-bottom:10px; }
 .avatar { width:50px; height:50px; border-radius:50%; border:2px solid cyan; object-fit:cover; margin-bottom:10px; }
 .owner-badge-box { display:inline-block; padding:2px 6px; margin-left:8px; font-size:0.7em; font-weight:bold; letter-spacing:1px; border-radius:4px; text-transform:uppercase; background:#3a005c; color:#ffccff; border:1px solid #ff00ff; box-shadow:0 0 5px #ff00ff,0 0 10px #cc33ff, inset 0 0 5px #ff00ff; vertical-align:middle; }
@@ -46,13 +69,83 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 .status-ingame { background-color:#ffaa00; color:#0b0b0b; box-shadow:0 0 5px #ffaa00; }
 .status-lfd { background-color:#00aaff; color:#0b0b0b; box-shadow:0 0 5px #00aaff; }
 .unread-badge { background-color:magenta; color:white; border-radius:50%; padding:2px 7px; margin-left:5px; font-size:0.7em; font-weight:bold; box-shadow:0 0 5px magenta; }
+
 /* --- CHAT STYLES --- */
+#messagingTab { 
+    display: grid; 
+    grid-template-columns: 1fr 2fr; 
+    height: 600px; 
+    border: 2px solid magenta; 
+    border-radius: 12px; 
+    background: #111; 
+}
+#chatList { padding:10px; border-right:1px solid #333; overflow-y:auto; }
+#chatWindow { display:flex; flex-direction:column; padding:10px; }
+
 .chat-item-btn { display:block; width:100%; text-align:left; margin-bottom:8px; }
 .message-bubble { display:inline-block; padding:8px 12px; border-radius:15px; max-width:70%; font-family:Arial, sans-serif; word-wrap:break-word; font-size:0.9em; }
 .message-mine { text-align:right; }
 .message-mine .message-bubble { background: magenta; color:white; }
 .message-other { text-align:left; }
 .message-other .message-bubble { background: cyan; color:#0b0b0b; }
+
+
+/* ======================================= */
+/* MEDIA QUERIES (MOBILE FIXES) */
+/* ======================================= */
+@media (max-width: 600px) {
+    .header h1 {
+        font-size: 1.5em; 
+    }
+    .icon-container {
+        font-size: 1.5em;
+    }
+
+    .dashboard div {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .card {
+        max-width: 100%;
+    }
+
+    /* CHAT FIX: Stack the chat list and chat window */
+    #messagingTab {
+        grid-template-columns: 1fr; 
+        height: auto; 
+        min-height: 400px;
+    }
+    
+    #chatList {
+        border-right: none;
+        border-bottom: 1px solid #333; 
+        max-height: 200px; 
+    }
+
+    /* Profile Edit fields stacking */
+    #profileTab > div > div:nth-child(1) {
+        flex-direction: column; 
+        align-items: flex-start;
+    }
+    #profileTab > div > div:nth-child(1) > div {
+        margin-top: 15px;
+    }
+    #profileNickname {
+        width: 100% !important;
+        max-width: 100%;
+    }
+    #profileSkillRating, #profileStatus {
+        max-width: 100%;
+    }
+    #profileBio {
+        width: 100%;
+    }
+    .flex {
+        flex-direction: column; 
+    }
+}
 </style>
 </head>
 <body>
@@ -81,13 +174,13 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <div id="requestsTab" class="flex hidden"></div>
 <div id="friendsTab" class="flex hidden"></div>
 
-<div id="messagingTab" class="hidden" style="display:flex; height:600px; border:2px solid magenta; border-radius:12px; background:#111;">
-<div id="chatList" style="width:30%; padding:10px; border-right:1px solid #333; overflow-y:auto;">
+<div id="messagingTab" class="hidden">
+<div id="chatList">
 <h3>Active Duos</h3>
 <div id="activeDuoList">No friends to chat with.</div>
 </div>
 
-<div id="chatWindow" style="width:70%; display:flex; flex-direction:column; padding:10px;">
+<div id="chatWindow">
 <h3 id="chatHeader" style="border-bottom:1px solid cyan; padding-bottom:5px;">Select a Duo</h3>
 <div id="messageDisplay" style="flex-grow:1; overflow-y:auto; padding:10px; background:#0b0b0b; border-radius:6px; margin-bottom:10px;"></div>
 <div id="messageInputArea" class="hidden" style="display:flex; gap:10px;">
@@ -157,7 +250,7 @@ const db = firebase.firestore();
 const storage = firebase.storage();
 const functions = firebase.functions(); // Initializes Cloud Functions SDK
 
-const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; // Replace with your actual admin UID
+const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; 
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 let currentUser = null, currentChatUid = null, unsubscribeMessages = null;
 let unsubscribeChatList = null; 
@@ -262,6 +355,7 @@ function renderCard(d,type,reqId=null){
     btn.onclick=()=>sendFriendRequest(d.uid); buttons.push(btn);
   }
   else if(type==='request'){
+    // NOTE: The accept button still uses the Cloud Function, which must be deployed
     const accept=document.createElement('button'); accept.className='neon-btn'; accept.textContent='Accept'; accept.onclick=()=>acceptFriend(reqId,d.uid); 
     const decline=document.createElement('button'); decline.className='neon-btn remove'; decline.textContent='Decline'; decline.onclick=()=>declineFriend(reqId); buttons.push(accept,decline);
   }
@@ -273,10 +367,8 @@ function renderCard(d,type,reqId=null){
 
 async function loadSuggested(){
   const container=document.getElementById('suggestedTab'); container.innerHTML='';
-  // NOTE: With public rules, this read will always work if the app is configured correctly.
   const snapshot=await db.collection('users').get(); 
   
-  // Check if currentUser is set (must be logged in)
   if(!currentUser) return; 
 
   const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
@@ -286,12 +378,11 @@ async function loadSuggested(){
   if(container.childElementCount===0) container.innerHTML='<p>No new suggested partners found.</p>';
 }
 
-// Client-side function for sending request
+// Client-side function for sending request (Robust version)
 async function sendFriendRequest(toUid){
   if(!currentUser) { alert("You must be logged in to send a request."); return; }
   if(toUid===currentUser.uid) { alert("Cannot send request to yourself!"); return; }
   
-  // Unique, sortable ID using both UIDs
   const reqId=[currentUser.uid,toUid].sort().join('_');
   const reqRef=db.collection('friendRequests').doc(reqId);
 
@@ -299,30 +390,24 @@ async function sendFriendRequest(toUid){
     if((await reqRef.get()).exists){ alert("Request already sent!"); return; }
     const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
     if((myDoc.friends||[]).includes(toUid)){ alert("Already friends!"); return; }
-
-    console.log("--- DEBUG: ATTEMPTING WRITE WITH PUBLIC RULES ---");
-    console.log("CurrentUser UID:", currentUser.uid);
-    console.log("Receiver UID:", toUid);
-    console.log("-----------------------------------------------");
     
-    // THIS LINE WILL SUCCEED IF AUTHENTICATION TOKEN IS PRESENT
+    // THIS WRITE RELIES ON THE SECURE ROBUST RULES YOU JUST PUBLISHED
     await reqRef.set({
       senderId:currentUser.uid, 
       receiverId:toUid, 
       createdAt:firebase.firestore.FieldValue.serverTimestamp() 
     });
     
-    alert("Friend request sent! (Success)"); 
+    alert("Friend request sent!"); 
     loadSuggested(); 
     loadRequests();
   } catch (e) {
     console.error("Failed to send friend request:", e);
-    alert("FATAL ERROR: Failed to send request even with public rules. Authentication has failed.");
+    alert("ERROR: Failed to send request. Check your browser console and ensure the SECURE rules are published.");
   }
 }
 
 async function loadRequests(){
-  // This query will now work with public rules if currentUser is set.
   const snapshot=await db.collection('friendRequests').where('receiverId','==',currentUser.uid).get();
   const container=document.getElementById('requestsTab'); container.innerHTML='';
   if(snapshot.empty){ container.innerHTML='<p>No friend requests.</p>'; return; }
@@ -330,9 +415,9 @@ async function loadRequests(){
   snapshot.docs.forEach((doc,i)=>{ const fromUser=userDocs[i].data(); if(!fromUser)return; container.appendChild(renderCard(fromUser,'request',doc.id)); });
 }
 
-// NOTE: This uses the Cloud Function 'acceptFriendRequest' which must be deployed separately.
 async function acceptFriend(reqId, friendUid){
   try {
+    // NOTE: This requires the 'acceptFriendRequest' Cloud Function to be deployed for transaction safety
     const acceptFunction = functions.https.callable('acceptFriendRequest');
     await acceptFunction({ reqId: reqId, friendUid: friendUid });
 
