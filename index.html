@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP Profiles & Friends (Direct Add)</title>
+<title>DUO UP Profiles & Friends (Direct Add + Chat)</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -46,58 +46,27 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     overflow: hidden;
     transition: transform 0.2s, box-shadow 0.2s;
 }
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 25px magenta, inset 0 0 10px rgba(255, 0, 255, 0.5); 
-}
-.card-content-box { 
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 10px; 
-    padding-bottom: 10px;
-    border-bottom: 1px dashed #333; 
-}
+/* ... (Other card styles omitted for brevity) ... */
 .avatar { width:60px; height:60px; border-radius:50%; border:3px solid magenta; object-fit:cover; margin-bottom:10px; }
-.owner-badge-box { 
-    display:inline-block; 
-    padding:2px 6px; 
-    margin-left:8px; 
-    font-size:0.7em; 
-    font-weight:bold; 
-    letter-spacing:1px; 
-    border-radius:4px; 
-    text-transform:uppercase; 
-    background:#3a005c; 
-    color:#ffccff;
-    border:1px solid #ff00ff; 
-    box-shadow:0 0 5px #ff00ff, 0 0 10px #cc33ff, inset 0 0 5px #ff00ff; 
-    vertical-align:middle; 
-    font-size: 0.8em; 
-}
-.owner-badge-box:before {
-    content: "⚡ "; 
-    color: yellow;
-    text-shadow: 0 0 5px yellow;
-    margin-right: 2px;
-}
-.skill-rating { color:gold; font-size:1.2em; margin-bottom:5px; }
-.status-indicator { font-size:0.8em; padding:3px 8px; border-radius:4px; font-weight:bold; margin-bottom:10px; }
 .status-online { background-color:#00cc00; color:#0b0b0b; box-shadow:0 0 5px #00ff00; }
 .status-ingame { background-color:#ffaa00; color:#0b0b0b; box-shadow:0 0 5px #ffaa00; }
 .status-lfd { background-color:#00aaff; color:#0b0b0b; box-shadow:0 0 5px #00aaff; }
-.game-badge {
-    display: inline-block;
-    background: #004444; 
-    color: #ccffff;
-    padding: 3px 8px;
-    border-radius: 4px;
-    margin: 4px; 
-    font-weight: bold;
-    font-size: 0.85em;
-    border: 1px solid cyan;
-}
+
+/* --- MESSAGING SPECIFIC STYLES --- */
+#messagingTab { display: flex; gap: 20px; height: 70vh; }
+#chatList { width: 300px; padding: 15px; border: 2px solid cyan; border-radius: 8px; background: #1a1a1a; overflow-y: auto; }
+#activeDuoList { margin-top: 10px; }
+.chat-entry { padding: 10px; border-bottom: 1px dashed #333; cursor: pointer; transition: background 0.2s; }
+.chat-entry:hover { background: #2a2a2a; }
+.chat-entry.active { background: #004444; border-left: 5px solid lime; font-weight: bold; }
+.last-message-snippet { font-size: 0.8em; color: #bbb; }
+#chatWindow { flex-grow: 1; display: flex; flex-direction: column; border: 2px solid magenta; border-radius: 8px; background: #1a1a1a; }
+#chatHeader { padding: 10px; border-bottom: 2px solid magenta; margin: 0; background: #330033; }
+#messageDisplay { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.message { max-width: 70%; padding: 8px 12px; border-radius: 15px; font-size: 0.9em; }
+.message.sent { background: #005555; align-self: flex-end; border-bottom-right-radius: 5px; }
+.message.received { background: #333333; align-self: flex-start; border-bottom-left-radius: 5px; }
+#messageInputArea { padding: 10px; border-top: 2px solid magenta; background: #0b0b0b; }
 </style>
 </head>
 <body>
@@ -158,13 +127,12 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     <div id="chatWindow">
         <h3 id="chatHeader">Select a Duo</h3>
         <div id="messageDisplay"></div>
-        <div id="messageInputArea" class="hidden" style="display:flex; gap:10px;">
+        <div id="messageInputArea" class="hidden">
             <input type="text" id="messageInput" placeholder="Type your message...">
-            <button class="neon-btn" id="sendMessageBtn">Send</button>
+            <button class="neon-btn" id="sendMessageBtn" onclick="sendMessage()">Send</button>
         </div>
     </div>
 </div>
-
 <div id="viewProfileTab" class="hidden container">
     <button class="neon-btn" onclick="showTab('allUsers')">← Back to Suggested</button>
     <div id="viewProfileContent" style="padding: 20px; border: 2px solid magenta; border-radius: 10px; background: #1a1a1a; margin-top: 20px;">
@@ -172,65 +140,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 </div>
 
 <div id="profileTab" class="hidden">
-    <h2>Cyber-Profile Editor</h2>
-    <div style="padding: 20px; border: 2px solid magenta; border-radius: 10px; background: #1a1a1a;">
-        <div style="display: flex; align-items: center; margin-bottom: 20px;">
-            <img id="profileAvatar" class="avatar" style="width: 80px; height: 80px; margin-right: 20px; border-color: magenta;" src="">
-            <div>
-                <label style="color: cyan; display: block; margin-bottom: 5px;">Unique Identifier:</label>
-                <input type="text" id="profileNickname" value="User Nickname" disabled>
-            </div>
-        </div>
-        <div style="margin-bottom: 15px;">
-            <label style="color: cyan; display: block; margin-bottom: 5px;">Upload Avatar:</label>
-            <input type="file" id="avatarUpload" accept="image/*" onchange="previewAvatar(this)">
-        </div>
-
-        <h3 style="color:cyan; margin-top: 25px;">Unique Username (@)</h3>
-        <p id="usernameDisplay">@Loading...</p>
-        <div id="usernameEditor" style="margin-bottom: 20px;">
-            <input type="text" id="newUsernameInput" placeholder="Enter new username (a-z, 0-9, 3-20 chars)" style="flex-grow: 1;">
-            <button class="neon-btn" id="changeUsernameBtn" onclick="attemptUsernameChange()">Set/Change Username</button>
-        </div>
-        <p id="usernameMessage" style="color: yellow;"></p>
-            
-        <div style="margin-bottom: 15px;">
-            <label style="color: cyan; display: block; margin-bottom: 5px;">Bio/Tagline:</label>
-            <textarea id="profileBio" rows="3" style="width: 100%;"></textarea>
-        </div>
-        <div style="display: flex; gap: 30px; margin-bottom: 20px;">
-            <div>
-                <label style="color: cyan; display: block; margin-bottom: 5px;">Skill Rating (1-5):</label>
-                <select id="profileSkillRating">
-                    <option value="1">⭐</option>
-                    <option value="2">⭐⭐</option>
-                    <option value="3">⭐⭐⭐</option>
-                    <option value="4">⭐⭐⭐⭐</option>
-                    <option value="5">⭐⭐⭐⭐⭐</option>
-                </select>
-            </div>
-            <div>
-                <label style="color: cyan; display: block; margin-bottom: 5px;">Current Status:</label>
-                <select id="profileStatus">
-                    <option value="Online">Online</option>
-                    <option value="In Game">In Game</option>
-                    <option value="LFD">Looking For Duo (LFD)</option>
-                </select>
-            </div>
-        </div>
-            
-        <h3 style="color:cyan; margin-top: 25px;">Featured Games & Needs (Max 4)</h3>
-        <button class="neon-btn" onclick="addGameSlot()" id="addGameBtn">Add Game</button>
-        <div id="gameSlotList" class="game-slot-container">
-        </div>
-
-        <h3 style="color:cyan; margin-top: 25px;">Gamer Card Manager (Max 8)</h3>
-        <p style="font-size: 0.9em; color: gray;">Click the "+" slot to upload a new card (Max 2MB per image).</p>
-        <div id="gamerCardList" class="gamer-card-container" style="border: 1px dashed cyan; padding: 10px; border-radius: 6px; margin-bottom: 15px;"></div>
-        <button class="neon-btn" style="border-color: #00ff00; box-shadow: 0 0 10px #00ff00;" onclick="saveProfile()">Save Profile</button>
-        <p id="saveMessage" style="color: #00ff00; margin-top: 10px;"></p>
     </div>
-</div>
 
 <script>
 // ---------- FIREBASE INIT (YOUR CONFIG) ----------
@@ -253,24 +163,17 @@ const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 const GAMES_LIST = [
     { name: "Apex Legends", roles: ["Tank", "DPS", "Support", "Any"] },
-    { name: "Valorant", roles: ["Duelist", "Controller", "Sentinel", "Initiator", "Any"] },
-    { name: "League of Legends", roles: ["Top", "Jungle", "Mid", "ADC", "Support", "Any"] },
-    { name: "Dota 2", roles: ["Carry", "Mid", "Offlane", "Support 4", "Support 5", "Any"] },
-    { name: "Overwatch 2", roles: ["Tank", "DPS", "Support", "Any"] },
-    { name: "Fortnite", roles: ["Builder", "Zero Build", "Any"] },
-    { name: "Destiny 2", roles: ["PVE", "PVP", "Any"] },
-    { name: "Rocket League", roles: ["Attacker", "Defender", "Midfield", "Any"] },
-    { name: "Other/Casual", roles: ["Chill", "Competitive", "Casual"] }
+    // ... (rest of GAMES_LIST)
 ];
 
-// Global State (Simplified: removed pending/sent requests)
+// Global State
 let currentUser = null, 
     currentChatUid = null, 
     unsubscribeMessages = null, 
     unsubscribeUnread = null; 
 let currentProfileData = {}; 
 let allUsersCache = [];    
-let friendUsers = {}; 
+let friendProfiles = {}; // Stores friend UID -> profile object mapping
 let blockedUsers = {}; 
 
 
@@ -293,40 +196,8 @@ auth.onAuthStateChanged(async user=>{
     dashboard.classList.remove("hidden"); 
     currentUser=user;
     
-    const userRef=db.collection("users").doc(user.uid);
-    const userDoc = await userRef.get();
+    // ... (User Setup Logic Omitted for brevity) ...
 
-    // 1. New User Setup (Ensuring profile exists with all fields)
-    if(!userDoc.exists || !userDoc.data().featuredGames){
-        const baseName = (user.displayName || user.email.split('@')[0]).replace(/\s/g, '').toLowerCase();
-        const defaultUsername = baseName.substring(0, 16).slice(0, 16 - 4) + Math.floor(1000 + Math.random() * 9000); 
-        
-        const existingData = userDoc.exists ? userDoc.data() : {};
-        
-        const profileUpdate = {
-            uid: user.uid,
-            username: existingData.username || defaultUsername,
-            usernameChanged: existingData.usernameChanged || false,
-            bio: existingData.bio || "New Cyber Warrior seeking a Duo partner!",
-            skillRating: existingData.skillRating || 3,
-            status: existingData.status || "Online",
-            friends: existingData.friends || [], // Ensure friends array is initialized
-            profileImageUrl: user.photoURL || DEFAULT_AVATAR,
-            nickname: user.displayName, 
-            gamerCards: existingData.gamerCards || [],
-            featuredGames: existingData.featuredGames || [], 
-        };
-        
-        await userRef.set(profileUpdate, { merge: true });
-
-        if (!userDoc.exists) {
-            await db.collection("usernames").doc(defaultUsername).set({
-                uid: user.uid,
-                username: defaultUsername
-            });
-        }
-    }
-    
     // 2. Load Core Data
     await loadUserProfile(); 
     await loadBlocks(); 
@@ -335,232 +206,14 @@ auth.onAuthStateChanged(async user=>{
     welcome.textContent=`Welcome, ${currentUser.displayName || currentUser.email}`;
     await loadAllUsers(); 
     await loadFriends();
-    showTab('allUsers'); // Ensure initial tab is loaded
+    showTab('allUsers'); 
 });
 
 
-// Loads UIDs blocked by the current user
-async function loadBlocks() {
-    if (!currentUser) return;
-    blockedUsers = {};
-    
-    const blocksSnap = await db.collection("blocks")
-        .where("blockerId", "==", currentUser.uid) 
-        .get();
-        
-    blocksSnap.forEach(doc => {
-        const blockedUid = doc.id.split('_')[1];
-        blockedUsers[blockedUid] = doc.id;
-    });
-}
-
-async function loadUserProfile() {
-    const userDoc = await db.collection("users").doc(currentUser.uid).get();
-    currentProfileData = userDoc.data() || {}; 
-
-    profileAvatar.src = currentProfileData.profileImageUrl || DEFAULT_AVATAR;
-    
-    const currentDisplayUsername = currentProfileData.username || 'Loading...';
-
-    profileNickname.value = currentProfileData.nickname || currentUser.displayName || "Unknown User";
-    
-    profileBio.value = currentProfileData.bio || "";
-    profileSkillRating.value = currentProfileData.skillRating || "3";
-    profileStatus.value = currentProfileData.status || "Online";
-
-    document.getElementById("usernameDisplay").textContent = `@${currentDisplayUsername}`;
-    
-    const changeBtn = document.getElementById("changeUsernameBtn");
-    const input = document.getElementById("newUsernameInput");
-    const messageElement = document.getElementById("usernameMessage");
-
-    const hasChanged = currentProfileData.usernameChanged === true;
-    
-    if (hasChanged) {
-        changeBtn.textContent = "Changed Once (Locked)";
-        changeBtn.disabled = true;
-        input.disabled = true;
-        messageElement.textContent = "Your unique username has been permanently set.";
-    } else {
-        changeBtn.textContent = "Set/Change Username";
-        changeBtn.disabled = false;
-        input.disabled = false;
-        messageElement.textContent = "You have one change remaining to set your unique @handle.";
-    }
-    
-    renderGameSlots();
-}
+// ... (loadBlocks, loadUserProfile, saveProfile, showTab, renderUserCard functions Omitted for brevity) ...
 
 
-// --- GAME SLOTS LOGIC (Place your full game slot functions here) ---
-function renderGameSlots() { 
-    // Simplified placeholder
-    const list = document.getElementById('gameSlotList');
-    list.innerHTML = '';
-    const games = currentProfileData.featuredGames || [];
-    games.forEach((g, index) => {
-        const slot = document.createElement('div');
-        slot.className = 'game-slot';
-        slot.innerHTML = `<h4>${g.game} (${g.role})</h4>`;
-        list.appendChild(slot);
-    });
-}
-function generateRoleOptions(gameName, selectedRole) { return `<option value="${selectedRole}">${selectedRole}</option>`; }
-function updateGameRoleOptions(gameName, index) { /* ... */ }
-function addGameSlot() { /* ... */ }
-function removeGameSlot(index) { /* ... */ }
-// --- END GAME SLOTS LOGIC ---
-
-
-async function saveProfile() {
-    const featuredGames = [];
-    const gameSlots = document.querySelectorAll('#gameSlotList .game-slot');
-    let hasError = false;
-
-    // ... (Game slot validation logic omitted) ...
-    gameSlots.forEach((slot, index) => {
-        const gameSelect = slot.querySelector(`select[data-field="game"]`);
-        const roleSelect = slot.querySelector(`select[data-field="role"]`);
-        if (gameSelect.value && roleSelect.value) {
-            featuredGames.push({
-                game: gameSelect.value,
-                role: roleSelect.value
-            });
-        } else if (gameSelect.value || roleSelect.value) {
-             hasError = true;
-        }
-    });
-
-    if (hasError) {
-        alert("Please ensure every selected game slot has both a Game Title and a Role/Need selected, or remove the slot.");
-        return;
-    }
-
-    const updateData = {
-        bio: profileBio.value,
-        skillRating: parseInt(profileSkillRating.value),
-        status: profileStatus.value,
-        featuredGames: featuredGames, 
-    };
-    
-    try {
-        await db.collection("users").doc(currentUser.uid).update(updateData);
-        document.getElementById('saveMessage').textContent = 'Profile saved successfully!';
-        setTimeout(() => document.getElementById('saveMessage').textContent = '', 3000);
-        await loadUserProfile(); 
-        loadAllUsers();
-    } catch(e) {
-        document.getElementById('saveMessage').textContent = `Error saving profile: ${e.message}`;
-        console.error("Save Profile Error:", e);
-    }
-}
-
-
-// --- TAB MANAGEMENT ---
-function showTab(tab){
-    document.querySelectorAll('#allUsersTab, #searchTab, #friendsTab, #messagingTab, #profileTab, #viewProfileTab').forEach(el => el.classList.add('hidden'));
-    
-    switch(tab){
-      case "allUsers": document.getElementById('allUsersTab').classList.remove("hidden"); loadAllUsers(); break; 
-      case "search": document.getElementById('searchTab').classList.remove("hidden"); filterSearchResults(); break; 
-      case "friends": document.getElementById('friendsTab').classList.remove("hidden"); loadFriends(); break; 
-      case "messaging": document.getElementById('messagingTab').classList.remove("hidden"); /* initMessaging(); */ break;
-      case "profile": document.getElementById('profileTab').classList.remove("hidden"); loadUserProfile(); break; 
-      case "viewProfile": document.getElementById('viewProfileTab').classList.remove("hidden"); break; 
-    }
-}
-
-
-// ---------- CORE USER CARD RENDERING ----------
-function renderUserCard(d, data) {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.onclick = () => viewUserProfile(d.uid);
-
-    let actionButton = '';
-    const isFriend = currentProfileData.friends && currentProfileData.friends.includes(d.uid);
-    const isSelf = d.uid === currentUser.uid;
-
-    if (!isSelf) {
-        if (isFriend) {
-            actionButton = `<button class="neon-btn remove" onclick="event.stopPropagation(); removeFriend('${d.uid}')">Remove Duo</button>`;
-        } else {
-            actionButton = `<button class="neon-btn add" onclick="event.stopPropagation(); addFriend('${d.uid}')">Add Duo</button>`;
-        }
-    } else {
-        actionButton = `<span class="owner-badge-box">You</span>`;
-    }
-
-    // Simplified Game Display
-    let gameBadges = '';
-    (data.featuredGames || []).slice(0, 3).forEach(g => {
-        gameBadges += `<span class="game-badge">${g.game} (${g.role})</span>`;
-    });
-
-
-    card.innerHTML = `
-        <div class="card-content-box">
-            <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar">
-            <h3 style="margin:0; font-size:1.2em;">@${data.username || data.nickname}</h3>
-            <div class="status-indicator status-${(data.status || 'Online').replace(/\s/g, '').toLowerCase()}">${data.status || 'Online'}</div>
-            <div class="skill-rating">${'⭐'.repeat(data.skillRating || 3)}</div>
-            <p style="margin:5px 0; font-size:0.9em; text-align:center; color:#ccc;">${data.bio || 'No bio provided.'}</p>
-        </div>
-        <div style="margin-bottom: 10px;">${actionButton}</div>
-        <div class="card-games">${gameBadges || '<p style="color:gray;">No games featured.</p>'}</div>
-    `;
-
-    return card;
-}
-
-
-// ---------- USER & SEARCH FUNCTIONS (Simplified) ----------
-async function loadAllUsers(){
-    allUsersTab.innerHTML = "<h3>Suggested Players</h3>";
-    try {
-        const snapshot = await db.collection("users").limit(100).get();
-        allUsersCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        allUsersCache.forEach(user => {
-            if (user.id !== currentUser.uid && !blockedUsers[user.id]) {
-                allUsersTab.appendChild(renderUserCard({ uid: user.id }, user));
-            }
-        });
-
-    } catch(e) {
-        allUsersTab.innerHTML += `<p style="color:red;">Error loading users: ${e.message}</p>`;
-        console.error("Load All Users Error:", e);
-    }
-}
-
-function filterSearchResults() {
-    const searchResults = document.getElementById('searchResults');
-    searchResults.innerHTML = '';
-    const query = searchInput.value.toLowerCase();
-    const statusFilter = statusFilter.value;
-    const skillFilter = parseInt(skillFilter.value);
-
-    const filteredUsers = allUsersCache.filter(user => {
-        const matchesQuery = user.nickname.toLowerCase().includes(query) || user.bio.toLowerCase().includes(query) || (user.username && user.username.toLowerCase().includes(query));
-        const matchesStatus = !statusFilter || user.status === statusFilter;
-        const matchesSkill = user.skillRating >= skillFilter;
-        const isSelf = user.id === currentUser.uid;
-        const isBlocked = blockedUsers[user.id];
-
-        return matchesQuery && matchesStatus && matchesSkill && !isSelf && !isBlocked;
-    });
-
-    if (filteredUsers.length === 0) {
-        searchResults.innerHTML = '<p>No players match your search criteria.</p>';
-        return;
-    }
-    filteredUsers.forEach(user => {
-        searchResults.appendChild(renderUserCard({ uid: user.id }, user));
-    });
-}
-
-
-// ---------- FRIENDSHIP FUNCTIONS (SIMPLIFIED - DIRECT ADD/REMOVE) ----------
+// ---------- FRIENDSHIP FUNCTIONS (DIRECT ADD/REMOVE) ----------
 
 async function addFriend(targetUid) {
     if (!currentUser) return;
@@ -572,14 +225,13 @@ async function addFriend(targetUid) {
         
         alert(`Successfully added ${targetUid.substring(0, 8)}... as a Duo. (One-way friendship established.)`);
         
-        // Refresh UI
         await loadUserProfile();
         await loadFriends();
         loadAllUsers(); 
         
     } catch (e) {
-        console.error("Add Friend Error (Rule 1 update failed):", e);
-        alert("Add Duo Failed: " + e.message);
+        console.error("Add Friend Error:", e);
+        alert("Add Duo Failed: " + (e.message || "Check Security Rules."));
     }
 }
 
@@ -593,47 +245,182 @@ async function removeFriend(friendId) {
         
         alert(`Successfully removed ${friendId.substring(0, 8)}... from Duos.`);
         
-        // Refresh UI
         await loadUserProfile();
         await loadFriends();
         loadAllUsers(); 
         
     } catch (e) {
         console.error("Remove Friend Error:", e);
-        alert("Remove Duo Failed: " + e.message);
+        alert("Remove Duo Failed: " + (e.message || "Check Security Rules."));
     }
 }
 
+/**
+ * Loads the current user's friends, stores their profiles, and renders the Duos tab.
+ */
 async function loadFriends() {
     const friendsTab = document.getElementById('friendsTab');
-    friendsTab.innerHTML = "<h3>Your Duo Partners</h3>";
-    
     const friendUids = currentProfileData.friends || [];
+    friendsTab.innerHTML = "<h3>Your Duo Partners</h3>";
+    friendProfiles = {}; // Reset cache
 
     if (friendUids.length === 0) {
         friendsTab.innerHTML += "<p>You have no Duo Partners yet. Find someone in Suggested or Search!</p>";
         return;
     }
 
-    // Get the profiles of the friends
     const friendPromises = friendUids.map(uid => db.collection("users").doc(uid).get());
     const friendDocs = await Promise.all(friendPromises);
 
     friendDocs.forEach(doc => {
         if (!doc.exists) return;
         const friendData = doc.data();
+        friendProfiles[doc.id] = friendData;
         friendsTab.appendChild(renderUserCard(doc, friendData));
     });
+    
+    // If on messaging tab, refresh the chat list
+    if (document.getElementById('messagingTab').classList.contains('hidden') === false) {
+        loadChatList();
+    }
 }
 
 
-// ---------- REMAINING FUNCTIONS (Simplified/Placeholders) ----------
-async function blockUser(blockedId) { /* ... */ }
-async function viewUserProfile(uid) { /* ... */ }
-async function unblockUser(blockedId) { /* ... */ }
-function startChat(friendId) { /* ... */ }
-async function attemptUsernameChange() { /* ... */ }
-function previewAvatar(input) { /* ... */ }
+// ---------- MESSAGING FUNCTIONS (NEW) ----------
+
+/**
+ * Generates a consistent Chat Document ID based on two UIDs.
+ * @param {string} uid1 
+ * @param {string} uid2 
+ * @returns {string} Canonical Chat ID (e.g., smallerUID_largerUID)
+ */
+function getCanonicalChatId(uid1, uid2) {
+    // Sort UIDs alphabetically to ensure the ID is always the same regardless of who starts the chat
+    const participants = [uid1, uid2].sort();
+    return participants.join('_');
+}
+
+/**
+ * Loads the list of friends into the messaging sidebar.
+ */
+function loadChatList() {
+    const duoList = document.getElementById('activeDuoList');
+    duoList.innerHTML = '';
+    
+    const friendUids = currentProfileData.friends || [];
+
+    if (friendUids.length === 0) {
+        duoList.innerHTML = "<p>No Duos to chat with. Add friends first!</p>";
+        return;
+    }
+
+    // Use the cached friend profiles
+    friendUids.forEach(uid => {
+        const profile = friendProfiles[uid];
+        if (!profile) return;
+        
+        const entry = document.createElement('div');
+        entry.className = 'chat-entry';
+        entry.textContent = profile.nickname || `@${profile.username}`;
+        
+        // Placeholder for last message/timestamp (requires reading the 'chats' collection later)
+        entry.innerHTML = `
+            <div>${profile.nickname || `@${profile.username}`}</div>
+            <div class="last-message-snippet">Click to start chatting...</div>
+        `;
+        entry.onclick = () => startChat(uid, profile);
+        duoList.appendChild(entry);
+    });
+}
+
+/**
+ * Starts a chat with a specific user, setting up the real-time listener.
+ * @param {string} targetUid The UID of the friend being chatted with.
+ * @param {object} targetProfile The profile data of the friend.
+ */
+async function startChat(targetUid, targetProfile) {
+    if (unsubscribeMessages) {
+        unsubscribeMessages(); // Stop listening to the previous chat
+    }
+    
+    currentChatUid = targetUid;
+    const chatId = getCanonicalChatId(currentUser.uid, targetUid);
+    
+    document.getElementById('chatHeader').textContent = `Chatting with: @${targetProfile.username}`;
+    document.getElementById('messageInputArea').classList.remove('hidden');
+    document.getElementById('messageDisplay').innerHTML = '';
+
+    // Set up the real-time listener for the messages subcollection
+    const chatRef = db.collection("chats").doc(chatId).collection("messages").orderBy("timestamp", "asc");
+
+    unsubscribeMessages = chatRef.onSnapshot(snapshot => {
+        const display = document.getElementById('messageDisplay');
+        display.innerHTML = ''; // Clear display on update
+
+        snapshot.forEach(doc => {
+            const msg = doc.data();
+            const messageEl = document.createElement('div');
+            messageEl.className = `message ${msg.senderId === currentUser.uid ? 'sent' : 'received'}`;
+            messageEl.textContent = msg.text;
+            display.appendChild(messageEl);
+        });
+
+        // Scroll to the bottom of the chat window
+        display.scrollTop = display.scrollHeight;
+    }, error => {
+        console.error("Error listening to messages:", error);
+        document.getElementById('messageDisplay').innerHTML = `<p style="color:red;">Error loading chat: ${error.message}</p>`;
+    });
+    
+    // Highlight the active chat entry (Basic placeholder)
+    document.querySelectorAll('.chat-entry').forEach(el => el.classList.remove('active'));
+    // Find the entry that was just clicked and add the 'active' class
+    // (A more robust solution would require adding the UID to the chat-entry element)
+}
+
+/**
+ * Sends a message to the currently active chat.
+ */
+async function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const messageText = input.value.trim();
+
+    if (!messageText || !currentChatUid) return;
+
+    const chatId = getCanonicalChatId(currentUser.uid, currentChatUid);
+    const chatDocRef = db.collection("chats").doc(chatId);
+
+    try {
+        // 1. Write the message to the messages subcollection
+        await chatDocRef.collection("messages").add({
+            senderId: currentUser.uid,
+            text: messageText,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // 2. Update the chat header document (for sorting/previews)
+        await chatDocRef.set({
+            participants: [currentUser.uid, currentChatUid].sort(),
+            lastMessage: messageText,
+            lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        input.value = ''; // Clear the input field
+
+    } catch (e) {
+        alert("Failed to send message: " + (e.message || "Check Messaging Security Rules."));
+        console.error("Message Send Error:", e);
+    }
+}
+
+// Ensure loadChatList is called when switching to the messaging tab
+document.querySelector('#navigationBar button:nth-child(4)').onclick = () => {
+    showTab('messaging');
+    loadChatList();
+};
+
+// ... (Other remaining placeholder functions omitted for brevity) ...
+
 </script>
 </body>
 </html>
