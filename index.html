@@ -482,7 +482,7 @@ async function loadAllUsers(){
     const allUsersTab = document.getElementById('allUsersTab');
     allUsersTab.innerHTML = "<h3>Suggested Players</h3>";
     try {
-        // FIX: Removed .limit(100) to fetch all users.
+        // FIX: Removed .limit() to fetch ALL users in the collection.
         const snapshot = await db.collection("users").get(); 
         
         allUsersCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
