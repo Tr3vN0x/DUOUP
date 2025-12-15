@@ -325,7 +325,7 @@ const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 let currentUser=null;
 let currentProfileData={};
 let allUsersCache=[]; 
-let requestCache = {}; 
+let requestCache = {}; // Key: Other User UID, Value: {id: chatId, status: 'accepted'/'pending', ...}
 let currentChatId=null;
 let chatListener=null;
 
@@ -389,27 +389,26 @@ function showTab(tab){
 
     switch(tab){
         case 'allUsers': loadAllUsers(); break;
-        case 'search': filterSearchResults(); break;
+        case 'search': 
+            if (allUsersCache.length === 0) loadAllUsers(true); // Ensure cache is loaded before search
+            filterSearchResults(); 
+            break;
         case 'friends': loadFriends(); break;
         case 'messaging': loadChatList(); break;
-        case 'profile': loadUserProfile(); toggleLfdCategory(); break; // Initialize LFD selector visibility
+        case 'profile': loadUserProfile(); toggleLfdCategory(); break;
         default: break;
     }
     document.getElementById(tab+'Tab')?.classList.remove('hidden');
 }
 
+
 // ---------------------------
-// Load Users and Rendering
-async function loadAllUsers(){
+// Duo Request / Status Caching
+// ---------------------------
+async function loadDuoCache() {
     if(!currentUser) return;
-    const container=document.getElementById('allUsersTab');
-    container.innerHTML="<h3>Loading Suggested Players...</h3>";
-    try{
-        // This is the query that requires 'allow list' on the /users collection
-        const snapshot=await db.collection('users').get();
-        allUsersCache=snapshot.docs.map(d=>({id:d.id,...d.data()}));
-        
-        // Load all requests involving the current user (accepted or pending)
+    try {
+        // This query requires 'allow read' on the /requests collection if the user is a participant
         const requestsSnap = await db.collection('requests')
             .where('participants', 'array-contains', currentUser.uid)
             .get();
@@ -426,15 +425,49 @@ async function loadAllUsers(){
                 receiverId: data.receiverId
             };
         });
+        return true;
+    } catch (e) {
+         console.error("Error loading Duo Cache:", e);
+         alert(`FATAL ERROR: Could not load Duo status. Check Firestore Rules for /requests. Details: ${e.message}`);
+         return false;
+    }
+}
 
+
+// ---------------------------
+// Load Users and Rendering
+// ---------------------------
+async function loadAllUsers(silent = false){
+    if(!currentUser) return;
+    const container=document.getElementById('allUsersTab');
+    if (!silent) container.innerHTML="<h3>Loading Suggested Players...</h3>";
+    
+    // Step 1: Load all users from the database
+    try{
+        // This is the query that requires 'allow list' on the /users collection
+        const snapshot=await db.collection('users').get();
+        allUsersCache=snapshot.docs.map(d=>({id:d.id,...d.data()}));
+    }catch(e){ 
+        if (!silent) container.innerHTML=`<p style="width:100%; text-align:center; color:red;">Error loading users: Check Firestore Rules for /users. Details: ${e.message}</p>`; 
+        return;
+    }
+    
+    // Step 2: Load all requests involving the current user (critical for status checks)
+    const cacheLoaded = await loadDuoCache();
+    if (!cacheLoaded) {
+        if (!silent) container.innerHTML=`<p style="width:100%; text-align:center; color:red;">Error loading Duo status. Check Firestore Rules for /requests.</p>`; 
+        return;
+    }
+
+    // Step 3: Render the cards for the 'Suggested' view
+    if (!silent) {
         container.innerHTML=""; 
-
         allUsersCache.forEach(user=>{
             if(user.id===currentUser.uid) return;
             const card=renderUserCard(user.id, user, requestCache[user.id]);
             if(card) container.appendChild(card);
         });
-    }catch(e){ container.innerHTML+=`<p style="width:100%; text-align:center; color:red;">Error loading users: Missing or insufficient permissions. Please check Firestore Rules. Details: ${e.message}</p>`; }
+    }
 }
 
 function renderUserCard(uid, data, requestInfo){
@@ -462,7 +495,8 @@ function renderUserCard(uid, data, requestInfo){
                 cardButtons = `<button class="neon-btn pending">Request Sent To You</button>`;
             }
         } else if (requestInfo.status === 'accepted') {
-            cardButtons = `<button class="neon-btn" style="border-color:lime; color:lime;">Duo</button>`;
+            // FIX: If accepted, show the Message button
+            cardButtons = `<button class="neon-btn" style="border-color:lime; color:lime;" onclick="event.stopPropagation(); openChat('${uid}', '${data.nickname}')">Message Duo</button>`;
         } else {
             // Should not happen if request is in cache, but handles deleted/rejected states
             cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
@@ -496,7 +530,7 @@ function renderUserCard(uid, data, requestInfo){
     return card;
 }
 
-function renderDuoCard(uid, data){
+function renderDuoCard(uid, data, requestId){
     if(!data) return null;
     const card=document.createElement('div');
     card.className='card';
@@ -588,11 +622,17 @@ async function loadFriends() {
     pendingListEl.innerHTML = 'Loading Requests...';
     friendListEl.innerHTML = 'Loading Duos...';
     
-    // Ensure all users are loaded and cached first
-    await loadAllUsers(); 
+    // CRITICAL: Ensure all users and request cache are loaded and fresh
+    await loadAllUsers(true); 
 
+    if (allUsersCache.length === 0) {
+        pendingListEl.innerHTML = '<p style="width:100%; text-align:center; color:red;">Could not load user data.</p>';
+        friendListEl.innerHTML = '<p style="width:100%; text-align:center; color:red;">Could not load user data.</p>';
+        return;
+    }
+    
     try {
-        // Filter the cache to find requests where the current user is the receiver and status is pending
+        // --- 1. Pending Requests ---
         const pendingRequests = Object.values(requestCache).filter(req => 
             req.status === 'pending' && req.receiverId === currentUser.uid
         );
@@ -611,13 +651,8 @@ async function loadFriends() {
                 }
             });
         }
-    } catch (e) {
-        console.error("Error loading Pending Requests:", e);
-        pendingListEl.innerHTML = `<p style="width:100%; text-align:center; color:red;">ERROR loading Pending Requests: ${e.message}.</p>`;
-    }
-    
-    try {
-        // Filter the cache to find accepted duos
+        
+        // --- 2. Accepted Duos ---
         const acceptedDuos = Object.values(requestCache).filter(req => req.status === 'accepted');
             
         if (acceptedDuos.length === 0) {
@@ -629,15 +664,16 @@ async function loadFriends() {
                 const otherProfile = findUserInCache(otherUid);
 
                 if (otherProfile) {
-                    const card = renderDuoCard(otherUid, otherProfile); 
+                    const requestId = getChatId(otherUid);
+                    const card = renderDuoCard(otherUid, otherProfile, requestId); 
                     if (card) friendListEl.appendChild(card);
                 }
             });
         }
         
     } catch (e) {
-        console.error("ERROR loading Accepted Duos:", e);
-        friendListEl.innerHTML = `<p style="width:100%; text-align:center; color:red;">ERROR loading Accepted Duos: ${e.message}.</p>`;
+        console.error("ERROR loading Friends/Duos:", e);
+        friendListEl.innerHTML = `<p style="width:100%; text-align:center; color:red;">ERROR loading Friends/Duos: ${e.message}.</p>`;
     }
 }
 
@@ -677,6 +713,8 @@ async function handleRequest(requestId, newStatus) {
         });
 
         alert(`Request ${newStatus}!`);
+        // Refresh everything to reflect the new Duo status
+        await loadDuoCache(); 
         loadFriends(); 
         loadChatList();
     } catch (e) {
@@ -701,7 +739,11 @@ async function removeDuo(otherUid) {
         await db.collection('chats').doc(requestId).delete();
         
         alert("Duo successfully removed.");
+        
+        // Update cache and refresh views
+        await loadDuoCache();
         loadFriends(); 
+        loadChatList();
         
         if (currentChatId === requestId) {
             if (chatListener) chatListener();
@@ -729,6 +771,13 @@ async function sendFriendRequest(uid){
         if (requestDoc.exists) {
             const status = requestDoc.data().status;
             let message = status === 'pending' ? "Your request is already PENDING." : "You are already DUOS with this player!";
+            
+            // CRITICAL FIX: If already DUOS, we just return. No error, but no further action needed.
+            if (status === 'accepted') {
+                 alert(message);
+                 return;
+            }
+            
             alert(message);
             return;
         }
@@ -743,6 +792,9 @@ async function sendFriendRequest(uid){
             sentAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         alert("Request sent successfully!");
+        
+        // Refresh cache to show 'Pending' status on the card
+        await loadDuoCache();
         loadAllUsers(); 
     }catch(e){
         console.error("Error sending friend request:", e);
@@ -758,30 +810,28 @@ async function sendFriendRequest(uid){
 async function loadChatList() {
     const duoListEl = document.getElementById('activeDuoList');
     duoListEl.innerHTML = 'Loading Duos for chat...';
+    
+    // Ensure cache is fresh to correctly identify accepted duos
+    await loadDuoCache(); 
 
     try {
-        // Use a query on the requests collection to find accepted duos
-        const acceptedSnapshot = await db.collection('requests')
-            .where('participants', 'array-contains', currentUser.uid)
-            .where('status', '==', 'accepted')
-            .get();
+        // Filter the cache to find accepted duos
+        const acceptedDuos = Object.values(requestCache).filter(req => req.status === 'accepted');
 
-        if (acceptedSnapshot.empty) {
+        if (acceptedDuos.length === 0) {
             duoListEl.innerHTML = 'No Duos yet.';
             return;
         }
 
         duoListEl.innerHTML = '';
-        const duoPromises = [];
         
-        acceptedSnapshot.forEach(doc => {
-            const request = doc.data();
+        const duoPromises = acceptedDuos.map(request => {
             const otherUid = request.senderId === currentUser.uid ? request.receiverId : request.senderId;
             const chatEntry = document.createElement('div');
             chatEntry.className = 'chat-entry';
             
             // Fetch the other user's nickname (requires 'allow get' on /users)
-            duoPromises.push(db.collection('users').doc(otherUid).get().then(userDoc => {
+            return db.collection('users').doc(otherUid).get().then(userDoc => {
                 const nickname = userDoc.data()?.nickname || 'Unknown Duo';
                 chatEntry.textContent = nickname;
                 chatEntry.onclick = () => {
@@ -790,7 +840,9 @@ async function loadChatList() {
                     openChat(otherUid, nickname);
                 };
                 duoListEl.appendChild(chatEntry);
-            }));
+            }).catch(e => {
+                console.warn(`Could not load profile for chat user ${otherUid}: ${e.message}`);
+            });
         });
         
         await Promise.all(duoPromises);
@@ -835,7 +887,8 @@ function openChat(otherUid, otherNickname) {
         messageDisplay.scrollTop = messageDisplay.scrollHeight;
     }, error => {
         console.error("Error listening to messages:", error);
-        document.getElementById('messageDisplay').innerHTML = `<p style="color:red;">Error loading messages: Missing or insufficient permissions. Please check Firestore Rules. Details: ${error.message}</p>`;
+        // The error details are often crucial for debugging permissions
+        document.getElementById('messageDisplay').innerHTML = `<p style="color:red;">Error loading messages: Check Firestore Rules for /chats/{chatId}/messages. Details: ${error.message}</p>`;
     });
 }
 
@@ -849,10 +902,6 @@ async function sendMessage() {
     try {
         await db.runTransaction(async (transaction) => {
             
-            // We don't need to check chatDoc.exists here because the security rules
-            // already enforce that the base chat document exists and has 'accepted' status
-            // for the user to be able to WRITE to the messages subcollection.
-
             // 1. Write the new message
             transaction.set(chatRef.collection('messages').doc(), {
                 text: text,
@@ -870,7 +919,7 @@ async function sendMessage() {
 
     } catch(e) {
         console.error("Message send failed:", e);
-        alert("Failed to send message. Error: Missing or insufficient permissions. Details: "+e.message);
+        alert("Failed to send message. Error: Missing or insufficient permissions. Check Rules for /chats/{chatId}/messages.");
     }
 }
 
@@ -888,6 +937,11 @@ function filterSearchResults() {
 
     const searchResultsEl = document.getElementById('searchResults');
     searchResultsEl.innerHTML = '';
+    
+    if (allUsersCache.length === 0) {
+        searchResultsEl.innerHTML = '<p style="width:100%; text-align:center; color:red;">User data not loaded. Please try the "Suggested" tab first.</p>';
+        return;
+    }
 
     const filteredUsers = allUsersCache.filter(user => {
         if (user.id === currentUser.uid) return false;
