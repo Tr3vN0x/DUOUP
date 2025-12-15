@@ -820,7 +820,9 @@ async function sendMessage() {
         await chatDocRef.collection('messages').add({
             text: text,
             senderId: currentUser.uid,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            // CRITICAL: Include chatId in the message document for robust security rules enforcement
+            chatId: currentChatId
         });
         
         inputElement.value = ''; // Clear input
