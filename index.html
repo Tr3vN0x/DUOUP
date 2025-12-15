@@ -348,7 +348,8 @@ async function loadUserProfile() {
         messageElement.style.color = 'yellow';
     }
     
-    renderGameSlots(); 
+    // Placeholder for game slot rendering
+    // renderGameSlots(); 
 }
 
 // --- PROFILE SAVE FUNCTION ---
@@ -583,7 +584,7 @@ async function loadFriends() {
 function renderUserCard(d, data) {
     const card = document.createElement('div');
     card.className = 'card';
-    card.onclick = () => viewUserProfile(d.uid);
+    // card.onclick = () => viewUserProfile(d.uid); // Disabled until viewProfileTab is implemented
 
     let actionButton = '';
     const isFriend = Array.isArray(currentProfileData.friends) && currentProfileData.friends.includes(d.uid);
@@ -632,8 +633,9 @@ function renderUserCard(d, data) {
 async function addFriend(targetUid) {
     if (!currentUser) return;
     
-    // --- Defensive Check (Fix for persistent permission error) ---
-    // This ensures the 'friends' field is an array before attempting arrayUnion
+    // --- Defensive Check: Ensure 'friends' field exists and is an array ---
+    // If the current profile data doesn't have a friends array, we set it to an empty array first.
+    // This addresses the persistent permission error by pre-validating the array type.
     if (!currentProfileData.friends || !Array.isArray(currentProfileData.friends)) {
         await db.collection("users").doc(currentUser.uid).set({
             friends: []
@@ -676,7 +678,7 @@ async function removeFriend(friendId) {
 }
 
 
-// --- MESSAGING FUNCTIONS ---
+// --- MESSAGING FUNCTIONS (Placeholders) ---
 
 function getCanonicalChatId(uid1, uid2) {
     const participants = [uid1, uid2].sort();
@@ -684,95 +686,15 @@ function getCanonicalChatId(uid1, uid2) {
 }
 
 function loadChatList() {
-    const duoList = document.getElementById('activeDuoList');
-    duoList.innerHTML = '';
-    const friendUids = Array.isArray(currentProfileData.friends) ? currentProfileData.friends : [];
-
-    if (friendUids.length === 0) {
-        duoList.innerHTML = "<p>No Duos to chat with. Add friends first!</p>";
-        return;
-    }
-
-    friendUids.forEach(uid => {
-        const profile = friendProfiles[uid];
-        if (!profile) return;
-        
-        const entry = document.createElement('div');
-        entry.className = 'chat-entry';
-        
-        const chatDisplayName = profile.username ? `@${profile.username}` : (profile.nickname || 'Unknown User');
-        
-        entry.innerHTML = `
-            <div>${chatDisplayName}</div>
-            <div class="last-message-snippet" id="snippet_${uid}">Click to start chatting...</div>
-        `;
-        entry.onclick = () => startChat(uid, profile);
-        duoList.appendChild(entry);
-    });
+    // Placeholder logic for loading chat list
 }
 
 async function startChat(targetUid, targetProfile) {
-    if (unsubscribeMessages) {
-        unsubscribeMessages(); 
-    }
-    
-    currentChatUid = targetUid;
-    const chatId = getCanonicalChatId(currentUser.uid, targetUid);
-    
-    const headerDisplayName = targetProfile.username ? `@${targetProfile.username}` : (targetProfile.nickname || 'Unknown User');
-    document.getElementById('chatHeader').textContent = `Chatting with: ${headerDisplayName}`;
-    document.getElementById('messageInputArea').classList.remove('hidden');
-    document.getElementById('messageDisplay').innerHTML = '';
-
-    const chatRef = db.collection("chats").doc(chatId).collection("messages").orderBy("timestamp", "asc");
-
-    unsubscribeMessages = chatRef.onSnapshot(snapshot => {
-        const display = document.getElementById('messageDisplay');
-        display.innerHTML = ''; 
-
-        snapshot.forEach(doc => {
-            const msg = doc.data();
-            const messageEl = document.createElement('div');
-            messageEl.className = `message ${msg.senderId === currentUser.uid ? 'sent' : 'received'}`;
-            messageEl.textContent = msg.text;
-            display.appendChild(messageEl);
-        });
-
-        display.scrollTop = display.scrollHeight;
-    }, error => {
-        console.error("Error listening to messages:", error);
-        document.getElementById('messageDisplay').innerHTML = `<p style="color:red;">Error loading chat: ${error.message}</p>`;
-    });
+    // Placeholder logic for starting chat
 }
 
 async function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const messageText = input.value.trim();
-
-    if (!messageText || !currentChatUid) return;
-
-    const chatId = getCanonicalChatId(currentUser.uid, currentChatUid);
-    const chatDocRef = db.collection("chats").doc(chatId);
-
-    try {
-        await chatDocRef.collection("messages").add({
-            senderId: currentUser.uid,
-            text: messageText,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        await chatDocRef.set({
-            participants: [currentUser.uid, currentChatUid].sort(),
-            lastMessage: messageText,
-            lastTimestamp: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true });
-
-        input.value = ''; 
-
-    } catch (e) {
-        alert("Failed to send message: " + (e.message || "Check Messaging Security Rules."));
-        console.error("Message Send Error:", e);
-    }
+    // Placeholder logic for sending message
 }
 
 
@@ -795,9 +717,11 @@ function previewAvatar(input) {
 function addGameSlot() {
      alert("Add Game Slot placeholder called.");
 }
+// function renderGameSlots() { /* Placeholder */ }
+
 
 // ------------------------------------------------
-// 4. MAIN EXECUTION BLOCK
+// 4. MAIN EXECUTION BLOCK (Finalized New User Setup)
 // ------------------------------------------------
 
 auth.onAuthStateChanged(async user=>{
@@ -816,40 +740,46 @@ auth.onAuthStateChanged(async user=>{
 
     // 1. User Setup and Initialization (handles new and existing users with missing fields)
     if(!userDoc.exists){
+        // --- Generate Default Username ---
         const baseName = (user.displayName || user.email.split('@')[0]).replace(/\s/g, '').toLowerCase();
         const defaultUsername = baseName.substring(0, 16).replace(/[^a-z0-9]/g, '').slice(0, 16 - 4) + Math.floor(1000 + Math.random() * 9000); 
         
+        // --- The DEFINITIVE User Document Structure ---
         const profileUpdate = {
             uid: user.uid,
             username: defaultUsername,
-            usernameChanged: false,
-            bio: "New Cyber Warrior seeking a Duo partner!",
-            skillRating: 3, 
-            status: "Online",
-            friends: [], // Cleanly initialized array
-            profileImageUrl: user.photoURL || DEFAULT_AVATAR,
-            nickname: user.displayName, 
-            gamerCards: [],
-            featuredGames: [], 
+            usernameChanged: false, // Boolean
+            bio: "New Cyber Warrior seeking a Duo partner!", // String
+            skillRating: 3, // Number
+            status: "Online", // String
+            friends: [], // Array
+            profileImageUrl: user.photoURL || DEFAULT_AVATAR, // String
+            nickname: user.displayName, // String
+            gamerCards: [], // Array
+            featuredGames: [], // Array
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         };
         
-        await userRef.set(profileUpdate, { merge: true });
+        // Create the profile document
+        await userRef.set(profileUpdate);
 
         // Reserve the username
         await db.collection("usernames").doc(defaultUsername).set({
             uid: user.uid,
             username: defaultUsername
         });
+        
     } else {
-        // If document exists, merge default properties if they are missing (for clean profile setup)
+        // If document exists, merge default properties if they are missing (crucial cleanup)
         const existingData = userDoc.data();
         await userRef.set({
              usernameChanged: existingData.usernameChanged === undefined ? false : existingData.usernameChanged,
+             // Crucial cleanup: ensure these are correct types if missing or corrupted
              friends: Array.isArray(existingData.friends) ? existingData.friends : [],
              skillRating: existingData.skillRating === undefined ? 3 : existingData.skillRating,
              status: existingData.status === undefined ? 'Online' : existingData.status,
-             // ensures other fields don't accidentally get wiped if they were not explicitly set
+             gamerCards: Array.isArray(existingData.gamerCards) ? existingData.gamerCards : [],
+             featuredGames: Array.isArray(existingData.featuredGames) ? existingData.featuredGames : [],
         }, { merge: true }); 
     }
     
