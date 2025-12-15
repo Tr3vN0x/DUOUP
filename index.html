@@ -39,6 +39,9 @@ textarea { resize: vertical; }
 .card-container { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; padding-top: 10px; }
 .card { width: 100%; max-width:300px; padding:20px; border:3px solid transparent; border-radius:8px; background:#181818; box-shadow:0 0 15px rgba(0,255,255,0.4), inset 0 0 5px rgba(0,255,255,0.2); border-image-source: linear-gradient(45deg, cyan, magenta, cyan); border-image-slice:1; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition: transform 0.2s, box-shadow 0.2s; }
 .card:hover { transform: translateY(-5px); box-shadow:0 0 30px magenta, inset 0 0 10px rgba(255,0,255,0.5); }
+.request-card { cursor:default; border:3px solid orange; box-shadow:0 0 15px orange; }
+.request-card:hover { transform:none; box-shadow:0 0 15px orange; }
+
 .card-content-box { display:flex; flex-direction:column; align-items:center; width:100%; margin-bottom:15px; padding-bottom:15px; border-bottom:1px dashed #333; }
 .avatar { width:80px; height:80px; border-radius:50%; border:4px solid magenta; object-fit:cover; margin-bottom:15px; }
 .skill-rating { color:gold; font-size:1.4em; margin-bottom:10px; }
@@ -109,8 +112,14 @@ textarea { resize: vertical; }
 </div>
 
 <div id="friendsTab" class="container hidden">
-<h2>Your Current Duos (Friends)</h2>
-<div id="friendList" class="card-container"></div>
+<h2>Incoming Friend Requests</h2>
+<div id="pendingRequestsList" class="card-container"></div>
+<h2 style="margin-top:40px;">Your Accepted Duos</h2>
+<div id="friendList" class="card-container">
+    <p style="width:100%; text-align:center; color:magenta;">
+    *To accept requests, the recipient must be the authenticated user.
+    </p>
+</div>
 </div>
 
 <div id="messagingTab" class="hidden">
@@ -188,15 +197,19 @@ const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
 let currentUser=null;
 let currentProfileData={};
-let allUsersCache=[];
+let allUsersCache=[]; // Cache of all user profiles
 let currentChatId=null;
 let chatListener=null;
 
 // ---------------------------
 // Utility Functions
 function getChatId(otherUid) {
-    // Ensures a consistent chat ID regardless of who starts the chat
     return [currentUser.uid, otherUid].sort().join('_');
+}
+
+// Function to find a user profile from the cache by ID
+function findUserInCache(uid) {
+    return allUsersCache.find(user => user.id === uid);
 }
 
 // ---------------------------
@@ -249,23 +262,39 @@ async function loadAllUsers(){
 }
 
 // Render Card
-function renderUserCard(uid,data){
+function renderUserCard(uid,data, isRequestCard = false){
     if(!data) return null;
-    const card=document.createElement('div'); card.className='card';
-    card.onclick=()=>viewProfile(uid, data);
+    const card=document.createElement('div');
+    card.className=`card ${isRequestCard ? 'request-card' : ''}`;
+    // Only allow clicking to view profile if it's not a request card, or if it's accepted
+    if (!isRequestCard) {
+        card.onclick=()=>viewProfile(uid, data);
+    }
     const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
 
-    const friendBtn = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
+    // Default button for the All Users view
+    let cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
+
+    if (isRequestCard) {
+        // If it's a request card, don't show the viewProfile handler, show action buttons
+        cardButtons = `
+            <div style="display:flex; gap:10px;">
+                <button class="neon-btn add" onclick="event.stopPropagation(); handleRequest('${uid}', 'accepted')">Accept</button>
+                <button class="neon-btn remove" onclick="event.stopPropagation(); handleRequest('${uid}', 'rejected')">Reject</button>
+            </div>
+        `;
+    }
+
 
     card.innerHTML=`
         <div class="card-content-box">
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
-        <h3 style="margin:0;">${data.username?`@${data.username}`:data.nickname||'Unknown'}</h3>
+        <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
         <div class="skill-rating">${'⭐'.repeat(data.skillRating||3)}</div>
         <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
         <p style="margin:5px 0; font-size:0.9em; text-align:center; color:#ccc;">${data.bio||'No bio provided.'}</p>
         </div>
-        ${friendBtn}
+        ${cardButtons}
     `;
     return card;
 }
@@ -326,14 +355,121 @@ async function saveProfile() {
 }
 
 // ---------------------------
-// Friends / Duos
+// Friends / Duos (UPDATED to show requests)
 async function loadFriends() {
+    const pendingListEl = document.getElementById('pendingRequestsList');
     const friendListEl = document.getElementById('friendList');
-    friendListEl.innerHTML = '<p style="color:yellow;">Friend/Duo listing logic requires server-side logic (e.g., Cloud Functions or complex rules) to manage the accepted requests. Using a placeholder for now.</p>';
+    pendingListEl.innerHTML = 'Loading Requests...';
+    friendListEl.innerHTML = '';
+    
+    // First, ensure all user data is loaded for nicknames/avatars
+    await loadAllUsers(); 
+
+    try {
+        // Query for requests where the CURRENT user is the receiver AND status is 'pending'
+        const snapshot = await db.collection('requests')
+            .where('receiverId', '==', currentUser.uid)
+            .where('status', '==', 'pending')
+            .get();
+
+        if (snapshot.empty) {
+            pendingListEl.innerHTML = '<p style="width:100%; text-align:center;">No pending requests at this time.</p>';
+        } else {
+            pendingListEl.innerHTML = ''; // Clear loading message
+            snapshot.forEach(doc => {
+                const request = doc.data();
+                const senderProfile = findUserInCache(request.senderId);
+                
+                if (senderProfile) {
+                    // Pass the request ID and the user data to render the request card
+                    const card = renderRequestCard(request.senderId, senderProfile, doc.id);
+                    if (card) pendingListEl.appendChild(card);
+                }
+            });
+        }
+        
+        // Placeholder for Accepted Duos: query accepted requests
+        const acceptedSnapshot = await db.collection('requests')
+            .where('participants', 'array-contains', currentUser.uid)
+            .where('status', '==', 'accepted')
+            .get();
+            
+        if (acceptedSnapshot.empty) {
+            friendListEl.innerHTML = '<p style="width:100%; text-align:center;">You have no accepted Duos yet.</p>';
+        } else {
+            friendListEl.innerHTML = '';
+            acceptedSnapshot.forEach(doc => {
+                const request = doc.data();
+                // Determine the other user's UID
+                const otherUid = request.senderId === currentUser.uid ? request.receiverId : request.senderId;
+                const otherProfile = findUserInCache(otherUid);
+
+                if (otherProfile) {
+                    const card = renderUserCard(otherUid, otherProfile, false); // Render as a standard profile card
+                    if (card) friendListEl.appendChild(card);
+                }
+            });
+        }
+        
+    } catch (e) {
+        console.error("Error loading friends/requests:", e);
+        pendingListEl.innerHTML = `<p style="width:100%; text-align:center; color:red;">Error loading requests: ${e.message}</p>`;
+    }
 }
 
+// Render Card for an incoming Request
+function renderRequestCard(senderUid, data, requestId){
+    if(!data) return null;
+    const card=document.createElement('div');
+    card.className='card request-card';
+    const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
+
+    // Action buttons call handleRequest with the request ID
+    const cardButtons = `
+        <div style="display:flex; gap:10px;">
+            <button class="neon-btn add" onclick="event.stopPropagation(); handleRequest('${requestId}', 'accepted')">Accept</button>
+            <button class="neon-btn remove" onclick="event.stopPropagation(); handleRequest('${requestId}', 'rejected')">Reject</button>
+        </div>
+    `;
+
+    card.innerHTML=`
+        <div class="card-content-box">
+        <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar" style="border-color:orange;">
+        <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
+        <div style="color:yellow; margin:5px 0;">Incoming Request</div>
+        <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
+        </div>
+        ${cardButtons}
+    `;
+    return card;
+}
+
+
+// Handle Request Logic (Accept/Reject)
+async function handleRequest(requestId, newStatus) {
+    if (!currentUser) return;
+    
+    try {
+        await db.collection('requests').doc(requestId).update({
+            status: newStatus,
+            // Add participants array if accepting, used for querying accepted duos
+            ...(newStatus === 'accepted' && { 
+                participants: [requestId.split('_')[0], requestId.split('_')[1]] 
+            }),
+            handledAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert(`Request ${newStatus}!`);
+        loadFriends(); // Reload the duos tab
+    } catch (e) {
+        console.error(`Failed to handle request (${newStatus}):`, e);
+        alert(`Failed to ${newStatus} request. Check rules and console.`);
+    }
+}
+
+
 // ---------------------------
-// Friend Request (FIXED with existence check)
+// Friend Request
 async function sendFriendRequest(uid){
     if(!currentUser || currentUser.uid === uid) return;
     const id = getChatId(uid);
@@ -354,10 +490,10 @@ async function sendFriendRequest(uid){
                  message = "A previous request exists, status: " + status;
             }
             alert(message);
-            return; // Exit the function gracefully
+            return;
         }
 
-        // If the document does not exist, proceed with creation (relies on 'create' rule)
+        // If the document does not exist, proceed with creation
         await requestRef.set({
             senderId: currentUser.uid,
             receiverId: uid,
@@ -368,7 +504,6 @@ async function sendFriendRequest(uid){
         loadAllUsers();
     }catch(e){
         console.error("Error sending friend request:", e);
-        // This will catch security rule failures (e.g., trying to send to self)
         alert("Failed to send request. Check your security rules and console for details.");
     }
 }
@@ -376,25 +511,45 @@ async function sendFriendRequest(uid){
 // ---------------------------
 // Messaging Logic
 async function loadChatList() {
+    // UPDATED to query accepted requests to determine who to chat with
     const duoListEl = document.getElementById('activeDuoList');
-    duoListEl.innerHTML = '';
+    duoListEl.innerHTML = 'Loading Duos for chat...';
 
-    // Placeholder: You would query the 'chats' collection here
-    const dummyDuos = [
-        { uid: 'partner1', nickname: 'CyberAce' },
-        { uid: 'partner2', nickname: 'SynthWitch' },
-    ];
+    try {
+        const acceptedSnapshot = await db.collection('requests')
+            .where('participants', 'array-contains', currentUser.uid)
+            .where('status', '==', 'accepted')
+            .get();
 
-    dummyDuos.forEach(duo => {
-        const chatEntry = document.createElement('div');
-        chatEntry.className = 'chat-entry';
-        chatEntry.textContent = duo.nickname;
-        chatEntry.onclick = () => openChat(duo.uid, duo.nickname);
-        duoListEl.appendChild(chatEntry);
-    });
+        if (acceptedSnapshot.empty) {
+            duoListEl.innerHTML = 'No Duos yet.';
+            return;
+        }
 
-    if (dummyDuos.length === 0) {
-        duoListEl.textContent = 'No Duos yet.';
+        duoListEl.innerHTML = '';
+        const duoPromises = [];
+        
+        acceptedSnapshot.forEach(doc => {
+            const request = doc.data();
+            const otherUid = request.senderId === currentUser.uid ? request.receiverId : request.senderId;
+            const chatEntry = document.createElement('div');
+            chatEntry.className = 'chat-entry';
+            
+            // Get profile data for nickname
+            duoPromises.push(db.collection('users').doc(otherUid).get().then(userDoc => {
+                const nickname = userDoc.data()?.nickname || 'Unknown Duo';
+                chatEntry.textContent = nickname;
+                chatEntry.onclick = () => openChat(otherUid, nickname);
+                duoListEl.appendChild(chatEntry);
+            }));
+        });
+        
+        // Wait for all profile lookups before showing list
+        await Promise.all(duoPromises);
+
+    } catch(e) {
+        console.error("Error loading chat list:", e);
+        duoListEl.innerHTML = `<p style="color:red;">Error loading chat list: ${e.message}</p>`;
     }
 }
 
