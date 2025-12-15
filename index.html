@@ -190,6 +190,11 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 </div>
 </div>
 
+<div id="viewProfileTab" class="hidden container">
+    <button class="neon-btn" onclick="showTab('suggested')">← Back to Suggested</button>
+    <div id="viewProfileContent" style="padding: 20px; border: 2px solid magenta; border-radius: 10px; background: #1a1a1a; margin-top: 20px;">
+        </div>
+</div>
 <div id="profileTab" class="hidden">
     <h2>Cyber-Profile Editor</h2>
     <div style="padding: 20px; border: 2px solid magenta; border-radius: 10px; background: #1a1a1a;">
@@ -228,11 +233,15 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
                 </select>
             </div>
         </div>
+
+        <h3 style="color:cyan; margin-top: 25px;">Gamer Card Manager (Max 8)</h3>
+        <div id="gamerCardList" style="display:flex; flex-wrap:wrap; gap:10px; border: 1px dashed cyan; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+            </div>
+
         <button class="neon-btn" style="border-color: #00ff00; box-shadow: 0 0 10px #00ff00;" onclick="saveProfile()">Save Profile</button>
         <p id="saveMessage" style="color: #00ff00; margin-top: 10px;"></p>
     </div>
 </div>
-
 <script>
 // ---------- FIREBASE INIT (YOUR CORRECT CONFIGURATION) ----------
 const firebaseConfig = {
@@ -307,6 +316,8 @@ async function loadProfile() {
   document.getElementById('profileSkillRating').value = data.skillRating || 3;
   document.getElementById('profileStatus').value = data.status || 'Online';
   document.getElementById('saveMessage').textContent = '';
+
+    loadGamerCards(); // Load gamer cards when profile editor is viewed
 }
 
 document.getElementById('avatarUpload').addEventListener('change', async e=>{
@@ -341,28 +352,212 @@ async function saveProfile() {
   }
 }
 
+// ---------- GAMER CARD FUNCTIONS ----------
+async function loadGamerCards() {
+    const listEl = document.getElementById('gamerCardList');
+    listEl.innerHTML = '';
+    
+    // 1. Load existing cards
+    const snapshot = await db.collection('gamerCards').where('uid', '==', currentUser.uid).get();
+    let cardCount = 0;
+    
+    snapshot.docs.forEach(doc => {
+        cardCount++;
+        const data = doc.data();
+        const cardDiv = document.createElement('div');
+        cardDiv.style.position = 'relative';
+        cardDiv.innerHTML = `
+            <img src="${data.imageUrl}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 3px;">
+            <button onclick="deleteGamerCard('${doc.id}', '${data.imageUrl}')" style="position: absolute; top: -5px; right: -5px; background: red; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; line-height: 1; padding: 0; cursor: pointer;">X</button>
+        `;
+        listEl.appendChild(cardDiv);
+    });
+
+    // 2. Add remaining upload slots (up to 8)
+    const maxCards = 8;
+    for (let i = cardCount; i < maxCards; i++) {
+        const slotDiv = document.createElement('div');
+        slotDiv.style.width = '100px';
+        slotDiv.style.height = '100px';
+        slotDiv.style.border = '2px dashed magenta';
+        slotDiv.style.borderRadius = '3px';
+        slotDiv.style.display = 'flex';
+        slotDiv.style.justifyContent = 'center';
+        slotDiv.style.alignItems = 'center';
+        slotDiv.style.position = 'relative';
+        slotDiv.innerHTML = `
+            <input type="file" onchange="uploadGamerCard(this.files[0])" accept="image/*" style="position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer;">
+            <span style="color:magenta;">+</span>
+        `;
+        listEl.appendChild(slotDiv);
+    }
+}
+
+async function uploadGamerCard(file) {
+    if (!file) return;
+
+    try {
+        const fileRef = storage.ref().child(`gamerCards/${currentUser.uid}/${Date.now()}_${file.name}`);
+        await fileRef.put(file);
+        const imageUrl = await fileRef.getDownloadURL();
+
+        await db.collection('gamerCards').add({
+            uid: currentUser.uid,
+            imageUrl: imageUrl,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        loadGamerCards(); 
+    } catch (e) {
+        console.error("Error uploading gamer card:", e);
+        alert("Failed to upload image. Check permissions.");
+    }
+}
+
+async function deleteGamerCard(docId, imageUrl) {
+    if (!confirm("Are you sure you want to delete this card?")) return;
+
+    try {
+        await storage.refFromURL(imageUrl).delete();
+        await db.collection('gamerCards').doc(docId).delete();
+        
+        loadGamerCards(); 
+    } catch (e) {
+        console.error("Error deleting gamer card:", e);
+        alert("Failed to delete card. Ensure you are the owner.");
+    }
+}
+
+// ---------- MODERATION TOOL (Requires Cloud Function Deployment) ----------
+async function toggleBan(targetUid, isBanned) {
+    if (!confirm(`Are you sure you want to ${isBanned ? 'UNBAN' : 'BAN'} ${targetUid}? This action requires the 'toggleBan' Cloud Function to be deployed.`)) return;
+
+    try {
+        const banFunction = functions.https.callable('toggleBan');
+        const result = await banFunction({ targetUid, isBanned });
+
+        alert(result.data.message);
+        viewProfile(targetUid); 
+    } catch (e) {
+        console.error("Ban/Unban failed:", e);
+        alert(`Failed to perform moderation action. Error: ${e.message}`);
+    }
+}
+
 
 // ---------- FRIEND REQUESTS & FRIENDS LOGIC ----------
 function getOwnerBadge(uid){ return uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''; }
 function renderSkillRating(r){r=parseInt(r)||0; return `<div class="skill-rating">${'⭐'.repeat(r)}${'☆'.repeat(5-r)}</div>`;}
 function renderStatus(s){ const c=s==='Online'?'status-online':s==='In Game'?'status-ingame':'status-lfd'; return `<div class="status-indicator ${c}">${s}</div>`; }
 function createCardContentHtml(d){ return `<div class="card-content"><img src="${d.profileImageUrl||DEFAULT_AVATAR}" class="avatar"><h3>${d.nickname}${getOwnerBadge(d.uid)}</h3>${renderSkillRating(d.skillRating)}${renderStatus(d.status)}</div>`; }
-function renderCard(d,type,reqId=null){
-  const card=document.createElement('div'); card.className='card'; card.innerHTML=createCardContentHtml(d);
-  let buttons=[];
-  if(type==='suggest'){ 
-    const btn=document.createElement('button'); btn.className='neon-btn'; btn.textContent='Send Request'; 
-    btn.onclick=()=>sendFriendRequest(d.uid); buttons.push(btn);
-  }
-  else if(type==='request'){
-    // NOTE: The accept button still uses the Cloud Function, which must be deployed
-    const accept=document.createElement('button'); accept.className='neon-btn'; accept.textContent='Accept'; accept.onclick=()=>acceptFriend(reqId,d.uid); 
-    const decline=document.createElement('button'); decline.className='neon-btn remove'; decline.textContent='Decline'; decline.onclick=()=>declineFriend(reqId); buttons.push(accept,decline);
-  }
-  else if(type==='friend'){
-    const chatBtn=document.createElement('button'); chatBtn.className='neon-btn'; chatBtn.textContent='Chat'; chatBtn.onclick=()=>startChat(d.uid,d.nickname); buttons.push(chatBtn);
-  }
-  buttons.forEach(b=>card.appendChild(b)); return card;
+
+function renderCard(d, type, reqId = null) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = createCardContentHtml(d);
+    
+    // Make the entire card clickable to view the profile
+    card.style.cursor = 'pointer'; 
+    card.onclick = () => viewProfile(d.uid); 
+
+    let buttons = [];
+    if (type === 'suggest') {
+        const btn = document.createElement('button'); btn.className = 'neon-btn'; btn.textContent = 'Send Request';
+        btn.onclick = (e) => { e.stopPropagation(); sendFriendRequest(d.uid); }; 
+        buttons.push(btn);
+    }
+    else if (type === 'request') {
+        const accept=document.createElement('button'); accept.className='neon-btn'; accept.textContent='Accept'; accept.onclick=(e)=>{e.stopPropagation(); acceptFriend(reqId,d.uid);}; 
+        const decline=document.createElement('button'); decline.className='neon-btn remove'; decline.textContent='Decline'; decline.onclick=(e)=>{e.stopPropagation(); declineFriend(reqId);}; 
+        buttons.push(accept,decline);
+    }
+    else if (type === 'friend') {
+        const chatBtn = document.createElement('button'); chatBtn.className = 'neon-btn'; chatBtn.textContent = 'Chat';
+        chatBtn.onclick = (e) => { e.stopPropagation(); startChat(d.uid, d.nickname); };
+        buttons.push(chatBtn);
+    }
+
+    buttons.forEach(b => card.appendChild(b)); 
+    return card;
+}
+
+// NEW: Function to render a detailed profile view
+async function viewProfile(targetUid) {
+    showTab('viewProfile');
+    const container = document.getElementById('viewProfileContent');
+    container.innerHTML = '<h2>Loading Profile...</h2>';
+
+    const doc = await db.collection('users').doc(targetUid).get();
+    if (!doc.exists) {
+        container.innerHTML = `<h2>Error: User profile not found.</h2>`;
+        return;
+    }
+    const data = doc.data();
+
+    if (data.isBanned) {
+        container.innerHTML = `<h2 style="color:red;">USER BANNED</h2><p>This user has been removed from the platform for violating community guidelines.</p>`;
+        return;
+    }
+
+    let actionButtonHTML = '';
+    const myDoc = (await db.collection('users').doc(currentUser.uid).get()).data();
+    const isFriend = (myDoc.friends || []).includes(targetUid);
+    const hasSentRequest = (await db.collection('friendRequests').doc(getChatId(currentUser.uid, targetUid)).get()).exists;
+    const isOwner = targetUid === currentUser.uid;
+
+    if (!isOwner) {
+        if (isFriend) {
+            actionButtonHTML = `<button class="neon-btn" onclick="startChat('${targetUid}', '${data.nickname}')">Start Duo Chat</button>`;
+        } else if (hasSentRequest) {
+            actionButtonHTML = `<button class="neon-btn" disabled>Request Sent</button>`;
+        } else {
+            actionButtonHTML = `<button class="neon-btn" onclick="sendFriendRequest('${targetUid}')">Send Duo Request</button>`;
+        }
+    }
+    
+    // Admin Ban Button
+    let adminButtonHTML = '';
+    if (currentUser.uid === OWNER_UID && !isOwner) {
+        adminButtonHTML = `<button class="neon-btn remove" onclick="toggleBan('${targetUid}', ${data.isBanned || false})">${data.isBanned ? 'UNBAN USER' : 'BAN USER'}</button>`;
+    }
+
+
+    // Render Image Cards (Gamer Cards)
+    const cardSnapshot = await db.collection('gamerCards').where('uid', '==', targetUid).get();
+    let imageCardsHTML = '<h3 style="color:cyan;">Gamer Cards</h3><div style="display:flex; flex-wrap:wrap; gap:10px;">';
+    
+    if (cardSnapshot.empty) {
+        imageCardsHTML += '<p>No custom cards uploaded.</p>';
+    } else {
+        cardSnapshot.docs.forEach(cardDoc => {
+            const cardData = cardDoc.data();
+            imageCardsHTML += `
+                <div style="border: 1px solid magenta; padding: 5px; border-radius: 5px;">
+                    <img src="${cardData.imageUrl}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 3px;">
+                </div>
+            `;
+        });
+    }
+    imageCardsHTML += '</div>';
+
+    // Final HTML Injection
+    container.innerHTML = `
+        <div style="text-align:center; border-bottom: 2px solid cyan; padding-bottom: 15px;">
+            <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar" style="width: 100px; height: 100px; border-color: magenta;">
+            <h2 style="margin: 5px 0;">${data.nickname} ${getOwnerBadge(data.uid)}</h2>
+            ${renderStatus(data.status)}
+            ${renderSkillRating(data.skillRating)}
+        </div>
+        <div style="margin-top: 20px;">
+            <h3 style="color:cyan;">Bio/Tagline</h3>
+            <p style="white-space: pre-wrap; margin: 0 0 20px 0;">${data.bio || 'The user has not added a bio yet.'}</p>
+            ${imageCardsHTML}
+        </div>
+        <div style="text-align:center; margin-top: 20px;">
+            ${actionButtonHTML}
+            ${adminButtonHTML}
+        </div>
+    `;
 }
 
 async function loadSuggested(){
@@ -378,7 +573,6 @@ async function loadSuggested(){
   if(container.childElementCount===0) container.innerHTML='<p>No new suggested partners found.</p>';
 }
 
-// Client-side function for sending request (Robust version)
 async function sendFriendRequest(toUid){
   if(!currentUser) { alert("You must be logged in to send a request."); return; }
   if(toUid===currentUser.uid) { alert("Cannot send request to yourself!"); return; }
@@ -391,7 +585,6 @@ async function sendFriendRequest(toUid){
     const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
     if((myDoc.friends||[]).includes(toUid)){ alert("Already friends!"); return; }
     
-    // THIS WRITE RELIES ON THE SECURE ROBUST RULES YOU JUST PUBLISHED
     await reqRef.set({
       senderId:currentUser.uid, 
       receiverId:toUid, 
@@ -417,7 +610,6 @@ async function loadRequests(){
 
 async function acceptFriend(reqId, friendUid){
   try {
-    // NOTE: This requires the 'acceptFriendRequest' Cloud Function to be deployed for transaction safety
     const acceptFunction = functions.https.callable('acceptFriendRequest');
     await acceptFunction({ reqId: reqId, friendUid: friendUid });
 
@@ -568,7 +760,7 @@ async function sendMessage(chatId,content,recipientUid){
 }
 
 function hideAllTabs(){ 
-  ["suggestedTab","requestsTab","friendsTab","profileTab","messagingTab"].forEach(t=>document.getElementById(t).classList.add('hidden')); 
+  ["suggestedTab","requestsTab","friendsTab","profileTab","messagingTab", "viewProfileTab"].forEach(t=>document.getElementById(t).classList.add('hidden')); 
 }
 
 function showTab(tab){ 
