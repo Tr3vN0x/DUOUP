@@ -150,10 +150,10 @@ textarea { resize: vertical; }
 <img id="profileAvatar" class="avatar" src="" style="width:80px;height:80px;margin-right:20px;border-color:cyan;">
 <div>
 <label style="color: cyan; display:block; margin-bottom:5px;">Unique Identifier:</label>
-<input type="text" id="profileNickname" value="User Nickname" disabled>
+<input type="text" id="profileNickname" value="User Nickname" placeholder="Your Unique Nickname">
+<p id="nicknameChangeInfo" style="color:yellow; font-size:0.8em; margin:5px 0 0 0;">(You get one free nickname change.)</p>
 </div>
 </div>
-<p style="color: yellow; font-size:0.9em;">(Avatar upload and username editor are simplified.)</p>
 <div style="margin-bottom:15px;">
 <label style="color: cyan; display:block; margin-bottom:5px;">Bio/Tagline:</label>
 <textarea id="profileBio" rows="3" style="width:100%;"></textarea>
@@ -249,7 +249,6 @@ async function loadAllUsers(){
     const container=document.getElementById('allUsersTab');
     container.innerHTML="<h3>Loading Suggested Players...</h3>";
     try{
-        // This query requires 'allow read: if isAuthenticated()' on /users
         const snapshot=await db.collection('users').get();
         allUsersCache=snapshot.docs.map(d=>({id:d.id,...d.data()}));
         container.innerHTML=""; 
@@ -332,14 +331,13 @@ function renderRequestCard(senderUid, data, requestId){
 
 
 // ---------------------------
-// Friends / Duos / Requests (CRITICALLY FIXED LOGIC)
+// Friends / Duos / Requests 
 async function loadFriends() {
     const pendingListEl = document.getElementById('pendingRequestsList');
     const friendListEl = document.getElementById('friendList');
     pendingListEl.innerHTML = 'Loading Requests...';
     friendListEl.innerHTML = 'Loading Duos...';
     
-    // Ensure all user data is loaded for nicknames/avatars
     await loadAllUsers(); 
 
     // 1. PENDING REQUESTS: Query where current user is the receiver
@@ -398,7 +396,7 @@ async function loadFriends() {
 }
 
 
-// Handle Request Logic (Accept/Reject) - **THIS IS THE FIX FOR CREATING PARTICIPANTS ARRAY**
+// Handle Request Logic (Accept/Reject) - **CRITICAL FIX FOR PARTICIPANTS ARRAY**
 async function handleRequest(requestId, newStatus) {
     if (!currentUser) return;
     
@@ -411,12 +409,9 @@ async function handleRequest(requestId, newStatus) {
                  throw new Error("Request no longer pending or does not exist.");
             }
 
-            // The requestId is formed as id1_id2 (sorted UIDs). We extract them.
             const [id1, id2] = requestId.split('_');
-            const participants = [id1, id2].sort(); // Create the participants array
+            const participants = [id1, id2].sort(); 
 
-            // 1. Update the status
-            // 2. ONLY add the 'participants' array if the status is 'accepted'
             transaction.update(docRef, {
                 status: newStatus,
                 ...(newStatus === 'accepted' && { participants: participants }),
@@ -449,7 +444,6 @@ async function handleRequest(requestId, newStatus) {
 // Send Friend Request
 async function sendFriendRequest(uid){
     if(!currentUser || currentUser.uid === uid) return;
-    // Request ID is always the two UIDs sorted and joined
     const id = getChatId(uid);
 
     try{
@@ -485,7 +479,6 @@ async function loadChatList() {
     duoListEl.innerHTML = 'Loading Duos for chat...';
 
     try {
-        // Query accepted duos for the chat list
         const acceptedSnapshot = await db.collection('requests')
             .where('participants', 'array-contains', currentUser.uid)
             .where('status', '==', 'accepted')
@@ -570,7 +563,6 @@ async function sendMessage() {
             const [id1, id2] = currentChatId.split('_');
 
             if (!chatDoc.exists) {
-                // Should already be created in handleRequest, but this is a failsafe
                 transaction.set(chatRef, {
                     participants: [id1, id2],
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -608,38 +600,83 @@ function viewProfile(uid, data) {
     `;
     showTab('viewProfile');
 }
+
+// 🌟 NICKNAME CHANGE FIX: Load
 async function loadUserProfile() {
     if(!currentUser) return;
     const data = currentProfileData;
-    document.getElementById('profileNickname').value = data.nickname || currentUser.displayName;
+    const nicknameInput = document.getElementById('profileNickname');
+    const changeInfo = document.getElementById('nicknameChangeInfo');
+    
+    nicknameInput.value = data.nickname || currentUser.displayName;
     document.getElementById('profileBio').value = data.bio || '';
     document.getElementById('profileSkillRating').value = data.skillRating || 3;
     document.getElementById('profileStatus').value = data.status || 'Online';
     document.getElementById('profileAvatar').src = data.profileImageUrl || currentUser.photoURL || DEFAULT_AVATAR;
+
+    // Check if nickname has already been changed once (count >= 1)
+    if (data.nicknameChangeCount && data.nicknameChangeCount >= 1) {
+        nicknameInput.disabled = true;
+        changeInfo.textContent = "(Your one-time nickname change has been used.)";
+        changeInfo.style.color = "red";
+    } else {
+        nicknameInput.disabled = false;
+        changeInfo.textContent = "(You get one free nickname change.)";
+        changeInfo.style.color = "yellow";
+    }
 }
+
+// 🌟 NICKNAME CHANGE FIX: Save
 async function saveProfile() {
     if(!currentUser) return;
     const messageEl = document.getElementById('saveMessage');
+    const nicknameInput = document.getElementById('profileNickname');
     messageEl.textContent = 'Saving...';
+    
+    const newNickname = nicknameInput.value.trim();
+    const oldNickname = currentProfileData.nickname;
 
     const updates = {
-        nickname: document.getElementById('profileNickname').value,
         bio: document.getElementById('profileBio').value,
         skillRating: parseInt(document.getElementById('profileSkillRating').value),
         status: document.getElementById('profileStatus').value,
     };
+
+    // Check for nickname change only if the field is not disabled
+    if (!nicknameInput.disabled && newNickname !== oldNickname) {
+        // Enforce the one-time change limit
+        if (!currentProfileData.nicknameChangeCount || currentProfileData.nicknameChangeCount === 0) {
+            updates.nickname = newNickname;
+            updates.nicknameChangeCount = (currentProfileData.nicknameChangeCount || 0) + 1;
+        } else {
+            messageEl.textContent = 'Error: Nickname change limit reached.';
+            messageEl.style.color = 'red';
+            return;
+        }
+    } else if (nicknameInput.disabled && newNickname !== oldNickname) {
+         // If disabled but somehow the value changed (shouldn't happen with proper disabling)
+         messageEl.textContent = 'Error: Nickname is locked.';
+         messageEl.style.color = 'red';
+         return;
+    }
+
 
     try {
         await db.collection('users').doc(currentUser.uid).update(updates);
         currentProfileData = {...currentProfileData, ...updates};
         document.getElementById('welcome').textContent=`Welcome, ${currentProfileData.nickname||currentUser.displayName}`;
         messageEl.textContent = 'Profile Saved!';
+        messageEl.style.color = '#00ff00';
+        // Reload profile view to update disabled state if nickname was just changed
+        loadUserProfile(); 
         setTimeout(() => messageEl.textContent = '', 3000);
     } catch(e) {
         console.error("Save failed:", e);
         messageEl.textContent = `Error: ${e.message}`;
+        messageEl.style.color = 'red';
     }
 }
+
 // ---------------------------
 // Auth listener
 auth.onAuthStateChanged(async user=>{
@@ -656,12 +693,14 @@ auth.onAuthStateChanged(async user=>{
     const uDoc=await uRef.get();
 
     if(!uDoc.exists){
+        // Initialize new user with nicknameChangeCount = 0
         await uRef.set({
             nickname:user.displayName,
             profileImageUrl:user.photoURL,
             bio:'New Cyber Warrior!',
             skillRating:3,
-            status:'Online'
+            status:'Online',
+            nicknameChangeCount: 0 // Initialize count
         });
     }
 
