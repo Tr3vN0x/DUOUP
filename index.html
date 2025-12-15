@@ -41,7 +41,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 #chatList { padding:10px; border-right:1px solid #333; overflow-y:auto; }
 #chatWindow { display:flex; flex-direction:column; padding:10px; }
 
-/* --- CHAT BUBBLE FIX: BEGIN --- */
+/* --- CHAT BUBBLE STYLES --- */
 #messageDisplay { 
     flex-grow: 1; 
     overflow-y: auto; 
@@ -86,7 +86,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
     border-bottom-left-radius: 4px;
     box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
 }
-/* --- CHAT BUBBLE FIX: END --- */
+/* --- END CHAT BUBBLE STYLES --- */
 
 .chat-item-btn { display:block; width:100%; text-align:left; margin-bottom:8px; }
 .gamer-card-container { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
@@ -399,6 +399,7 @@ function renderUserCard(d, data) {
         statusText.style.color = 'lime';
         statusText.textContent = "✅ Duo Partner";
         
+        // --- REMOVE DUO BUTTON ---
         const removeBtn = document.createElement("button");
         removeBtn.className = "neon-btn remove";
         removeBtn.textContent = "Remove Duo";
@@ -590,6 +591,7 @@ async function declineFriend(reqId){
     loadAllUsers(); 
 }
 
+// --- DUO REMOVAL LOGIC ---
 async function removeFriend(friendUid) {
     if (!currentUser || friendUid === currentUser.uid) return;
 
@@ -604,13 +606,18 @@ async function removeFriend(friendUid) {
     
     try {
         await db.runTransaction(async (t) => {
+            // 1. Remove friendUid from the current user's friends array
             t.update(userRef, {
                 friends: firebase.firestore.FieldValue.arrayRemove(friendUid)
             });
+
+            // 2. Remove currentUser.uid from the friend's friends array
             t.update(friendRef, {
                 friends: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
             });
             
+            // 3. Delete the chat document (Requires updated security rules)
+            // Note: If the document doesn't exist (no messages sent), this will effectively do nothing without error.
             t.delete(chatRef);    
         });
         alert(`Successfully removed Duo.`);
@@ -690,6 +697,7 @@ async function loadFriends() {
 
     const friendDocs = await Promise.all(friendUids.map(uid => db.collection('users').doc(uid).get()));
     
+    friendUsers = {}; // Clear and rebuild cache
     friendDocs.forEach(doc => {
         if (doc.exists) {
             const data = doc.data();
