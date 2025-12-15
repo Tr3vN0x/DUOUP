@@ -3,12 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP Profiles & Friends</title>
+<title>DUO UP Profiles & Friends (Client-Only)</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-functions.js"></script> 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
 <style>
 /* --- BASE STYLES --- */
@@ -213,7 +212,8 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <div id="dashboard" class="container hidden">
 <h2 id="welcome"></h2>
 <div style="margin-bottom:20px;">
-<button class="neon-btn" onclick="showTab('suggested')">Suggested</button>
+<button class="neon-btn" onclick="showTab('allUsers')">Suggested</button>
+<button class="neon-btn" onclick="showTab('search')">Find Players</button>
 <button class="neon-btn" onclick="showTab('requests')">Requests</button>
 <button id="friendsBtn" class="neon-btn" onclick="showTab('friends')">Friends <span id="unreadBadge" class="unread-badge hidden">0</span></button>
 <button class="neon-btn" onclick="showTab('messaging')">Messaging</button>
@@ -221,28 +221,33 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 <button class="neon-btn" onclick="logout()">Logout</button>
 </div>
 
-<div id="searchControls" style="display:flex; gap:15px; margin-bottom:20px; align-items:center;">
-    <input type="text" id="searchInput" placeholder="Search by Nickname or Bio..." style="flex-grow:1; padding:10px; border:1px solid magenta; background:#181818; color:white; border-radius:6px;">
-    
-    <label style="color:cyan;">Filter Status:</label>
-    <select id="statusFilter" style="padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px;">
-        <option value="">Any Status</option>
-        <option value="Online">Online</option>
-        <option value="In Game">In Game</option>
-        <option value="LFD">Looking For Duo (LFD)</option>
-    </select>
-    
-    <label style="color:cyan;">Min Skill:</label>
-    <select id="skillFilter" style="padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px;">
-        <option value="0">Any Skill</option>
-        <option value="1">⭐ 1+</option>
-        <option value="2">⭐⭐ 2+</option>
-        <option value="3">⭐⭐⭐ 3+</option>
-        <option value="4">⭐⭐⭐⭐ 4+</option>
-        <option value="5">⭐⭐⭐⭐⭐ 5</option>
-    </select>
+<div id="allUsersTab" class="card-container"></div>
+
+<div id="searchTab" class="hidden container">
+    <h2>Player Search Filter</h2>
+    <div id="searchControls" style="display:flex; gap:15px; margin-bottom:20px; align-items:center;">
+        <input type="text" id="searchInput" placeholder="Search by Nickname or Bio..." style="flex-grow:1; padding:10px; border:1px solid magenta; background:#181818; color:white; border-radius:6px;">
+        
+        <label style="color:cyan;">Filter Status:</label>
+        <select id="statusFilter" style="padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px;">
+            <option value="">Any Status</option>
+            <option value="Online">Online</option>
+            <option value="In Game">In Game</option>
+            <option value="LFD">Looking For Duo (LFD)</option>
+        </select>
+        
+        <label style="color:cyan;">Min Skill:</label>
+        <select id="skillFilter" style="padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px;">
+            <option value="0">Any Skill</option>
+            <option value="1">⭐ 1+</option>
+            <option value="2">⭐⭐ 2+</option>
+            <option value="3">⭐⭐⭐ 3+</option>
+            <option value="4">⭐⭐⭐⭐ 4+</option>
+            <option value="5">⭐⭐⭐⭐⭐ 5</option>
+        </select>
+    </div>
+    <div id="searchResults" class="card-container"></div>
 </div>
-<div id="suggestedTab" class="card-container"></div>
 <div id="requestsTab" class="flex hidden"></div>
 <div id="friendsTab" class="flex hidden"></div>
 
@@ -263,7 +268,7 @@ body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:wh
 </div>
 
 <div id="viewProfileTab" class="hidden container">
-    <button class="neon-btn" onclick="showTab('suggested')">← Back to Suggested</button>
+    <button class="neon-btn" onclick="showTab('allUsers')">← Back to Suggested</button>
     <div id="viewProfileContent" style="padding: 20px; border: 2px solid magenta; border-radius: 10px; background: #1a1a1a; margin-top: 20px;">
         </div>
 </div>
@@ -329,9 +334,14 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 const storage = firebase.storage();
-const functions = firebase.functions(); // Initializes Cloud Functions SDK
 
-const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; // REPLACE WITH YOUR UID FOR ADMIN ACCESS
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// IMPORTANT: REPLACE THIS UID WITH YOUR ACTUAL UID FOR ADMIN ACCESS
+// THIS IS FOR CLIENT-SIDE DISPLAY AND BUTTON ENABLEMENT ONLY.
+// SECURITY MUST BE ENFORCED VIA FIRESTORE RULES (Step 2).
+const OWNER_UID = "DecuxiBRxoSwb8wKMmaHQKql9HQ2"; 
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
 const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 let currentUser = null, currentChatUid = null, unsubscribeMessages = null;
 let unsubscribeChatList = null; 
@@ -361,8 +371,6 @@ auth.onAuthStateChanged(async user=>{
       uid:user.uid,
       nickname:user.displayName||"Player",
       bio:"",
-      games:[],
-      gameDetails:{},
       friends:[],
       profileImageUrl:user.photoURL||DEFAULT_AVATAR,
       skillRating:3,
@@ -372,25 +380,101 @@ auth.onAuthStateChanged(async user=>{
   }
   document.getElementById("welcome").innerHTML = `Welcome, ${(await userRef.get()).data().nickname}${user.uid===OWNER_UID?'<span class="owner-badge-box">OWNER</span>':''}`;
 
-  setupSearchListeners(); // Setup the event listeners for the new search controls
+  setupSearchListeners(); 
 
-  loadSuggested(); 
+  loadAllUsers(); 
   loadRequests(); 
   loadFriends();
   loadProfile();
 });
 
-// ---------- SEARCH LISTENERS (NEW) ----------
+// ---------- SEARCH LISTENERS & FUNCTIONS ----------
 function setupSearchListeners() {
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
     const skillFilter = document.getElementById('skillFilter');
     
-    // Attach the loadSuggested function to run whenever the inputs change
-    searchInput.addEventListener('input', loadSuggested);
-    statusFilter.addEventListener('change', loadSuggested);
-    skillFilter.addEventListener('change', loadSuggested);
+    searchInput.addEventListener('input', searchUsers);
+    statusFilter.addEventListener('change', searchUsers);
+    skillFilter.addEventListener('change', searchUsers);
 }
+
+async function loadAllUsers(){
+    const container = document.getElementById('allUsersTab'); 
+    container.innerHTML = '<p style="text-align:center; color:cyan;">Loading Suggested Partners...</p>';
+
+    if(!currentUser) return; 
+
+    const snapshot = await db.collection('users').get(); 
+    const myDoc = (await db.collection('users').doc(currentUser.uid).get()).data();
+    
+    const myFriends = new Set(myDoc.friends || []);
+    const myRequestsSent = new Set((await db.collection('friendRequests').where('senderId', '==', currentUser.uid).get()).docs.map(d => d.data().receiverId));
+    
+    container.innerHTML = '';
+    let matchCount = 0;
+
+    snapshot.docs.forEach(doc => { 
+        const d = doc.data(); 
+        
+        if (d.uid === currentUser.uid || myFriends.has(d.uid) || myRequestsSent.has(d.uid) || d.isBanned) return;
+
+        container.appendChild(renderCard(d, 'suggest'));
+        matchCount++;
+    });
+
+    if (matchCount === 0) {
+        container.innerHTML = `<p>No new suggested partners found. Try the 'Find Players' tab!</p>`;
+    }
+}
+
+async function searchUsers(){
+    const container = document.getElementById('searchResults'); 
+    container.innerHTML = '<p style="text-align:center; color:cyan;">Searching for Duos...</p>';
+
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const minSkill = parseInt(document.getElementById('skillFilter').value) || 0;
+    
+    if(!currentUser) return; 
+
+    const snapshot = await db.collection('users').get(); 
+    const myDoc = (await db.collection('users').doc(currentUser.uid).get()).data();
+    
+    const myFriends = new Set(myDoc.friends || []);
+    const myRequestsSent = new Set((await db.collection('friendRequests').where('senderId', '==', currentUser.uid).get()).docs.map(d => d.data().receiverId));
+    
+    container.innerHTML = ''; 
+    let matchCount = 0;
+
+    snapshot.docs.forEach(doc => { 
+        const d = doc.data(); 
+        
+        if (d.uid === currentUser.uid || d.isBanned) return;
+
+        // --- APPLY FILTERS ---
+        const nicknameMatch = d.nickname.toLowerCase().includes(searchTerm);
+        const bioMatch = (d.bio || '').toLowerCase().includes(searchTerm);
+        if (searchTerm && !(nicknameMatch || bioMatch)) return;
+
+        if (statusFilter && d.status !== statusFilter) return;
+
+        if (d.skillRating < minSkill) return;
+
+        // Determine card type for buttons
+        let type = 'suggest';
+        if (myFriends.has(d.uid)) type = 'friend';
+        else if (myRequestsSent.has(d.uid)) type = 'pending';
+        
+        container.appendChild(renderCard(d, type));
+        matchCount++;
+    });
+
+    if (matchCount === 0) {
+        container.innerHTML = `<p>No matching partners found for the current search criteria.</p>`;
+    }
+}
+
 
 // ---------- PROFILE EDIT & UTILITIES ----------
 async function loadProfile() {
@@ -414,7 +498,7 @@ document.getElementById('avatarUpload').addEventListener('change', async e=>{
   const url = await ref.getDownloadURL();
   await db.collection('users').doc(currentUser.uid).update({profileImageUrl:url});
   document.getElementById('profileAvatar').src = url;
-  loadSuggested(); loadFriends();
+  loadAllUsers(); loadFriends();
 });
 
 async function saveProfile() {
@@ -431,7 +515,7 @@ async function saveProfile() {
     });
     saveMessageEl.textContent = 'Profile successfully updated!';
     saveMessageEl.style.color = '#00ff00';
-    loadFriends(); loadSuggested();
+    loadFriends(); loadAllUsers();
   } catch(e){ 
     saveMessageEl.textContent='Error saving profile!'; 
     saveMessageEl.style.color='red'; 
@@ -444,7 +528,6 @@ async function loadGamerCards() {
     const listEl = document.getElementById('gamerCardList');
     listEl.innerHTML = '';
     
-    // 1. Load existing cards
     const snapshot = await db.collection('gamerCards').where('uid', '==', currentUser.uid).get();
     let cardCount = 0;
     
@@ -461,7 +544,6 @@ async function loadGamerCards() {
         listEl.appendChild(cardDiv);
     });
 
-    // 2. Add remaining upload slots (up to 8)
     const maxCards = 8;
     for (let i = cardCount; i < maxCards; i++) {
         const slotDiv = document.createElement('div');
@@ -478,6 +560,13 @@ async function uploadGamerCard(file) {
     if (!file) return;
 
     try {
+        const currentCards = await db.collection('gamerCards').where('uid', '==', currentUser.uid).get();
+        if (currentCards.docs.length >= 8) {
+            alert("Maximum limit of 8 Gamer Cards reached.");
+            loadGamerCards(); 
+            return;
+        }
+
         const fileRef = storage.ref().child(`gamerCards/${currentUser.uid}/${Date.now()}_${file.name}`);
         await fileRef.put(file);
         const imageUrl = await fileRef.getDownloadURL();
@@ -491,7 +580,7 @@ async function uploadGamerCard(file) {
         loadGamerCards(); 
     } catch (e) {
         console.error("Error uploading gamer card:", e);
-        alert("Failed to upload image. Check permissions.");
+        alert("Failed to upload image. Check Firebase Storage permissions.");
     }
 }
 
@@ -505,23 +594,29 @@ async function deleteGamerCard(docId, imageUrl) {
         loadGamerCards(); 
     } catch (e) {
         console.error("Error deleting gamer card:", e);
-        alert("Failed to delete card. Ensure you are the owner.");
+        alert("Failed to delete card. Ensure you are the owner and Storage rules allow deletion.");
     }
 }
 
-// ---------- MODERATION TOOL (Requires Cloud Function Deployment) ----------
+// ---------- MODERATION TOOL (CLIENT-SIDE) ----------
 async function toggleBan(targetUid, isBanned) {
-    if (!confirm(`Are you sure you want to ${isBanned ? 'UNBAN' : 'BAN'} ${targetUid}? This action requires the 'toggleBan' Cloud Function to be deployed.`)) return;
+    if (currentUser.uid !== OWNER_UID) {
+        alert("Permission Denied: Only the site owner can perform moderation.");
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to ${isBanned ? 'UNBAN' : 'BAN'} ${targetUid}?`)) return;
 
     try {
-        const banFunction = functions.https.callable('toggleBan');
-        const result = await banFunction({ targetUid, isBanned });
+        await db.collection('users').doc(targetUid).update({
+            isBanned: !isBanned // Toggle the status
+        });
 
-        alert(result.data.message);
+        alert(`User ${targetUid} successfully ${!isBanned ? 'BANNED' : 'UNBANNED'}.`);
         viewProfile(targetUid); 
     } catch (e) {
         console.error("Ban/Unban failed:", e);
-        alert(`Failed to perform moderation action. Error: ${e.message}`);
+        alert(`Failed to perform moderation action. Error: ${e.message}. CHECK FIRESTORE RULES.`);
     }
 }
 
@@ -545,6 +640,11 @@ function renderCard(d, type, reqId = null) {
         const btn = document.createElement('button'); btn.className = 'neon-btn'; btn.textContent = 'Send Request';
         btn.onclick = (e) => { e.stopPropagation(); sendFriendRequest(d.uid); }; 
         buttons.push(btn);
+    }
+    else if (type === 'pending') {
+         const btn = document.createElement('button'); btn.className = 'neon-btn'; btn.textContent = 'Request Sent'; btn.disabled = true;
+         btn.onclick = (e) => { e.stopPropagation(); }; 
+         buttons.push(btn);
     }
     else if (type === 'request') {
         const accept=document.createElement('button'); accept.className='neon-btn'; accept.textContent='Accept'; accept.onclick=(e)=>{e.stopPropagation(); acceptFriend(reqId,d.uid);}; 
@@ -577,20 +677,31 @@ async function viewProfile(targetUid) {
 
         if (data.isBanned) {
             container.innerHTML = `<h2 style="color:red;">USER BANNED</h2><p>This user has been removed from the platform for violating community guidelines.</p>`;
+            if (currentUser.uid === OWNER_UID && targetUid !== currentUser.uid) {
+                 container.innerHTML += `<div style="text-align:center; margin-top: 20px;"><button class="neon-btn remove" onclick="toggleBan('${targetUid}', ${data.isBanned})">UNBAN USER</button></div>`;
+            }
             return;
         }
 
         let actionButtonHTML = '';
         const myDoc = (await db.collection('users').doc(currentUser.uid).get()).data();
         const isFriend = (myDoc.friends || []).includes(targetUid);
-        const hasSentRequest = (await db.collection('friendRequests').doc(getChatId(currentUser.uid, targetUid)).get()).exists;
         const isOwner = targetUid === currentUser.uid;
+        
+        // Check if the request is pending either way (check if a doc exists with the user's UIDs)
+        const reqId = getChatId(currentUser.uid, targetUid);
+        const sentReqDoc = await db.collection('friendRequests').doc(reqId).get();
+        const hasSentRequest = sentReqDoc.exists && sentReqDoc.data().senderId === currentUser.uid;
+        const hasReceivedRequest = sentReqDoc.exists && sentReqDoc.data().receiverId === currentUser.uid;
+
 
         if (!isOwner) {
             if (isFriend) {
                 actionButtonHTML = `<button class="neon-btn" onclick="startChat('${targetUid}', '${data.nickname}')">Start Duo Chat</button>`;
             } else if (hasSentRequest) {
                 actionButtonHTML = `<button class="neon-btn" disabled>Request Sent</button>`;
+            } else if (hasReceivedRequest) {
+                actionButtonHTML = `<button class="neon-btn" onclick="acceptFriend('${reqId}','${targetUid}')">Accept Duo Request</button>`;
             } else {
                 actionButtonHTML = `<button class="neon-btn" onclick="sendFriendRequest('${targetUid}')">Send Duo Request</button>`;
             }
@@ -598,10 +709,9 @@ async function viewProfile(targetUid) {
         
         let adminButtonHTML = '';
         if (currentUser.uid === OWNER_UID && !isOwner) {
-            adminButtonHTML = `<button class="neon-btn remove" onclick="toggleBan('${targetUid}', ${data.isBanned || false})">${data.isBanned ? 'UNBAN USER' : 'BAN USER'}</button>`;
+            adminButtonHTML = `<button class="neon-btn remove" onclick="toggleBan('${targetUid}', ${data.isBanned || false})">BAN USER</button>`;
         }
 
-        // Render Image Cards (Gamer Cards)
         const cardSnapshot = await db.collection('gamerCards').where('uid', '==', targetUid).get();
         let imageCardsHTML = '<h3 style="color:cyan;">Gamer Cards</h3><div class="gamer-card-container">';
         
@@ -619,7 +729,6 @@ async function viewProfile(targetUid) {
         }
         imageCardsHTML += '</div>';
 
-        // Final HTML Injection (Replaces "Loading Profile..." message)
         container.innerHTML = `
             <div style="text-align:center; border-bottom: 2px solid cyan; padding-bottom: 15px;">
                 <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar" style="width: 100px; height: 100px; border-color: magenta;">
@@ -638,66 +747,8 @@ async function viewProfile(targetUid) {
             </div>
         `;
     } catch (e) {
-        // If an error happens during the query (like a security rule violation)
         console.error("Error loading profile:", e);
         container.innerHTML = `<h2 style="color:red;">Error loading profile data!</h2><p>Check Firebase Security Rules (especially for 'users' and 'gamerCards' collections).</p>`;
-    }
-}
-
-async function loadSuggested(){
-    const container = document.getElementById('suggestedTab'); 
-    container.innerHTML = '<p style="text-align:center; color:cyan;">Searching the Cyber-Arena...</p>';
-
-    // 1. Get filter values
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    const minSkill = parseInt(document.getElementById('skillFilter').value) || 0;
-    
-    // 2. Fetch necessary data
-    if(!currentUser) return; 
-
-    // NOTE: This fetches ALL users, which is inefficient for large apps. 
-    // For larger apps, Firebase must be used with backend-side indexed queries.
-    const snapshot = await db.collection('users').get(); 
-    const myDoc = (await db.collection('users').doc(currentUser.uid).get()).data();
-    
-    const myFriends = new Set(myDoc.friends || []);
-    const myRequestsSent = new Set((await db.collection('friendRequests').where('senderId', '==', currentUser.uid).get()).docs.map(d => d.data().receiverId));
-    
-    // 3. Filter and Render
-    container.innerHTML = ''; // Clear loading message
-
-    let matchCount = 0;
-
-    snapshot.docs.forEach(doc => { 
-        const d = doc.data(); 
-        
-        // Skip self, friends, and users to whom a request has been sent
-        if (d.uid === currentUser.uid || myFriends.has(d.uid) || myRequestsSent.has(d.uid)) return;
-
-        // Skip Banned Users
-        if (d.isBanned) return;
-
-        // --- APPLY FILTERS ---
-
-        // Filter 1: Search Term (Nickname or Bio)
-        const nicknameMatch = d.nickname.toLowerCase().includes(searchTerm);
-        const bioMatch = (d.bio || '').toLowerCase().includes(searchTerm);
-        if (searchTerm && !(nicknameMatch || bioMatch)) return;
-
-        // Filter 2: Status
-        if (statusFilter && d.status !== statusFilter) return;
-
-        // Filter 3: Skill Rating
-        if (d.skillRating < minSkill) return;
-
-        // --- RENDER MATCH ---
-        container.appendChild(renderCard(d, 'suggest'));
-        matchCount++;
-    });
-
-    if (matchCount === 0) {
-        container.innerHTML = `<p>No matching partners found for the current search criteria.</p>`;
     }
 }
 
@@ -709,7 +760,7 @@ async function sendFriendRequest(toUid){
   const reqRef=db.collection('friendRequests').doc(reqId);
 
   try {
-    if((await reqRef.get()).exists){ alert("Request already sent!"); return; }
+    if((await reqRef.get()).exists){ alert("Request already sent or pending!"); return; }
     const myDoc=(await db.collection('users').doc(currentUser.uid).get()).data();
     if((myDoc.friends||[]).includes(toUid)){ alert("Already friends!"); return; }
     
@@ -720,11 +771,12 @@ async function sendFriendRequest(toUid){
     });
     
     alert("Friend request sent!"); 
-    loadSuggested(); 
+    loadAllUsers(); 
+    searchUsers();
     loadRequests();
   } catch (e) {
     console.error("Failed to send friend request:", e);
-    alert("ERROR: Failed to send request. Check your browser console and ensure the SECURE rules are published.");
+    alert("ERROR: Failed to send request. Check your browser console and ensure the SECURITY RULES are published.");
   }
 }
 
@@ -733,27 +785,54 @@ async function loadRequests(){
   const container=document.getElementById('requestsTab'); container.innerHTML='';
   if(snapshot.empty){ container.innerHTML='<p>No friend requests.</p>'; return; }
   const userDocs=await Promise.all(snapshot.docs.map(doc=>db.collection('users').doc(doc.data().senderId).get()));
-  snapshot.docs.forEach((doc,i)=>{ const fromUser=userDocs[i].data(); if(!fromUser)return; container.appendChild(renderCard(fromUser,'request',doc.id)); });
+  snapshot.docs.forEach((doc,i)=>{ 
+    const fromUser=userDocs[i].data(); 
+    if(!fromUser || fromUser.isBanned) return; 
+    container.appendChild(renderCard(fromUser,'request',doc.id)); 
+});
 }
 
+// Client-side transaction for friend acceptance (WARNING: Less secure than Cloud Functions)
 async function acceptFriend(reqId, friendUid){
-  try {
-    const acceptFunction = functions.https.callable('acceptFriendRequest');
-    await acceptFunction({ reqId: reqId, friendUid: friendUid });
+    if (!currentUser) return;
 
-    alert("Duo accepted!");
-    loadRequests(); 
-    loadFriends(); 
-    loadSuggested();
-  } catch (e) {
-    console.error("Failed to accept friend request via Cloud Function:", e);
-    alert("ERROR: Failed to accept Duo. Ensure your Cloud Function 'acceptFriendRequest' is deployed.");
-  }
+    const myUid = currentUser.uid;
+
+    try {
+        await db.runTransaction(async (transaction) => {
+            // 1. Check request validity (Client-side check)
+            const reqRef = db.collection('friendRequests').doc(reqId);
+            const reqDoc = await transaction.get(reqRef);
+            if (!reqDoc.exists || reqDoc.data().receiverId !== myUid || reqDoc.data().senderId !== friendUid) {
+                throw "Request is invalid or not addressed to you.";
+            }
+
+            // 2. Add friend to both users' lists
+            const myRef = db.collection('users').doc(myUid);
+            const friendRef = db.collection('users').doc(friendUid);
+
+            transaction.update(myRef, { friends: firebase.firestore.FieldValue.arrayUnion(friendUid) });
+            transaction.update(friendRef, { friends: firebase.firestore.FieldValue.arrayUnion(myUid) });
+
+            // 3. Delete the friend request
+            transaction.delete(reqRef);
+        });
+
+        alert("Duo accepted!");
+        loadRequests(); 
+        loadFriends(); 
+        loadAllUsers();
+        searchUsers();
+
+    } catch (e) {
+        console.error("Failed to accept friend request:", e);
+        alert(`ERROR: Failed to accept Duo. Check your browser console and ensure the SECURITY RULES allow the updates.`);
+    }
 }
 
 async function declineFriend(reqId){
   await db.collection('friendRequests').doc(reqId).delete();
-  loadRequests(); loadSuggested();
+  loadRequests(); loadAllUsers();
 }
 
 async function loadFriends(){
@@ -774,7 +853,7 @@ async function loadFriends(){
   const friendDocs=await Promise.all(friendUids.map(f=>db.collection('users').doc(f).get()));
   friendDocs.forEach(fDoc=>{ 
     const f=fDoc.data(); 
-    if(!f)return; 
+    if(!f || f.isBanned)return; 
     container.appendChild(renderCard(f,'friend')); 
   });
 
@@ -795,9 +874,14 @@ function renderChatList(friendUids) {
     chatList.innerHTML = ''; 
     const friendDocs = await Promise.all(friendUids.map(f => db.collection('users').doc(f).get()));
     
+    if (friendDocs.filter(d => d.exists && !d.data().isBanned).length === 0) {
+        chatList.innerHTML = 'No friends to chat with.';
+        return;
+    }
+
     friendDocs.forEach(fDoc => {
       const f = fDoc.data(); 
-      if (!f) return;
+      if (!f || f.isBanned) return;
 
       const unreadCount = friendUnreads[f.uid] || 0;
       totalUnread += unreadCount;
@@ -888,7 +972,7 @@ async function sendMessage(chatId,content,recipientUid){
 }
 
 function hideAllTabs(){ 
-  ["suggestedTab","requestsTab","friendsTab","profileTab","messagingTab", "viewProfileTab"].forEach(t=>document.getElementById(t).classList.add('hidden')); 
+  ["allUsersTab","requestsTab","friendsTab","profileTab","messagingTab", "viewProfileTab", "searchTab"].forEach(t=>document.getElementById(t).classList.add('hidden')); 
 }
 
 function showTab(tab){ 
@@ -901,10 +985,11 @@ function showTab(tab){ 
       unsubscribeMessages=null; 
     }
     
-    if(tab==='suggested') loadSuggested(); 
+    if(tab==='allUsers') loadAllUsers(); 
     else if(tab==='requests') loadRequests(); 
     else if(tab==='friends') loadFriends(); 
-    else if(tab==='profile') loadProfile(); 
+    else if(tab==='profile') loadProfile();
+    else if(tab==='search') searchUsers(); 
 }
 </script>
 </body>
