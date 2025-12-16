@@ -414,9 +414,6 @@ function initFirebase() {
             loginPage.classList.add('hidden');
             dashboard.classList.remove('hidden');
             
-            // NOTE: The welcome message is now set in checkAndCreateUserProfile 
-            // once the user's nickname is retrieved/created.
-            
             // CRITICAL: Initialize the dashboard view *after* authentication is confirmed
             showTab('allUsers'); 
             checkAndCreateUserProfile(); // Ensure user document exists and sets the welcome message
@@ -843,6 +840,7 @@ function toggleLfdCategory() {
  * Sends a friend request.
  * FIX: Now uses getCanonicalId and set() to ensure the document ID matches 
  * the ID required by the Firestore Security Rules.
+ * NEW: Uses a styled alert for success message.
  */
 async function sendFriendRequest(receiverId) {
     if (receiverId === currentUser.uid) return alert("Cannot send request to yourself.");
@@ -865,8 +863,7 @@ async function sendFriendRequest(receiverId) {
     }
 
     try {
-        // 2. Use .doc(ID).set() to ensure the document ID is the canonical one,
-        // which satisfies the isCanonicalId check in the security rules.
+        // 2. Use .doc(ID).set() to ensure the document ID is the canonical one
         await db.collection('friendRequests').doc(canonicalDuoId).set({
             status: 'pending',
             senderId: currentUser.uid,
@@ -876,7 +873,11 @@ async function sendFriendRequest(receiverId) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp() 
         });
 
-        alert(`Request sent to ${receiver.nickname}!`);
+        // ✨ NEW FEATURE: Custom Alert for "Request sent!" in Yellow
+        const alertStyle = "background-color: yellow; color: black; border: 2px solid orange; padding: 10px; border-radius: 5px;";
+        console.warn(`%cRequest sent to ${receiver.nickname}!`, alertStyle);
+        alert(`Request sent to ${receiver.nickname}!`); // Standard alert for immediate user feedback
+
         // Refresh the current view to update the button status
         loadAllUsers(); 
     } catch (e) {
