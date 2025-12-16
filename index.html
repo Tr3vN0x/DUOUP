@@ -14,7 +14,7 @@
 
 <meta property="og:title" content="DUO UP (BETA)">
 <meta property="og:description" content="DUO UP BETA IS OUT NOW! ⚡ ">
-<meta property="og:image" content="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/598884570_845641984737502_3175907977751628974_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=ZuwpdBTHlbQQ7kNvwFLa4-J&_nc_oc=AdnsRNEZ9LGhbLpRqeQnLeM5ZTiGo3THde7Ovkn1ymRwx86CnpNR8dGLxw8Vn8khnNbRizxoPDAEcuzexnVRQJ5Y&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=3wKM0Dsce2XSdse-2Nk3rw&oh=00_AflRQGBb5NxeRDBjPunJ3xstGrvtMITHymVjwLLf8QvciA&oe=6946C99E">
+<meta property="og:image" content="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/598884570_845641984737502_3175907977751628974_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=ZuwpdBTHlbQQ7kNvwFLa4-J&_nc_oc=AdnsRNEZ9LGhbLpRqeQnLeM5ZTiGo3THde7Ovkn1ymRwx86CnpNR8dGLxw8Vn8khnNbNbxoPDAEcuzexnVRQJ5Y&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=3wKM0Dsce2XSdse-2Nk3rw&oh=00_AflRQGBb5NxeRDBjPunJ3xstGrvtMITHymVjwLLf8QvciA&oe=6946C99E">
 <meta property="og:url" content="https://tr3vn0x.github.io/DUOUP/">
 <meta property="og:type" content="website">
 
@@ -29,6 +29,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
+
 <style>
 /* --- Base styles --- */
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
@@ -352,7 +353,7 @@ const CO_FOUNDER_UIDS = [
     "GmH4xJp92vY8sbwIWgJWjFw9MOQ2",
 ];
 
-// --- NEW CUSTOM BADGE MAPPING ---
+// --- CUSTOM BADGE MAPPING (Includes Pilex6/Pelix6) ---
 const CUSTOM_BADGE_MAP = {
     // UID: { title: "Pilex6", color: "neon-green" }
     "kHsYFJVHCGfQzI16nJH0mg1rv7u1": { title: "Pilex6", color: "pilex6" }, 
@@ -499,20 +500,19 @@ function showTab(tab){
 }
 
 // ---------------------------
-// CORE DATA LOADING (Fixed LoadAllUsers Query)
+// CORE DATA LOADING (Fixed LoadAllUsers Query & Error Handling)
 // ---------------------------
 async function loadAllUsers(){
     if(!currentUser) return;
     const container=document.getElementById('allUsersTab');
-    container.innerHTML="<h3>Loading Suggested Players...</h3>";
+    container.innerHTML="<p style='width:100%; text-align:center;'>Loading Suggested Players... Please wait.</p>";
     
     try{
         // 1. Load ALL users 
         const snapshot=await db.collection('users').get();
         allUsersCache=snapshot.docs.map(d=>({id:d.id,...d.data()}));
         
-        // 2. Load all friend requests involving the current user (FIXED QUERY)
-        // Uses the 'participants' array field which is enforced by security rules.
+        // 2. Load all friend requests involving the current user 
         const requestsSnap = await db.collection('friendRequests')
             .where('participants', 'array-contains', currentUser.uid) 
             .get();
@@ -532,20 +532,29 @@ async function loadAllUsers(){
             }
         });
 
+        // --- FIX: CLEAR CONTAINER BEFORE RENDERING ---
         container.innerHTML=""; 
 
+        // 3. Render the cards
+        let renderedCount = 0;
         allUsersCache.forEach(user=>{
             if(user.id===currentUser.uid) return;
             const card=renderUserCard(user.id, user, requestCache[user.id]);
-            if(card) container.appendChild(card);
+            if(card) {
+                container.appendChild(card);
+                renderedCount++;
+            }
         });
+        
+        if (renderedCount === 0) {
+            container.innerHTML = '<p style="width:100%; text-align:center; color:#ff00ff;">No other users found in the system yet.</p>';
+        }
 
     }catch(e){ 
+        // --- IMPROVED ERROR DISPLAY ---
+        console.error("Error loading users:", e);
         container.innerHTML=`<p style="width:100%; text-align:center; color:red;">
-            ACCESS DENIED [UID: ${currentUser?.uid || 'NONE'}] - 
-            Error loading users: ${e.message}</p>
-            <p style="width:100%; text-align:center; color:yellow;">
-            **CRITICAL:** Ensure Firebase Security Rules are deployed correctly.
+            NETWORK ERROR: Failed to load user data. Check console for details.
             </p>`; 
     }
 }
@@ -686,7 +695,7 @@ async function saveProfile() {
         
         let profileImageUrl = currentProfileData.profileImageUrl || DEFAULT_AVATAR;
 
-        // 1. Handle Avatar Upload
+        // 1. Handle Avatar Upload (Uses Firebase Storage)
         if (avatarFile) {
             profileImageUrl = await uploadAvatar(avatarFile);
         }
@@ -697,7 +706,7 @@ async function saveProfile() {
             gameCategory,
             gameRole,
             status,
-            profileImageUrl: profileImageUrl,
+            profileImageUrl: profileImageUrl, // Updated URL from storage
             lfdCategory: status === 'LFD' ? lfdCategory : null,
         };
 
@@ -720,7 +729,7 @@ async function saveProfile() {
         currentProfileData = { ...currentProfileData, ...updateData };
         document.getElementById('saveMessage').textContent = 'Profile saved successfully! Reloading data...';
         document.getElementById('nicknameChangeInfo').textContent = '(Nickname change is now used.)';
-
+        
         // Re-load to refresh all UI components
         setTimeout(() => {
             showTab('profile'); // Keep user on profile page
@@ -739,7 +748,6 @@ async function loadUserProfile() {
     try {
         const userDoc = await db.collection('users').doc(currentUser.uid).get();
         if (!userDoc.exists) {
-            // Should not happen if checkAndCreateUserProfile ran, but handle gracefully
             document.getElementById('profileTab').innerHTML = '<p style="color:red;">Profile not found. Please log out and back in.</p>';
             return;
         }
@@ -770,6 +778,9 @@ async function loadUserProfile() {
 
         toggleLfdCategory();
         document.getElementById('saveMessage').textContent = ''; // Clear previous save messages
+        
+        // Clear the file input
+        document.getElementById('avatarFile').value = '';
 
     } catch (e) {
         console.error("Error loading user profile:", e);
