@@ -8,19 +8,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP (Cyber Social Platform)</title>
+<title>DUO UP</title>
 
 <link rel="icon" type="image/x-icon" href="https://your-domain.com/favicon.ico"> 
 <link rel="apple-touch-icon" href="https://your-domain.com/apple-touch-icon.png">
 
-<meta property="og:title" content="DUO UP: Find Your Next Cyber Social Partner">
-<meta property="og:description" content="The ultimate platform for cyber warriors to connect, build duos, and dominate the digital landscape.">
-<meta property="og:image" content="https://your-domain.com/duo-up-thumbnail.png">
-<meta property="og:url" content="https://your-domain.com/">
+<meta property="og:title" content="DUO UP (BETA)">
+<meta property="og:description" content="DUO UP IS A WEBSITE WHERE PLAYERS CAN FIND OTHER PLAYERS TO TEAM UP AND DUO CLICK THE LINK TO FIND YOUR TEAMMATE.">
+<meta property="og:image" content="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/598884570_845641984737502_3175907977751628974_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=ZuwpdBTHlbQQ7kNvwFLa4-J&_nc_oc=AdnsRNEZ9LGhbLpRqeQnLeM5ZTiGo3THde7Ovkn1ymRwx86CnpNR8dGLxw8Vn8khnNbRizxoPDAEcuzexnVRQJ5Y&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=3wKM0Dsce2XSdse-2Nk3rw&oh=00_AflRQGBb5NxeRDBjPunJ3xstGrvtMITHymVjwLLf8QvciA&oe=6946C99E">
+<meta property="og:url" content="https://tr3vn0x.github.io/DUOUP/">
 <meta property="og:type" content="website">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="DUO UP: Cyber Social Platform">
+<meta name="twitter:title" content="DUO UP: (BETA)">
 <meta name="twitter:description" content="Connect, duo up, and conquer. Find your next teammate today.">
 <meta name="twitter:image" content="https://your-domain.com/duo-up-thumbnail.png">
 
@@ -95,8 +95,9 @@ textarea { resize: vertical; }
     font-weight: bold;
     text-transform: uppercase;
     margin-left: 8px; /* Spacing next to nickname */
-    box-shadow: 0 0 5px #FFD700;
+    box-shadow: 0 0 5px #FF0000; /* changed to red */
 }
+
 /* Nav */
 #navigationBar { display:flex; justify-content:center; flex-wrap:wrap; padding:10px; background:#151515; border-radius:8px; margin-bottom:30px; border:1px solid #333; }
 #navigationBar button.active { background:#00ffcc; color:#0b0b0b; box-shadow:0 0 15px #00ffcc; }
@@ -147,7 +148,7 @@ textarea { resize: vertical; }
 </head>
 <body>
 
-<div id="loadingOverlay">INITIATING SECURE CONNECTION...</div>
+<div id="loadingOverlay">LOADING...</div>
 
 <div class="header"><div class="icon-container">⚡</div><h1>DUO UP</h1></div>
 
@@ -174,7 +175,7 @@ textarea { resize: vertical; }
 <div id="searchTab" class="hidden container">
 <h2>Player Search Filter</h2>
 <div id="searchControls">
-<input type="text" id="searchInput" placeholder="Search by Nickname or Bio..." onkeyup="filterSearchResults()">
+<input type="text" id="searchInput" placeholder="Search by Nickname..." onkeyup="filterSearchResults()">
 <label style="color:cyan; margin-left:15px;">Status:</label>
 <select id="statusFilter" onchange="filterSearchResults()">
 <option value="">Any Status</option>
@@ -1076,4 +1077,5 @@ initFirebase();
 
 </body>
 </html>
+
 
