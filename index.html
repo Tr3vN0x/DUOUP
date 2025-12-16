@@ -14,7 +14,7 @@
 
 <meta property="og:title" content="DUO UP (BETA)">
 <meta property="og:description" content="DUO UP BETA IS OUT NOW! ⚡ ">
-<meta property="og:image" content="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/598884570_845641984737502_3175907977751628974_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=ZuwpdBTHlbQQ7kNvwFLa4-J&_nc_oc=AdnsRNEZ9LGhbLpRqeQnLeM5ZTiGo3THde7Ovkn1ymRwx86CnpNR8dGLxw8Vn8khnNbNbxoPDAEcuzexnVRQJ5Y&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=3wKM0Dsce2XSdse-2Nk3rw&oh=00_AflRQGBb5NxeRDBjPunJ3xstGrvtMITHymVjwLLf8QvciA&oe=6946C99E">
+<meta property="og:image" content="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/598884570_845641984737502_3175907977751628974_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=ZuwpdBTHlbQQ7kNvwFLa4-J&_nc_oc=AdnsRNEZ9LGhbLpRqeQnLeM5ZTiGo3THde7Ovkn1ymRwx86CnpNR8dGLxw8Vn8khnNbNbxoPDAEcuzexnVRQJ5Y&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=3wKM0Dsce2XSdse-2Nk3rw&oh=00_AflRQGBp1QY34jQ0Q1L20G0R8K8Hh3F34y2I2Uq9gDqK4A&oe=6946C99E">
 <meta property="og:url" content="https://tr3vn0x.github.io/DUOUP/">
 <meta property="og:type" content="website">
 
@@ -505,6 +505,7 @@ function showTab(tab){
 async function loadAllUsers(){
     if(!currentUser) return;
     const container=document.getElementById('allUsersTab');
+    // Display loading message first
     container.innerHTML="<p style='width:100%; text-align:center;'>Loading Suggested Players... Please wait.</p>";
     
     try{
@@ -798,52 +799,198 @@ function toggleLfdCategory() {
 }
 
 // ---------------------------
-// DUO/FRIENDS/MESSAGING FUNCTIONS (STUBS)
+// DUO/FRIENDS/MESSAGING FUNCTIONS (IMPLEMENTATION)
 // ---------------------------
 
-// Placeholder functions for Friend Requests (Implement Firebase rules and logic here)
 async function sendFriendRequest(receiverId) {
     if (receiverId === currentUser.uid) return alert("Cannot send request to yourself.");
-    alert(`Sending request to ${findUserInCache(receiverId)?.nickname || 'Unknown'}... (Not yet implemented)`);
-    // Logic: Create a new document in 'friendRequests' collection
-    // { status: 'pending', senderId: currentUser.uid, receiverId: receiverId, participants: [currentUser.uid, receiverId] }
-    // After success, re-load the current tab to refresh buttons
-    // loadAllUsers(); 
+
+    const receiver = findUserInCache(receiverId);
+    if (!receiver) return alert("Error: User not found in cache.");
+
+    // Check if a request already exists
+    const existingRequest = requestCache[receiverId];
+    if (existingRequest) {
+        if (existingRequest.status === 'pending') {
+            return alert(`A pending request to ${receiver.nickname} already exists.`);
+        }
+        if (existingRequest.status === 'accepted') {
+            return alert(`${receiver.nickname} is already your Duo partner!`);
+        }
+    }
+
+    try {
+        await db.collection('friendRequests').add({
+            status: 'pending',
+            senderId: currentUser.uid,
+            receiverId: receiverId,
+            participants: [currentUser.uid, receiverId],
+            sentAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert(`Request sent to ${receiver.nickname}!`);
+        // Refresh the current view to update the button status
+        loadAllUsers(); 
+    } catch (e) {
+        console.error("Error sending request:", e);
+        alert("Failed to send request: " + e.message);
+    }
 }
 
 async function acceptFriendRequest(requestId) {
-    alert(`Accepting request ${requestId}... (Not yet implemented)`);
-    // Logic: Update the request document in 'friendRequests' to { status: 'accepted' }
-    // After success, re-load the friends tab
-    // loadFriends(); 
+    try {
+        await db.collection('friendRequests').doc(requestId).update({
+            status: 'accepted',
+            acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert('Friend request accepted! You are now a Duo.');
+        // Re-load the friends tab
+        loadFriends(); 
+        // Also refresh the all users list in case this was initiated from there
+        loadAllUsers();
+    } catch (e) {
+        console.error("Error accepting request:", e);
+        alert("Failed to accept request: " + e.message);
+    }
 }
 
 async function rejectFriendRequest(requestId) {
-    alert(`Rejecting request ${requestId}... (Not yet implemented)`);
-    // Logic: Delete the request document from 'friendRequests'
-    // After success, re-load the friends tab
-    // loadFriends(); 
+    try {
+        // We delete the request upon rejection
+        await db.collection('friendRequests').doc(requestId).delete();
+        alert('Friend request rejected.');
+        // Re-load the friends tab
+        loadFriends(); 
+        // Also refresh the all users list
+        loadAllUsers();
+    } catch (e) {
+        console.error("Error rejecting request:", e);
+        alert("Failed to reject request: " + e.message);
+    }
 }
 
 async function loadFriends() {
-    document.getElementById('pendingRequestsList').innerHTML = '<h3>Loading requests...</h3>';
-    document.getElementById('friendList').innerHTML = '<p style="width:100%; text-align:center; color:magenta;">Loading accepted duos...</p>';
+    if (!currentUser) return;
     
-    // Logic: Filter requestCache for 'pending' where receiverId === currentUser.uid
-    // And filter requestCache for 'accepted'
-    // Then use findUserInCache() and renderUserCard() or renderDuoCard()
+    const pendingContainer = document.getElementById('pendingRequestsList');
+    const acceptedContainer = document.getElementById('friendList');
+
+    pendingContainer.innerHTML = '<p style="width:100%; text-align:center;">Loading pending requests...</p>';
+    acceptedContainer.innerHTML = '<p style="width:100%; text-align:center; color:magenta;">Loading accepted duos...</p>';
+    
+    // CRITICAL: Ensure all users are loaded into cache first for rendering names/avatars
+    if (allUsersCache.length === 0) {
+        // Call loadAllUsers to populate both allUsersCache and requestCache
+        await loadAllUsers(); 
+        // Note: loadAllUsers updates allUsersTab, but we continue here for friendsTab
+    }
+
+    pendingContainer.innerHTML = '';
+    acceptedContainer.innerHTML = '';
+    
+    let pendingCount = 0;
+    let acceptedCount = 0;
+
+    try {
+        // Iterate through the requestCache which contains ALL requests involving currentUser
+        for (const otherUid in requestCache) {
+            const requestInfo = requestCache[otherUid];
+            const otherUserData = findUserInCache(otherUid);
+
+            if (!otherUserData) continue; // Skip if user data is missing
+
+            if (requestInfo.status === 'pending' && requestInfo.receiverId === currentUser.uid) {
+                // Incoming Pending Request (I must accept/reject)
+                // Note: We use renderUserCard here because it has the accept/reject buttons
+                const card = renderUserCard(otherUid, otherUserData, requestInfo);
+                if (card) {
+                    pendingContainer.appendChild(card);
+                    pendingCount++;
+                }
+            } else if (requestInfo.status === 'accepted') {
+                // Accepted Duo
+                const card = renderDuoCard(otherUid, otherUserData);
+                if (card) {
+                    acceptedContainer.appendChild(card);
+                    acceptedCount++;
+                }
+            }
+        }
+
+        if (pendingCount === 0) {
+            pendingContainer.innerHTML = '<p style="width:100%; text-align:center; color:cyan;">No pending requests at this time.</p>';
+        }
+
+        if (acceptedCount === 0) {
+            acceptedContainer.innerHTML = '<p style="width:100%; text-align:center; color:magenta;">You have no active Duo partners yet. Go find some!</p>';
+        }
+        
+    } catch(e) {
+        console.error("Error loading friends:", e);
+        pendingContainer.innerHTML = '<p style="width:100%; text-align:center; color:red;">Error loading requests.</p>';
+        acceptedContainer.innerHTML = '<p style="width:100%; text-align:center; color:red;">Error loading duos.</p>';
+    }
 }
 
-function loadChatList() {
-    document.getElementById('activeDuoList').innerHTML = '<p>Loading Duos...</p>';
-    // Logic: Get list of accepted Duos (from friendList logic), then populate #activeDuoList with .chat-entry divs.
+
+async function loadChatList() {
+    if (!currentUser) return;
+    const duoListContainer = document.getElementById('activeDuoList');
+    duoListContainer.innerHTML = '<p style="text-align:center;">Loading Duos...</p>';
+    
+    // CRITICAL: Ensure all users and requests are loaded/cached
+    if (allUsersCache.length === 0) {
+        await loadAllUsers(); 
+    }
+
+    let chatListContent = '';
+    let duoCount = 0;
+
+    try {
+        // We rely on requestCache being populated by loadAllUsers()
+        for (const otherUid in requestCache) {
+            const requestInfo = requestCache[otherUid];
+            const partnerData = findUserInCache(otherUid);
+
+            if (requestInfo.status === 'accepted' && partnerData) {
+                const chatId = getChatId(otherUid);
+                const isActive = chatId === currentChatId ? 'active' : '';
+
+                chatListContent += `
+                    <div class="chat-entry ${isActive}" onclick="selectChat('${chatId}', '${otherUid}')">
+                        <span style="font-weight:bold; color:lime;">${partnerData.nickname}</span> 
+                        <span style="font-size:0.8em; opacity:0.7;">(${partnerData.status || 'Online'})</span>
+                    </div>
+                `;
+                duoCount++;
+            }
+        }
+        
+        duoListContainer.innerHTML = chatListContent;
+
+        if (duoCount === 0) {
+             duoListContainer.innerHTML = '<p style="text-align:center; color:magenta;">No active Duos to message.</p>';
+        }
+
+    } catch(e) {
+        console.error("Error loading chat list:", e);
+        duoListContainer.innerHTML = '<p style="text-align:center; color:red;">Error loading chat list.</p>';
+    }
 }
+
 
 function selectChat(chatId, partnerUid) {
     // 1. Stop previous listener
     if (chatListener) chatListener(); 
     
-    // 2. Set new chat info
+    // 2. Update list highlighting
+    document.querySelectorAll('.chat-entry').forEach(e => e.classList.remove('active'));
+    // Simple way to select the entry: find the one with the correct onclick attribute
+    const selectedEntry = document.querySelector(`.chat-entry[onclick*="'${chatId}'"]`);
+    if (selectedEntry) selectedEntry.classList.add('active');
+
+
+    // 3. Set new chat info
     currentChatId = chatId;
     currentChatPartnerId = partnerUid;
     const partner = findUserInCache(partnerUid);
@@ -852,7 +999,7 @@ function selectChat(chatId, partnerUid) {
     document.getElementById('messageDisplay').innerHTML = 'Connecting...';
     document.getElementById('messageInputArea').classList.remove('hidden');
     
-    // 3. Start new listener
+    // 4. Start new listener
     chatListener = db.collection('chats').doc(chatId).collection('messages')
         .orderBy('timestamp', 'asc')
         .onSnapshot(snapshot => {
@@ -928,10 +1075,22 @@ function viewProfile(uid, data) {
     if (requestInfo && requestInfo.status === 'accepted') {
         profileActions = `<button class="neon-btn" style="border-color:lime; color:lime;" onclick="event.stopPropagation(); showTab('messaging'); selectChat('${getChatId(uid)}', '${uid}')">Message Duo</button>`;
     } else if (requestInfo && requestInfo.status === 'pending') {
-        profileActions = `<button class="neon-btn pending" disabled>Pending Request</button>`;
+        // If pending, check if it's an incoming request
+        if (requestInfo.receiverId === currentUser.uid) {
+            profileActions = `<button class="neon-btn add" onclick="event.stopPropagation(); acceptFriendRequest('${requestInfo.id}')">Accept Request</button>
+                              <button class="neon-btn remove" onclick="event.stopPropagation(); rejectFriendRequest('${requestInfo.id}')">Reject</button>`;
+        } else {
+            profileActions = `<button class="neon-btn pending" disabled>Pending Request</button>`;
+        }
     } else {
         profileActions = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
     }
+    
+    // Hide actions for own profile
+    if (uid === currentUser.uid) {
+         profileActions = '<p style="color:cyan;">This is your profile.</p>';
+    }
+
 
     container.innerHTML = `
         <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar" style="width:120px; height:120px; border-color:cyan;">
