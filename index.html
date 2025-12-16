@@ -19,12 +19,12 @@
 <meta property="og:type" content="website">
 
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:site" content="@YourTwitterHandle">
 <meta name="twitter:title" content="DUO UP: Cyber Social Platform">
 <meta name="twitter:description" content="Connect, duo up, and conquer. Find your next teammate today.">
 <meta name="twitter:image" content="https://your-domain.com/duo-up-thumbnail.png">
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
@@ -338,16 +338,17 @@ const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 // Firebase Configuration (<<-- REPLACE THIS WITH YOUR ACTUAL CONFIG -->>)
 // ---------------------------
 const firebaseConfig = {
-    apiKey:"AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-    authDomain:"duoup-cfae6.firebaseapp.com",
-    projectId:"duoup-cfae6",
-    storageBucket:"duoup-cfae6.firebasestorage.app",
-    messagingSenderId:"812263060524",
-    appId:"1:812263060524:web:ac09c3ae610db1cd110d89"
+    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
+    authDomain: "duoup-cfae6.firebaseapp.com",
+    projectId: "duoup-cfae6",
+    storageBucket: "duoup-cfae6.firebasestorage.app",
+    messagingSenderId: "812263060524",
+    appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
+    measurementId: "G-46B67F90FK" // Added measurementId
 };
 
 const CO_FOUNDER_UIDS = [
-    // Add UID for co-founder badges
+    // Add UIDs for co-founder badges here
     "GmH4xJp92vY8sbwIWgJWjFw9MOQ2",
 ];
 
@@ -511,7 +512,7 @@ async function loadAllUsers(){
             ACCESS DENIED [UID: ${currentUser?.uid || 'NONE'}] - 
             Error loading users: ${e.message}</p>
             <p style="width:100%; text-align:center; color:yellow;">
-            **CRITICAL:** This usually means the **Firestore Security Rules** are not deployed correctly.
+            **CRITICAL:** Ensure Firebase Security Rules are deployed correctly.
             </p>`; 
     }
 }
@@ -667,6 +668,7 @@ async function sendFriendRequest(otherUid) {
     if (!currentUser) return alert("Please log in first.");
 
     const requestId = getChatId(otherUid); // UID1_UID2 format
+    const senderId = currentUser.uid;
     
     if (requestCache[otherUid] && requestCache[otherUid].status !== 'rejected') {
         return alert(`A request status is already: ${requestCache[otherUid].status}.`);
@@ -674,11 +676,11 @@ async function sendFriendRequest(otherUid) {
 
     try {
         await db.collection('friendRequests').doc(requestId).set({
-            senderId: currentUser.uid,
+            senderId: senderId,
             receiverId: otherUid,
             status: 'pending',
             // CRITICAL: The array field needed for security rules and queries
-            participants: [currentUser.uid, otherUid].sort(), 
+            participants: [senderId, otherUid].sort(), 
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
@@ -688,7 +690,7 @@ async function sendFriendRequest(otherUid) {
 
     } catch (e) {
         console.error("Error sending request:", e);
-        alert(`Error: Could not send request. Check console.`);
+        alert(`Error: Could not send request. Check console. Error: ${e.message}`);
     }
 }
 
@@ -712,7 +714,7 @@ async function rejectFriendRequest(requestId) {
     try {
         // We delete the document to keep the database clean
         await db.collection('friendRequests').doc(requestId).delete();
-        alert("Request Rejected.");
+        alert("Request Rejected/Canceled.");
         loadFriends();
     } catch (e) {
         console.error("Error rejecting request:", e);
@@ -731,6 +733,7 @@ async function loadChatList() {
     
     try {
         // Query accepted requests where current user is a participant
+        // This query relies on the 'participants' array and 'status' fields.
         const duoSnap = await db.collection('friendRequests')
             .where('participants', 'array-contains', currentUser.uid)
             .where('status', '==', 'accepted')
@@ -758,7 +761,7 @@ async function loadChatList() {
 
     } catch (e) {
         console.error("Error loading chat list:", e);
-        container.innerHTML = `<p style="color:red;">Error loading chats: ${e.message}.</p>`;
+        container.innerHTML = `<p style="color:red;">Error loading chats: ${e.message}. Check Firestore Rules/Index.</p>`;
     }
 }
 
@@ -776,11 +779,13 @@ async function selectChat(chatId, otherUid) {
 
     // Add 'active' class to the selected chat entry
     document.querySelectorAll('.chat-entry').forEach(e => e.classList.remove('active'));
+    // Simple way to find the corresponding entry (may need refinement if names aren't unique)
     document.querySelector(`#activeDuoList div:contains(${partnerNickname})`)?.classList.add('active');
 
 
     const messageRef = db.collection('chats').doc(chatId).collection('messages');
     
+    // Start the real-time listener for messages
     chatListener = messageRef.orderBy('timestamp', 'asc').limit(50).onSnapshot(snapshot => {
         const display = document.getElementById('messageDisplay');
         display.innerHTML = ''; // Clear display
@@ -788,13 +793,17 @@ async function selectChat(chatId, otherUid) {
         snapshot.forEach(doc => {
             const msg = doc.data();
             const messageElement = document.createElement('div');
+            // Check if timestamp exists and convert it for display
+            const timeString = msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString() : 'now';
+
             messageElement.className = `message ${msg.senderId === currentUser.uid ? 'sent' : 'received'}`;
-            messageElement.innerHTML = `${msg.text}<span>${msg.timestamp ? new Date(msg.timestamp.toDate()).toLocaleTimeString() : 'now'}</span>`;
+            messageElement.innerHTML = `${msg.text}<span>${timeString}</span>`;
             display.appendChild(messageElement);
         });
         display.scrollTop = display.scrollHeight; // Scroll to bottom
     }, error => {
-        console.error("Message listener failed:", error);
+        console.error("Message listener failed (Check Firestore rules for /chats/{chatId}/messages read permission):", error);
+        document.getElementById('messageDisplay').innerHTML = `<p style="color:red;">Failed to load messages. Duo status required.</p>`;
     });
 }
 
@@ -805,11 +814,12 @@ async function sendMessage() {
     if (!text || !currentChatId) return;
 
     try {
-        // 1. Ensure the parent chat document exists (or create it if this is the first message)
         const chatDocRef = db.collection('chats').doc(currentChatId);
+        
+        // 1. Ensure the parent chat document exists (Lazy creation)
         const chatDoc = await chatDocRef.get();
-
         if (!chatDoc.exists) {
+            // This set operation is protected by the 'allow create' rule for /chats/{chatId}
             await chatDocRef.set({
                 participants: [currentUser.uid, currentChatPartnerId].sort(),
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -817,19 +827,20 @@ async function sendMessage() {
         }
 
         // 2. Send the message
+        // This add operation is protected by the 'allow create' rule for /messages
         await chatDocRef.collection('messages').add({
             text: text,
             senderId: currentUser.uid,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             // CRITICAL: Include chatId in the message document for robust security rules enforcement
-            chatId: currentChatId
+            chatId: currentChatId 
         });
         
         inputElement.value = ''; // Clear input
 
     } catch (e) {
-        console.error("Error sending message:", e);
-        alert("Failed to send message. Check chat permissions/rules.");
+        console.error("Error sending message (Check Firestore rules for /chats/{chatId}/messages create permission):", e);
+        alert("Failed to send message. Duo status must be 'accepted' and chat rules correct.");
     }
 }
 
@@ -850,7 +861,9 @@ function toggleLfdCategory() {
 
 async function loadUserProfile() {
     if (!currentUser) return;
-    const profile = allUsersCache.find(u => u.id === currentUser.uid) || currentProfileData;
+    // Reload data for the current user to get the latest profile
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    const profile = doc.data() || {};
     currentProfileData = profile;
 
     document.getElementById('profileAvatar').src = profile.profileImageUrl || DEFAULT_AVATAR;
@@ -1043,6 +1056,7 @@ document.querySelector = (function(orig) {
         if (selector.includes(':contains')) {
             const [base, text] = selector.split(':contains');
             const target = text.match(/\((.*?)\)/)[1].replace(/['"]/g, '');
+            // We use Array.from and find for a safer check instead of NodeList iteration
             return Array.from(document.querySelectorAll(base)).find(e => e.textContent.includes(target));
         }
         return orig.call(this, selector);
