@@ -86,17 +86,8 @@ textarea { resize: vertical; }
 
 /* Co-Founder Badge Style */
 .nickname-group { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
-.co-founder-badge { 
-    background: linear-gradient(45deg, #FFD700, #FFA500, #FFD700); 
-    color: #333; 
-    font-size: 0.75em; 
-    padding: 2px 8px; 
-    border-radius: 4px; 
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-left: 8px; /* Spacing next to nickname */
-    box-shadow: 0 0 5px #FFD700;
-}
+/* The co-founder badge class is now defined by the getCoFounderBadge function using inline styles */
+
 /* Nav */
 #navigationBar { display:flex; justify-content:center; flex-wrap:wrap; padding:10px; background:#151515; border-radius:8px; margin-bottom:30px; border:1px solid #333; }
 #navigationBar button.active { background:#00ffcc; color:#0b0b0b; box-shadow:0 0 15px #00ffcc; }
@@ -1039,12 +1030,11 @@ function selectChat(chatId, partnerUid) {
     chatListener = db.collection('chats').doc(chatId).collection('messages')
         .orderBy('timestamp', 'asc')
         .onSnapshot(snapshot => {
-            document.getElementById('messageDisplay').innerHTML = ''; // Clear display
-            snapshot.docChanges().forEach(change => {
-                if (change.type === 'added') {
-                    const messageData = change.doc.data();
-                    displayMessage(messageData);
-                }
+            // Note: This only clears on first load or manual refresh. 
+            // docChanges() handles updates more efficiently but we'll stick to a full refresh for simplicity.
+            document.getElementById('messageDisplay').innerHTML = ''; 
+            snapshot.docs.forEach(doc => {
+                displayMessage(doc.data());
             });
             // Auto-scroll to bottom
             const display = document.getElementById('messageDisplay');
@@ -1070,23 +1060,47 @@ function displayMessage(messageData) {
     display.appendChild(msgDiv);
 }
 
+/**
+ * Sends a message to the currently selected chat.
+ * CRITICAL FIX: Added error logging to debug silent write failures.
+ */
 async function sendMessage() {
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
-    if (!text || !currentChatId) return;
+    
+    if (!text || !currentChatId || !currentUser) {
+        console.warn("Message not sent: Input is empty, chat is not selected, or user is not logged in.");
+        return;
+    }
 
+    // Disable input and button to prevent double send
+    input.disabled = true;
+    document.getElementById('sendMessageBtn').disabled = true;
+    
     try {
         await db.collection('chats').doc(currentChatId).collection('messages').add({
             text: text,
             senderId: currentUser.uid,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        input.value = ''; // Clear input field
+        
+        // Success: Clear input and re-enable controls
+        input.value = ''; 
+        input.disabled = false;
+        document.getElementById('sendMessageBtn').disabled = false;
+        
     } catch (e) {
-        alert("Failed to send message: " + e.message);
-        console.error("Error sending message:", e);
+        // FAILURE: Re-enable controls and show error
+        input.disabled = false;
+        document.getElementById('sendMessageBtn').disabled = false;
+
+        alert(`Failed to send message. Please check the console for the error. (Error Code: ${e.code || 'UNKNOWN'})`);
+        console.error("!!! FATAL CHAT WRITE ERROR !!!", e);
+        // Important Check: If 'Permission Denied', your Firestore Rules are NOT open.
+        // If 'Invalid Argument', check the data structure (text, senderId, timestamp).
     }
 }
+
 
 function viewProfile(uid, data) {
     // This is the viewing logic, not the editing logic
