@@ -1065,6 +1065,33 @@ document.querySelector = (function(orig) {
         return orig.call(this, selector);
     };
 })(document.querySelector);
+    const CO_FOUNDER_UIDS = [
+    "GmH4xJp92vY8sbwIWgJWjFw9MOQ2",
+];
+
+// Add a new object for special badges
+const SPECIAL_BADGES = {
+    "kHsYFJVHCGfQzI16nJH0mg1rv7u1": {
+        text: "Pelix6",
+        color: "lime" // green color
+    }
+};
+
+function getSpecialBadge(uid) {
+    if (SPECIAL_BADGES[uid]) {
+        const badgeInfo = SPECIAL_BADGES[uid];
+        return `<div class="co-founder-badge" style="background:${badgeInfo.color}; color:#0b0b0b; box-shadow:0 0 5px ${badgeInfo.color};">
+                    ${badgeInfo.text}
+                </div>`;
+    }
+    return '';
+}
+
+// Updated combined badge function
+function getBadges(uid) {
+    return getCoFounderBadge(uid) + getSpecialBadge(uid);
+}
+
 
 
 // ----------------------------------------------------
@@ -1075,4 +1102,5 @@ initFirebase();
 
 </body>
 </html>
+
 
