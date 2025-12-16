@@ -1062,7 +1062,7 @@ function displayMessage(messageData) {
 
 /**
  * Sends a message to the currently selected chat.
- * CRITICAL FIX: Added error logging to debug silent write failures.
+ * CRITICAL FIX: Added chatId to match the Firestore Security Rule validation.
  */
 async function sendMessage() {
     const input = document.getElementById('messageInput');
@@ -1081,7 +1081,10 @@ async function sendMessage() {
         await db.collection('chats').doc(currentChatId).collection('messages').add({
             text: text,
             senderId: currentUser.uid,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            // --- CRITICAL FIX START ---
+            chatId: currentChatId // <-- REQUIRED by your Firestore Security Rule
+            // --- CRITICAL FIX END ---
         });
         
         // Success: Clear input and re-enable controls
@@ -1094,10 +1097,8 @@ async function sendMessage() {
         input.disabled = false;
         document.getElementById('sendMessageBtn').disabled = false;
 
-        alert(`Failed to send message. Please check the console for the error. (Error Code: ${e.code || 'UNKNOWN'})`);
+        alert(`Failed to send message. Please check the console for the error. (Error Code: ${e.code || 'UNKNOWN'}). If this is a 'Permission Denied' error, the issue was the missing 'chatId' field!`);
         console.error("!!! FATAL CHAT WRITE ERROR !!!", e);
-        // Important Check: If 'Permission Denied', your Firestore Rules are NOT open.
-        // If 'Invalid Argument', check the data structure (text, senderId, timestamp).
     }
 }
 
