@@ -112,63 +112,60 @@ textarea { resize: vertical; }
 #navigationBar { display:flex; justify-content:center; flex-wrap:wrap; padding:10px; background:#151515; border-radius:8px; margin-bottom:30px; border:1px solid #333; }
 #navigationBar button.active { background:#00ffcc; color:#0b0b0b; box-shadow:0 0 15px #00ffcc; }
 #searchControls { display:flex; gap:15px; margin-bottom:20px; align-items:center; flex-wrap:wrap; background:#1a1a1a; padding:15px; border-radius:8px; border:1px solid #004444; }
-/* --- CYBERPUNK GREY & CYAN LED THEME - LAYOUT FLIP & BACKGROUND UNIFICATION --- */
+/* --- CYBERPUNK GREY & CYAN LED THEME - FULL CODE WITH BUBBLES AND ALIGNMENT --- */
 
 /* 1. Messaging Layout - Flip Order */
 #messagingTab { 
-    display:flex; 
-    gap:20px; 
-    height:75vh; 
-    /* FLIP THE ORDER: Use flex-direction: row-reverse */
+    display: flex; 
+    gap: 20px; 
+    height: 75vh; 
+    /* FLIP THE ORDER: Chat Window is now on the left, List on the right */
     flex-direction: row-reverse; 
-    background: #1a1a1a; 
+    background: #1a1a1a; /* Dark overall background */
 }
 
 /* 2. Chat List (Now on the Right) - Maintain Dark Base */
 #chatList { 
-    width:300px; 
-    padding:15px; 
-    /* Keep the subtle grey border for differentiation */
-    border:2px solid #333333; 
-    border-radius:8px; 
-    background:#111111; 
-    overflow-y:auto; 
+    width: 300px; 
+    padding: 15px; 
+    border: 2px solid #333333; 
+    border-radius: 8px; 
+    background: #111111; 
+    overflow-y: auto; 
     color: #cccccc;
 }
 
-/* Chat List Entries (No Change to Active Style, keeping the "fire" look) */
+/* Chat List Entries */
 .chat-entry { 
-    padding:10px; 
-    border-bottom:1px dashed #222222; 
+    padding: 10px; 
+    border-bottom: 1px dashed #222222; 
     transition: background 0.2s; 
 }
 .chat-entry:hover { 
-    background:#1e1e1e; 
+    background: #1e1e1e; 
     color: #00ffff; 
 }
 .chat-entry.active { 
-    /* THE 'FIRE' STYLE: Dark Cyan Background, Neon Cyan Left Border */
-    background:#003333; 
-    border-left:5px solid #00ffff; 
+    /* The Active 'Fire' Style */
+    background: #003333; 
+    border-left: 5px solid #00ffff; 
     color: #00ffff; 
-    font-weight:bold; 
+    font-weight: bold; 
 }
 
-/* 3. Chat Window (Now on the Left) - Matching Active Duo Style */
+/* 3. Chat Window (Now on the Left) - Main Container */
 #chatWindow {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     
-    /* MATCHING BORDER: Neon Cyan */
+    /* Neon Cyan Border and Glow */
     border: 3px solid #00ffff; 
     border-radius: 8px;
-    
-    /* MATCHING BACKGROUND: Dark Cyan base of the Active Duo */
-    background: #002222; 
-    
-    /* Maintain the Cyan Glow on the container */
     box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); 
+    
+    /* Dark Cyan Background */
+    background: #002222; 
 }
 
 /* 4. Chat Header - Refined Cyan LED Box */
@@ -176,7 +173,6 @@ textarea { resize: vertical; }
     padding: 15px 20px;
     border-bottom: 2px solid #00ffff; 
     color: #00ffff; 
-    /* Slightly lighter background for the header within the dark window */
     background: #003333; 
     font-size: 1.5em; 
     font-weight: bold;
@@ -190,67 +186,63 @@ textarea { resize: vertical; }
 /* 5. Message Display Area - Enabling Bubbles and Alignment */
 #messageDisplay {
     padding: 20px;
-    
-    /* --- NEW FOR BUBBLE LAYOUT --- */
+    /* Flex setup for vertical stacking and horizontal alignment of bubbles */
     display: flex;
-    flex-direction: column; /* Stack messages vertically */
+    flex-direction: column; 
     gap: 15px;
-    /* --- END NEW --- */
     
-    /* MATCHING CHAT BACKGROUND: Using the dark cyan theme background */
-    background: #002222; 
+    background: #002222; /* Matches chat window background */
     flex-grow: 1;
-    overflow-y: auto; /* Ensure scrolling if messages exceed height */
+    overflow-y: auto;
 }
 
-/* 5b. Message Group Layout (New alignment rule) */
+/* 5b. Message Group Layout (Container for each message) */
 .message-group {
-    display: flex; /* Makes the message bubble align left or right */
+    display: flex; 
     max-width: 100%;
 }
 
 /* 5c. Align Sent Messages to the Right */
 .message-group.sent {
-    justify-content: flex-end; /* Pushes the bubble to the right */
+    justify-content: flex-end; 
 }
 
-/* 5d. Align Received Messages to the Left (Default, but explicit is better) */
+/* 5d. Align Received Messages to the Left */
 .message-group.received {
-    justify-content: flex-start; /* Keeps the bubble on the left */
+    justify-content: flex-start; 
 }
 
-/* Standard Bubble Styling (applied to the content wrapper) */
+/* 5e. Standard Bubble Styling (applied to the content wrapper) */
 .message-group .message {
     padding: 10px 15px;
-    max-width: 60%; /* Ensure bubbles don't span the whole width */
+    max-width: 60%; /* Limit bubble width */
     word-wrap: break-word;
-    min-width: 100px; /* Smallest size for a bubble */
+    min-width: 100px; 
 }
 
-/* 6. Sent Messages (User - Cyan Blue LED Neon) */
+/* 6. Sent Messages (User - Cyan LED Neon Bubble) */
 .message-group.sent .message {
-    /* Base background needs to be slightly lighter than the new #002222 window background */
-    background: #004444; 
+    background: #004444; /* Darker Cyan Bubble Interior */
     color: #e6ffff; 
     border: 1px solid #00ffff; 
     box-shadow: 0 0 8px #00ffff, 0 0 15px rgba(0, 255, 255, 0.4);
-    /* NEW: Adjusted for bubble on the right */
+    /* Rounded corners, flattened corner on the bottom right (sent side) */
     border-radius: 18px 18px 4px 18px; 
 }
-.message-group.sent .message span { color: #88ffff; } 
+.message-group.sent .message span { color: #88ffff; } /* Example text color for metadata/timestamps */
 
-/* 7. Received Messages (Opponent - Neon Cyberpunk Grey) */
+/* 7. Received Messages (Opponent - Neon Cyberpunk Grey Bubble) */
 .message-group.received .message {
-    background: #222222; 
+    background: #222222; /* Dark Grey Bubble Interior */
     color: #dddddd; 
     border: 1px solid #999999; 
     box-shadow: 0 0 8px #cccccc, 0 0 15px rgba(100, 100, 100, 0.4); 
-    /* NEW: Adjusted for bubble on the left */
+    /* Rounded corners, flattened corner on the bottom left (received side) */
     border-radius: 18px 18px 18px 4px; 
 }
-.message-group.received .message span { color: #aaaaaa; } 
+.message-group.received .message span { color: #aaaaaa; } /* Example text color for metadata/timestamps */
 
-/* 8. Input Area (No major changes, just ensure background matches) */
+/* 8. Input Area */
 #messageInputArea {
     padding: 12px 15px;
     border-top: 2px solid #00ffff;
