@@ -276,8 +276,47 @@ textarea { resize: vertical; }
             box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
         }
 
+        /* 9. Loading State */
+   <style>
+    #loadingOverlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 9999;
+        display: flex; justify-content: center; align-items: center;
 
+        /* Text Styling for "DUO UP" */
+        font-size: 4em; /* Made text larger */
+        font-weight: bold;
+        color: lime;
+        text-shadow: 0 0 10px lime;
+        opacity: 0; /* Start invisible */
+        transform: scale(0); /* Start scaled down */
 
+        /* Apply the Animation */
+        animation: duoUpPop 1.2s ease-out forwards;
+    }
+
+    /* Keyframe Animation Definition */
+    @keyframes duoUpPop {
+        0% {
+            opacity: 0;
+            transform: scale(0); /* Very small */
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.1); /* Overshoot for the 'pop' effect */
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1); /* Settle at normal size */
+        }
+    }
+</style>
+</head>
+<body>
+
+<div id="loadingOverlay">DUO UP</div>
+<div class="header"><div class="icon-container">⚡</div><h1>DUO UP</h1></div>
 
 <div id="loginPage" class="container hidden">
 <p style="text-align:center;">Log in to connect and find your next cyber-duo.</p>
