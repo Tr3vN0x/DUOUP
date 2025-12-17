@@ -277,19 +277,45 @@ textarea { resize: vertical; }
         }
 
         /* 9. Loading State */
-        #loadingOverlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 9999;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 2em; color: lime; text-shadow: 0 0 10px lime;
+   <style>
+    #loadingOverlay {
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.9);
+        z-index: 9999;
+        display: flex; justify-content: center; align-items: center;
+
+        /* Text Styling for "DUO UP" */
+        font-size: 4em; /* Made text larger */
+        font-weight: bold;
+        color: lime;
+        text-shadow: 0 0 10px lime;
+        opacity: 0; /* Start invisible */
+        transform: scale(0); /* Start scaled down */
+
+        /* Apply the Animation */
+        animation: duoUpPop 1.2s ease-out forwards;
+    }
+
+    /* Keyframe Animation Definition */
+    @keyframes duoUpPop {
+        0% {
+            opacity: 0;
+            transform: scale(0); /* Very small */
         }
-    </style>
+        50% {
+            opacity: 1;
+            transform: scale(1.1); /* Overshoot for the 'pop' effect */
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1); /* Settle at normal size */
+        }
+    }
+</style>
 </head>
 <body>
 
-<div id="loadingOverlay">⚡</div>
-
+<div id="loadingOverlay">DUO UP</div>
 <div class="header"><div class="icon-container">⚡</div><h1>DUO UP</h1></div>
 
 <div id="loginPage" class="container hidden">
