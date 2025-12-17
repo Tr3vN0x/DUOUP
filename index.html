@@ -450,37 +450,92 @@ const firebaseConfig = {
     appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
     measurementId: "G-46B67F90FK"
 };
-
 const CO_FOUNDER_UIDS = [
     // UIDs for Co-Founder / Developer Badge (Gold/Orange)
     "GmH4xJp92vY8sbwIWgJWjFw9MOQ2",
 ];
 
-// --- CUSTOM BADGE MAPPING (Includes Pilex6/Pelix6) ---
+// --- CUSTOM BADGE MAPPING (Updated to support an array of badges per UID) ---
 const CUSTOM_BADGE_MAP = {
-    // UID: { title: "Pilex6", color: "neon-green" }
-    "kHsYFJVHCGfQzI16nJH0mg1rv7u1": { title: "Pilex6", color: "pilex6" }, 
+    // UID: [ { title: "Badge 1", color: "css-class/hex-code" }, { title: "Badge 2", color: "css-class/hex-code" } ]
+
+    // Existing "Pilex6" badge (using custom 'pilex6' color name)
+    "kHsYFJVHCGfQzI16nJH0mg1rv7u1": [
+        { title: "Pilex6", color: "pilex6" } 
+    ], 
+
+    // 🟢 NEW USER WITH MULTIPLE BADGES
+    "hmXTc2hkF5Vvqrn8xuNjK3S9ybS2": [
+        { title: "MEMER", color: "memer-pink" },
+        { title: "PEN PINEAPPLE APPLE PEN", color: "apple-pen-yellow" }
+    ]
 };
 // -----------------------------------
 
+/**
+ * Helper function to define the style based on the custom color name.
+ * @param {string} customColor The key for the style (e.g., 'pilex6', 'memer-pink').
+ * @returns {string} The CSS style string.
+ */
+function getBadgeStyle(customColor) {
+    switch (customColor) {
+        case 'pilex6':
+            return `
+                background: linear-gradient(45deg, #00ff00, #009900); 
+                color: #0b0b0b; 
+                box-shadow: 0 0 8px #00ff00;
+            `;
+        case 'memer-pink':
+            return `
+                background: linear-gradient(90deg, #ff00ff, #800080); /* Magenta/Purple */
+                color: #fff; 
+                box-shadow: 0 0 8px #ff00ff;
+            `;
+        case 'apple-pen-yellow':
+            return `
+                background: linear-gradient(45deg, #ffff00, #ffaa00); /* Yellow/Orange */
+                color: #111; 
+                box-shadow: 0 0 8px #ffff00;
+            `;
+        default:
+            return `
+                background: #444; 
+                color: #fff; 
+                box-shadow: 0 0 3px #fff;
+            `;
+    }
+}
+
+/**
+ * Renders all custom badges for a given UID.
+ */
 function getCustomBadge(uid) {
-    const customData = CUSTOM_BADGE_MAP[uid];
-    if (customData) {
-        // Using inline styles for quick implementation of the neon green look
-        const style = `
-            background: linear-gradient(45deg, #00ff00, #009900); 
-            color: #0b0b0b; 
+    const customBadges = CUSTOM_BADGE_MAP[uid];
+    if (!customBadges || customBadges.length === 0) {
+        return '';
+    }
+
+    let badgeHTML = '';
+
+    // Loop through all badges assigned to this UID
+    customBadges.forEach(badge => {
+        const customStyle = getBadgeStyle(badge.color);
+        
+        // Base style for all custom badges
+        const baseStyle = `
             font-size: 0.75em; 
             padding: 2px 8px; 
             border-radius: 4px; 
             font-weight: bold;
             text-transform: uppercase;
             margin-left: 8px;
-            box-shadow: 0 0 8px #00ff00;
+            display: inline-block;
         `;
-        return `<div style="${style}">${customData.title}</div>`;
-    }
-    return '';
+        
+        badgeHTML += `<div style="${baseStyle} ${customStyle}">${badge.title}</div>`;
+    });
+
+    return badgeHTML;
 }
 
 
@@ -497,12 +552,12 @@ function getCoFounderBadge(uid) {
             text-transform: uppercase;
             margin-left: 8px; 
             box-shadow: 0 0 8px #00ffff;
+            display: inline-block; /* Ensure this badge is also inline */
         `;
         return `<div style="${style}">⚡ DUO UP DEV</div>`;
     }
     return '';
 }
-
 // ----------------------------------------------------
 // 1. INITIALIZATION & AUTHENTICATION ENTRY POINT
 // ----------------------------------------------------
