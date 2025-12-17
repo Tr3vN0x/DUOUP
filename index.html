@@ -343,57 +343,55 @@ essage span { display:block; font-size:0.7em; opacity:0.6; text-align:right; mar
                 <input id="profileSkillRating" type="number" min="1" max="5">
             </div>
             
-            <div>
-                <label style="color: cyan; display:block; margin-bottom:5px;">Primary Game/Category:</label>
-                <select id="profileGameCategory">
-                    <option value="AmongUs">Among Us</option>
-                    <option value="GTAV">Grand Theft Auto V</option>
-                    <option value="LeagueOfLegends">League of Legends</option>
-                    <option value="Fortnite">Fortnite</option>
-                    <option value="Valorant">Valorant</option>
-                    <option value="CallOfDuty">Call of Duty</option>
-                    <option value="Minecraft">Minecraft</option>
-                    <option value="GenshinImpact">Genshin/MMORPG</option>
-                    <option value="Fighting">Fighting Games</option>
-                    <option value="Sports">Sports Games</option>
-                    <option value="Strategy">Strategy/RTS</option>
-                    <option value="CyberSecurity">Cyber Security</option>
-                    <option value="Other">Other</option>
-                </select>
-            </div>
-        </div>
+           <div style="display:flex; gap:30px; margin-bottom:20px; flex-wrap:wrap;">
 
-        <div style="display:flex; gap:30px; margin-bottom:20px; flex-wrap:wrap;">
-            <div>
-                <label style="color: cyan; display:block; margin-bottom:5px;">Game Role/Mode:</label>
-                <select id="profileGameRole">
-              <label style="color: cyan; display:block; margin-bottom:5px;">Game Role/Mode:</label>
-<select id="profileGameRole">
-    <option value="TopTank">Top Tank (LoL)</option>
-    <option value="JungleCarry">Jungle Carry (LoL)</option>
-    <option value="Support">Support (LoL/Valorant/Genshin)</option>
-    <option value="Duo">Duo (Fortnite/Valorant/CoD)</option>
-    <option value="Squad">Squad (Fortnite/CoD)</option>
-    <option value="WZTrios">Warzone Trios (CoD)</option>
-    <option value="Survival">Survival (Minecraft)</option>
-    <option value="Builder">Builder (Minecraft)</option>
-    <option value="Exploration">Exploration (Genshin/MMO)</option>
-    <option value="Striker">Striker (Sports)</option>
-    <option value="Grappler">Grappler (Fighting)</option>
-    <option value="Commander">Commander (Strategy)</option>
-    
-    <option value="Impostor">Impostor (Among Us)</option>
-    <option value="Crewmate">Crewmate (Among Us)</option>
-    <option value="HeistCrew">Heist Crew (GTA V)</option>
-    <option value="CEO">CEO/MC (GTA V)</option>
-    
-    <option value="ExploitDev">Exploit Dev (Cyber)</option>
-    <option value="RedTeamOp">Red Team Op (Cyber)</option>
-    <option value="Generalist">Generalist/Flex</option>
-</select>
-                </select>
-            </div>
+    <div>
+        <label style="color: cyan; display:block; margin-bottom:5px;">Primary Game/Category:</label>
+        <select id="profileGameCategory">
+            <option value="AmongUs">Among Us</option>
+            <option value="GTAV">Grand Theft Auto V</option>
+            <option value="LeagueOfLegends">League of Legends</option>
+            <option value="Fortnite">Fortnite</option>
+            <option value="Valorant">Valorant</option>
+            <option value="CallOfDuty">Call of Duty</option>
+            <option value="Minecraft">Minecraft</option>
+            <option value="GenshinImpact">Genshin/MMORPG</option>
+            <option value="Fighting">Fighting Games</option>
+            <option value="Sports">Sports Games</option>
+            <option value="Strategy">Strategy/RTS</option>
+            <option value="CyberSecurity">Cyber Security</option>
+            <option value="Other">Other</option>
+        </select>
+    </div>
 
+    <div>
+        <label style="color: cyan; display:block; margin-bottom:5px;">Game Role/Mode:</label>
+        <select id="profileGameRole">
+            <option value="TopTank">Top Tank (LoL)</option>
+            <option value="JungleCarry">Jungle Carry (LoL)</option>
+            <option value="Support">Support (LoL/Valorant/Genshin)</option>
+            <option value="Duo">Duo (Fortnite/Valorant/CoD)</option>
+            <option value="Squad">Squad (Fortnite/CoD)</option>
+            <option value="WZTrios">Warzone Trios (CoD)</option>
+            <option value="Survival">Survival (Minecraft)</option>
+            <option value="Builder">Builder (Minecraft)</option>
+            <option value="Exploration">Exploration (Genshin/MMO)</option>
+            <option value="Striker">Striker (Sports)</option>
+            <option value="Grappler">Grappler (Fighting)</option>
+            <option value="Commander">Commander (Strategy)</option>
+            
+            <option value="Impostor">Impostor (Among Us)</option>
+            <option value="Crewmate">Crewmate (Among Us)</option>
+            <option value="HeistCrew">Heist Crew (GTA V)</option>
+            <option value="CEO">CEO/MC (GTA V)</option>
+            
+            <option value="ExploitDev">Exploit Dev (Cyber)</option>
+            <option value="RedTeamOp">Red Team Op (Cyber)</option>
+            <option value="Generalist">Generalist/Flex</option>
+        </select>
+    </div>
+
+</div>
             <div>
                 <label style="color: cyan; display:block; margin-bottom:5px;">Current Status:</label>
                 <select id="profileStatus" onchange="toggleLfdCategory()">
