@@ -456,26 +456,26 @@ essage span { display:block; font-size:0.7em; opacity:0.6; text-align:right; mar
     <div style="margin-right:20px; display:flex; flex-direction:column; align-items:center;">
         <img id="profileAvatar" class="avatar" src="" style="width:100px;height:100px;border-color:cyan;">
         
-        <label style="color: cyan; display:block; margin:10px 0 5px 0;">New Image URL:</label>
+        <label style="color: cyan; display:block; margin:10px 0 5px 0;">NEW IMAGE URL FIND IMAGE HOLD IT OR RIGHT CLICK AND PRESS COPY ONCE COPIED PASTE THE COPY LINK HERE:</label>
         <input type="text" id="profileImageUrlInput" placeholder="Paste image link here" oninput="previewUrl(this.value)" style="width: 250px;">
         </div>
     <div style="flex-grow:1; min-width:200px;">
-        <label style="color: cyan; display:block; margin-bottom:5px;">Unique Identifier:</label>
+        <label style="color: cyan; display:block; margin-bottom:5px;">USERNAME ONLY ONE CHANGE:</label>
         <input type="text" id="profileNickname" value="User Nickname" placeholder="Your Unique Nickname">
         <p id="nicknameChangeInfo" style="color:yellow; font-size:0.8em; margin:5px 0 0 0;">(You get one free nickname change.)</p>
     </div>
 </div>
 <div style="margin-bottom:15px;">
-<label style="color: cyan; display:block; margin-bottom:5px;">Bio/Tagline:</label>
+<label style="color: cyan; display:block; margin-bottom:5px;">BIO:</label>
 <textarea id="profileBio" rows="3" style="width:100%;"></textarea>
 </div>
 <div style="display:flex; gap:30px; margin-bottom:20px; flex-wrap:wrap;">
 <div>
-    <label style="color: cyan; display:block; margin-bottom:5px;">Skill Rating (1-5):</label>
+    <label style="color: cyan; display:block; margin-bottom:5px;">RATE YOURSELF</label>
     <input id="profileSkillRating" type="number" min="1" max="5">
 </div>
 <div>
-    <label style="color: cyan; display:block; margin-bottom:5px;">Primary Game/Category:</label>
+    <label style="color: cyan; display:block; margin-bottom:5px;">GAME/CATEGORY:</label>
     <select id="profileGameCategory">
         <option value="LeagueOfLegends">League of Legends</option>
         <option value="Fortnite">Fortnite</option>
@@ -490,25 +490,25 @@ essage span { display:block; font-size:0.7em; opacity:0.6; text-align:right; mar
 </div>
 <div style="display:flex; gap:30px; margin-bottom:20px; flex-wrap:wrap;">
     <div>
-        <label style="color: cyan; display:block; margin-bottom:5px;">Game Role/Mode:</label>
+        <label style="color: cyan; display:block; margin-bottom:5px;">GAME ROLE/MODE:</label>
         <select id="profileGameRole">
-          <label style="color: cyan; display:block; margin-bottom:5px;">Game Role/Mode:</label>
+          <label style="color: cyan; display:block; margin-bottom:5px;">GAME ROLE/MODE:</label>
 <select id="profileGameRole">
-    <option value="TopTank">Top Tank (LoL)</option>
-    <option value="JungleCarry">Jungle Carry (LoL)</option>
-    <option value="Support">Support (LoL/Valorant/Genshin)</option>
-    <option value="Duo">Duo (Fortnite/Valorant/CoD)</option>
-    <option value="Squad">Squad (Fortnite/CoD)</option>
-    <option value="WZTrios">Warzone Trios (CoD)</option>
-    <option value="Survival">Survival (Minecraft)</option>
-    <option value="Builder">Builder (Minecraft)</option>
-    <option value="Exploration">Exploration (Genshin/MMO)</option>
-    <option value="Striker">Striker (Sports)</option>
-    <option value="Grappler">Grappler (Fighting)</option>
-    <option value="Commander">Commander (Strategy)</option>
+    <option value="TopTank">TOP TANKLEAGUE OF LEGENDS)</option>
+    <option value="JungleCarry">JUNGLE CARRY LEAGUE OF LEGENDS</option>
+    <option value="Support">SUPPORT (LoL/Valorant/Genshin)</option>
+    <option value="Duo">DUOS (Fortnite/Valorant/CoD)</option>
+    <option value="Squad">SQUADS (Fortnite/CoD)</option>
+    <option value="WZTrios">WARZONE TRIOS(CoD)</option>
+    <option value="Survival">SURVIVAL (Minecraft)</option>
+    <option value="Builder">BUILDER (Minecraft)</option>
+    <option value="Exploration">EXPLORATION (Genshin/MMO)</option>
+    <option value="Striker">STRIKER (Sports)</option>
+    <option value="Grappler">GRAPPLER (Fighting)</option>
+    <option value="Commander">COMMANDER (Strategy)</option>
     
-    <option value="Impostor">Impostor (Among Us)</option>
-    <option value="Crewmate">Crewmate (Among Us)</option>
+    <option value="Impostor">IMPOSTER (Among Us)</option>
+    <option value="Crewmate">CREWMATE (Among Us)</option>
     <option value="HeistCrew">Heist Crew (GTA V)</option>
     <option value="CEO">CEO/MC (GTA V)</option>
     
@@ -523,16 +523,16 @@ essage span { display:block; font-size:0.7em; opacity:0.6; text-align:right; mar
         <select id="profileStatus" onchange="toggleLfdCategory()">
             <option value="Online">Online</option>
             <option value="In Game">In Game</option>
-            <option value="LFD">Looking For Duo (LFD)</option>
+            <option value="LFD">LOOKING FOR DUO (LFD)</option>
         </select>
     </div>
     <div id="lfdCategoryGroup" class="hidden">
         <label style="color: cyan; display:block; margin-bottom:5px;">LFD Goal:</label>
         <select id="profileLfdCategory">
-            <option value="Duo">Duo (2-person team)</option>
-            <option value="Squad">Squad (3+ person team)</option>
-            <option value="Team">Full Team (Permanent)</option>
-            <option value="Mentor">Mentor/Mentee</option>
+            <option value="Duo">DUOS (2-person team)</option>
+            <option value="Squad">SQUADS (3+ person team)</option>
+            <option value="Team">FULL TEAM(Permanent)</option>
+            <option value="Mentor">MENTOR/MENTEE</option>
         </select>
     </div>
 </div>
