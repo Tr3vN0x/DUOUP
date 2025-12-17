@@ -1,4 +1,3 @@
-
 <?php
 // index.php
 // This PHP file serves as the wrapper for the single-page application (SPA).
@@ -29,8 +28,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage-compat.js"></script>
-
 <style>
 /* --- Base styles --- */
 body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
@@ -243,9 +240,10 @@ textarea { resize: vertical; }
 <div style="display:flex; align-items:center; margin-bottom:20px; flex-wrap:wrap;">
     <div style="margin-right:20px; display:flex; flex-direction:column; align-items:center;">
         <img id="profileAvatar" class="avatar" src="" style="width:100px;height:100px;border-color:cyan;">
-        <p style="font-size:0.8em; margin:5px 0 0 0;">Upload New:</p>
-        <input type="file" id="avatarFile" accept="image/*" style="width:150px; font-size:0.8em; border:none;" onchange="previewAvatar(event)">
-    </div>
+        
+        <label style="color: cyan; display:block; margin:10px 0 5px 0;">New Image URL:</label>
+        <input type="text" id="profileImageUrlInput" placeholder="Paste image link here" oninput="previewUrl(this.value)" style="width: 250px;">
+        </div>
     <div style="flex-grow:1; min-width:200px;">
         <label style="color: cyan; display:block; margin-bottom:5px;">Unique Identifier:</label>
         <input type="text" id="profileNickname" value="User Nickname" placeholder="Your Unique Nickname">
@@ -315,7 +313,7 @@ textarea { resize: vertical; }
 // ----------------------------------------------------
 let auth;
 let db;
-let storage;
+// let storage; // Firebase Storage is NO LONGER needed
 
 let currentUser = null;
 let currentProfileData = {};
@@ -334,7 +332,7 @@ const firebaseConfig = {
     apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
     authDomain: "duoup-cfae6.firebaseapp.com",
     projectId: "duoup-cfae6",
-    storageBucket: "duoup-cfae6.appspot.com", // <-- CRITICAL: Use .appspot.com for storageBucket
+    // storageBucket: "duoup-cfae6.appspot.com", // <-- No longer required
     messagingSenderId: "812263060524",
     appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
     measurementId: "G-46B67F90FK"
@@ -401,7 +399,7 @@ function initFirebase() {
     }
     auth = firebase.auth();
     db = firebase.firestore();
-    storage = firebase.storage(); // Initialize Storage
+    // storage = firebase.storage(); // Removed Storage initialization
 
     // Listener is the main entry point to ensure user is ready
     auth.onAuthStateChanged(user => {
@@ -681,34 +679,13 @@ function renderDuoCard(uid, data) {
 // PROFILE EDITOR FUNCTIONS
 // ---------------------------
 
-function previewAvatar(event) {
-    const file = event.target.files[0];
-    if (file) {
-        document.getElementById('profileAvatar').src = URL.createObjectURL(file);
-    }
+// NEW FUNCTION: Updates the profile avatar preview from the URL field
+function previewUrl(url) {
+    // Basic check to prevent breakage if user clears the field
+    document.getElementById('profileAvatar').src = url.trim() || DEFAULT_AVATAR;
 }
 
-async function uploadAvatar(file) {
-    if (!file) return currentProfileData.profileImageUrl;
-
-    try {
-        const storageRef = storage.ref();
-        const fileExtension = file.name.split('.').pop();
-        // Path MUST include the user's UID as the folder name due to security rules
-        const filename = `${currentUser.uid}/avatar-${Date.now()}.${fileExtension}`; 
-        const avatarRef = storageRef.child(filename);
-
-        document.getElementById('saveMessage').textContent = 'Uploading image...';
-
-        const snapshot = await avatarRef.put(file);
-        const downloadURL = await snapshot.ref.getDownloadURL();
-        return downloadURL;
-    } catch (e) {
-        console.error("Error during image upload:", e);
-        // Important: throw error so saveProfile knows it failed
-        throw new Error(`Failed to upload image. Check Firebase Storage Rules. Error: ${e.code}`);
-    }
-}
+// NOTE: The uploadAvatar function is DELETED for the URL-only approach.
 
 async function saveProfile() {
     if (!currentUser) return;
@@ -723,15 +700,10 @@ async function saveProfile() {
         const gameRole = document.getElementById('profileGameRole').value;
         const status = document.getElementById('profileStatus').value;
         const lfdCategory = document.getElementById('profileLfdCategory').value;
-        const avatarFile = document.getElementById('avatarFile').files[0];
         
-        let profileImageUrl = currentProfileData.profileImageUrl || DEFAULT_AVATAR;
-
-        // 1. Handle Avatar Upload (Uses Firebase Storage)
-        if (avatarFile) {
-            // Uploading image can fail if rules are wrong - this needs try/catch
-            profileImageUrl = await uploadAvatar(avatarFile);
-        }
+        // 🚨 PROFILE PICTURE INTEGRATION (Updated for URL input)
+        // Get the value directly from the new URL input field
+        let profileImageUrl = document.getElementById('profileImageUrlInput').value.trim() || DEFAULT_AVATAR;
 
         const updateData = {
             bio,
@@ -739,7 +711,7 @@ async function saveProfile() {
             gameCategory,
             gameRole,
             status,
-            profileImageUrl: profileImageUrl, // Updated URL from storage
+            profileImageUrl: profileImageUrl, // <--- New URL is saved directly
             lfdCategory: status === 'LFD' ? lfdCategory : null,
         };
 
@@ -793,6 +765,11 @@ async function loadUserProfile() {
 
         // Update editor fields
         document.getElementById('profileAvatar').src = data.profileImageUrl || DEFAULT_AVATAR;
+        
+        // === NEW: Set the value of the new input field ===
+        document.getElementById('profileImageUrlInput').value = data.profileImageUrl || DEFAULT_AVATAR;
+        // ================================================
+        
         document.getElementById('profileNickname').value = data.nickname || '';
         document.getElementById('profileBio').value = data.bio || '';
         document.getElementById('profileSkillRating').value = data.skillRating || 3;
@@ -815,9 +792,6 @@ async function loadUserProfile() {
         toggleLfdCategory();
         document.getElementById('saveMessage').textContent = ''; // Clear previous save messages
         
-        // Clear the file input
-        document.getElementById('avatarFile').value = '';
-
     } catch (e) {
         console.error("Error loading user profile:", e);
     }
@@ -942,7 +916,7 @@ async function loadFriends() {
     let acceptedCount = 0;
 
     try {
-        // Iterate through the requestCache which contains ALL requests involving currentUser
+        // We rely on requestCache being populated by loadAllUsers()
         for (const otherUid in requestCache) {
             const requestInfo = requestCache[otherUid];
             const otherUserData = findUserInCache(otherUid);
