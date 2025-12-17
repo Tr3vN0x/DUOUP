@@ -1,642 +1,705 @@
 <?php
-// index.php
-// This PHP file serves as the wrapper for the single-page application (SPA).
+// This is the start of your PHP file. 
+// Any server-side logic (like session checks or configuration fetches) would go here.
+// For this example, we proceed directly to outputting the HTML/JavaScript application.
+
+// You might initialize variables here, for example:
+// $welcome_message = "WELCOME TO DUO UP!"; 
+// And then echo it in the HTML below.
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DUO UP</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duo Up - Find Your Partner</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
 
-<link rel="icon" type="image/x-icon" href="https://your-domain.com/favicon.ico"> 
-<link rel="apple-touch-icon" href="https://your-domain.com/apple-touch-icon.png">
+    <style>
+        /* BASIC NEON STYLES */
+        body {
+            background-color: #0d0d1a;
+            color: #00ffff;
+            font-family: 'Arial', sans-serif;
+            text-shadow: 0 0 5px #00ffff;
+            padding: 20px;
+        }
 
-<meta property="og:title" content="DUO UP (BETA)">
-<meta property="og:description" content="DUO UP BETA IS OUT NOW! ⚡ ">
-<meta property="og:image" content="https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/598884570_845641984737502_3175907977751628974_n.jpg?_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=ZuwpdBTHlbQQ7kNvwFLa4-J&_nc_oc=AdnsRNEZ9LGhbLpRqeQnLeM5ZTiGo3THde7Ovkn1ymRwx86CnpNR8dGLxw8Vn8khnNbNbxoPDAEcuzexnVRQJ5Y&_nc_zt=23&_nc_ht=scontent-iad3-2.xx&_nc_gid=3wKM0Dsce2XSdse-2Nk3rw&oh=00_AflRQGBp1QY34jQ0Q1L20G0R8K8Hh3F34y2I2Uq9gDqK4A&oe=6946C99E">
-<meta property="og:url" content="https://tr3vn0x.github.io/DUOUP/">
-<meta property="og:type" content="website">
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 20px #00ffff, inset 0 0 10px #00ffff;
+            padding: 20px;
+            border-radius: 10px;
+        }
 
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="DUO UP: Cyber Social Platform">
-<meta name="twitter:description" content="Connect, duo up, and conquer. Find your next teammate today.">
-<meta name="twitter:image" content="https://your-domain.com/duo-up-thumbnail.png">
+        /* Tabs and Navigation */
+        .tab-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #00ffff;
+            padding-bottom: 10px;
+        }
+        .tab-button {
+            background: none;
+            border: none;
+            color: #00ffff;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 1.1em;
+            text-shadow: 0 0 10px #00ffff;
+            transition: all 0.2s;
+        }
+        .tab-button.active {
+            border-bottom: 3px solid lime;
+            text-shadow: 0 0 15px lime;
+            color: lime;
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+        /* Card Styles */
+        #searchResults {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .card {
+            background-color: #1a1a33;
+            border: 1px solid #00ffff;
+            box-shadow: 0 0 8px #00ffff;
+            width: 280px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px #ff00ff;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 8px #00ffff;
+            margin-bottom: 10px;
+        }
+        .nickname-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        .badge {
+            font-size: 0.7em;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: black;
+            text-shadow: none;
+        }
+        .game-category, .game-role {
+            font-size: 0.8em;
+            margin: 2px 0;
+            color: #88ff88;
+        }
+        .lfd-category {
+            font-size: 0.8em;
+            padding: 1px 5px;
+            background-color: #ff00ff;
+            color: black;
+            border-radius: 3px;
+            display: inline-block;
+            margin-top: 5px;
+            font-weight: bold;
+            text-shadow: none;
+        }
+        .status-indicator {
+            font-size: 0.8em;
+            padding: 2px 5px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+        .status-online { background-color: lime; color: black; text-shadow: none; }
+        .status-offline { background-color: red; color: white; text-shadow: none; }
+        .status-lfd { background-color: yellow; color: black; text-shadow: none; }
 
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-<style>
-/* --- Base styles --- */
-body { margin:0; font-family:'Orbitron',sans-serif; background:#0b0b0b; color:white; }
-.container { width:90%; max-width:1000px; margin:auto; padding:20px; }
-.hidden { display:none !important; }
-/* Header */
-.header { background:#111; border-bottom:3px solid cyan; box-shadow:0 0 20px rgba(0,255,255,0.5); padding:10px 0; margin-bottom:20px; display:flex; align-items:center; justify-content:center; }
-.header h1 { font-size:2.5em; color:#fff; text-shadow:0 0 5px cyan,0 0 10px cyan,0 0 15px magenta; margin:0; }
-/* Icon Container for Lightning Bolt */
-.icon-container { margin-right:15px; font-size:2.5em; color:yellow; text-shadow:0 0 5px yellow,0 0 10px orange; }
-/* Buttons */
-.neon-btn { border:2px solid cyan; background:transparent; color:white; padding:8px 14px; margin:5px; border-radius:6px; cursor:pointer; box-shadow:0 0 10px cyan; transition:all 0.2s ease-in-out; text-transform:uppercase; font-family:'Orbitron',sans-serif; }
-.neon-btn:hover { border-color:magenta; box-shadow:0 0 15px magenta; transform: translateY(-1px); }
-.neon-btn:disabled { border-color:#555; box-shadow:none; color:#555; cursor:not-allowed; }
-.neon-btn.add { border-color:lime; box-shadow:0 0 10px lime; }
-.neon-btn.add:hover { border-color:green; box-shadow:0 0 15px green; }
-.neon-btn.remove { border-color:red; box-shadow:0 0 10px red; }
-.neon-btn.remove:hover { border-color:orange; box-shadow:0 0 15px orange; }
-.neon-btn.pending { border-color:yellow; box-shadow:0 0 10px yellow; color:yellow; cursor:default; }
-/* Input fields */
-input[type="text"], input[type="number"], textarea, select { flex-grow:1; padding:10px; border:1px solid cyan; background:#181818; color:white; border-radius:6px; font-family:inherit; outline:none; transition:border-color 0.2s, box-shadow 0.2s; }
-input:focus, textarea:focus, select:focus { border-color: magenta; box-shadow: 0 0 8px magenta; }
-textarea { resize: vertical; }
-/* Cards */
-.card-container { display:flex; flex-wrap:wrap; gap:20px; justify-content:center; padding-top: 10px; }
-.card { width: 100%; max-width:300px; padding:20px; border:3px solid transparent; border-radius:8px; background:#181818; box-shadow:0 0 15px rgba(0,255,255,0.4), inset 0 0 5px rgba(0,255,255,0.2); border-image-source: linear-gradient(45deg, cyan, magenta, cyan); border-image-slice:1; display:flex; flex-direction:column; align-items:center; cursor:pointer; transition: transform 0.2s, box-shadow 0.2s; }
-.card:hover { transform: translateY(-5px); box-shadow:0 0 30px magenta, inset 0 0 10px rgba(255,0,255,0.5); }
-.request-card { cursor:default; border:3px solid orange; box-shadow:0 0 15px orange; }
-.request-card:hover { transform:none; box-shadow:0 0 15px orange; }
+        /* Neon Buttons */
+        .neon-btn {
+            background: none;
+            border: 2px solid #00ffff;
+            color: #00ffff;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-shadow: 0 0 5px #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+            margin-top: 10px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .neon-btn:hover {
+            background-color: #00ffff33;
+            box-shadow: 0 0 20px #ff00ff;
+        }
+        .neon-btn.add { border-color: lime; color: lime; box-shadow: 0 0 10px lime; }
+        .neon-btn.add:hover { box-shadow: 0 0 20px lime; }
+        .neon-btn.remove { border-color: red; color: red; box-shadow: 0 0 10px red; }
+        .neon-btn.remove:hover { box-shadow: 0 0 20px red; }
+        .neon-btn.pending { border-color: orange; color: orange; box-shadow: none; cursor: default; }
 
-.card-content-box { display:flex; flex-direction:column; align-items:center; width:100%; margin-bottom:15px; padding-bottom:15px; border-bottom:1px dashed #333; }
-.avatar { width:80px; height:80px; border-radius:50%; border:4px solid magenta; object-fit:cover; margin-bottom:15px; }
-.skill-rating { color:gold; font-size:1.4em; margin-bottom:10px; }
+        /* Profile Editor Styles */
+        .profile-editor, #viewProfileContent {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .profile-editor label, .profile-stat {
+            width: 100%;
+            max-width: 400px;
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .profile-editor input, .profile-editor select, .profile-editor textarea {
+            background: #2a2a4a;
+            border: 1px solid #00ffff;
+            color: #fff;
+            padding: 8px;
+            border-radius: 5px;
+            width: 60%;
+            text-shadow: none;
+        }
+        #profileAvatar {
+            margin-bottom: 20px;
+        }
 
-/* Game Category (formerly Discipline) styling */
-.game-category { font-size:0.9em; padding:4px 10px; border-radius:4px; font-weight:bold; margin-bottom:5px; text-transform:uppercase; color:#0b0b0b; }
-.game-category-leagueoflegends { background-color:#0077B6; color:white; }
-.game-category-fortnite { background-color:#5a189a; color:white; }
-.game-category-valorant { background-color:#FF4655; color:white; }
-.game-category-cybersecurity { background-color:lime; color:#0b0b0b; }
-.game-category-other { background-color:gray; color:white; }
+        /* Messaging Styles */
+        #messagingTab {
+            display: flex;
+            height: 60vh;
+            border: 1px solid #00ffff;
+        }
+        #duoList {
+            width: 25%;
+            border-right: 1px solid #00ffff;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        #chatWindow {
+            width: 75%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        #messageDisplay {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            border-bottom: 1px solid #00ffff;
+        }
+        .message-input-area {
+            display: flex;
+            padding: 10px;
+        }
+        #messageInput {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 10px;
+            max-width: 70%;
+            word-wrap: break-word;
+            font-size: 0.9em;
+            position: relative;
+        }
+        .message.sent {
+            background-color: #00ffff33;
+            margin-left: auto;
+            border-bottom-right-radius: 0;
+            text-align: right;
+        }
+        .message.received {
+            background-color: #ff00ff33;
+            margin-right: auto;
+            border-bottom-left-radius: 0;
+            text-align: left;
+        }
+        .message span {
+            display: block;
+            font-size: 0.7em;
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+        .chat-entry {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px dashed #00ffff55;
+        }
+        .chat-entry.active {
+            background-color: #00ffff1a;
+            border-left: 5px solid lime;
+        }
 
-/* Game Role styling */
-.game-role { font-size:0.8em; padding:4px 10px; border-radius:4px; font-weight:bold; margin-bottom:5px; text-transform:uppercase; background-color:cyan; color:#0b0b0b;}
-
-/* Looking For Category styling */
-.lfd-category { font-size:0.8em; padding:4px 10px; border-radius:4px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; background-color:#ff00ff; color:white; border:1px solid white;}
-
-
-.status-indicator { font-size:0.9em; padding:4px 10px; border-radius:4px; font-weight:bold; margin-bottom:10px; text-transform:uppercase; }
-.status-online { background-color:#00cc00; color:#0b0b0b; box-shadow:0 0 5px #00ff00; }
-.status-ingame { background-color:#ffaa00; color:#0b0b0b; box-shadow:0 0 5px #ffaa00; }
-.status-lfd { background-color:#ff00ff; color:white; box-shadow:0 0 5px #ff00ff; border:1px solid #ff00ff; }
-
-/* Co-Founder Badge Style */
-.nickname-group { display: flex; align-items: center; justify-content: center; margin-bottom: 5px; }
-/* The co-founder badge class is now defined by the getCoFounderBadge function using inline styles */
-
-/* Nav */
-#navigationBar { display:flex; justify-content:center; flex-wrap:wrap; padding:10px; background:#151515; border-radius:8px; margin-bottom:30px; border:1px solid #333; }
-#navigationBar button.active { background:#00ffcc; color:#0b0b0b; box-shadow:0 0 15px #00ffcc; }
-#searchControls { display:flex; gap:15px; margin-bottom:20px; align-items:center; flex-wrap:wrap; background:#1a1a1a; padding:15px; border-radius:8px; border:1px solid #004444; }
-/* Messaging */
-#messagingTab { display:flex; gap:20px; height:75vh; }
-#chatList { width:300px; padding:15px; border:2px solid cyan; border-radius:8px; background:#1a1a1a; overflow-y:auto; }
-#activeDuoList { margin-top:10px; }
-.chat-entry { padding:10px; border-bottom:1px dashed #333; cursor:pointer; transition: background 0.2s; }
-.chat-entry:hover { background:#2a2a2a; }
-.chat-entry.active { background:#004444; border-left:5px solid lime; font-weight:bold; }
-#chatWindow { flex-grow:1; display:flex; flex-direction:column; border:2px solid magenta; border-radius:8px; background:#1a1a1a; }
-#chatHeader { padding:10px; border-bottom:2px solid magenta; margin:0; background:#330033; }
-#messageDisplay { flex-grow:1; padding:15px; overflow-y:auto; display:flex; flex-direction:column; gap:15px; }
-/* Message Bubbles - Styling the chat */
-.message { max-width:70%; padding:10px 15px; border-radius:18px; font-size:0.95em; position:relative; }
-.message span { display:block; font-size:0.7em; opacity:0.6; text-align:right; margin-top:3px; }
-.message.sent { 
-    background:#005555; 
-    align-self:flex-end; 
-    border-bottom-right-radius:5px;
-    box-shadow: 0 0 5px #00ffff;
-}
-.message.received { 
-    background:#333333; 
-    align-self:flex-start; 
-    border-bottom-left-radius:5px;
-    box-shadow: 0 0 5px #ff00ff;
-}
-#messageInputArea { padding:10px; border-top:2px solid magenta; background:#0b0b0b; display:flex; gap:10px; }
-/* Profile view */
-#viewProfileTab { display:none; }
-/* Refined Profile Content Style */
-#viewProfileContent { padding:30px; border:3px solid magenta; border-radius:12px; background:#1a1a1a; margin-top:20px; display:flex; flex-direction:column; align-items:center; }
-.profile-stat { width:100%; max-width:400px; display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px dashed #333; margin-bottom:5px; }
-.profile-stat span:first-child { color: cyan; font-weight:bold; }
-.profile-stat span:last-child { text-align:right; }
-
-/* Loading State */
-#loadingOverlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.9);
-    z-index: 9999;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 2em; color: lime; text-shadow: 0 0 10px lime;
-}
-</style>
+        /* Friends/Duos List */
+        .friend-section {
+            margin-top: 20px;
+            border-top: 1px solid #ff00ff;
+            padding-top: 10px;
+        }
+        #friendList, #pendingRequestsList {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
 
-<div id="loadingOverlay">⚡</div>
+<div class="container">
+    <h1 style="text-align:center; color:lime;" id="welcome">DUO UP!</h1>
 
-<div class="header"><div class="icon-container">⚡</div><h1>DUO UP</h1></div>
+    <div id="authArea">
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <button onclick="signup()">Sign Up</button>
+        <p id="authMessage" style="text-align:center; color:red;"></p>
+    </div>
 
-<div id="loginPage" class="container hidden">
-<p style="text-align:center;">Log in to connect and find your next cyber-duo.</p>
-<div style="text-align:center;">
-<button class="neon-btn" onclick="login()">Login with Google</button>
-</div>
-</div>
-
-<div id="dashboard" class="container hidden">
-<h2 id="welcome"></h2>
-<div id="navigationBar">
-<button class="neon-btn" id="tab-allUsers" onclick="showTab('allUsers')">Suggested</button>
-<button class="neon-btn" id="tab-search" onclick="showTab('search')">Find Players</button>
-<button class="neon-btn" id="tab-friends" onclick="showTab('friends')">Duos</button>
-<button class="neon-btn" id="tab-messaging" onclick="showTab('messaging')">Messaging</button>
-<button class="neon-btn" id="tab-profile" onclick="showTab('profile')">Profile</button>
-<button class="neon-btn remove" onclick="logout()">Logout</button>
-</div>
-
-<div id="allUsersTab" class="card-container"></div>
-
-<div id="searchTab" class="hidden container">
-<h2>Player Search Filter</h2>
-<div id="searchControls">
-<input type="text" id="searchInput" placeholder="Search by Nickname or Bio..." onkeyup="filterSearchResults()">
-<label style="color:cyan; margin-left:15px;">Status:</label>
-<select id="statusFilter" onchange="filterSearchResults()">
-<option value="">Any Status</option>
-<option value="Online">Online</option>
-<option value="In Game">In Game</option>
-<option value="LFD">Looking For Duo (LFD)</option>
-</select>
-<label style="color:cyan; margin-left:15px;">Game/Category:</label>
-<select id="gameCategoryFilter" onchange="filterSearchResults()">
-<option value="">Any Game/Category</option>
-<option value="LeagueOfLegends">League of Legends</option>
-<option value="Fortnite">Fortnite</option>
-<option value="Valorant">Valorant</option>
-<option value="CyberSecurity">Cyber Security</option>
-<option value="Other">Other</option>
-</select>
-<label style="color:cyan; margin-left:15px;">Game Role/Mode:</label>
-<select id="gameRoleFilter" onchange="filterSearchResults()">
-<option value="">Any Role/Mode</option>
-<option value="TopTank">Top Tank (LoL)</option>
-<option value="JungleCarry">Jungle Carry (LoL)</option>
-<option value="Duo">Duo (Fortnite/Valorant)</option>
-<option value="Squad">Squad (Fortnite)</option>
-<option value="Support">Support (LoL/Valorant)</option>
-<option value="ExploitDev">Exploit Dev (Cyber)</option>
-<option value="RedTeamOp">Red Team Op (Cyber)</option>
-</select>
-<label style="color:cyan; margin-left:15px;">Looking For:</label>
-<select id="lfdCategoryFilter" onchange="filterSearchResults()">
-<option value="">Any LFD Type</option>
-<option value="Duo">Duo (2-person team)</option>
-<option value="Squad">Squad (3+ person team)</option>
-<option value="Team">Full Team (Permanent)</option>
-<option value="Mentor">Mentor/Mentee</option>
-</select>
-</div>
-<div id="searchResults" class="card-container"></div>
-</div>
-
-<div id="friendsTab" class="container hidden">
-<h2>Incoming Duo Requests</h2>
-<div id="pendingRequestsList" class="card-container"></div>
-<h2 style="margin-top:40px;">Your Accepted Duos</h2>
-<div id="friendList" class="card-container">
-    <p style="width:100%; text-align:center; color:magenta;">
-    Loading accepted duos...
-    </p>
-</div>
-</div>
-
-<div id="messagingTab" class="hidden">
-<div id="chatList">
-<h3>Active Duos</h3>
-<div id="activeDuoList">No Duos yet.</div>
-</div>
-<div id="chatWindow">
-<h3 id="chatHeader">Select a Duo to start messaging</h3>
-<div id="messageDisplay"></div>
-<div id="messageInputArea" class="hidden">
-<input type="text" id="messageInput" placeholder="Type your message..." onkeyup="if(event.key==='Enter') sendMessage()">
-<button class="neon-btn" id="sendMessageBtn" onclick="sendMessage()">Send</button>
-</div>
-</div>
-</div>
-
-<div id="viewProfileTab" class="hidden container">
-<button class="neon-btn" onclick="showTab('allUsers')">← Back to Suggested</button>
-<div id="viewProfileContent"></div>
-</div>
-
-<div id="profileTab" class="hidden container">
-<h2>Gamer-Profile Editor</h2>
-<div style="padding:20px; border:2px solid magenta; border-radius:10px; background:#1a1a1a;">
-<div style="display:flex; align-items:center; margin-bottom:20px; flex-wrap:wrap;">
-    <div style="margin-right:20px; display:flex; flex-direction:column; align-items:center;">
-        <img id="profileAvatar" class="avatar" src="" style="width:100px;height:100px;border-color:cyan;">
-        
-        <label style="color: cyan; display:block; margin:10px 0 5px 0;">New Image URL:</label>
-        <input type="text" id="profileImageUrlInput" placeholder="Paste image link here" oninput="previewUrl(this.value)" style="width: 250px;">
+    <div id="app" class="hidden">
+        <div class="tab-bar">
+            <button class="tab-button active" onclick="showTab('search')">Find Duos</button>
+            <button class="tab-button" onclick="showTab('friends'); loadFriends();">My Duos/Requests</button>
+            <button class="tab-button" onclick="showTab('messaging'); loadChatList();">Messaging</button>
+            <button class="tab-button" onclick="showTab('profile'); loadUserProfile();">Profile Editor</button>
+            <button class="tab-button" style="color:red; text-shadow:0 0 10px red;" onclick="logout()">Logout</button>
         </div>
-    <div style="flex-grow:1; min-width:200px;">
-        <label style="color: cyan; display:block; margin-bottom:5px;">Unique Identifier:</label>
-        <input type="text" id="profileNickname" value="User Nickname" placeholder="Your Unique Nickname">
-        <p id="nicknameChangeInfo" style="color:yellow; font-size:0.8em; margin:5px 0 0 0;">(You get one free nickname change.)</p>
+
+        <div id="searchTab" class="tab-content">
+            <h2 style="text-align:center;">Find Duos</h2>
+            <div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:20px;">
+                <input type="text" id="searchInput" placeholder="Search nickname or bio" onkeyup="filterSearchResults()">
+                <select id="statusFilter" onchange="filterSearchResults()">
+                    <option value="">Status (Any)</option>
+                    <option value="Online">Online</option>
+                    <option value="LFD">LFD (Looking For Duo)</option>
+                    <option value="Offline">Offline</option>
+                </select>
+                <select id="gameCategoryFilter" onchange="filterSearchResults()">
+                    <option value="">Game (Any)</option>
+                    <option value="FPS">FPS</option>
+                    <option value="MOBA">MOBA</option>
+                    <option value="MMORPG">MMORPG</option>
+                    <option value="Strategy">Strategy</option>
+                    <option value="Other">Other</option>
+                </select>
+                <select id="gameRoleFilter" onchange="filterSearchResults()">
+                    <option value="">Role (Any)</option>
+                    <option value="Support">Support</option>
+                    <option value="Tank">Tank</option>
+                    <option value="DPS">DPS</option>
+                    <option value="Carry">Carry</option>
+                    <option value="Generalist">Generalist</option>
+                </select>
+                <select id="lfdCategoryFilter" onchange="filterSearchResults()">
+                    <option value="">LFD Goal (Any)</option>
+                    <option value="Duo">Duo (2s)</option>
+                    <option value="Team">Team (3s+)</option>
+                </select>
+            </div>
+            <div id="searchResults" style="min-height: 200px; text-align: center;">
+                </div>
+        </div>
+
+        <div id="friendsTab" class="tab-content hidden">
+            <h2 style="text-align:center;">Pending Requests</h2>
+            <div id="pendingRequestsList" style="min-height: 50px; text-align: center;"></div>
+            
+            <h2 style="text-align:center;" class="friend-section">Active Duo Partners</h2>
+            <div id="friendList" style="min-height: 100px; text-align: center;"></div>
+        </div>
+
+        <div id="messagingTab" class="tab-content hidden">
+            <div id="duoList">
+                <h3 style="color:magenta;">My Duos</h3>
+                <div id="activeDuoList"></div>
+            </div>
+            <div id="chatWindow">
+                <h3 id="chatHeader" style="text-align:center; border-bottom:1px solid #ff00ff; padding:10px;">Select a Duo to Chat</h3>
+                <div id="messageDisplay"></div>
+                <div class="message-input-area hidden" id="messageInputArea">
+                    <input type="text" id="messageInput" placeholder="Type a message..." onkeypress="if(event.key === 'Enter') sendMessage()">
+                    <button class="neon-btn" id="sendMessageBtn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="profileTab" class="tab-content hidden">
+            <h2 style="text-align:center;">Edit Profile</h2>
+            <div class="profile-editor">
+                <img id="profileAvatar" src="default.png" class="avatar" style="width:100px; height:100px;">
+                
+                <label>
+                    Profile Image URL:
+                    <input type="url" id="profileImageUrlInput" oninput="previewUrl(this.value)" placeholder="Paste image URL here">
+                </label>
+
+                <label>
+                    Nickname:
+                    <input type="text" id="profileNickname" maxlength="20">
+                </label>
+                <p id="nicknameChangeInfo" style="font-size:0.8em; margin-top:-10px;"></p>
+
+                <label>
+                    Bio:
+                    <textarea id="profileBio" maxlength="150" rows="3"></textarea>
+                </label>
+
+                <label>
+                    Skill Rating (1-5 ⭐):
+                    <input type="number" id="profileSkillRating" min="1" max="5" value="3">
+                </label>
+
+                <label>
+                    Primary Game:
+                    <select id="profileGameCategory">
+                        <option value="FPS">FPS</option>
+                        <option value="MOBA">MOBA</option>
+                        <option value="MMORPG">MMORPG</option>
+                        <option value="Strategy">Strategy</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </label>
+
+                <label>
+                    Role/Mode:
+                    <select id="profileGameRole">
+                        <option value="Support">Support</option>
+                        <option value="Tank">Tank</option>
+                        <option value="DPS">DPS</option>
+                        <option value="Carry">Carry</option>
+                        <option value="Generalist">Generalist</option>
+                    </select>
+                </label>
+
+                <label>
+                    Status:
+                    <select id="profileStatus" onchange="toggleLfdCategory()">
+                        <option value="Online">Online</option>
+                        <option value="Offline">Offline</option>
+                        <option value="LFD">LFD (Looking For Duo)</option>
+                    </select>
+                </label>
+
+                <div id="lfdCategoryGroup" class="hidden" style="width: 100%; max-width: 400px; display: flex; justify-content: space-between;">
+                    <label>
+                        LFD Goal:
+                        <select id="profileLfdCategory" style="width: 100%;">
+                            <option value="Duo">Duo (2s)</option>
+                            <option value="Team">Team (3s+)</option>
+                        </select>
+                    </label>
+                </div>
+
+                <button class="neon-btn add" onclick="saveProfile()" style="margin-top: 20px;">Save Profile</button>
+                <p id="saveMessage" style="text-align:center; color:lime;"></p>
+            </div>
+        </div>
+        
+        <div id="viewProfile" class="tab-content hidden">
+            <button class="neon-btn" onclick="showTab('search')" style="align-self: flex-start; margin-bottom: 20px;">← Back to Search</button>
+            <div id="viewProfileContent" style="display:flex; flex-direction:column; align-items:center;">
+                </div>
+        </div>
+
     </div>
-</div>
-<div style="margin-bottom:15px;">
-<label style="color: cyan; display:block; margin-bottom:5px;">Bio/Tagline:</label>
-<textarea id="profileBio" rows="3" style="width:100%;"></textarea>
-</div>
-<div style="display:flex; gap:30px; margin-bottom:20px; flex-wrap:wrap;">
-<div>
-    <label style="color: cyan; display:block; margin-bottom:5px;">Skill Rating (1-5):</label>
-    <input id="profileSkillRating" type="number" min="1" max="5">
-</div>
-<div>
-    <label style="color: cyan; display:block; margin-bottom:5px;">Primary Game/Category:</label>
-    <select id="profileGameCategory">
-        <option value="LeagueOfLegends">League of Legends</option>
-        <option value="Fortnite">Fortnite</option>
-        <option value="Valorant">Valorant</option>
-        <option value="CyberSecurity">Cyber Security</option>
-        <option value="Other">Other</option>
-    </select>
-</div>
-</div>
-<div style="display:flex; gap:30px; margin-bottom:20px; flex-wrap:wrap;">
-    <div>
-        <label style="color: cyan; display:block; margin-bottom:5px;">Game Role/Mode:</label>
-        <select id="profileGameRole">
-            <option value="TopTank">Top Tank (LoL)</option>
-            <option value="JungleCarry">Jungle Carry (LoL)</option>
-            <option value="Duo">Duo (Fortnite/Valorant)</option>
-            <option value="Squad">Squad (Fortnite)</option>
-            <option value="Support">Support (LoL/Valorant)</option>
-            <option value="ExploitDev">Exploit Dev (Cyber)</option>
-            <option value="RedTeamOp">Red Team Op (Cyber)</option>
-            <option value="Generalist">Generalist/Flex</option>
-        </select>
-    </div>
-    <div>
-        <label style="color: cyan; display:block; margin-bottom:5px;">Current Status:</label>
-        <select id="profileStatus" onchange="toggleLfdCategory()">
-            <option value="Online">Online</option>
-            <option value="In Game">In Game</option>
-            <option value="LFD">Looking For Duo (LFD)</option>
-        </select>
-    </div>
-    <div id="lfdCategoryGroup" class="hidden">
-        <label style="color: cyan; display:block; margin-bottom:5px;">LFD Goal:</label>
-        <select id="profileLfdCategory">
-            <option value="Duo">Duo (2-person team)</option>
-            <option value="Squad">Squad (3+ person team)</option>
-            <option value="Team">Full Team (Permanent)</option>
-            <option value="Mentor">Mentor/Mentee</option>
-        </select>
-    </div>
-</div>
-<button class="neon-btn" style="border-color:#00ff00; box-shadow:0 0 10px #00ff00;" onclick="saveProfile()">Save Profile</button>
-<p id="saveMessage" style="color:#00ff00; margin-top:10px;"></p>
-</div>
 </div>
 
 <script>
-// ----------------------------------------------------
-// 0. GLOBAL VARS 
-// ----------------------------------------------------
-let auth;
-let db;
-// let storage; // Firebase Storage is NO LONGER needed
+// ====================================================================
+// 4. CONFIGURATION & GLOBAL VARIABLES (JAVASCRIPT)
+// ====================================================================
+
+// 🚨 IMPORTANT: Replace with your actual Firebase Configuration
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+const DEFAULT_AVATAR = 'https://via.placeholder.com/150/0000FF/FFFFFF?text=Duo'; 
 
 let currentUser = null;
+let db = null;
+let allUsersCache = []; // Stores profile data for all users
+let requestCache = {};  // Stores request status: {otherUid: {status: 'accepted'|'pending', id: 'request_id', ...}}
+
 let currentProfileData = {};
-let allUsersCache = [];
-let requestCache = {};
 let currentChatId = null;
+let currentChatPartnerId = null;
 let chatListener = null;
-let currentChatPartnerId = null; 
-
-const DEFAULT_AVATAR = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-
-// ---------------------------
-// Firebase Configuration (<<-- REPLACE THIS WITH YOUR ACTUAL CONFIG -->>)
-// ---------------------------
-const firebaseConfig = {
-    apiKey: "AIzaSyDVHxatohLvJNqIHXjf1ZXdmmWX5W1EpNw",
-    authDomain: "duoup-cfae6.firebaseapp.com",
-    projectId: "duoup-cfae6",
-    // storageBucket: "duoup-cfae6.appspot.com", // <-- No longer required
-    messagingSenderId: "812263060524",
-    appId: "1:812263060524:web:ac09c3ae610db1cd110d89",
-    measurementId: "G-46B67F90FK"
-};
-
-const CO_FOUNDER_UIDS = [
-    // UIDs for Co-Founder / Developer Badge (Gold/Orange)
-    "GmH4xJp92vY8sbwIWgJWjFw9MOQ2",
-];
-
-// --- CUSTOM BADGE MAPPING (Includes Pilex6/Pelix6) ---
-const CUSTOM_BADGE_MAP = {
-    // UID: { title: "Pilex6", color: "neon-green" }
-    "kHsYFJVHCGfQzI16nJH0mg1rv7u1": { title: "Pilex6", color: "pilex6" }, 
-};
-// -----------------------------------
-
-function getCustomBadge(uid) {
-    const customData = CUSTOM_BADGE_MAP[uid];
-    if (customData) {
-        // Using inline styles for quick implementation of the neon green look
-        const style = `
-            background: linear-gradient(45deg, #00ff00, #009900); 
-            color: #0b0b0b; 
-            font-size: 0.75em; 
-            padding: 2px 8px; 
-            border-radius: 4px; 
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-left: 8px;
-            box-shadow: 0 0 8px #00ff00;
-        `;
-        return `<div style="${style}">${customData.title}</div>`;
-    }
-    return '';
-}
 
 
-function getCoFounderBadge(uid) {
-    if (CO_FOUNDER_UIDS.includes(uid)) {
-        // Updated badge style to match "⚡DUO UP DEV"
-        const style = `
-            background: linear-gradient(90deg, #00ffff, #ff00ff); 
-            color: #111; 
-            font-size: 0.75em; 
-            padding: 2px 8px; 
-            border-radius: 4px; 
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-left: 8px; 
-            box-shadow: 0 0 8px #00ffff;
-        `;
-        return `<div style="${style}">⚡ DUO UP DEV</div>`;
-    }
-    return '';
-}
+// ====================================================================
+// 5. UTILITY AND CORE FUNCTIONS (JAVASCRIPT)
+// ====================================================================
 
-// ----------------------------------------------------
-// 1. INITIALIZATION & AUTHENTICATION ENTRY POINT
-// ----------------------------------------------------
 function initFirebase() {
     if (!firebase.apps.length) {
         firebase.initializeApp(firebaseConfig);
     }
-    auth = firebase.auth();
     db = firebase.firestore();
-    // storage = firebase.storage(); // Removed Storage initialization
 
-    // Listener is the main entry point to ensure user is ready
-    auth.onAuthStateChanged(user => {
-        currentUser = user;
-        document.getElementById('loadingOverlay').classList.add('hidden');
-        
-        const loginPage = document.getElementById('loginPage');
-        const dashboard = document.getElementById('dashboard');
-        
-        if (currentUser) {
-            loginPage.classList.add('hidden');
-            dashboard.classList.remove('hidden');
+    // Check auth state on load
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            // Use the user's email prefix as a temporary welcome name
+            const userName = user.email.split('@')[0];
+            document.getElementById('welcome').textContent = `WELCOME ${userName.toUpperCase()} TO DUO UP!`;
             
-            // CRITICAL: Initialize the dashboard view *after* authentication is confirmed
-            showTab('allUsers'); 
-            checkAndCreateUserProfile(); // Ensure user document exists and sets the welcome message
+            document.getElementById('authArea').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+            loadAllUsers();
+            loadUserProfile(); // Load current user's data for editing
         } else {
-            loginPage.classList.remove('hidden');
-            dashboard.classList.add('hidden');
+            currentUser = null;
+            document.getElementById('authArea').classList.remove('hidden');
+            document.getElementById('app').classList.add('hidden');
+            document.getElementById('welcome').textContent = 'DUO UP!';
         }
     });
 }
 
-async function checkAndCreateUserProfile() {
-    if (!currentUser) return;
-    const userDocRef = db.collection('users').doc(currentUser.uid);
-    const userDoc = await userDocRef.get();
-
-    if (!userDoc.exists) {
-        // Create default profile for new user
-        const defaultNickname = currentUser.displayName || 'New Cyber Warrior';
-        await userDocRef.set({
-            nickname: defaultNickname,
-            profileImageUrl: currentUser.photoURL || DEFAULT_AVATAR,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            status: 'Online',
-            bio: 'Ready to connect!',
-            skillRating: 3,
-            gameCategory: 'Other',
-            gameRole: 'Generalist',
-            nicknameChangeUsed: false
-        });
-        
-        // SET WELCOME MESSAGE AFTER CREATION
-        document.getElementById('welcome').textContent = `WELCOME ${defaultNickname.toUpperCase()} TO DUO UP!`;
-
-        // New users start on the profile tab to set things up
-        showTab('profile'); 
-    } else {
-        // Profile exists, load nickname
-        const data = userDoc.data();
-        
-        // SET WELCOME MESSAGE AFTER LOADING
-        const nickname = data.nickname || currentUser.displayName || 'Cyber Warrior';
-        document.getElementById('welcome').textContent = `WELCOME ${nickname.toUpperCase()} TO DUO UP!`;
-    }
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(tabId + 'Tab').classList.remove('hidden');
+    document.querySelector(`.tab-button[onclick*="showTab('${tabId}')"]`).classList.add('active');
 }
 
-// ---------------------------
-// Utility Functions
+// Auth Functions
+function login() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    firebase.auth().signInWithEmailAndPassword(email, password)
+        .catch(error => {
+            document.getElementById('authMessage').textContent = error.message;
+        });
+}
+
+function signup() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then(userCredential => {
+            // Create a default user profile in Firestore immediately after sign-up
+            return db.collection('users').doc(userCredential.user.uid).set({
+                email: email,
+                nickname: email.split('@')[0],
+                bio: 'New user to Duo Up!',
+                skillRating: 3,
+                gameCategory: 'Other',
+                gameRole: 'Generalist',
+                status: 'Online',
+                profileImageUrl: DEFAULT_AVATAR,
+                duoCount: 0, // Initialize duo count
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        })
+        .then(() => {
+             document.getElementById('authMessage').textContent = 'Sign up successful! Please log in.';
+        })
+        .catch(error => {
+            document.getElementById('authMessage').textContent = error.message;
+        });
+}
+
+function logout() {
+    firebase.auth().signOut();
+}
+
+
+// Helper to find user data in the cache
+function findUserInCache(uid) {
+    return allUsersCache.find(u => u.id === uid);
+}
+
+// Canonical ID for chat/request documents (sorted string of two UIDs)
+function getCanonicalId(uid1, uid2) {
+    const uids = [uid1, uid2].sort();
+    return uids.join('_');
+}
+
 function getChatId(otherUid) {
-    // Standardized Chat ID format: UID1_UID2 (alphabetically sorted)
-    return [currentUser.uid, otherUid].sort().join('_');
+    return getCanonicalId(currentUser.uid, otherUid);
+}
+
+// Co-Founder Badge (Example)
+function getCoFounderBadge(uid) {
+    const coFounders = ['YOUR_COFOUNDER_UID_1', 'YOUR_COFOUNDER_UID_2']; // Replace with actual UIDs
+    if (coFounders.includes(uid)) {
+        return `<span class="badge" style="background-color:gold;">Co-Founder</span>`;
+    }
+    return '';
 }
 
 /**
- * FIX: Helper function to create the canonical ID for friendRequests/chats, 
- * matching the logic defined in the Firestore Security Rules.
+ * Generates custom, manually assigned badges based on user ID.
+ * Includes the requested '67' badge.
+ * @param {string} uid - The user's unique ID.
+ * @returns {string} HTML string for the custom badge or an empty string.
  */
-function getCanonicalId(uid1, uid2) {
-    // Canonical duo ID: uidA_uidB (lexicographically sorted)
-    return uid1 < uid2 ? uid1 + "_" + uid2 : uid2 + "_" + uid1;
-}
+function getCustomBadge(uid) {
+    const customBadges = {
+        // 🚀 NEW BADGES REQUESTED 🚀
+        'kHsYFJVHCGfQzI16nJH0mg1rv7u1': { text: '67', color: '#67FF67' }, 
+        'hmXTc2hkF5Vvqrn8xuNjK3S9ybS2': { text: '67', color: '#67FF67' }
+    };
 
-
-function findUserInCache(uid) {
-    return allUsersCache.find(user => user.id === uid);
-}
-
-// ---------------------------
-// Authentication
-function login(){ auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-function logout(){ 
-    if(chatListener) chatListener(); 
-    auth.signOut(); 
-}
-
-// ---------------------------
-// Tab switching
-function showTab(tab){
-    document.querySelectorAll('#allUsersTab,#searchTab,#friendsTab,#messagingTab,#profileTab,#viewProfileTab').forEach(e=>e.classList.add('hidden'));
-
-    // Reset Chat Listener if not navigating to messaging
-    if(tab!=='messaging' && chatListener){
-        chatListener();
-        chatListener=null;
-        currentChatId=null;
-        currentChatPartnerId = null;
-        document.getElementById('messageDisplay').innerHTML = '';
-        document.getElementById('chatHeader').textContent = 'Select a Duo to start messaging';
-        document.getElementById('messageInputArea').classList.add('hidden');
+    if (customBadges[uid]) {
+        const badge = customBadges[uid];
+        return `<span class="badge" style="background-color:${badge.color};">${badge.text}</span>`;
     }
-
-    // Highlight active navigation button
-    document.querySelectorAll('#navigationBar button').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('tab-' + tab)?.classList.add('active');
-
-
-    switch(tab){
-        case 'allUsers': loadAllUsers(); break;
-        case 'search': filterSearchResults(); break;
-        case 'friends': loadFriends(); break;
-        case 'messaging': loadChatList(); break;
-        case 'profile': loadUserProfile(); toggleLfdCategory(); break;
-        default: break;
-    }
-    document.getElementById(tab+'Tab')?.classList.remove('hidden'); 
+    return '';
 }
 
-// ---------------------------
-// CORE DATA LOADING (Fixed LoadAllUsers Query & Error Handling)
-// ---------------------------
-async function loadAllUsers(){
-    if(!currentUser) return;
-    const container=document.getElementById('allUsersTab');
-    // Display loading message first
-    container.innerHTML="<p style='width:100%; text-align:center;'>Loading Suggested Players... Please wait.</p>";
+// ====================================================================
+// 6. DATA LOADING AND CACHING (JAVASCRIPT)
+// ====================================================================
+
+async function loadAllUsers() {
+    if (!currentUser) return;
     
-    try{
-        // 1. Load ALL users 
-        const snapshot=await db.collection('users').get();
-        allUsersCache=snapshot.docs.map(d=>({id:d.id,...d.data()}));
+    const resultsContainer = document.getElementById('searchResults');
+    resultsContainer.innerHTML = '<p style="width:100%; text-align:center; color:cyan;">Loading players and duo statuses...</p>';
+    allUsersCache = [];
+    requestCache = {};
+
+    try {
+        // 1. Fetch all user profiles
+        const userSnapshot = await db.collection('users').get();
+        userSnapshot.docs.forEach(doc => {
+            allUsersCache.push({ id: doc.id, ...doc.data() });
+        });
         
-        // 2. Load all friend requests involving the current user 
-        const requestsSnap = await db.collection('friendRequests')
-            .where('participants', 'array-contains', currentUser.uid) 
+        // 2. Fetch all friend requests involving the current user
+        // Query requests where I am the sender OR the receiver
+        const requestSnapshot = await db.collection('friendRequests')
+            .where('participants', 'array-contains', currentUser.uid)
             .get();
-            
-        requestCache = {};
-        requestsSnap.forEach(doc => {
+
+        requestSnapshot.docs.forEach(doc => {
             const data = doc.data();
-            const otherUid = data.participants.find(uid => uid !== currentUser.uid);
-
-            if (otherUid) {
-                requestCache[otherUid] = { 
-                    id: doc.id, 
-                    status: data.status, 
-                    senderId: data.senderId,
-                    receiverId: data.receiverId
-                };
-            }
+            // Determine the UID of the *other* person
+            const otherUid = data.senderId === currentUser.uid ? data.receiverId : data.senderId;
+            
+            // Cache the request status based on the *other* person's UID
+            requestCache[otherUid] = {
+                id: doc.id,
+                status: data.status, // 'pending' or 'accepted'
+                senderId: data.senderId,
+                receiverId: data.receiverId
+            };
         });
 
-        // --- FIX: CLEAR CONTAINER BEFORE RENDERING ---
-        container.innerHTML=""; 
+        // 3. Render the full list using the newly updated cache
+        filterSearchResults();
 
-        // 3. Render the cards
-        let renderedCount = 0;
-        allUsersCache.forEach(user=>{
-            if(user.id===currentUser.uid) return;
-            const card=renderUserCard(user.id, user, requestCache[user.id]);
-            if (card) {
-                container.appendChild(card);
-                renderedCount++;
-            }
-        });
-        
-        if (renderedCount === 0) {
-            container.innerHTML = '<p style="width:100%; text-align:center; color:#ff00ff;">No other users found in the system yet.</p>';
-        }
-
-    }catch(e){ 
-        // --- IMPROVED ERROR DISPLAY ---
-        console.error("Error loading users:", e);
-        container.innerHTML=`<p style="width:100%; text-align:center; color:red;">
-            NETWORK ERROR: Failed to load user data. Check console for details.
-            </p>`; 
+    } catch (e) {
+        console.error("Error loading all users/requests:", e);
+        resultsContainer.innerHTML = '<p style="width:100%; text-align:center; color:red;">Failed to load user data.</p>';
     }
 }
 
-// ---------------------------
-// User Rendering Functions
-// ---------------------------
-function renderUserCard(uid, data, requestInfo){
-    if(!data) return null;
-    const card=document.createElement('div');
-    card.className='card';
-    card.onclick=()=>viewProfile(uid, data);
-    const statusClass=(data.status||'Online').replace(/\s/g,'').toLowerCase();
-    
-    // --- COMBINE BADGES ---
-    const badge = getCoFounderBadge(uid) + getCustomBadge(uid);
-    // ----------------------
-    
-    const gameCategory = data.gameCategory || 'Other';
-    const gameCategoryClass = `game-category-${gameCategory.toLowerCase().replace(/\s/g, '')}`;
-    const gameRole = data.gameRole || 'Generalist';
-    const lfdCategory = data.lfdCategory || null; 
+// ====================================================================
+// 7. CARD RENDERING FUNCTIONS (UPDATED FOR DUO COUNT)
+// ====================================================================
 
-    let cardButtons;
-    
-    if (requestInfo) {
-        if (requestInfo.status === 'pending') {
-            if (requestInfo.senderId === currentUser.uid) {
-                cardButtons = `<button class="neon-btn pending" disabled>Pending (Waiting for reply)</button>`; 
-            } else {
-                cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); acceptFriendRequest('${requestInfo.id}')">Accept Request</button>
-                               <button class="neon-btn remove" onclick="event.stopPropagation(); rejectFriendRequest('${requestInfo.id}')">Reject</button>`;
-            }
-        } else if (requestInfo.status === 'accepted') {
-            cardButtons = `<button class="neon-btn" style="border-color:lime; color:lime;" onclick="event.stopPropagation(); showTab('messaging'); selectChat('${getChatId(uid)}', '${uid}')">Duo Active</button>`;
+/**
+ * Renders a user card for display in the main user list or search results.
+ * @param {string} uid - The user's unique ID.
+ * @param {object} data - The user's profile data from Firestore.
+ * @param {object} requestInfo - Information about the current user's relationship with this user.
+ * @returns {HTMLElement} The card element.
+ */
+function renderUserCard(uid, data, requestInfo) {
+    if (!data) return null;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => viewProfile(uid, data);
+
+    const statusClass = (data.status || 'Online').replace(/\s/g, '').toLowerCase();
+    const gameCategory = data.gameCategory || 'Other';
+    const gameCategoryClass = gameCategory.replace(/\s/g, '').toLowerCase();
+    const gameRole = data.gameRole || 'Generalist';
+    const lfdCategory = data.lfdCategory || 'N/A';
+
+    const coFounderBadge = getCoFounderBadge(uid);
+    const customBadge = getCustomBadge(uid);
+    const badge = coFounderBadge + customBadge;
+
+    let cardButtons = '';
+    if (uid === currentUser.uid) {
+        cardButtons = `<button class="neon-btn self" onclick="event.stopPropagation(); showTab('profile')">Your Profile</button>`;
+    } else if (requestInfo && requestInfo.status === 'accepted') {
+        cardButtons = `<button class="neon-btn message" onclick="event.stopPropagation(); showTab('messaging'); selectChat('${getChatId(uid)}', '${uid}')">Message Duo</button>`;
+    } else if (requestInfo && requestInfo.status === 'pending') {
+        if (requestInfo.receiverId === currentUser.uid) {
+            // Incoming request (Allow accept/reject)
+            cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); acceptFriendRequest('${requestInfo.id}')">Accept Request</button>
+                           <button class="neon-btn remove" onclick="event.stopPropagation(); rejectFriendRequest('${requestInfo.id}')">Reject</button>`;
         } else {
-            // Rejected or other state, allow new request
-            cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
+            // Outgoing request (Just show pending)
+            cardButtons = `<button class="neon-btn pending" disabled>Pending...</button>`;
         }
     } else {
         cardButtons = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
     }
-    
+
     let lfdCategoryDisplay = '';
     if (data.status === 'LFD' && lfdCategory) {
         lfdCategoryDisplay = `<div class="lfd-category">${lfdCategory}</div>`;
     }
 
-    card.innerHTML=`
+    // DUO COUNT IMPLEMENTATION
+    const duoCount = data.duoCount || 0;
+
+    card.innerHTML = `
         <div class="card-content-box">
-        <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
+        <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar">
         <div class="nickname-group">
-            <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
+            <h3 style="margin:0;">${data.nickname || 'Unknown'}</h3>
             ${badge}
         </div>
         <div class="game-category ${gameCategoryClass}">${gameCategory.replace(/([A-Z])/g, ' $1').trim()}</div>
         <div class="game-role">${gameRole.replace(/([A-Z])/g, ' $1').trim()}</div>
-        ${lfdCategoryDisplay} 
-        <div class="skill-rating">${'⭐'.repeat(data.skillRating||3)}</div>
-        <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
-        <p style="margin:5px 0; font-size:0.9em; text-align:center; color:#ccc;">${data.bio||'No bio provided.'}</p>
+        ${lfdCategoryDisplay}
+
+        <div class="duo-count" style="font-size:0.9em; color:cyan; margin: 5px 0;">Duos: ${duoCount}</div>
+        <div class="skill-rating">${'⭐'.repeat(data.skillRating || 3)}</div>
+        <div class="status-indicator status-${statusClass}">${data.status || 'Online'}</div>
+        <p style="margin:5px 0; font-size:0.9em; text-align:center; color:#ccc;">${data.bio || 'No bio provided.'}</p>
         </div>
         ${cardButtons}
     `;
@@ -644,28 +707,26 @@ function renderUserCard(uid, data, requestInfo){
 }
 
 function renderDuoCard(uid, data) {
-    if(!data) return null;
+    if (!data) return null;
     const card = document.createElement('div');
     card.className = 'card';
-    card.onclick = () => viewProfile(uid, data); 
+    card.onclick = () => viewProfile(uid, data);
 
-    const statusClass = (data.status || 'Online').replace(/\s/g,'').toLowerCase();
-    
-    // --- COMBINE BADGES ---
+    const statusClass = (data.status || 'Online').replace(/\s/g, '').toLowerCase();
     const badge = getCoFounderBadge(uid) + getCustomBadge(uid);
-    // ----------------------
-    
     const chatId = getChatId(uid);
+    const duoCount = data.duoCount || 0; // Duo count here too
 
     card.innerHTML = `
         <div class="card-content-box" style="border-bottom: none;">
-            <img src="${data.profileImageUrl||DEFAULT_AVATAR}" class="avatar">
+            <img src="${data.profileImageUrl || DEFAULT_AVATAR}" class="avatar">
             <div class="nickname-group">
-                <h3 style="margin:0;">${data.nickname||'Unknown'}</h3>
+                <h3 style="margin:0;">${data.nickname || 'Unknown'}</h3>
                 ${badge}
             </div>
             <p style="margin:5px 0; font-size:0.9em; color:lime;">DUO PARTNER</p>
-            <div class="status-indicator status-${statusClass}">${data.status||'Online'}</div>
+            <div class="status-indicator status-${statusClass}">${data.status || 'Online'}</div>
+            <div class="duo-count" style="font-size:0.9em; color:cyan; margin: 5px 0;">Duos: ${duoCount}</div>
         </div>
         <button class="neon-btn" style="border-color:magenta; box-shadow:0 0 10px magenta;" 
                 onclick="event.stopPropagation(); showTab('messaging'); selectChat('${chatId}', '${uid}')">
@@ -675,185 +736,32 @@ function renderDuoCard(uid, data) {
     return card;
 }
 
-// ---------------------------
-// PROFILE EDITOR FUNCTIONS
-// ---------------------------
+// ====================================================================
+// 8. DUO/FRIENDS/MESSAGING FUNCTIONS (UPDATED ACCEPT LOGIC)
+// ====================================================================
 
-// NEW FUNCTION: Updates the profile avatar preview from the URL field
-function previewUrl(url) {
-    // Basic check to prevent breakage if user clears the field
-    document.getElementById('profileAvatar').src = url.trim() || DEFAULT_AVATAR;
-}
-
-// NOTE: The uploadAvatar function is DELETED for the URL-only approach.
-
-async function saveProfile() {
-    if (!currentUser) return;
-    document.getElementById('saveMessage').textContent = 'Saving profile...';
-    
-    try {
-        const nicknameInput = document.getElementById('profileNickname');
-        const nickname = nicknameInput.value.trim();
-        const bio = document.getElementById('profileBio').value.trim();
-        const skillRating = parseInt(document.getElementById('profileSkillRating').value);
-        const gameCategory = document.getElementById('profileGameCategory').value;
-        const gameRole = document.getElementById('profileGameRole').value;
-        const status = document.getElementById('profileStatus').value;
-        const lfdCategory = document.getElementById('profileLfdCategory').value;
-        
-        // 🚨 PROFILE PICTURE INTEGRATION (Updated for URL input)
-        // Get the value directly from the new URL input field
-        let profileImageUrl = document.getElementById('profileImageUrlInput').value.trim() || DEFAULT_AVATAR;
-
-        const updateData = {
-            bio,
-            skillRating,
-            gameCategory,
-            gameRole,
-            status,
-            profileImageUrl: profileImageUrl, // <--- New URL is saved directly
-            lfdCategory: status === 'LFD' ? lfdCategory : null,
-        };
-
-        // 2. Handle Nickname Change (if allowed)
-        if (nickname !== currentProfileData.nickname) {
-            if (currentProfileData.nicknameChangeUsed === true) {
-                 alert('You have already used your one-time nickname change.');
-                 nicknameInput.value = currentProfileData.nickname; // Revert change
-                 document.getElementById('saveMessage').textContent = 'Error: Nickname change limit reached.';
-                 return;
-            }
-            updateData.nickname = nickname;
-            updateData.nicknameChangeUsed = true;
-        }
-
-        // 3. Update Firestore
-        await db.collection('users').doc(currentUser.uid).update(updateData);
-
-        // Update local cache and UI
-        currentProfileData = { ...currentProfileData, ...updateData };
-        document.getElementById('saveMessage').textContent = 'Profile saved successfully! Reloading data...';
-        document.getElementById('nicknameChangeInfo').textContent = '(Nickname change is now used.)';
-        
-        // Update the welcome message immediately with the new nickname
-        document.getElementById('welcome').textContent = `WELCOME ${nickname.toUpperCase()} TO DUO UP!`;
-
-        // Re-load to refresh all UI components
-        setTimeout(() => {
-            showTab('profile'); // Keep user on profile page
-            loadAllUsers(); // Refresh the main user list/cache
-        }, 1000);
-
-    } catch (e) {
-        console.error("Error saving profile: ", e);
-        document.getElementById('saveMessage').textContent = `Error saving profile: ${e.message}`;
-    }
-}
-
-async function loadUserProfile() {
-    if (!currentUser) return;
-
-    try {
-        const userDoc = await db.collection('users').doc(currentUser.uid).get();
-        if (!userDoc.exists) {
-            document.getElementById('profileTab').innerHTML = '<p style="color:red;">Profile not found. Please log out and back in.</p>';
-            return;
-        }
-
-        const data = userDoc.data();
-        currentProfileData = data;
-
-        // Update editor fields
-        document.getElementById('profileAvatar').src = data.profileImageUrl || DEFAULT_AVATAR;
-        
-        // === NEW: Set the value of the new input field ===
-        document.getElementById('profileImageUrlInput').value = data.profileImageUrl || DEFAULT_AVATAR;
-        // ================================================
-        
-        document.getElementById('profileNickname').value = data.nickname || '';
-        document.getElementById('profileBio').value = data.bio || '';
-        document.getElementById('profileSkillRating').value = data.skillRating || 3;
-        document.getElementById('profileGameCategory').value = data.gameCategory || 'Other';
-        document.getElementById('profileGameRole').value = data.gameRole || 'Generalist';
-        document.getElementById('profileStatus').value = data.status || 'Online';
-        document.getElementById('profileLfdCategory').value = data.lfdCategory || 'Duo';
-
-        // Update nickname info message
-        if (data.nicknameChangeUsed) {
-            document.getElementById('profileNickname').disabled = true;
-            document.getElementById('nicknameChangeInfo').textContent = '(Nickname change has been used. Contact support for further changes.)';
-            document.getElementById('nicknameChangeInfo').style.color = 'red';
-        } else {
-            document.getElementById('profileNickname').disabled = false;
-            document.getElementById('nicknameChangeInfo').textContent = '(You get one free nickname change.)';
-            document.getElementById('nicknameChangeInfo').style.color = 'yellow';
-        }
-
-        toggleLfdCategory();
-        document.getElementById('saveMessage').textContent = ''; // Clear previous save messages
-        
-    } catch (e) {
-        console.error("Error loading user profile:", e);
-    }
-}
-
-function toggleLfdCategory() {
-    const status = document.getElementById('profileStatus').value;
-    const lfdGroup = document.getElementById('lfdCategoryGroup');
-    if (status === 'LFD') {
-        lfdGroup.classList.remove('hidden');
-    } else {
-        lfdGroup.classList.add('hidden');
-    }
-}
-
-// ---------------------------
-// DUO/FRIENDS/MESSAGING FUNCTIONS (IMPLEMENTATION)
-// ---------------------------
-
-/**
- * Sends a friend request.
- * FIX: Now uses getCanonicalId and set() to ensure the document ID matches 
- * the ID required by the Firestore Security Rules.
- * NEW: Uses a styled alert for success message.
- */
 async function sendFriendRequest(receiverId) {
     if (receiverId === currentUser.uid) return alert("Cannot send request to yourself.");
 
     const receiver = findUserInCache(receiverId);
     if (!receiver) return alert("Error: User not found in cache.");
 
-    // 1. Calculate the required document ID (Canonical ID)
     const canonicalDuoId = getCanonicalId(currentUser.uid, receiverId);
-
-    // Check if a request already exists
     const existingRequest = requestCache[receiverId];
-    if (existingRequest) {
-        if (existingRequest.status === 'pending') {
-            return alert(`A pending request to ${receiver.nickname} already exists.`);
-        }
-        if (existingRequest.status === 'accepted') {
-            return alert(`${receiver.nickname} is already your Duo partner!`);
-        }
+    if (existingRequest && existingRequest.status !== 'rejected') {
+        return alert(existingRequest.status === 'pending' ? `A pending request to ${receiver.nickname} already exists.` : `${receiver.nickname} is already your Duo partner!`);
     }
 
     try {
-        // 2. Use .doc(ID).set() to ensure the document ID is the canonical one
         await db.collection('friendRequests').doc(canonicalDuoId).set({
             status: 'pending',
             senderId: currentUser.uid,
             receiverId: receiverId,
             participants: [currentUser.uid, receiverId],
-            // FIX: Using 'createdAt' as required by the security rules
             createdAt: firebase.firestore.FieldValue.serverTimestamp() 
         });
 
-        // ✨ NEW FEATURE: Custom Alert for "Request sent!" in Yellow
-        const alertStyle = "background-color: yellow; color: black; border: 2px solid orange; padding: 10px; border-radius: 5px;";
-        console.warn(`%cRequest sent to ${receiver.nickname}!`, alertStyle);
-        alert(`Request sent to ${receiver.nickname}!`); // Standard alert for immediate user feedback
-
-        // Refresh the current view to update the button status
+        alert(`Request sent to ${receiver.nickname}!`);
         loadAllUsers(); 
     } catch (e) {
         console.error("Error sending request:", e);
@@ -861,17 +769,38 @@ async function sendFriendRequest(receiverId) {
     }
 }
 
+/**
+ * Accepts a friend request and now increments the duoCount for both users.
+ * @param {string} requestId - The canonical ID of the friend request document.
+ */
 async function acceptFriendRequest(requestId) {
     try {
+        // 1. Get the request data to find the participants
+        const requestDoc = await db.collection('friendRequests').doc(requestId).get();
+        if (!requestDoc.exists) throw new Error("Request not found.");
+        const requestData = requestDoc.data();
+        const { senderId, receiverId } = requestData; 
+
+        // 2. Update the friendRequests status
         await db.collection('friendRequests').doc(requestId).update({
             status: 'accepted',
             acceptedAt: firebase.firestore.FieldValue.serverTimestamp()
         });
+
+        // 3. 🚀 NEW: Increment the duoCount for BOTH users
+        const increment = firebase.firestore.FieldValue.increment(1);
+
+        await db.collection('users').doc(senderId).update({
+            duoCount: increment
+        });
+        await db.collection('users').doc(receiverId).update({
+            duoCount: increment
+        });
+        // 🚀 END NEW 🚀
+        
         alert('Friend request accepted! You are now a Duo.');
-        // Re-load the friends tab
-        loadFriends(); 
-        // Also refresh the all users list in case this was initiated from there
-        loadAllUsers();
+        loadFriends();
+        loadAllUsers(); 
     } catch (e) {
         console.error("Error accepting request:", e);
         alert("Failed to accept request: " + e.message);
@@ -880,12 +809,9 @@ async function acceptFriendRequest(requestId) {
 
 async function rejectFriendRequest(requestId) {
     try {
-        // We delete the request upon rejection
         await db.collection('friendRequests').doc(requestId).delete();
         alert('Friend request rejected.');
-        // Re-load the friends tab
         loadFriends(); 
-        // Also refresh the all users list
         loadAllUsers();
     } catch (e) {
         console.error("Error rejecting request:", e);
@@ -902,11 +828,8 @@ async function loadFriends() {
     pendingContainer.innerHTML = '<p style="width:100%; text-align:center;">Loading pending requests...</p>';
     acceptedContainer.innerHTML = '<p style="width:100%; text-align:center; color:magenta;">Loading accepted duos...</p>';
     
-    // CRITICAL: Ensure all users are loaded into cache first for rendering names/avatars
     if (allUsersCache.length === 0) {
-        // Call loadAllUsers to populate both allUsersCache and requestCache
         await loadAllUsers(); 
-        // Note: loadAllUsers updates allUsersTab, but we continue here for friendsTab
     }
 
     pendingContainer.innerHTML = '';
@@ -916,16 +839,14 @@ async function loadFriends() {
     let acceptedCount = 0;
 
     try {
-        // We rely on requestCache being populated by loadAllUsers()
         for (const otherUid in requestCache) {
             const requestInfo = requestCache[otherUid];
             const otherUserData = findUserInCache(otherUid);
 
-            if (!otherUserData) continue; // Skip if user data is missing
+            if (!otherUserData) continue; 
 
             if (requestInfo.status === 'pending' && requestInfo.receiverId === currentUser.uid) {
-                // Incoming Pending Request (I must accept/reject)
-                // Note: We use renderUserCard here because it has the accept/reject buttons
+                // Incoming Pending Request
                 const card = renderUserCard(otherUid, otherUserData, requestInfo);
                 if (card) {
                     pendingContainer.appendChild(card);
@@ -956,13 +877,11 @@ async function loadFriends() {
     }
 }
 
-
 async function loadChatList() {
     if (!currentUser) return;
     const duoListContainer = document.getElementById('activeDuoList');
     duoListContainer.innerHTML = '<p style="text-align:center;">Loading Duos...</p>';
     
-    // CRITICAL: Ensure all users and requests are loaded/cached
     if (allUsersCache.length === 0) {
         await loadAllUsers(); 
     }
@@ -971,7 +890,6 @@ async function loadChatList() {
     let duoCount = 0;
 
     try {
-        // We rely on requestCache being populated by loadAllUsers()
         for (const otherUid in requestCache) {
             const requestInfo = requestCache[otherUid];
             const partnerData = findUserInCache(otherUid);
@@ -1004,17 +922,12 @@ async function loadChatList() {
 
 
 function selectChat(chatId, partnerUid) {
-    // 1. Stop previous listener
     if (chatListener) chatListener(); 
     
-    // 2. Update list highlighting
     document.querySelectorAll('.chat-entry').forEach(e => e.classList.remove('active'));
-    // Simple way to select the entry: find the one with the correct onclick attribute
     const selectedEntry = document.querySelector(`.chat-entry[onclick*="'${chatId}'"]`);
     if (selectedEntry) selectedEntry.classList.add('active');
 
-
-    // 3. Set new chat info
     currentChatId = chatId;
     currentChatPartnerId = partnerUid;
     const partner = findUserInCache(partnerUid);
@@ -1023,17 +936,13 @@ function selectChat(chatId, partnerUid) {
     document.getElementById('messageDisplay').innerHTML = 'Connecting...';
     document.getElementById('messageInputArea').classList.remove('hidden');
     
-    // 4. Start new listener
     chatListener = db.collection('chats').doc(chatId).collection('messages')
         .orderBy('timestamp', 'asc')
         .onSnapshot(snapshot => {
-            // Note: This only clears on first load or manual refresh. 
-            // docChanges() handles updates more efficiently but we'll stick to a full refresh for simplicity.
             document.getElementById('messageDisplay').innerHTML = ''; 
             snapshot.docs.forEach(doc => {
                 displayMessage(doc.data());
             });
-            // Auto-scroll to bottom
             const display = document.getElementById('messageDisplay');
             display.scrollTop = display.scrollHeight;
         }, error => {
@@ -1057,20 +966,12 @@ function displayMessage(messageData) {
     display.appendChild(msgDiv);
 }
 
-/**
- * Sends a message to the currently selected chat.
- * CRITICAL FIX: Added chatId to match the Firestore Security Rule validation.
- */
 async function sendMessage() {
     const input = document.getElementById('messageInput');
     const text = input.value.trim();
     
-    if (!text || !currentChatId || !currentUser) {
-        console.warn("Message not sent: Input is empty, chat is not selected, or user is not logged in.");
-        return;
-    }
+    if (!text || !currentChatId || !currentUser) return;
 
-    // Disable input and button to prevent double send
     input.disabled = true;
     document.getElementById('sendMessageBtn').disabled = true;
     
@@ -1079,43 +980,34 @@ async function sendMessage() {
             text: text,
             senderId: currentUser.uid,
             timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            // --- CRITICAL FIX START ---
-            chatId: currentChatId // <-- REQUIRED by your Firestore Security Rule
-            // --- CRITICAL FIX END ---
+            chatId: currentChatId 
         });
         
-        // Success: Clear input and re-enable controls
         input.value = ''; 
         input.disabled = false;
         document.getElementById('sendMessageBtn').disabled = false;
         
     } catch (e) {
-        // FAILURE: Re-enable controls and show error
         input.disabled = false;
         document.getElementById('sendMessageBtn').disabled = false;
-
-        alert(`Failed to send message. Please check the console for the error. (Error Code: ${e.code || 'UNKNOWN'}). If this is a 'Permission Denied' error, the issue was the missing 'chatId' field!`);
-        console.error("!!! FATAL CHAT WRITE ERROR !!!", e);
+        alert(`Failed to send message: ${e.message}`);
+        console.error("Chat Write Error:", e);
     }
 }
 
 
 function viewProfile(uid, data) {
-    // This is the viewing logic, not the editing logic
     showTab('viewProfile'); 
     
     const container = document.getElementById('viewProfileContent');
     container.innerHTML = 'Loading profile details...';
     
-    const statusClass = (data.status || 'Online').replace(/\s/g,'').toLowerCase();
-    const gameCategory = data.gameCategory || 'Other';
-    const gameCategoryDisplay = gameCategory.replace(/([A-Z])/g, ' $1').trim();
+    const statusClass = (data.status || 'Online').replace(/\s/g, '').toLowerCase();
+    const gameCategoryDisplay = (data.gameCategory || 'Other').replace(/([A-Z])/g, ' $1').trim();
     const gameRoleDisplay = (data.gameRole || 'Generalist').replace(/([A-Z])/g, ' $1').trim();
     const lfdCategory = data.lfdCategory || 'N/A';
     
-    // --- COMBINE BADGES ---
     const badge = getCoFounderBadge(uid) + getCustomBadge(uid);
-    // ----------------------
 
     let profileActions = '';
     const requestInfo = requestCache[uid];
@@ -1123,10 +1015,9 @@ function viewProfile(uid, data) {
     if (requestInfo && requestInfo.status === 'accepted') {
         profileActions = `<button class="neon-btn" style="border-color:lime; color:lime;" onclick="event.stopPropagation(); showTab('messaging'); selectChat('${getChatId(uid)}', '${uid}')">Message Duo</button>`;
     } else if (requestInfo && requestInfo.status === 'pending') {
-        // If pending, check if it's an incoming request
         if (requestInfo.receiverId === currentUser.uid) {
             profileActions = `<button class="neon-btn add" onclick="event.stopPropagation(); acceptFriendRequest('${requestInfo.id}')">Accept Request</button>
-                              <button class="neon-btn remove" onclick="event.stopPropagation(); rejectFriendRequest('${requestInfo.id}')">Reject</button>`;
+                             <button class="neon-btn remove" onclick="event.stopPropagation(); rejectFriendRequest('${requestInfo.id}')">Reject</button>`;
         } else {
             profileActions = `<button class="neon-btn pending" disabled>Pending Request</button>`;
         }
@@ -1134,10 +1025,12 @@ function viewProfile(uid, data) {
         profileActions = `<button class="neon-btn add" onclick="event.stopPropagation(); sendFriendRequest('${uid}')">Send Request</button>`;
     }
     
-    // Hide actions for own profile
     if (uid === currentUser.uid) {
-         profileActions = '<p style="color:cyan;">This is your profile.</p>';
+           profileActions = '<p style="color:cyan;">This is your profile.</p>';
     }
+
+    // Duo Count Display
+    const duoCount = data.duoCount || 0;
 
 
     container.innerHTML = `
@@ -1151,6 +1044,10 @@ function viewProfile(uid, data) {
         <div class="profile-stat">
             <span>Skill Rating:</span>
             <span>${'⭐'.repeat(data.skillRating||3)}</span>
+        </div>
+        <div class="profile-stat">
+            <span>Duos:</span>
+            <span>${duoCount}</span>
         </div>
         <div class="profile-stat">
             <span>Primary Game:</span>
@@ -1172,9 +1069,123 @@ function viewProfile(uid, data) {
     `;
 }
 
-// ----------------------------------------------------
-// 3. SEARCH FILTER LOGIC
-// ----------------------------------------------------
+// ====================================================================
+// 9. PROFILE EDITOR FUNCTIONS (JAVASCRIPT)
+// ====================================================================
+
+function previewUrl(url) {
+    document.getElementById('profileAvatar').src = url.trim() || DEFAULT_AVATAR;
+}
+
+async function saveProfile() {
+    if (!currentUser) return;
+    document.getElementById('saveMessage').textContent = 'Saving profile...';
+
+    try {
+        const nicknameInput = document.getElementById('profileNickname');
+        const nickname = nicknameInput.value.trim();
+        const bio = document.getElementById('profileBio').value.trim();
+        const skillRating = parseInt(document.getElementById('profileSkillRating').value);
+        const gameCategory = document.getElementById('profileGameCategory').value;
+        const gameRole = document.getElementById('profileGameRole').value;
+        const status = document.getElementById('profileStatus').value;
+        const lfdCategory = document.getElementById('profileLfdCategory').value;
+        let profileImageUrl = document.getElementById('profileImageUrlInput').value.trim() || DEFAULT_AVATAR;
+
+        const updateData = {
+            bio,
+            skillRating,
+            gameCategory,
+            gameRole,
+            status,
+            profileImageUrl: profileImageUrl,
+            lfdCategory: status === 'LFD' ? lfdCategory : null,
+        };
+
+        // Handle Nickname Change
+        if (nickname !== currentProfileData.nickname) {
+            if (currentProfileData.nicknameChangeUsed === true) {
+                 alert('You have already used your one-time nickname change.');
+                 nicknameInput.value = currentProfileData.nickname;
+                 document.getElementById('saveMessage').textContent = 'Error: Nickname change limit reached.';
+                 return;
+            }
+            updateData.nickname = nickname;
+            updateData.nicknameChangeUsed = true;
+        }
+
+        await db.collection('users').doc(currentUser.uid).update(updateData);
+
+        currentProfileData = { ...currentProfileData, ...updateData };
+        document.getElementById('saveMessage').textContent = 'Profile saved successfully! Reloading data...';
+        document.getElementById('nicknameChangeInfo').textContent = '(Nickname change is now used.)';
+        document.getElementById('welcome').textContent = `WELCOME ${nickname.toUpperCase()} TO DUO UP!`;
+
+        setTimeout(() => {
+            showTab('profile');
+            loadAllUsers(); 
+        }, 1000);
+
+    } catch (e) {
+        console.error("Error saving profile: ", e);
+        document.getElementById('saveMessage').textContent = `Error saving profile: ${e.message}`;
+    }
+}
+
+async function loadUserProfile() {
+    if (!currentUser) return;
+
+    try {
+        const userDoc = await db.collection('users').doc(currentUser.uid).get();
+        if (!userDoc.exists) {
+            document.getElementById('profileTab').innerHTML = '<p style="color:red;">Profile not found. Please log out and back in.</p>';
+            return;
+        }
+
+        const data = userDoc.data();
+        currentProfileData = data;
+
+        document.getElementById('profileAvatar').src = data.profileImageUrl || DEFAULT_AVATAR;
+        document.getElementById('profileImageUrlInput').value = data.profileImageUrl || DEFAULT_AVATAR;
+        document.getElementById('profileNickname').value = data.nickname || '';
+        document.getElementById('profileBio').value = data.bio || '';
+        document.getElementById('profileSkillRating').value = data.skillRating || 3;
+        document.getElementById('profileGameCategory').value = data.gameCategory || 'Other';
+        document.getElementById('profileGameRole').value = data.gameRole || 'Generalist';
+        document.getElementById('profileStatus').value = data.status || 'Online';
+        document.getElementById('profileLfdCategory').value = data.lfdCategory || 'Duo';
+
+        if (data.nicknameChangeUsed) {
+            document.getElementById('profileNickname').disabled = true;
+            document.getElementById('nicknameChangeInfo').textContent = '(Nickname change has been used. Contact support for further changes.)';
+            document.getElementById('nicknameChangeInfo').style.color = 'red';
+        } else {
+            document.getElementById('profileNickname').disabled = false;
+            document.getElementById('nicknameChangeInfo').textContent = '(You get one free nickname change.)';
+            document.getElementById('nicknameChangeInfo').style.color = 'yellow';
+        }
+
+        toggleLfdCategory();
+        document.getElementById('saveMessage').textContent = ''; 
+        
+    } catch (e) {
+        console.error("Error loading user profile:", e);
+    }
+}
+
+function toggleLfdCategory() {
+    const status = document.getElementById('profileStatus').value;
+    const lfdGroup = document.getElementById('lfdCategoryGroup');
+    if (status === 'LFD') {
+        lfdGroup.classList.remove('hidden');
+    } else {
+        lfdGroup.classList.add('hidden');
+    }
+}
+
+// ====================================================================
+// 10. SEARCH FILTER LOGIC (JAVASCRIPT)
+// ====================================================================
 
 function filterSearchResults() {
     const resultsContainer = document.getElementById('searchResults');
@@ -1195,8 +1206,8 @@ function filterSearchResults() {
 
         // Text Search (Nickname or Bio)
         const matchesText = !searchInput || 
-                            user.nickname.toLowerCase().includes(searchInput) || 
-                            (user.bio && user.bio.toLowerCase().includes(searchInput));
+                             (user.nickname && user.nickname.toLowerCase().includes(searchInput)) || 
+                             (user.bio && user.bio.toLowerCase().includes(searchInput));
         if (!matchesText) return false;
 
         // Status Filter
@@ -1229,46 +1240,16 @@ function filterSearchResults() {
     });
 }
 
+// ====================================================================
+// 11. INITIALIZATION
+// ====================================================================
 
-// FIX for jQuery style selector not being available
-if (typeof NodeList.prototype.forEach !== 'function') {
-    NodeList.prototype.forEach = Array.prototype.forEach;
-}
-if (!Element.prototype.matches) {
-    Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
-}
-if (!Element.prototype.closest) {
-    Element.prototype.closest = function(s) {
-        let el = this;
-        do {
-            if (el.matches(s)) return el;
-            el = el.parentElement || el.parentNode;
-        } while (el !== null && el.nodeType === 1);
-        return null;
-    };
-}
-// Simple contains polyfill/extension for querySelector
-if (window.Element && !Element.prototype.matches) {
-    Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
-}
-document.querySelector = (function(orig) {
-    return function(selector) {
-        if (selector.includes(':contains')) {
-            const [base, text] = selector.split(':contains');
-            const target = text.match(/\((.*?)\)/)[1].replace(/['"]/g, '');
-            // We use Array.from and find for a safer check instead of NodeList iteration
-            return Array.from(document.querySelectorAll(base)).find(e => e.textContent.includes(target));
-        }
-        return orig.call(this, selector);
-    };
-})(document.querySelector);
-
-
-// ----------------------------------------------------
-// 4. START APPLICATION
-// ----------------------------------------------------
+// Start Firebase when the page loads
 initFirebase();
-</script>
 
+</script>
 </body>
 </html>
+<?php
+// This is the end of your PHP file.
+?>
