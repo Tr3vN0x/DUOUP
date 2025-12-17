@@ -113,131 +113,121 @@ textarea { resize: vertical; }
 #navigationBar button.active { background:#00ffcc; color:#0b0b0b; box-shadow:0 0 15px #00ffcc; }
 #searchControls { display:flex; gap:15px; margin-bottom:20px; align-items:center; flex-wrap:wrap; background:#1a1a1a; padding:15px; border-radius:8px; border:1px solid #004444; }
 /* Messaging */
-#messagingTab { display:flex; gap:20px; height:75vh; }
-#chatList { width:300px; padding:15px; border:2px solid cyan; border-radius:8px; background:#1a1a1a; overflow-y:auto; }
+        #messagingTab { display:flex; gap:20px; height:75vh; }
+        #chatList { width:300px; padding:15px; border:2px solid cyan; border-radius:8px; background:#1a1a1a; overflow-y:auto; }
 
-/* --- CHAT LIST & WINDOW STYLES --- */
-#activeDuoList { margin-top:10px; }
-.chat-entry { padding:10px; border-bottom:1px dashed #333; cursor:pointer; transition: background 0.2s; }
-.chat-entry:hover { background:#2a2a2a; }
-.chat-entry.active { background:#004444; border-left:5px solid lime; font-weight:bold; }
+        /* --- CHAT LIST & WINDOW STYLES --- */
+        #activeDuoList { margin-top:10px; }
+        .chat-entry { padding:10px; border-bottom:1px dashed #333; cursor:pointer; transition: background 0.2s; }
+        .chat-entry:hover { background:#2a2a2a; }
+        .chat-entry.active { background:#004444; border-left:5px solid lime; font-weight:bold; }
 
-#chatWindow {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    border: 2px solid magenta;
-    border-radius: 8px;
-    background: #1a1a1a;
-}
-/* 🟢 CHAT HEADER WITH PROFILE LINK ALIGNMENT */
-#chatHeader {
-    padding: 10px 15px;
-    border-bottom: 1px solid #333;
-    text-align: center;
-    margin: 0;
-    color: cyan;
-    background: #330033;
-    font-size: 1.2em;
-}
+        #chatWindow {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            border: 2px solid magenta;
+            border-radius: 8px;
+            background: #1a1a1a;
+        }
+        /* CHAT HEADER with Profile Link Alignment */
+        #chatHeader {
+            padding: 10px 15px;
+            border-bottom: 1px solid #333;
+            text-align: center;
+            margin: 0;
+            color: cyan;
+            background: #330033;
+            font-size: 1.2em;
+        }
 
-#messageDisplay {
-    padding: 15px;
-    overflow-y: auto;
-    background: #111;
-    border-bottom: 1px solid #333;
-    display: flex; 
-    flex-direction: column;
-    flex-grow: 1;
-    gap: 15px;
-}
-/* 🟢 MESSAGE INPUT AREA (Includes Avatar alignment) */
-#messageInputArea {
-    display: flex;
-    padding: 10px 15px;
-    gap: 10px;
-    align-items: center; 
-    border-top: 2px solid magenta; 
-    background: #0b0b0b; 
-    box-shadow: 0 0 10px rgba(255, 0, 255, 0.5); 
-}
+        #messageDisplay {
+            padding: 15px;
+            overflow-y: auto;
+            background: #111;
+            border-bottom: 1px solid #333;
+            display: flex; 
+            flex-direction: column;
+            flex-grow: 1;
+            gap: 15px;
+        }
+        /* MESSAGE INPUT AREA (Includes Avatar alignment) */
+        #messageInputArea {
+            display: flex;
+            padding: 10px 15px;
+            gap: 10px;
+            align-items: center; 
+            border-top: 2px solid magenta; 
+            background: #0b0b0b; 
+            box-shadow: 0 0 10px rgba(255, 0, 255, 0.5); 
+        }
 
-/* Avatar for the chat bubble and input bar */
-.chat-avatar {
-    width: 35px;
-    height: 35px;
-    min-width: 35px; /* Prevent shrinking */
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid cyan;
-}
+        /* Avatar for the chat bubble and input bar */
+        .chat-avatar {
+            width: 35px;
+            height: 35px;
+            min-width: 35px; 
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid cyan;
+        }
 
-/* Wrapper for Avatar + Message Bubble */
-/* This is essential: it controls the avatar/bubble positioning */
-.message-group {
-    display: flex;
-    align-items: flex-end; 
-    max-width: 90%; 
-}
+        /* Wrapper for Avatar + Message Bubble (ESSENTIAL FOR MESSENGER LOOK) */
+        .message-group {
+            display: flex;
+            align-items: flex-end; 
+            max-width: 90%; 
+        }
 
-/* Base message container */
-.message { 
-    max-width:75%;
-    padding:10px 15px; 
-    border-radius:18px; 
-    font-size:0.95em; 
-    position:relative; 
-    color: white; 
-    border: 1px solid transparent; 
-}
+        /* Base message container */
+        .message { 
+            max-width:75%;
+            padding:10px 15px; 
+            border-radius:18px; 
+            font-size:0.95em; 
+            position:relative; 
+            color: white; 
+            border: 1px solid transparent; 
+        }
 
-/* Timestamp/Sender Info */
-.message span { 
-    display:block; 
-    font-size:0.7em; 
-    opacity:0.7; 
-    text-align:right; 
-    margin-top:5px; 
-    font-family: Arial, sans-serif;
-}
+        /* Timestamp/Sender Info */
+        .message span { 
+            display:block; 
+            font-size:0.7em; 
+            opacity:0.7; 
+            text-align:right; 
+            margin-top:5px; 
+            font-family: Arial, sans-serif;
+        }
+        
+        /* Read Indicator Icon */
+        .read-indicator {
+            color: #00ff00; 
+            font-size: 0.8em;
+            margin-left: 5px; 
+            vertical-align: middle;
+        }
 
-/* Read Indicator Icon */
-.read-indicator {
-    color: #00ff00; /* Neon Green */
-    font-size: 0.8em;
-    margin-left: 5px; 
-    vertical-align: middle;
-}
+        /* Sent Messages (Current User) */
+        .message-group.sent { 
+            align-self: flex-end; 
+            flex-direction: row-reverse; /* Puts avatar on the right */
+        }
+        .message-group.sent .chat-avatar { margin-left: 10px; border-color: #00ffff; }
+        .message-group.sent .message {
+            background: #003344; border: 1px solid #00ffff; box-shadow: 0 0 8px #00ffff;
+            border-bottom-right-radius: 5px; border-top-right-radius: 18px; border-bottom-left-radius: 18px; border-top-left-radius: 18px;
+        }
 
-/* Sent Messages (Current User) */
-.message-group.sent { 
-    align-self: flex-end; 
-    flex-direction: row-reverse; /* Puts avatar on the right */
-}
-.message-group.sent .chat-avatar { margin-left: 10px; border-color: #00ffff; }
-.message-group.sent .message {
-    background: #003344; border: 1px solid #00ffff; box-shadow: 0 0 8px #00ffff;
-    border-bottom-right-radius: 5px; border-top-right-radius: 18px; border-bottom-left-radius: 18px; border-top-left-radius: 18px;
-}
-
-/* Received Messages (Opponent) */
-.message-group.received { 
-    align-self: flex-start; 
-    flex-direction: row; /* Puts avatar on the left */
-}
-.message-group.received .chat-avatar { margin-right: 10px; border-color: #ff00ff; }
-.message-group.received .message {
-    background: #221133; border: 1px solid #ff00ff; box-shadow: 0 0 8px #ff00ff;
-    border-bottom-left-radius: 5px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 18px;
-}
-/* --- END CHAT WINDOW STYLES --- */
-
-/* Loading State */
-#loadingOverlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.9); z-index: 9999;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 2em; color: lime; text-shadow: 0 0 10px lime;
-}
+        /* Received Messages (Opponent) */
+        .message-group.received { 
+            align-self: flex-start; 
+            flex-direction: row; /* Puts avatar on the left */
+        }
+        .message-group.received .chat-avatar { margin-right: 10px; border-color: #ff00ff; }
+        .message-group.received .message {
+            background: #221133; border: 1px solid #ff00ff; box-shadow: 0 0 8px #ff00ff;
+            border-bottom-left-radius: 5px; border-top-left-radius: 18px; border-bottom-right-radius: 18px; border-top-right-radius: 18px;
         }
         /* --- END CHAT WINDOW STYLES --- */
 
