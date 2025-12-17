@@ -112,27 +112,31 @@ textarea { resize: vertical; }
 #navigationBar { display:flex; justify-content:center; flex-wrap:wrap; padding:10px; background:#151515; border-radius:8px; margin-bottom:30px; border:1px solid #333; }
 #navigationBar button.active { background:#00ffcc; color:#0b0b0b; box-shadow:0 0 15px #00ffcc; }
 #searchControls { display:flex; gap:15px; margin-bottom:20px; align-items:center; flex-wrap:wrap; background:#1a1a1a; padding:15px; border-radius:8px; border:1px solid #004444; }
-/* --- CYBERPUNK GREY & CYAN LED THEME --- */
+/* --- CYBERPUNK GREY & CYAN LED THEME - LAYOUT FLIP & BACKGROUND UNIFICATION --- */
 
-/* 1. Overall Messaging Layout - Dark Grey Background */
+/* 1. Messaging Layout - Flip Order */
 #messagingTab { 
+    display:flex; 
     gap:20px; 
     height:75vh; 
-    background: #1a1a1a; /* Dark base application background */
+    /* FLIP THE ORDER: Use flex-direction: row-reverse */
+    flex-direction: row-reverse; 
+    background: #1a1a1a; 
 }
 
-/* 2. Chat List - Monochromatic with Cyan Accent */
+/* 2. Chat List (Now on the Right) - Maintain Dark Base */
 #chatList { 
     width:300px; 
     padding:15px; 
-    border:2px solid #333333; /* Soft grey border */
+    /* Keep the subtle grey border for differentiation */
+    border:2px solid #333333; 
     border-radius:8px; 
-    background:#111111; /* Very dark inner background */
+    background:#111111; 
     overflow-y:auto; 
     color: #cccccc;
 }
 
-/* Chat List Entries */
+/* Chat List Entries (No Change to Active Style, keeping the "fire" look) */
 .chat-entry { 
     padding:10px; 
     border-bottom:1px dashed #222222; 
@@ -140,98 +144,87 @@ textarea { resize: vertical; }
 }
 .chat-entry:hover { 
     background:#1e1e1e; 
-    color: #00ffff; /* Subtle cyan hover */
+    color: #00ffff; 
 }
 .chat-entry.active { 
-    background:#003333; /* Dark cyan background */
-    border-left:5px solid #00ffff; /* Neon Cyan Active Border */
+    /* THE 'FIRE' STYLE: Dark Cyan Background, Neon Cyan Left Border */
+    background:#003333; 
+    border-left:5px solid #00ffff; 
     color: #00ffff; 
     font-weight:bold; 
 }
 
-/* 3. Chat Window - Focus on Grey/Cyan */
+/* 3. Chat Window (Now on the Left) - Matching Active Duo Style */
 #chatWindow {
-    border: 2px solid #222222; /* Clean grey border */
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    
+    /* MATCHING BORDER: Neon Cyan */
+    border: 3px solid #00ffff; 
     border-radius: 8px;
-    background: #0d0d0d; /* Pure black message area base */
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    
+    /* MATCHING BACKGROUND: Dark Cyan base of the Active Duo */
+    background: #002222; 
+    
+    /* Maintain the Cyan Glow on the container */
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); 
 }
 
-/* 4. Chat Header - The Cyan LED Box */
+/* 4. Chat Header - Refined Cyan LED Box */
 #chatHeader {
     padding: 15px 20px;
-    border-bottom: 2px solid #00ffff; /* Bright Cyan LED Accent */
-    color: #00ffff; /* Neon Cyan LED Text */
-    background: #001111; /* Dark teal background for contrast */
+    border-bottom: 2px solid #00ffff; 
+    color: #00ffff; 
+    /* Slightly lighter background for the header within the dark window */
+    background: #003333; 
     font-size: 1.5em; 
     font-weight: bold;
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 2px;
-    
-    /* Strong LED Text Effect */
     text-shadow: 0 0 5px #00ffff, 0 0 10px rgba(0, 255, 255, 0.5);
     margin: 0;
 }
 
-/* 5. Message Display Area */
+/* 5. Message Display Area - Matching Theme Background */
 #messageDisplay {
-    background: #000000; /* Pure Black for maximum LED contrast */
+    padding: 20px;
     gap: 15px;
-}
-
-/* 6. Avatars - Grey Ring */
-.chat-avatar {
-    width: 35px;
-    height: 35px;
-    min-width: 35px; 
-    border: 2px solid #444444; /* Cyber Grey Ring */
-    box-shadow: none;
-}
-/* Active User Avatar Accent */
-.message-group.sent .chat-avatar { border-color: #00ffff; }
-
-
-/* 7. Sent Messages (User - Cyan Blue LED Neon) */
-.message-group.sent .message {
-    background: #002222; /* Very dark teal base */
-    color: #e6ffff; /* Light Cyan text */
-    /* LED Glow Effect */
-    border: 1px solid #00ffff; /* Cyan border */
-    box-shadow: 0 0 8px #00ffff, 0 0 15px rgba(0, 255, 255, 0.4);
     
-    /* Bubble Shape */
+    /* MATCHING CHAT BACKGROUND: Using the dark cyan theme background */
+    background: #002222; 
+    flex-grow: 1;
+}
+
+
+/* 6. Sent Messages (User - Cyan Blue LED Neon - Slight adjustment to fit new BG) */
+.message-group.sent .message {
+    /* Base background needs to be slightly lighter than the new #002222 window background */
+    background: #004444; 
+    color: #e6ffff; 
+    border: 1px solid #00ffff; 
+    box-shadow: 0 0 8px #00ffff, 0 0 15px rgba(0, 255, 255, 0.4);
     border-radius: 18px 18px 4px 18px; 
 }
 .message-group.sent .message span { color: #88ffff; } 
 
-/* 8. Received Messages (Opponent - Neon Cyberpunk Grey) */
+/* 7. Received Messages (Opponent - Neon Cyberpunk Grey - No change needed here) */
 .message-group.received .message {
-    background: #222222; /* Medium dark grey base */
-    color: #dddddd; /* Light grey text */
-    /* LED Glow Effect (Grey/White Glow) */
-    border: 1px solid #999999; /* Light grey border */
+    background: #222222; 
+    color: #dddddd; 
+    border: 1px solid #999999; 
     box-shadow: 0 0 8px #cccccc, 0 0 15px rgba(100, 100, 100, 0.4); 
-    
-    /* Bubble Shape */
     border-radius: 18px 18px 18px 4px; 
 }
 .message-group.received .message span { color: #aaaaaa; } 
 
-
-/* 9. Read Indicator Icon */
-.read-indicator {
-    color: #00ffff; 
-    font-weight: bold;
-    text-shadow: 0 0 3px #00ffff; 
-}
-
-/* 10. Message Input Area */
+/* 8. Input Area (No major changes, just ensure background matches) */
 #messageInputArea {
     padding: 12px 15px;
-    border-top: 2px solid #00ffff; /* Cyan Accent Bar */
-    background: #0a0a0a;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3); /* Subtle input area glow */
+    border-top: 2px solid #00ffff;
+    background: #003333; /* Darker cyan to separate it from the message display */
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
 }
 /* Loading State (Included for context/completeness) */
 #loadingOverlay {
