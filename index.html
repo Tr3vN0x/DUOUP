@@ -187,34 +187,65 @@ textarea { resize: vertical; }
     margin: 0;
 }
 
-/* 5. Message Display Area - Matching Theme Background */
+/* 5. Message Display Area - Enabling Bubbles and Alignment */
 #messageDisplay {
     padding: 20px;
+    
+    /* --- NEW FOR BUBBLE LAYOUT --- */
+    display: flex;
+    flex-direction: column; /* Stack messages vertically */
     gap: 15px;
+    /* --- END NEW --- */
     
     /* MATCHING CHAT BACKGROUND: Using the dark cyan theme background */
     background: #002222; 
     flex-grow: 1;
+    overflow-y: auto; /* Ensure scrolling if messages exceed height */
 }
 
+/* 5b. Message Group Layout (New alignment rule) */
+.message-group {
+    display: flex; /* Makes the message bubble align left or right */
+    max-width: 100%;
+}
 
-/* 6. Sent Messages (User - Cyan Blue LED Neon - Slight adjustment to fit new BG) */
+/* 5c. Align Sent Messages to the Right */
+.message-group.sent {
+    justify-content: flex-end; /* Pushes the bubble to the right */
+}
+
+/* 5d. Align Received Messages to the Left (Default, but explicit is better) */
+.message-group.received {
+    justify-content: flex-start; /* Keeps the bubble on the left */
+}
+
+/* Standard Bubble Styling (applied to the content wrapper) */
+.message-group .message {
+    padding: 10px 15px;
+    max-width: 60%; /* Ensure bubbles don't span the whole width */
+    word-wrap: break-word;
+    min-width: 100px; /* Smallest size for a bubble */
+}
+
+/* 6. Sent Messages (User - Cyan Blue LED Neon) */
 .message-group.sent .message {
     /* Base background needs to be slightly lighter than the new #002222 window background */
     background: #004444; 
     color: #e6ffff; 
     border: 1px solid #00ffff; 
     box-shadow: 0 0 8px #00ffff, 0 0 15px rgba(0, 255, 255, 0.4);
+    /* NEW: Adjusted for bubble on the right */
     border-radius: 18px 18px 4px 18px; 
 }
 .message-group.sent .message span { color: #88ffff; } 
 
-/* 7. Received Messages (Opponent - Neon Cyberpunk Grey - No change needed here) */
+/* 7. Received Messages (Opponent - Neon Cyberpunk Grey) */
 .message-group.received .message {
     background: #222222; 
     color: #dddddd; 
     border: 1px solid #999999; 
     box-shadow: 0 0 8px #cccccc, 0 0 15px rgba(100, 100, 100, 0.4); 
+    /* NEW: Adjusted for bubble on the left */
     border-radius: 18px 18px 18px 4px; 
 }
 .message-group.received .message span { color: #aaaaaa; } 
