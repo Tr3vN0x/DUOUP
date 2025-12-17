@@ -112,160 +112,179 @@ textarea { resize: vertical; }
 #navigationBar { display:flex; justify-content:center; flex-wrap:wrap; padding:10px; background:#151515; border-radius:8px; margin-bottom:30px; border:1px solid #333; }
 #navigationBar button.active { background:#00ffcc; color:#0b0b0b; box-shadow:0 0 15px #00ffcc; }
 #searchControls { display:flex; gap:15px; margin-bottom:20px; align-items:center; flex-wrap:wrap; background:#1a1a1a; padding:15px; border-radius:8px; border:1px solid #004444; }
-/* * --- CYBERPUNK GREY & CYAN LED THEME - FULL CODE (Layout Flip, Bubbles, and Alignment) ---
- * * Instructions: Ensure your HTML uses the correct structure:
- * <div id="messageDisplay">
- * <div class="message-group sent/received">
- * <div class="message">Your text here.</div>
- * </div>
- * </div>
- */
+/* * --- CYBERPUNK GREY & CYAN LED THEME - CHAT STYLES --- */
 
-/* 1. Messaging Layout - Flip Order */
-#messagingTab { 
-    display: flex; 
-    gap: 20px; 
-    height: 75vh; 
-    /* FLIP THE ORDER: Chat Window on the left, List on the right */
-    flex-direction: row-reverse; 
-    background: #1a1a1a; /* Dark overall background */
-}
+        /* 1. Messaging Layout - Flip Order */
+        #messagingTab { 
+            display: flex; 
+            gap: 20px; 
+            height: 75vh; 
+            /* FLIP THE ORDER: Chat Window on the left, List on the right */
+            flex-direction: row-reverse; 
+            background: #1a1a1a; /* Dark overall background */
+        }
 
-/* 2. Chat List (Now on the Right) - Maintain Dark Base */
-#chatList { 
-    width: 300px; 
-    padding: 15px; 
-    border: 2px solid #333333; 
-    border-radius: 8px; 
-    background: #111111; 
-    overflow-y: auto; 
-    color: #cccccc;
-}
+        /* 2. Chat List (Now on the Right) - Maintain Dark Base */
+        #chatList { 
+            width: 300px; 
+            padding: 15px; 
+            border: 2px solid #333333; 
+            border-radius: 8px; 
+            background: #111111; 
+            overflow-y: auto; 
+            color: #cccccc;
+        }
 
-/* Chat List Entries */
-.chat-entry { 
-    padding: 10px; 
-    border-bottom: 1px dashed #222222; 
-    transition: background 0.2s; 
-}
-.chat-entry:hover { 
-    background: #1e1e1e; 
-    color: #00ffff; 
-}
-.chat-entry.active { 
-    /* The Active 'Fire' Style: Dark Cyan Background, Neon Cyan Left Border */
-    background: #003333; 
-    border-left: 5px solid #00ffff; 
-    color: #00ffff; 
-    font-weight: bold; 
-}
+        /* Chat List Entries */
+        #activeDuoList { margin-top:10px; }
+        .chat-entry { 
+            padding: 10px; 
+            border-bottom: 1px dashed #222222; 
+            cursor: pointer;
+            transition: background 0.2s; 
+        }
+        .chat-entry:hover { 
+            background: #1e1e1e; 
+            color: #00ffff; 
+        }
+        .chat-entry.active { 
+            /* The Active 'Fire' Style: Dark Cyan Background, Neon Cyan Left Border */
+            background: #003333; 
+            border-left: 5px solid #00ffff; 
+            color: #00ffff; 
+            font-weight: bold; 
+        }
 
-/* 3. Chat Window (Now on the Left) - Main Container */
-#chatWindow {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    
-    /* Neon Cyan Border and Glow */
-    border: 3px solid #00ffff; 
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); 
-    
-    /* Dark Cyan Background */
-    background: #002222; 
-}
+        /* 3. Chat Window (Now on the Left) - Main Container */
+        #chatWindow {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            
+            /* Neon Cyan Border and Glow */
+            border: 3px solid #00ffff; 
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5); 
+            
+            /* Dark Cyan Background */
+            background: #002222; 
+        }
 
-/* 4. Chat Header - Refined Cyan LED Box */
-#chatHeader {
-    padding: 15px 20px;
-    border-bottom: 2px solid #00ffff; 
-    color: #00ffff; 
-    background: #003333; 
-    font-size: 1.5em; 
-    font-weight: bold;
-    text-align: center;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    text-shadow: 0 0 5px #00ffff, 0 0 10px rgba(0, 255, 255, 0.5);
-    margin: 0;
-}
+        /* 4. Chat Header - Refined Cyan LED Box */
+        #chatHeader {
+            padding: 15px 20px;
+            border-bottom: 2px solid #00ffff; 
+            color: #00ffff; 
+            background: #003333; 
+            font-size: 1.5em; 
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 5px #00ffff, 0 0 10px rgba(0, 255, 255, 0.5);
+            margin: 0;
+        }
 
-/* 5. Message Display Area - Bubble Alignment Setup */
-#messageDisplay {
-    padding: 20px;
-    /* CRITICAL: Flex setup for vertical stacking and horizontal alignment of bubbles */
-    display: flex;
-    flex-direction: column; 
-    gap: 15px;
-    
-    background: #002222; /* Matches chat window background */
-    flex-grow: 1;
-    overflow-y: auto;
-}
+        /* 5. Message Display Area - Bubble Alignment Setup */
+        #messageDisplay {
+            padding: 20px;
+            /* CRITICAL: Flex setup for vertical stacking and horizontal alignment of bubbles */
+            display: flex;
+            flex-direction: column; 
+            gap: 15px;
+            
+            background: #002222; /* Matches chat window background */
+            flex-grow: 1;
+            overflow-y: auto;
+        }
 
-/* 5b. Message Group Layout (Container for each message) */
-.message-group {
-    display: flex; 
-    max-width: 100%;
-}
+        /* 5b. Message Group Layout (Container for each message) */
+        .message-group {
+            display: flex; 
+            max-width: 100%;
+        }
 
-/* 5c. Align Sent Messages to the Right */
-.message-group.sent {
-    justify-content: flex-end; /* Pushes the message bubble to the right */
-}
+        /* 5c. Align Sent Messages to the Right */
+        .message-group.sent {
+            justify-content: flex-end; /* Pushes the message bubble to the right */
+        }
 
-/* 5d. Align Received Messages to the Left */
-.message-group.received {
-    justify-content: flex-start; /* Keeps the message bubble on the left */
-}
+        /* 5d. Align Received Messages to the Left */
+        .message-group.received {
+            justify-content: flex-start; /* Keeps the message bubble on the left */
+        }
 
-/* 5e. Standard Bubble Styling (applied to the content wrapper) */
-.message-group .message {
-    padding: 10px 15px;
-    max-width: 60%; /* Limit bubble width */
-    word-wrap: break-word;
-    min-width: 100px; 
-}
+        /* Avatar styling (Applies to chat list, header, and messages) */
+        .chat-avatar {
+            width: 35px;
+            height: 35px;
+            min-width: 35px; 
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #00ffff; /* Cyberpunk border */
+            margin: 0 8px; /* Spacing next to bubbles */
+        }
 
-/* 6. Sent Messages (User - Cyan LED Neon Bubble) */
-.message-group.sent .message {
-    background: #004444; /* Darker Cyan Bubble Interior */
-    color: #e6ffff; 
-    border: 1px solid #00ffff; 
-    box-shadow: 0 0 8px #00ffff, 0 0 15px rgba(0, 255, 255, 0.4);
-    /* Rounded corners, flattened corner on the bottom right (sent side) */
-    border-radius: 18px 18px 4px 18px; 
-}
-.message-group.sent .message span { color: #88ffff; } 
+        /* 5e. Standard Bubble Styling (applied to the content wrapper) */
+        .message-group .message {
+            padding: 10px 15px;
+            max-width: 60%; /* Limit bubble width */
+            word-wrap: break-word;
+            min-width: 100px; 
+        }
+        
+        /* 5f. Timestamp/Sender Info */
+        .message span { 
+            display:block; 
+            font-size:0.7em; 
+            opacity:0.8; 
+            text-align:right; 
+            margin-top:5px; 
+            font-family: Arial, sans-serif;
+        }
 
-/* 7. Received Messages (Opponent - Neon Cyberpunk Grey Bubble) */
-.message-group.received .message {
-    background: #222222; /* Dark Grey Bubble Interior */
-    color: #dddddd; 
-    border: 1px solid #999999; 
-    box-shadow: 0 0 8px #cccccc, 0 0 15px rgba(100, 100, 100, 0.4); 
-    /* Rounded corners, flattened corner on the bottom left (received side) */
-    border-radius: 18px 18px 18px 4px; 
-}
-.message-group.received .message span { color: #aaaaaa; } 
+        /* 6. Sent Messages (User - Cyan LED Neon Bubble) */
+        .message-group.sent .message {
+            background: #004444; /* Darker Cyan Bubble Interior */
+            color: #e6ffff; 
+            border: 1px solid #00ffff; 
+            box-shadow: 0 0 8px #00ffff, 0 0 15px rgba(0, 255, 255, 0.4);
+            /* Rounded corners, flattened corner on the bottom right (sent side) */
+            border-radius: 18px 18px 4px 18px; 
+        }
+        .message-group.sent .message span { color: #88ffff; } 
+        
+        /* 7. Received Messages (Opponent - Neon Cyberpunk Grey Bubble) */
+        .message-group.received .message {
+            background: #222222; /* Dark Grey Bubble Interior */
+            color: #dddddd; 
+            border: 1px solid #999999; 
+            box-shadow: 0 0 8px #cccccc, 0 0 15px rgba(100, 100, 100, 0.4); 
+            /* Rounded corners, flattened corner on the bottom left (received side) */
+            border-radius: 18px 18px 18px 4px; 
+        }
+        .message-group.received .message span { color: #aaaaaa; } 
 
-/* 8. Input Area */
-#messageInputArea {
-    padding: 12px 15px;
-    border-top: 2px solid #00ffff;
-    background: #003333; /* Darker cyan to separate it from the message display */
-    box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-}
+        /* 8. Input Area */
+        #messageInputArea {
+            display: flex;
+            gap: 10px;
+            align-items: center; 
+            padding: 12px 15px;
+            border-top: 2px solid #00ffff;
+            background: #003333; /* Darker cyan to separate it from the message display */
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
 
-/* 9. Loading State (From your previous snippet) */
-#loadingOverlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.9);
-    z-index: 9999;
-    display: flex; justify-content: center; align-items: center;
-    font-size: 2em; color: lime; text-shadow: 0 0 10px lime;
-}
-</style>
+        /* 9. Loading State */
+        #loadingOverlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 2em; color: lime; text-shadow: 0 0 10px lime;
+        }
+    </style>
 </head>
 <body>
 
