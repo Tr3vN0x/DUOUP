@@ -277,53 +277,119 @@ textarea { resize: vertical; }
         }
 
 <style>
+    /* 1. OVERLAY SETUP */
     #loadingOverlay {
         position: fixed; top: 0; left: 0; right: 0; bottom: 0;
         background: rgba(0, 0, 0, 0.9);
         z-index: 9999;
         display: flex; justify-content: center; align-items: center;
+        flex-direction: column; /* Allows bolt and text to stack */
+    }
 
-        /* Text Styling for "DUO UP" */
+    /* 2. LIGHTNING BOLT STYLING */
+    #lightningBolt {
+        font-size: 8em; /* Large size */
+        color: #ffcc00; /* Yellow for lightning */
+        text-shadow: 0 0 20px #ffcc00;
+        opacity: 0; /* Start hidden */
+        transform: translateY(-50vh); /* Start far above the screen */
+        animation: 
+            boltStrike 0.5s ease-in forwards, /* Strike down quickly */
+            boltHide 0.1s linear 0.5s forwards; /* Hide instantly after striking */
+    }
+
+    /* 3. DUO UP TEXT STYLING */
+    #duoUpText {
         font-size: 4em;
         font-weight: bold;
         color: lime;
-        text-shadow: 0 0 10px lime;
-        opacity: 0;
-        transform: scale(0);
-
-        /* Apply the 1.2s Pop Animation */
-        animation: duoUpPop 1.2s ease-out forwards;
+        text-shadow: 0 0 0 lime; /* Start with no text shadow */
+        opacity: 0; /* Start hidden */
+        margin-top: -20px; /* Pull text up closer to the bolt */
+        
+        /* 1.2s Pop, then 1.0s Flicker (starts 0.5s after bolt starts) */
+        animation: 
+            duoUpPop 1.2s ease-out 0.1s forwards,
+            flicker 1.0s linear 1.2s forwards; 
     }
 
-    /* Keyframe Animation Definition */
+    /* 4. KEYFRAMES */
+
+    /* Bolt Strike Animation */
+    @keyframes boltStrike {
+        0% { opacity: 1; transform: translateY(-50vh); }
+        100% { opacity: 1; transform: translateY(0); } /* Strike down to center */
+    }
+    
+    /* Bolt Hide Animation (Instant) */
+    @keyframes boltHide {
+        100% { opacity: 0; }
+    }
+
+    /* DUO UP Pop Animation (The initial appearance) */
     @keyframes duoUpPop {
         0% { opacity: 0; transform: scale(0); }
-        50% { opacity: 1; transform: scale(1.1); } /* Pop overshoot */
-        100% { opacity: 1; transform: scale(1); } /* Settle */
+        50% { opacity: 1; transform: scale(1.1); }
+        100% { opacity: 1; transform: scale(1); } 
     }
 
-    /* Style to hide the overlay when done loading */
+    /* LED Flicker Animation (Triggered after the pop) */
+    @keyframes flicker {
+        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { 
+            text-shadow: 0 0 10px lime; 
+            opacity: 1;
+        }
+        20%, 24%, 55% { 
+            text-shadow: none; 
+            opacity: 0.5; /* Slight dim */
+        }
+    }
+
+    /* 5. CONTENT REVEAL */
+    #mainContent {
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out; /* Smooth transition for reveal */
+    }
+    .visible {
+        opacity: 1 !important;
+    }
     .hidden {
         display: none !important;
     }
 </style>
-</head>
+
 <body>
 
-<div id="loadingOverlay">DUO UP</div>
+<div id="loadingOverlay">
+    <div id="lightningBolt">⚡</div>
+    <div id="duoUpText">DUO UP</div>
+</div>
+
+<div id="mainContent">
+    <p style="color: white; padding: 20px; font-size: 1.5em;">Welcome! The website has loaded.</p>
+</div>
 
 <script>
-    // Get the loading overlay element
     const loadingOverlay = document.getElementById('loadingOverlay');
+    const mainContent = document.getElementById('mainContent');
+    
+    // Total animation time is Pop (1.2s) + Flicker (1.0s) = 2.2s.
+    // We'll add a slight buffer to the required 2.5s total duration.
+    const totalDurationMs = 2500; 
 
-    // Set a timer to hide the overlay after 2500 milliseconds (2.5 seconds)
+    // 1. Hide the overlay and reveal the content after the total duration
     setTimeout(() => {
-        // Add the 'hidden' class to the overlay to make it disappear
-        loadingOverlay.classList.add('hidden');
-    }, 2500); // 2500ms = 2.5 seconds
+        // Start the fade-in of the main content
+        mainContent.classList.add('visible');
+        
+        // Wait for the fade-in to complete (0.5s defined in CSS transition)
+        setTimeout(() => {
+            loadingOverlay.classList.add('hidden');
+        }, 500); // 500ms for the fade-out transition
+        
+    }, totalDurationMs); 
 </script>
-
-</body>
+ 
 
 <div id="loadingOverlay">DUO UP</div>
 <div class="header"><div class="icon-container">⚡</div><h1>DUO UP</h1></div>
