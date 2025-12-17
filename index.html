@@ -130,7 +130,7 @@ textarea { resize: vertical; }
             border-radius: 8px;
             background: #1a1a1a;
         }
-        /* CHAT HEADER with Profile Link Alignment */
+        /* 🟢 CHAT HEADER WITH PROFILE LINK ALIGNMENT */
         #chatHeader {
             padding: 10px 15px;
             border-bottom: 1px solid #333;
@@ -151,7 +151,7 @@ textarea { resize: vertical; }
             flex-grow: 1;
             gap: 15px;
         }
-        /* MESSAGE INPUT AREA (Includes Avatar alignment) */
+        /* 🟢 MESSAGE INPUT AREA (Includes Avatar alignment) */
         #messageInputArea {
             display: flex;
             padding: 10px 15px;
@@ -166,13 +166,13 @@ textarea { resize: vertical; }
         .chat-avatar {
             width: 35px;
             height: 35px;
-            min-width: 35px; 
+            min-width: 35px; /* Prevent shrinking */
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid cyan;
         }
 
-        /* Wrapper for Avatar + Message Bubble (ESSENTIAL FOR MESSENGER LOOK) */
+        /* Wrapper for Avatar + Message Bubble */
         .message-group {
             display: flex;
             align-items: flex-end; 
@@ -202,28 +202,20 @@ textarea { resize: vertical; }
         
         /* Read Indicator Icon */
         .read-indicator {
-            color: #00ff00; 
+            color: #00ff00; /* Neon Green */
             font-size: 0.8em;
             margin-left: 5px; 
             vertical-align: middle;
         }
 
-        /* Sent Messages (Current User) */
-        .message-group.sent { 
-            align-self: flex-end; 
-            flex-direction: row-reverse; /* Puts avatar on the right */
-        }
+        /* Sent & Received Message Bubbles */
+        .message-group.sent { align-self: flex-end; flex-direction: row-reverse; }
         .message-group.sent .chat-avatar { margin-left: 10px; border-color: #00ffff; }
         .message-group.sent .message {
             background: #003344; border: 1px solid #00ffff; box-shadow: 0 0 8px #00ffff;
             border-bottom-right-radius: 5px; border-top-right-radius: 18px; border-bottom-left-radius: 18px; border-top-left-radius: 18px;
         }
-
-        /* Received Messages (Opponent) */
-        .message-group.received { 
-            align-self: flex-start; 
-            flex-direction: row; /* Puts avatar on the left */
-        }
+        .message-group.received { align-self: flex-start; flex-direction: row; }
         .message-group.received .chat-avatar { margin-right: 10px; border-color: #ff00ff; }
         .message-group.received .message {
             background: #221133; border: 1px solid #ff00ff; box-shadow: 0 0 8px #ff00ff;
